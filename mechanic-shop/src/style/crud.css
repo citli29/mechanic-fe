@@ -192,3 +192,37 @@
 	border: 1px solid #ef9a9a;
 }
 
+/* =====================
+   Inline Create
+===================== */
+
+.inline-create {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.inline-create input {
+	width: 100%;
+	height: 30px;
+}
+
+.create-buttons {
+	display: flex;
+	gap: 5px;
+}
+
+.create-buttons button {
+	height: 28px;
+}
+
+.create-buttons button:first-child {
+	background: #2e7d32;
+	color: white;
+}
+
+.create-buttons button:last-child {
+	background: #ddd;
+	color: #333;
+}
+
