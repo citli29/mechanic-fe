@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
-import "./ModelsList.css";
 
 export default function ModelsList() {
 

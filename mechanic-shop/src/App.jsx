@@ -3,7 +3,7 @@ import MakesList from "./pages/Makes/MakesList";
 import ModelsList from "./pages/Models/ModelsList";
 import CarsList from "./pages/Cars/CarsList";
 import CarShow from "./pages/Cars/CarShow";
-
+import "./style/crud.css"
 function App() {
   return (
     <BrowserRouter>

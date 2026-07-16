@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
-import "./MakesList.css";
 
 export default function MakesList() {
 
