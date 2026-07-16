@@ -25,6 +25,91 @@ export default function CarsList() {
 		text: ""
 	});
 
+
+	const [creatingMake, setCreatingMake] = useState(false);
+	const [creatingModel, setCreatingModel] = useState(false);
+
+	const [newMakeName, setNewMakeName] = useState("");
+	const [newModelName, setNewModelName] = useState("");
+
+	async function createMake() {
+		if (!newMakeName.trim()) return;
+
+		try {
+			const res = await api.post("/makes", {
+				name: newMakeName
+			});
+
+			const newMake = res.data.make;
+
+			setMakes(prev => [
+				...prev,
+				newMake
+			]);
+
+			setEditing(prev => ({
+				...prev,
+				make_id: newMake.id,
+				model_id: ""
+			}));
+
+			setModels([]);
+
+			setNewMakeName("");
+			setCreatingMake(false);
+
+			showMessage(
+				"success",
+				"Make created successfully."
+			);
+
+		} catch (err) {
+			handleApiError(err);
+		}
+	}
+
+
+	async function createModel() {
+		if (!newModelName.trim() || !editing.make_id)
+			return;
+
+		try {
+			const res = await api.post("/models", {
+				name: newModelName,
+				make_id: editing.make_id
+			});
+
+
+			const newModel = res.data.model;
+
+
+			setModels(prev => [
+				...prev,
+				newModel
+			]);
+
+
+			setEditing(prev => ({
+				...prev,
+				model_id: newModel.id
+			}));
+
+
+			setNewModelName("");
+			setCreatingModel(false);
+
+
+			showMessage(
+				"success",
+				"Model created successfully."
+			);
+
+
+		} catch (err) {
+			handleApiError(err);
+		}
+	}
+
 	function showMessage(type, text) {
 		setMessage({
 			type,
@@ -190,27 +275,27 @@ export default function CarsList() {
 		}
 	}*/
 	async function saveCar() {
-	try {
+		try {
 
-		const data = Object.fromEntries(
-			Object.entries(editing)
-				.filter(([_, value]) => value !== "")
-		);
+			const data = Object.fromEntries(
+				Object.entries(editing)
+					.filter(([_, value]) => value !== "")
+			);
 
-		await api.put(`/cars/${editing.id}`, data);
+			await api.put(`/cars/${editing.id}`, data);
 
-		showMessage(
-			"success",
-			"Car updated successfully."
-		);
+			showMessage(
+				"success",
+				"Car updated successfully."
+			);
 
-		setEditing(null);
-		loadCars();
+			setEditing(null);
+			loadCars();
 
-	} catch (err) {
-		handleApiError(err);
+		} catch (err) {
+			handleApiError(err);
+		}
 	}
-}
 
 	function clearFilters() {
 		setFilters({
@@ -223,7 +308,7 @@ export default function CarsList() {
 	}
 
 
-			/*{error && (
+	/*{error && (
 				<div className="api-error">
 					{error}
 				</div>
@@ -322,14 +407,24 @@ export default function CarsList() {
 
 
 								<td>
-									<select
+									{!creatingMake && (<select
 										name="make_id"
 										value={editing.make_id || ""}
-										onChange={updateEdit}
+										onChange={(e) => {
+
+											if (e.target.value === "new") {
+												setCreatingMake(true);
+												return;
+											}
+
+											updateEdit(e);
+										}}
 									>
+
 										<option value="">
 											Make
 										</option>
+
 
 										{makes.map(make => (
 											<option
@@ -339,19 +434,61 @@ export default function CarsList() {
 												{make.name}
 											</option>
 										))}
-									</select>
+
+
+										<option value="new">
+											+ Create new make
+										</option>
+
+									</select> )}
+
+
+									{creatingMake && (
+										<div className="inline-create">
+
+											<input
+												placeholder="Make name"
+												value={newMakeName}
+												onChange={(e)=>setNewMakeName(e.target.value)}
+											/>
+
+											<button onClick={createMake}>
+												Add
+											</button>
+
+											<button
+												onClick={()=>{
+													setCreatingMake(false);
+													setNewMakeName("");
+												}}
+											>
+												X
+											</button>
+
+										</div>
+									)}
 								</td>
 
 
 								<td>
-									<select
+									{!creatingModel && (<select
 										name="model_id"
 										value={editing.model_id || ""}
-										onChange={updateEdit}
+										onChange={(e)=>{
+
+											if(e.target.value === "new"){
+												setCreatingModel(true);
+												return;
+											}
+
+											updateEdit(e);
+										}}
 									>
+
 										<option value="">
 											Model
 										</option>
+
 
 										{models.map(model => (
 											<option
@@ -361,9 +498,42 @@ export default function CarsList() {
 												{model.name}
 											</option>
 										))}
-									</select>
-								</td>
 
+
+										{editing.make_id && (
+											<option value="new">
+												+ Create new model
+											</option>
+										)}
+
+									</select>)}
+
+
+									{creatingModel && (
+										<div className="inline-create">
+
+											<input
+												placeholder="Model name"
+												value={newModelName}
+												onChange={(e)=>setNewModelName(e.target.value)}
+											/>
+
+											<button onClick={createModel}>
+												Add
+											</button>
+
+											<button
+												onClick={()=>{
+													setCreatingModel(false);
+													setNewModelName("");
+												}}
+											>
+												X
+											</button>
+
+										</div>
+									)}
+								</td>
 
 								<td>
 									<input
@@ -434,35 +604,35 @@ export default function CarsList() {
 
 						) : (
 
-							<tr
-								key={car.id}
-								onClick={() => navigate(`/cars/${car.id}`)}
-							>
+								<tr
+									key={car.id}
+									onClick={() => navigate(`/cars/${car.id}`)}
+								>
 
-								<td>{car.plate}</td>
-								<td>{car.make_name}</td>
-								<td>{car.model_name}</td>
-								<td>{car.month}</td>
-								<td>{car.year}</td>
-								<td>{car.cc}</td>
-								<td>{car.engine_code}</td>
-								<td>{car.color_code}</td>
-								<td>{car.chassi_nr}</td>
+									<td>{car.plate}</td>
+									<td>{car.make_name}</td>
+									<td>{car.model_name}</td>
+									<td>{car.month}</td>
+									<td>{car.year}</td>
+									<td>{car.cc}</td>
+									<td>{car.engine_code}</td>
+									<td>{car.color_code}</td>
+									<td>{car.chassi_nr}</td>
 
-								<td>
-									<button
-										onClick={(e) => {
-											e.stopPropagation();
-											editCar(car);
-										}}
-									>
-										Edit
-									</button>
-								</td>
+									<td>
+										<button
+											onClick={(e) => {
+												e.stopPropagation();
+												editCar(car);
+											}}
+										>
+											Edit
+										</button>
+									</td>
 
-							</tr>
+								</tr>
 
-						)
+							)
 
 					))}
 
