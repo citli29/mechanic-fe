@@ -9,8 +9,9 @@ export default function ScheduleDetails() {
 	const navigate = useNavigate();
 
 	const [schedule, setSchedule] = useState(null);
-
 	const [editing, setEditing] = useState(null);
+
+	const [isEditing, setIsEditing] = useState(false);
 
 	const [cars, setCars] = useState([]);
 	const [clients, setClients] = useState([]);
@@ -19,15 +20,17 @@ export default function ScheduleDetails() {
 
 	const [creatingClient, setCreatingClient] = useState(false);
 	const [creatingCar, setCreatingCar] = useState(false);
+	const [creatingMake, setCreatingMake] = useState(false);
+	const [creatingModel, setCreatingModel] = useState(false);
 
-	const [newClient, setNewClient] = useState({
+	const emptyClient = {
 		name: "",
 		phone: "",
 		address: "",
 		email: "",
 		zip_code: "",
 		tax_nr: ""
-	});
+	};
 
 	const emptyCar = {
 		plate: "",
@@ -41,13 +44,16 @@ export default function ScheduleDetails() {
 		chassi_nr: ""
 	};
 
+	const [newClient, setNewClient] = useState(emptyClient);
 	const [newCar, setNewCar] = useState(emptyCar);
+
+	const [newMakeName, setNewMakeName] = useState("");
+	const [newModelName, setNewModelName] = useState("");
 
 	const [message, setMessage] = useState({
 		type: "",
 		text: ""
 	});
-
 
 	function showMessage(type, text) {
 
@@ -66,7 +72,6 @@ export default function ScheduleDetails() {
 		}, 4000);
 
 	}
-
 
 	function handleApiError(err) {
 
@@ -91,7 +96,6 @@ export default function ScheduleDetails() {
 
 	}
 
-
 	useEffect(() => {
 
 		loadSchedule();
@@ -101,18 +105,20 @@ export default function ScheduleDetails() {
 
 	}, [id]);
 
-
 	useEffect(() => {
 
 		if (editing?.make_id) {
+
 			loadModels(editing.make_id);
+
 		}
 		else {
+
 			setModels([]);
+
 		}
 
 	}, [editing?.make_id]);
-
 
 	async function loadSchedule() {
 
@@ -123,12 +129,9 @@ export default function ScheduleDetails() {
 			setSchedule(res.data.schedule);
 
 			setEditing({
-
 				...res.data.schedule,
-
 				make_id: "",
 				model_id: ""
-
 			});
 
 		}
@@ -140,7 +143,6 @@ export default function ScheduleDetails() {
 
 	}
 
-
 	async function loadCars() {
 
 		try {
@@ -150,14 +152,13 @@ export default function ScheduleDetails() {
 			setCars(res.data.car_list || []);
 
 		}
-		catch (err) {
+		catch {
 
-			console.error(err);
+			setCars([]);
 
 		}
 
 	}
-
 
 	async function loadClients() {
 
@@ -168,14 +169,13 @@ export default function ScheduleDetails() {
 			setClients(res.data.client_list || []);
 
 		}
-		catch (err) {
+		catch {
 
-			console.error(err);
+			setClients([]);
 
 		}
 
 	}
-
 
 	async function loadMakes() {
 
@@ -186,18 +186,17 @@ export default function ScheduleDetails() {
 			setMakes(res.data.make_list || []);
 
 		}
-		catch (err) {
+		catch {
 
-			console.error(err);
+			setMakes([]);
 
 		}
 
 	}
 
+	async function loadModels(make_id) {
 
-	async function loadModels(makeId) {
-
-		if (!makeId) {
+		if (!make_id) {
 
 			setModels([]);
 			return;
@@ -208,25 +207,67 @@ export default function ScheduleDetails() {
 
 			const res = await api.get("/models", {
 				params: {
-					make_id: makeId
+					make_id
 				}
 			});
 
 			setModels(res.data.model_list || []);
 
 		}
-		catch (err) {
-
-			console.error(err);
+		catch {
 
 			setModels([]);
 
 		}
 
 	}
+
+	const selectedClient = clients.find(
+		client => client.id === Number(editing?.client_id)
+	);
+
+	const selectedCar = cars.find(
+		car => car.id === Number(editing?.car_id)
+	);
+
+	function beginEdit() {
+
+		setIsEditing(true);
+
+	}
+
+	function cancelEdit() {
+
+		setIsEditing(false);
+
+		setCreatingClient(false);
+		setCreatingCar(false);
+		setCreatingMake(false);
+		setCreatingModel(false);
+
+		setNewClient(emptyClient);
+		setNewCar(emptyCar);
+
+		loadSchedule();
+
+	}
 	function updateEdit(e) {
 
 		const { name, value } = e.target;
+
+		if (name === "client_id" && value === "new") {
+
+			setCreatingClient(true);
+			return;
+
+		}
+
+		if (name === "car_id" && value === "new") {
+
+			setCreatingCar(true);
+			return;
+
+		}
 
 		setEditing(prev => {
 
@@ -237,11 +278,6 @@ export default function ScheduleDetails() {
 
 			if (name === "car_id") {
 
-				if (value === "new") {
-					setCreatingCar(true);
-					return prev;
-				}
-
 				if (value !== "") {
 
 					updated.make_id = "";
@@ -251,17 +287,9 @@ export default function ScheduleDetails() {
 
 			}
 
-			if (name === "client_id" && value === "new") {
-
-				setCreatingClient(true);
-				return prev;
-
-			}
-
 			if (name === "make_id") {
 
 				updated.model_id = "";
-
 				loadModels(value);
 
 			}
@@ -299,7 +327,6 @@ export default function ScheduleDetails() {
 			if (name === "make_id") {
 
 				updated.model_id = "";
-
 				loadModels(value);
 
 			}
@@ -311,18 +338,137 @@ export default function ScheduleDetails() {
 	}
 
 
+	async function createMake() {
+
+		if (!newMakeName.trim()) {
+
+			showMessage(
+				"error",
+				"Make name is required."
+			);
+
+			return;
+
+		}
+
+		try {
+
+			const res = await api.post("/makes", {
+				name: newMakeName
+			});
+
+			const make = res.data.make;
+
+			setMakes(prev => [
+				...prev,
+				make
+			]);
+
+			setNewCar(prev => ({
+				...prev,
+				make_id: make.id,
+				model_id: ""
+			}));
+
+			setCreatingMake(false);
+			setNewMakeName("");
+
+			showMessage(
+				"success",
+				"Make created successfully."
+			);
+
+		}
+		catch (err) {
+
+			handleApiError(err);
+
+		}
+
+	}
+
+
+	async function createModel() {
+
+		if (!newCar.make_id) {
+
+			showMessage(
+				"error",
+				"Select a make first."
+			);
+
+			return;
+
+		}
+
+		if (!newModelName.trim()) {
+
+			showMessage(
+				"error",
+				"Model name is required."
+			);
+
+			return;
+
+		}
+
+		try {
+
+			const res = await api.post("/models", {
+				name: newModelName,
+				make_id: newCar.make_id
+			});
+
+			const model = res.data.model;
+
+			setModels(prev => [
+				...prev,
+				model
+			]);
+
+			setNewCar(prev => ({
+				...prev,
+				model_id: model.id
+			}));
+
+			setCreatingModel(false);
+			setNewModelName("");
+
+			showMessage(
+				"success",
+				"Model created successfully."
+			);
+
+		}
+		catch (err) {
+
+			handleApiError(err);
+
+		}
+
+	}
+
+
 	async function createClient() {
 
 		if (!newClient.name.trim()) {
 
-			showMessage("error", "Client name is required.");
+			showMessage(
+				"error",
+				"Client name is required."
+			);
+
 			return;
 
 		}
 
 		if (!newClient.phone.trim()) {
 
-			showMessage("error", "Phone is required.");
+			showMessage(
+				"error",
+				"Phone is required."
+			);
+
 			return;
 
 		}
@@ -334,7 +480,10 @@ export default function ScheduleDetails() {
 					.filter(([_, value]) => value !== "")
 			);
 
-			const res = await api.post("/clients", data);
+			const res = await api.post(
+				"/clients",
+				data
+			);
 
 			const client = res.data.client;
 
@@ -349,15 +498,7 @@ export default function ScheduleDetails() {
 			}));
 
 			setCreatingClient(false);
-
-			setNewClient({
-				name: "",
-				phone: "",
-				address: "",
-				email: "",
-				zip_code: "",
-				tax_nr: ""
-			});
+			setNewClient(emptyClient);
 
 			showMessage(
 				"success",
@@ -378,14 +519,22 @@ export default function ScheduleDetails() {
 
 		if (!newCar.plate.trim()) {
 
-			showMessage("error", "Plate is required.");
+			showMessage(
+				"error",
+				"Plate is required."
+			);
+
 			return;
 
 		}
 
 		if (!newCar.make_id) {
 
-			showMessage("error", "Please select a make.");
+			showMessage(
+				"error",
+				"Please select a make."
+			);
+
 			return;
 
 		}
@@ -397,7 +546,10 @@ export default function ScheduleDetails() {
 					.filter(([_, value]) => value !== "")
 			);
 
-			const res = await api.post("/cars", data);
+			const res = await api.post(
+				"/cars",
+				data
+			);
 
 			const car = res.data.car;
 
@@ -414,6 +566,8 @@ export default function ScheduleDetails() {
 			}));
 
 			setCreatingCar(false);
+			setCreatingMake(false);
+			setCreatingModel(false);
 
 			setNewCar(emptyCar);
 
@@ -430,8 +584,6 @@ export default function ScheduleDetails() {
 		}
 
 	}
-
-
 	async function saveSchedule() {
 
 		try {
@@ -441,8 +593,9 @@ export default function ScheduleDetails() {
 				description: editing.description
 			};
 
-			if (editing.client_id)
+			if (editing.client_id) {
 				data.client_id = editing.client_id;
+			}
 
 			if (editing.car_id) {
 
@@ -464,6 +617,8 @@ export default function ScheduleDetails() {
 				"success",
 				"Schedule updated successfully."
 			);
+
+			setIsEditing(false);
 
 			loadSchedule();
 
@@ -501,6 +656,18 @@ export default function ScheduleDetails() {
 		}
 
 	}
+
+
+	if (!editing) {
+
+		return (
+			<div className="container">
+				Loading...
+			</div>
+		);
+
+	}
+
 	return (
 
 		<div className="container">
@@ -513,69 +680,88 @@ export default function ScheduleDetails() {
 				</div>
 			)}
 
-			{editing && (
+			<div className="details-card">
 
-				<div className="details-card">
+				<div className="details-grid">
 
-					<div className="details-grid">
+					<div className="field">
 
-						<div className="field">
+						<label>Date</label>
 
-							<label>Date</label>
+						<input
+							type="date"
+							name="date"
+							value={editing.date || ""}
+							onChange={updateEdit}
+							readOnly={!isEditing}
+						/>
 
-							<input
-								type="date"
-								name="date"
-								value={editing.date || ""}
-								onChange={updateEdit}
-							/>
+					</div>
 
-						</div>
+					<div className="field field-full">
 
-						<div className="field field-full">
+						<label>Description</label>
 
-							<label>Description</label>
+						<textarea
+							name="description"
+							value={editing.description || ""}
+							onChange={updateEdit}
+							readOnly={!isEditing}
+						/>
 
-							<textarea
-								name="description"
-								value={editing.description || ""}
-								onChange={updateEdit}
-							/>
+					</div>
 
-						</div>
+					<div className="field">
 
-						<div className="field">
+						<label>Client</label>
 
-							<label>Client</label>
+						{isEditing ? (
 
-							{!creatingClient ? (
+							!creatingClient ? (
 
-								<select
-									name="client_id"
-									value={editing.client_id || ""}
-									onChange={updateEdit}
-								>
+								<>
 
-									<option value="">
-										No client
-									</option>
+									<select
+										name="client_id"
+										value={editing.client_id || ""}
+										onChange={updateEdit}
+									>
 
-									{clients.map(client => (
-
-										<option
-											key={client.id}
-											value={client.id}
-										>
-											{client.name}
+										<option value="">
+											No client
 										</option>
 
-									))}
+										{clients.map(client => (
+											<option
+												key={client.id}
+												value={client.id}
+											>
+												{client.name} ({client.phone})
+											</option>
+										))}
 
-									<option value="new">
-										+ Create new client
-									</option>
+										<option value="new">
+											+ Create new client
+										</option>
 
-								</select>
+									</select>
+
+									{selectedClient && (
+
+										<div className="info-box">
+
+											<div><strong>Name:</strong> {selectedClient.name}</div>
+											<div><strong>Phone:</strong> {selectedClient.phone}</div>
+											<div><strong>Email:</strong> {selectedClient.email || "-"}</div>
+											<div><strong>Address:</strong> {selectedClient.address || "-"}</div>
+											<div><strong>ZIP:</strong> {selectedClient.zip_code || "-"}</div>
+											<div><strong>Tax:</strong> {selectedClient.tax_nr || "-"}</div>
+
+										</div>
+
+									)}
+
+								</>
 
 							) : (
 
@@ -590,104 +776,169 @@ export default function ScheduleDetails() {
 
 									<input
 										name="phone"
-										placeholder="Phone"
-										value={newClient.phone}
-										onChange={updateNewClient}
-									/>
+											placeholder="Phone"
+											value={newClient.phone}
+											onChange={updateNewClient}
+										/>
 
-									<input
-										name="email"
-										placeholder="Email"
-										value={newClient.email}
-										onChange={updateNewClient}
-									/>
+										<input
+											name="email"
+											placeholder="Email"
+											value={newClient.email}
+											onChange={updateNewClient}
+										/>
 
-									<input
-										name="address"
-										placeholder="Address"
-										value={newClient.address}
-										onChange={updateNewClient}
-									/>
+										<input
+											name="address"
+											placeholder="Address"
+											value={newClient.address}
+											onChange={updateNewClient}
+										/>
 
-									<input
-										name="zip_code"
-										placeholder="Zip Code"
-										value={newClient.zip_code}
-										onChange={updateNewClient}
-									/>
+										<input
+											name="zip_code"
+											placeholder="ZIP Code"
+											value={newClient.zip_code}
+											onChange={updateNewClient}
+										/>
 
-									<input
-										name="tax_nr"
-										placeholder="Tax Number"
-										value={newClient.tax_nr}
-										onChange={updateNewClient}
-									/>
+										<input
+											name="tax_nr"
+											placeholder="Tax Number"
+											value={newClient.tax_nr}
+											onChange={updateNewClient}
+										/>
 
-									<div className="create-buttons">
+										<div className="create-buttons">
 
-										<button onClick={createClient}>
-											Add
-										</button>
+											<button onClick={createClient}>
+												Add
+											</button>
 
-										<button
-											onClick={() => {
+											<button
+												onClick={() => {
 
-												setCreatingClient(false);
+													setCreatingClient(false);
+													setNewClient(emptyClient);
 
-												setNewClient({
-													name: "",
-													phone: "",
-													address: "",
-													email: "",
-													zip_code: "",
-													tax_nr: ""
-												});
+												}}
+											>
+												X
+											</button>
 
-											}}
-										>
-											X
-										</button>
+										</div>
 
 									</div>
 
-								</div>
+								)
 
-							)}
+						) : (
 
-						</div>
+								<>
+									<input
+										readOnly
+										value={
+											schedule.client_name
+												? `${schedule.client_name} (${schedule.client_phone})`
+												: "-"
+										}
+									/>
 
-						<div className="field">
+									{selectedClient && (
 
-							<label>Car</label>
+										<div className="info-box">
 
-							{!creatingCar ? (
+											<div>
+												<strong>Name:</strong> {selectedClient.name}
+											</div>
 
-								<select
-									name="car_id"
-									value={editing.car_id || ""}
-									onChange={updateEdit}
-								>
+											<div>
+												<strong>Phone:</strong> {selectedClient.phone}
+											</div>
 
-									<option value="">
-										No car
-									</option>
+											<div>
+												<strong>Email:</strong> {selectedClient.email || "-"}
+											</div>
 
-									{cars.map(car => (
+											<div>
+												<strong>Address:</strong> {selectedClient.address || "-"}
+											</div>
 
-										<option
-											key={car.id}
-											value={car.id}
-										>
-											{car.plate}
+											<div>
+												<strong>ZIP:</strong> {selectedClient.zip_code || "-"}
+											</div>
+
+											<div>
+												<strong>Tax:</strong> {selectedClient.tax_nr || "-"}
+											</div>
+
+										</div>
+
+									)}
+
+								</>
+						)}
+
+					</div>
+
+					<div className="field">
+
+						<label>Car</label>
+
+						{isEditing ? (
+
+							!creatingCar ? (
+
+								<>
+
+									<select
+										name="car_id"
+										value={editing.car_id || ""}
+										onChange={updateEdit}
+									>
+
+										<option value="">
+											No car
 										</option>
 
-									))}
+										{cars.map(car => (
 
-									<option value="new">
-										+ Create new car
-									</option>
+											<option
+												key={car.id}
+												value={car.id}
+											>
+												{car.plate}
+											</option>
 
-								</select>
+										))}
+
+										<option value="new">
+											+ Create new car
+										</option>
+
+									</select>
+
+									{selectedCar && (
+
+										<div className="info-box">
+
+											<div>
+												<strong>Plate:</strong> {selectedCar.plate}
+											</div>
+
+											<div>
+												<strong>Make:</strong> {selectedCar.make_name}
+											</div>
+
+											<div>
+												<strong>Model:</strong> {selectedCar.model_name}
+											</div>
+
+										</div>
+
+									)}
+
+								</>
 
 							) : (
 
@@ -700,167 +951,341 @@ export default function ScheduleDetails() {
 										onChange={updateNewCar}
 									/>
 
-									<select
-										name="make_id"
-										value={newCar.make_id}
-										onChange={updateNewCar}
-									>
+									{!creatingMake ? (
 
-										<option value="">
-											Select Make
-										</option>
+										<select
+											name="make_id"
+											value={newCar.make_id}
+											onChange={updateNewCar}
+										>
 
-										{makes.map(make => (
-											<option
-												key={make.id}
-												value={make.id}
-											>
-												{make.name}
+											<option value="">
+												Select Make
 											</option>
-										))}
 
-									</select>
+											{makes.map(make => (
 
-									<select
-										name="model_id"
-										value={newCar.model_id}
-										onChange={updateNewCar}
-										disabled={!newCar.make_id}
-									>
+												<option
+													key={make.id}
+													value={make.id}
+												>
+													{make.name}
+												</option>
 
-										<option value="">
-											Select Model
-										</option>
+											))}
 
-										{models.map(model => (
-											<option
-												key={model.id}
-												value={model.id}
-											>
-												{model.name}
+											<option value="new">
+												+ Create new make
 											</option>
-										))}
 
-									</select>
+										</select>
+
+									) : (
+
+										<>
+											<input
+												placeholder="New make"
+												value={newMakeName}
+												onChange={(e) =>
+													setNewMakeName(e.target.value)
+												}
+											/>
+
+											<div className="create-buttons">
+
+												<button onClick={createMake}>
+													Add
+												</button>
+
+												<button
+													onClick={() => {
+														setCreatingMake(false);
+														setNewMakeName("");
+													}}
+												>
+													X
+												</button>
+
+											</div>
+
+										</>
+
+									)}
+																		{!creatingModel ? (
+
+										<select
+											name="model_id"
+											value={newCar.model_id}
+											onChange={updateNewCar}
+											disabled={!newCar.make_id}
+										>
+
+											<option value="">
+												Select Model
+											</option>
+
+											{models.map(model => (
+
+												<option
+													key={model.id}
+													value={model.id}
+												>
+													{model.name}
+												</option>
+
+											))}
+
+											<option value="new">
+												+ Create new model
+											</option>
+
+										</select>
+
+									) : (
+
+										<>
+
+											<input
+												placeholder="New model"
+												value={newModelName}
+												onChange={(e) =>
+													setNewModelName(e.target.value)
+												}
+											/>
+
+											<div className="create-buttons">
+
+												<button onClick={createModel}>
+													Add
+												</button>
+
+												<button
+													onClick={() => {
+
+														setCreatingModel(false);
+														setNewModelName("");
+
+													}}
+												>
+													X
+												</button>
+
+											</div>
+
+										</>
+
+									)}
 
 									<div className="create-buttons">
 
 										<button onClick={createCar}>
-											Add
+											Add Car
 										</button>
 
 										<button
 											onClick={() => {
 
 												setCreatingCar(false);
+												setCreatingMake(false);
+												setCreatingModel(false);
+
 												setNewCar(emptyCar);
 
 											}}
 										>
-											X
+											Cancel
 										</button>
 
 									</div>
 
 								</div>
 
-							)}
+							)
 
-						</div>
+						) : (
 
-						{!editing.car_id && (
+<>
+	<input
+		readOnly
+		value={
+			schedule.car_plate
+				? `${schedule.car_plate} (${schedule.car_make} ${schedule.car_model})`
+				: "-"
+		}
+	/>
 
-							<>
+	{selectedCar && (
 
-								<div className="field">
+		<div className="info-box">
 
-									<label>Make</label>
+			<div>
+				<strong>Plate:</strong> {selectedCar.plate}
+			</div>
 
-									<select
-										name="make_id"
-										value={editing.make_id || ""}
-										onChange={updateEdit}
-									>
+			<div>
+				<strong>Make:</strong> {selectedCar.make_name}
+			</div>
 
-										<option value="">
-											Select Make
-										</option>
+			<div>
+				<strong>Model:</strong> {selectedCar.model_name}
+			</div>
 
-										{makes.map(make => (
+			{selectedCar.year && (
+				<div>
+					<strong>Year:</strong> {selectedCar.year}
+				</div>
+			)}
 
-											<option
-												key={make.id}
-												value={make.id}
-											>
-												{make.name}
-											</option>
+			{selectedCar.month && (
+				<div>
+					<strong>Month:</strong> {selectedCar.month}
+				</div>
+			)}
 
-										))}
+			{selectedCar.engine_code && (
+				<div>
+					<strong>Engine:</strong> {selectedCar.engine_code}
+				</div>
+			)}
 
-									</select>
+			{selectedCar.cc && (
+				<div>
+					<strong>CC:</strong> {selectedCar.cc}
+				</div>
+			)}
 
-								</div>
+			{selectedCar.color_code && (
+				<div>
+					<strong>Color:</strong> {selectedCar.color_code}
+				</div>
+			)}
 
-								<div className="field">
+			{selectedCar.chassi_nr && (
+				<div>
+					<strong>Chassis:</strong> {selectedCar.chassi_nr}
+				</div>
+			)}
 
-									<label>Model</label>
+		</div>
 
-									<select
-										name="model_id"
-										value={editing.model_id || ""}
-										onChange={updateEdit}
-										disabled={!editing.make_id}
-									>
+	)}
 
-										<option value="">
-											Select Model
-										</option>
-
-										{models.map(model => (
-
-											<option
-												key={model.id}
-												value={model.id}
-											>
-												{model.name}
-											</option>
-
-										))}
-
-									</select>
-
-								</div>
-
-							</>
-
+</>
 						)}
 
 					</div>
 
-					<div className="details-actions">
+					{isEditing && !editing.car_id && (
 
-						<button onClick={saveSchedule}>
-							Save
-						</button>
+						<>
 
-						<button
-							className="delete-btn"
-							onClick={deleteSchedule}
-						>
-							Delete
-						</button>
+							<div className="field">
 
-						<button
-							onClick={() => navigate("/schedules")}
-						>
-							Back
-						</button>
+								<label>Make</label>
 
-					</div>
+								<select
+									name="make_id"
+									value={editing.make_id || ""}
+									onChange={updateEdit}
+								>
+
+									<option value="">
+										Select Make
+									</option>
+
+									{makes.map(make => (
+
+										<option
+											key={make.id}
+											value={make.id}
+										>
+											{make.name}
+										</option>
+
+									))}
+
+								</select>
+
+							</div>
+
+							<div className="field">
+
+								<label>Model</label>
+
+								<select
+									name="model_id"
+									value={editing.model_id || ""}
+									onChange={updateEdit}
+									disabled={!editing.make_id}
+								>
+
+									<option value="">
+										Select Model
+									</option>
+
+									{models.map(model => (
+
+										<option
+											key={model.id}
+											value={model.id}
+										>
+											{model.name}
+										</option>
+
+									))}
+
+								</select>
+
+							</div>
+
+						</>
+
+					)}
 
 				</div>
 
-			)}
+				<div className="details-actions">
+
+					{!isEditing ? (
+
+						<>
+
+							<button onClick={beginEdit}>
+								Edit
+							</button>
+
+							<button
+								className="delete-btn"
+								onClick={deleteSchedule}
+							>
+								Delete
+							</button>
+
+						</>
+
+					) : (
+
+						<>
+
+							<button onClick={saveSchedule}>
+								Save
+							</button>
+
+							<button onClick={cancelEdit}>
+								Cancel
+							</button>
+
+						</>
+
+					)}
+
+					<button onClick={() => navigate("/schedules")}>
+						Back
+					</button>
+
+				</div>
+
+			</div>
 
 		</div>
 
