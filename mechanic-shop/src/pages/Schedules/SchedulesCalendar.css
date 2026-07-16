@@ -1,0 +1,179 @@
+/* =====================
+   Month Navigation
+===================== */
+
+.month-navigation {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 20px;
+
+	margin-bottom: 25px;
+}
+
+.month-navigation h2 {
+	margin: 0;
+	min-width: 220px;
+	text-align: center;
+
+	color: #333;
+}
+
+.month-navigation button {
+	width: 38px;
+	height: 38px;
+
+	background: #1976d2;
+	color: white;
+
+	border: none;
+	border-radius: 5px;
+
+	cursor: pointer;
+
+	font-size: 18px;
+}
+
+.month-navigation button:hover {
+	background: #125aa0;
+}
+
+
+/* =====================
+   Calendar
+===================== */
+
+.calendar {
+	display: grid;
+
+	grid-template-columns: repeat(7, 1fr);
+
+	gap: 1px;
+
+	background: #ddd;
+
+	border: 1px solid #ddd;
+}
+
+
+/* Weekday header */
+
+.calendar-header {
+
+	background: #1976d2;
+
+	color: white;
+
+	font-weight: bold;
+
+	text-align: center;
+
+	padding: 12px;
+
+}
+
+
+/* =====================
+   Calendar Day
+===================== */
+
+.calendar-day {
+
+	background: white;
+
+	min-height: 140px;
+
+	padding: 8px;
+
+	display: flex;
+	flex-direction: column;
+
+}
+
+
+.calendar-day.empty {
+
+	background: #f8f8f8;
+
+}
+
+
+.day-number {
+
+	font-weight: bold;
+
+	margin-bottom: 8px;
+
+	color: #555;
+
+}
+
+
+/* =====================
+   Appointments
+===================== */
+
+.appointments {
+
+	display: flex;
+
+	flex-direction: column;
+
+	gap: 6px;
+
+}
+
+
+/* Individual appointment */
+
+.appointment {
+
+	background: #1976d2;
+
+	color: white;
+
+	padding: 6px 8px;
+
+	border-radius: 5px;
+
+	cursor: pointer;
+
+	font-size: 12px;
+
+	transition: background 0.15s;
+
+}
+
+
+.appointment:hover {
+
+	background: #125aa0;
+
+}
+
+
+.appointment-plate {
+
+	font-weight: bold;
+
+}
+
+
+.appointment-client {
+
+	font-size: 11px;
+
+	opacity: .95;
+
+}
+
+
+.appointment-description {
+
+	font-size: 11px;
+
+	margin-top: 3px;
+
+	word-break: break-word;
+
+}
