@@ -6,6 +6,7 @@ import ProductTypesList from "./pages/ProductTypes/ProductTypesList";
 import ProductsList from "./pages/Products/ProductsList";
 import SchedulesCalendar from "./pages/Schedules/SchedulesCalendar";
 import SchedulesList from "./pages/Schedules/SchedulesList";
+import SchedulesShow from "./pages/Schedules/SchedulesShow";
 
 import "./style/crud.css"
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/products" element={<ProductsList />} />
         <Route path="/schedules_calendar" element={<SchedulesCalendar/>} />
         <Route path="/schedules" element={<SchedulesList/>} />
+        <Route path="/schedules/:id" element={<SchedulesShow/>} />
       </Routes>
     </BrowserRouter>
   );

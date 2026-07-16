@@ -1,0 +1,138 @@
+/* =====================
+   Details Card
+===================== */
+
+.details-card {
+	background: white;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 20px;
+	margin-top: 20px;
+}
+
+/* =====================
+   Grid
+===================== */
+
+.details-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 20px;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.field-full {
+	grid-column: 1 / -1;
+}
+
+/* =====================
+   Labels
+===================== */
+
+.field label {
+	font-weight: 600;
+	color: #444;
+}
+
+/* =====================
+   Inputs
+===================== */
+
+.field input,
+.field select,
+.field textarea {
+
+	width: 100%;
+	padding: 8px 10px;
+
+	border: 1px solid #ccc;
+	border-radius: 5px;
+
+	font-size: 14px;
+	box-sizing: border-box;
+
+}
+
+.field textarea {
+
+	min-height: 120px;
+	resize: vertical;
+
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+
+	outline: none;
+	border-color: #1976d2;
+
+}
+
+/* =====================
+   Bottom Buttons
+===================== */
+
+.details-actions {
+
+	display: flex;
+	gap: 10px;
+	margin-top: 25px;
+
+}
+
+.details-actions button {
+
+	height: 36px;
+	padding: 0 20px;
+
+	border: none;
+	border-radius: 5px;
+
+	cursor: pointer;
+
+}
+
+.details-actions button:first-child {
+
+	background: #1976d2;
+	color: white;
+
+}
+
+.details-actions button:first-child:hover {
+
+	background: #125aa0;
+
+}
+
+.details-actions .delete-btn {
+
+	background: #d32f2f;
+	color: white;
+
+}
+
+.details-actions .delete-btn:hover {
+
+	background: #b71c1c;
+
+}
+
+.details-actions button:last-child {
+
+	background: #ddd;
+	color: #333;
+
+}
+
+.details-actions button:last-child:hover {
+
+	background: #c5c5c5;
+
+}
