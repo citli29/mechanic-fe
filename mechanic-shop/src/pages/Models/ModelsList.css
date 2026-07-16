@@ -2,14 +2,14 @@
 	padding: 10px;
 }
 
-
-/* Title */
+/* =====================
+   Title
+===================== */
 
 .container h1 {
 	margin-bottom: 20px;
 	color: #333;
 }
-
 
 /* =====================
    Filters
@@ -19,13 +19,11 @@
 	display: flex;
 	gap: 10px;
 	flex-wrap: wrap;
-	margin:  25px 0;
+	margin: 25px 0;
 }
-
 
 .filters input {
 	height: 36px;
-
 	padding: 0 10px;
 
 	border: 1px solid #ccc;
@@ -34,307 +32,162 @@
 	font-size: 14px;
 }
 
-
 .filters button {
 	height: 36px;
-
 	padding: 0 20px;
 
 	background: #1976d2;
-
 	color: white;
 
 	border: none;
-
 	border-radius: 5px;
 
 	cursor: pointer;
 }
 
-
 .filters button:hover {
 	background: #125aa0;
 }
-
 
 /* =====================
    Table
 ===================== */
 
 .table {
-
 	width: 100%;
-
 	border-collapse: collapse;
-
-	table-layout: fixed;
-
 }
-
 
 .table th {
-
 	background: #1976d2;
-
 	color: white;
-
 	padding: 10px;
-
 	text-align: center;
-
 }
-
 
 .table td {
-
-	padding: 8px 10px;
-
+	padding: 10px;
 	border-bottom: 1px solid #ddd;
-
 	vertical-align: middle;
-
 }
-.container-buttons {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: 6px; /* change to 8px or 10px if you want more space */
-}
-
-
-.table tbody tr {
-
-	cursor: pointer;
-
-}
-
 
 .table tbody tr:hover {
-
 	background: #f5f5f5;
-
 }
 
-
 /* =====================
-   Edit inputs
+   Inputs
 ===================== */
 
 .table input,
 .table select {
-
 	width: 100%;
-
 	height: 32px;
 
-	padding: 4px 6px;
+	padding: 4px 8px;
 
 	border: 1px solid #ccc;
-
 	border-radius: 4px;
 
 	box-sizing: border-box;
-
-	font-size: 13px;
-
 }
-
 
 .table input:focus,
 .table select:focus {
-
 	outline: none;
-
 	border-color: #1976d2;
-
 }
 
+/* =====================
+   Editing Row
+===================== */
 
-/* Editing row */
-
-.table tr.editing {
-
+.editing {
 	background: #fff8e1;
-
 }
-
-
-.table tr.editing td {
-
-	padding-top: 12px;
-
-	padding-bottom: 12px;
-
-}
-
 
 /* =====================
    Buttons
 ===================== */
 
+.container-buttons {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 6px;
+}
+
 .table button {
-
 	height: 30px;
-
 	padding: 0 12px;
 
 	border: none;
-
 	border-radius: 4px;
 
 	cursor: pointer;
-
 	font-size: 13px;
-
 }
 
+/* Save / Edit */
 
 .table button:first-child {
-
 	background: #1976d2;
-
 	color: white;
-
 }
-
 
 .table button:first-child:hover {
-
 	background: #125aa0;
-
 }
 
+/* Cancel */
 
-.table button:last-child {
-
+.editing button:last-child {
 	background: #ddd;
-
 	color: #333;
-
 }
 
-
-.table button:last-child:hover {
-
+.editing button:last-child:hover {
 	background: #c5c5c5;
-
 }
 
+/* Delete */
 
-.table td:last-child {
-
-	text-align: center;
-
-	white-space: nowrap;
-
+.delete-btn {
+	background: #d32f2f !important;
+	color: white !important;
 }
 
+.delete-btn:hover {
+	background: #b71c1c !important;
+}
 
 /* =====================
-   Create make/model
-===================== */
-
-.inline-create {
-
-	display: flex;
-
-	flex-direction: column;
-
-	gap: 6px;
-
-}
-
-
-.inline-create input {
-
-	width: 100%;
-
-	height: 30px;
-
-}
-
-
-.create-buttons {
-
-	display: flex;
-
-	gap: 5px;
-
-}
-
-
-.create-buttons button {
-
-	height: 28px;
-
-}
-
-
-.create-buttons button:first-child {
-
-	background: #2e7d32;
-
-	color: white;
-
-}
-
-
-.create-buttons button:last-child {
-
-	background: #ddd;
-
-	color: #333;
-
-}
-
-
-/* =====================
-   API Messages
+   API Message
 ===================== */
 
 .api-message {
-
 	position: fixed;
-
 	top: 20px;
-
 	right: 20px;
 
-
-	padding: 14px 18px;
-
-
 	min-width: 300px;
-
+	padding: 14px 18px;
 
 	border-radius: 8px;
 
-
 	z-index: 9999;
 
-
 	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-
 }
-
 
 .api-message.success {
-
 	background: #e8f5e9;
-
 	color: #2e7d32;
-
 	border: 1px solid #81c784;
-
 }
 
-
 .api-message.error {
-
 	background: #ffebee;
-
 	color: #c62828;
-
 	border: 1px solid #ef9a9a;
-
 }

@@ -248,32 +248,6 @@ export default function CarsList() {
 	}
 
 
-	/*async function saveCar() {
-		try {
-			await api.put(`/cars/${editing.id}`, editing);
-
-			setEditing(null);
-			loadCars();
-
-		} catch (err) {
-			console.error("Update failed:", err);
-		}
-	}
-	async function saveCar() {
-		try {
-			const data = Object.fromEntries(
-				Object.entries(editing).filter(([_, value]) => value !== "")
-			);
-
-			await api.put(`/cars/${editing.id}`, data);
-
-			setEditing(null);
-			loadCars();
-
-		} catch (err) {
-			handleApiError(err);
-		}
-	}*/
 	async function saveCar() {
 		try {
 
@@ -307,16 +281,11 @@ export default function CarsList() {
 		});
 	}
 
-
-	/*{error && (
-				<div className="api-error">
-					{error}
-				</div>
-			)}*/
 	return (
-		<div className="cars-container">
+		<div className="container">
 
 			<h1>Cars</h1>
+
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
 					{message.text}
@@ -368,10 +337,7 @@ export default function CarsList() {
 			</div>
 
 
-			{loading && <p>Loading...</p>}
-
-
-			<table className="cars-table">
+			<table className="table">
 
 				<thead>
 					<tr>
@@ -590,13 +556,15 @@ export default function CarsList() {
 
 
 								<td>
-									<button onClick={saveCar}>
-										Save
-									</button>
+									<div className="container-buttons">
+										<button onClick={saveCar}>
+											Save
+										</button>
 
-									<button onClick={() => setEditing(null)}>
-										X
-									</button>
+										<button onClick={() => setEditing(null)}>
+											X
+										</button>
+									</div>
 								</td>
 
 							</tr>
