@@ -98,6 +98,20 @@ export default function ScheduleDetails() {
 
 	useEffect(() => {
 
+		if (editing?.make_id) {
+
+			loadModels(editing.make_id);
+
+		}
+		else {
+
+			setModels([]);
+
+		}
+
+	}, [editing?.make_id]);
+	useEffect(() => {
+
 		loadSchedule();
 		loadCars();
 		loadClients();
@@ -130,10 +144,9 @@ export default function ScheduleDetails() {
 
 			setEditing({
 				...res.data.schedule,
-				make_id: "",
-				model_id: ""
+				make_id: res.data.schedule.car_make_id || "",
+				model_id: res.data.schedule.car_model_id || ""
 			});
-
 		}
 		catch (err) {
 
@@ -1175,7 +1188,7 @@ export default function ScheduleDetails() {
 
 					</div>
 
-					{isEditing && !editing.car_id && (
+					{!editing.car_id && (
 
 						<>
 
@@ -1183,62 +1196,77 @@ export default function ScheduleDetails() {
 
 								<label>Make</label>
 
-								<select
-									name="make_id"
-									value={editing.make_id || ""}
-									onChange={updateEdit}
-								>
+								{isEditing ? (
 
-									<option value="">
-										Select Make
-									</option>
+									<select
+										name="make_id"
+										value={editing.make_id || ""}
+										onChange={updateEdit}
+									>
 
-									{makes.map(make => (
-
-										<option
-											key={make.id}
-											value={make.id}
-										>
-											{make.name}
+										<option value="">
+											Select Make
 										</option>
 
-									))}
+										{makes.map(make => (
+											<option
+												key={make.id}
+												value={make.id}
+											>
+												{make.name}
+											</option>
+										))}
 
-								</select>
+									</select>
+
+								) : (
+
+										<input
+											readOnly
+											value={schedule.car_make || "-"}
+										/>
+
+									)}
 
 							</div>
-
 							<div className="field">
 
 								<label>Model</label>
 
-								<select
-									name="model_id"
-									value={editing.model_id || ""}
-									onChange={updateEdit}
-									disabled={!editing.make_id}
-								>
+								{isEditing ? (
 
-									<option value="">
-										Select Model
-									</option>
+									<select
+										name="model_id"
+										value={editing.model_id || ""}
+										onChange={updateEdit}
+										disabled={!editing.make_id}
+									>
 
-									{models.map(model => (
-
-										<option
-											key={model.id}
-											value={model.id}
-										>
-											{model.name}
+										<option value="">
+											Select Model
 										</option>
 
-									))}
+										{models.map(model => (
+											<option
+												key={model.id}
+												value={model.id}
+											>
+												{model.name}
+											</option>
+										))}
 
-								</select>
+									</select>
 
-							</div>
+								) : (
 
-						</>
+										<input
+											readOnly
+											value={schedule.car_model || "-"}
+										/>
+
+									)}
+
+							</div>						</>
 
 					)}
 
