@@ -11,6 +11,7 @@ import SchedulesCalendar from "./pages/Schedules/SchedulesCalendar";
 import SchedulesList from "./pages/Schedules/SchedulesList";
 import SchedulesShow from "./pages/Schedules/SchedulesShow";
 import ClientsList from "./pages/Clients/ClientsList";
+import ServicesList from "./pages/Services/ServicesList";
 import Home from "./pages/Home/Home";
 
 import "./style/crud.css";
@@ -31,10 +32,11 @@ function App() {
 					<Route path="/cars" element={<CarsList />} />
 					<Route path="/product_types" element={<ProductTypesList />} />
 					<Route path="/products" element={<ProductsList />} />
+					<Route path="/clients" element={<ClientsList />} />
 					<Route path="/schedules_calendar" element={<SchedulesCalendar />} />
 					<Route path="/schedules" element={<SchedulesList />} />
 					<Route path="/schedules/:id" element={<SchedulesShow />} />
-					<Route path="/clients" element={<ClientsList />} />
+					<Route path="/services" element={<ServicesList />} />
 
 				</Route>
 

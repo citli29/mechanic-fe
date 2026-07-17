@@ -19,6 +19,10 @@ export default function Navbar() {
 					Calendar
 				</NavLink>
 
+				<NavLink to="/services">
+					Services
+				</NavLink>
+
 				<NavLink to="/schedules">
 					Schedules
 				</NavLink>
