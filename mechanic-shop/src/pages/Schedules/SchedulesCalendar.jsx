@@ -371,10 +371,14 @@ export default function SchedulesCalendar() {
 										>
 
 											<div className="appointment-plate">
-												{schedule.car_plate || "No Car"}
-											</div>
-
-											<div className="appointment-client">
+												{schedule.car_plate
+													? `${schedule.car_plate} - ${[schedule.car_make, schedule.car_model]
+.filter(Boolean)
+.join(" ")}`
+													: [schedule.car_make, schedule.car_model]
+														.filter(Boolean)
+														.join(" ") || "No Car"}
+											</div>										<div className="appointment-client">
 												{schedule.client_name || "No Client"}
 											</div>
 
