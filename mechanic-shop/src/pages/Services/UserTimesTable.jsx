@@ -2,17 +2,15 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 
 export default function UserTimesTable({
-
 	serviceId,
 	showMessage,
 	handleApiError
-
 }) {
 
 	const emptyUserTime = {
 		user_id: "",
 		minutes: "",
-		date: "",
+		date: ""
 	};
 
 	const [userTimes, setUserTimes] = useState([]);
@@ -42,7 +40,7 @@ export default function UserTimesTable({
 
 			await Promise.all([
 				loadUserTimes(),
-				loadUsers(),
+				loadUsers()
 			]);
 
 		}
@@ -63,13 +61,7 @@ export default function UserTimesTable({
 			);
 
 			setUserTimes(
-				res.data.user_time_list ||
-				res.data.user_times ||
-				res.data.service_user_time_list ||
-				res.data.items ||
-				(Array.isArray(res.data)
-					? res.data
-					: [])
+				res.data.sut_list || []
 			);
 
 		}
@@ -91,7 +83,6 @@ export default function UserTimesTable({
 			setUsers(
 				res.data.user_list ||
 				res.data.users ||
-				res.data.items ||
 				(Array.isArray(res.data)
 					? res.data
 					: [])
@@ -122,96 +113,14 @@ export default function UserTimesTable({
 
 	}
 
-	function getUserTimeId(userTime) {
-
-		return (
-			userTime.service_user_time_id ||
-			userTime.user_time_id ||
-			userTime.sut_id ||
-			userTime.id
-		);
-
-	}
-
-	function getUser(userId) {
-
-		return users.find(
-			user =>
-				Number(user.id) ===
-				Number(userId)
-		);
-
-	}
-
-	function getUserName(userTime) {
-
-		const user = getUser(
-			userTime.user_id
-		);
-
-		return (
-			userTime.user_name ||
-			userTime.name ||
-			user?.name ||
-			user?.username ||
-			user?.email ||
-			"-"
-		);
-
-	}
-
-	function formatDateInput(value) {
-
-		if (!value) {
-			return "";
-		}
-
-		const stringValue = String(value);
-
-		if (stringValue.includes("T")) {
-
-			return stringValue.split("T")[0];
-
-		}
-
-		if (stringValue.includes(" ")) {
-
-			return stringValue.split(" ")[0];
-
-		}
-
-		return stringValue.slice(0, 10);
-
-	}
-
-	function formatDateDisplay(value) {
-
-		const formattedDate =
-			formatDateInput(value);
-
-		if (!formattedDate) {
-			return "-";
-		}
-
-		const [year, month, day] =
-			formattedDate.split("-");
-
-		if (!year || !month || !day) {
-			return formattedDate;
-		}
-
-		return `${day}/${month}/${year}`;
-
-	}
-
 	function updateNewUserTime(e) {
 
 		const { name, value } = e.target;
 
-		setNewUserTime({
-			...newUserTime,
-			[name]: value,
-		});
+		setNewUserTime(prev => ({
+			...prev,
+			[name]: value
+		}));
 
 	}
 
@@ -219,10 +128,10 @@ export default function UserTimesTable({
 
 		const { name, value } = e.target;
 
-		setEditing({
-			...editing,
-			[name]: value,
-		});
+		setEditing(prev => ({
+			...prev,
+			[name]: value
+		}));
 
 	}
 
@@ -232,10 +141,11 @@ export default function UserTimesTable({
 		setCreating(true);
 
 		setNewUserTime({
-			...emptyUserTime,
-			date: formatDateInput(
-				new Date().toISOString()
-			),
+			user_id: "",
+			minutes: "",
+			date: new Date()
+				.toISOString()
+				.split("T")[0]
 		});
 
 	}
@@ -247,27 +157,22 @@ export default function UserTimesTable({
 
 	}
 
-	function editUserTime(userTime) {
+	function beginEditing(userTime) {
 
 		setCreating(false);
 
 		setEditing({
-			...userTime,
-
-			id:
-				getUserTimeId(userTime),
-
-			user_id:
-				userTime.user_id || "",
-
-			minutes:
-				userTime.minutes ?? "",
-
-			date:
-				formatDateInput(
-					userTime.date
-				),
+			sut_id: userTime.sut_id,
+			user_id: userTime.user_id || "",
+			minutes: userTime.minutes ?? "",
+			date: formatDateInput(userTime.date)
 		});
+
+	}
+
+	function cancelEditing() {
+
+		setEditing(null);
 
 	}
 
@@ -326,21 +231,13 @@ export default function UserTimesTable({
 			await api.post(
 				`/services/${serviceId}/user_times`,
 				{
-					service_id:
-						Number(serviceId),
-
-					user_id:
-						Number(
-							newUserTime.user_id
-						),
-
-					minutes:
-						Number(
-							newUserTime.minutes
-						),
-
-					date:
-						newUserTime.date,
+					user_id: Number(
+						newUserTime.user_id
+					),
+					minutes: Number(
+						newUserTime.minutes
+					),
+					date: newUserTime.date
 				}
 			);
 
@@ -379,19 +276,15 @@ export default function UserTimesTable({
 		try {
 
 			await api.put(
-				`/services/${serviceId}/user_times/${editing.id}`,
+				`/services/${serviceId}/user_times/${editing.sut_id}`,
 				{
-					service_id:
-						Number(serviceId),
-
-					user_id:
-						Number(editing.user_id),
-
-					minutes:
-						Number(editing.minutes),
-
-					date:
-						editing.date,
+					user_id: Number(
+						editing.user_id
+					),
+					minutes: Number(
+						editing.minutes
+					),
+					date: editing.date
 				}
 			);
 
@@ -418,13 +311,10 @@ export default function UserTimesTable({
 
 	}
 
-	async function deleteUserTime(
-		id,
-		userName
-	) {
+	async function deleteUserTime(userTime) {
 
 		const confirmed = window.confirm(
-			`Delete the time entry for "${userName}"?`
+			`Delete the time entry for "${userTime.user_name}"?`
 		);
 
 		if (!confirmed) {
@@ -434,7 +324,7 @@ export default function UserTimesTable({
 		try {
 
 			await api.delete(
-				`/services/${serviceId}/user_times/${id}`
+				`/services/${serviceId}/user_times/${userTime.sut_id}`
 			);
 
 			showMessage?.(
@@ -442,7 +332,10 @@ export default function UserTimesTable({
 				"User time deleted successfully."
 			);
 
-			if (editing?.id === id) {
+			if (
+				editing?.sut_id ===
+				userTime.sut_id
+			) {
 
 				setEditing(null);
 
@@ -456,6 +349,48 @@ export default function UserTimesTable({
 			handleError(err);
 
 		}
+
+	}
+
+	function formatDateInput(value) {
+
+		if (!value) {
+			return "";
+		}
+
+		return String(value)
+			.split("T")[0]
+			.split(" ")[0];
+
+	}
+
+	function formatDateDisplay(value) {
+
+		const date = formatDateInput(value);
+
+		if (!date) {
+			return "-";
+		}
+
+		const [year, month, day] =
+			date.split("-");
+
+		if (!year || !month || !day) {
+			return date;
+		}
+
+		return `${day}/${month}/${year}`;
+
+	}
+
+	function getUserName(user) {
+
+		return (
+			user.name ||
+			user.username ||
+			user.email ||
+			`User ${user.id}`
+		);
 
 	}
 
@@ -526,20 +461,16 @@ export default function UserTimesTable({
 					{!loading &&
 						userTimes.map(userTime => {
 
-							const userTimeId =
-								getUserTimeId(
-									userTime
-								);
+							const isCurrentEditing =
+								editing?.sut_id ===
+								userTime.sut_id;
 
-							if (
-								editing?.id ===
-								userTimeId
-							) {
+							if (isCurrentEditing) {
 
 								return (
 
 									<tr
-										key={userTimeId}
+										key={userTime.sut_id}
 										className="editing"
 									>
 
@@ -547,12 +478,8 @@ export default function UserTimesTable({
 
 											<select
 												name="user_id"
-												value={
-													editing.user_id
-												}
-												onChange={
-													updateEdit
-												}
+												value={editing.user_id}
+												onChange={updateEdit}
 											>
 
 												<option value="">
@@ -565,9 +492,7 @@ export default function UserTimesTable({
 														key={user.id}
 														value={user.id}
 													>
-														{user.name ||
-															user.username ||
-															user.email}
+														{getUserName(user)}
 													</option>
 
 												))}
@@ -582,12 +507,8 @@ export default function UserTimesTable({
 												type="number"
 												name="minutes"
 												min="1"
-												value={
-													editing.minutes
-												}
-												onChange={
-													updateEdit
-												}
+												value={editing.minutes}
+												onChange={updateEdit}
 											/>
 
 										</td>
@@ -597,12 +518,8 @@ export default function UserTimesTable({
 											<input
 												type="date"
 												name="date"
-												value={
-													editing.date
-												}
-												onChange={
-													updateEdit
-												}
+												value={editing.date}
+												onChange={updateEdit}
 											/>
 
 										</td>
@@ -613,9 +530,7 @@ export default function UserTimesTable({
 
 												<button
 													type="button"
-													onClick={
-														saveUserTime
-													}
+													onClick={saveUserTime}
 													disabled={saving}
 												>
 													{saving
@@ -625,9 +540,7 @@ export default function UserTimesTable({
 
 												<button
 													type="button"
-													onClick={() =>
-														setEditing(null)
-													}
+													onClick={cancelEditing}
 													disabled={saving}
 												>
 													X
@@ -645,16 +558,14 @@ export default function UserTimesTable({
 
 							return (
 
-								<tr key={userTimeId}>
+								<tr key={userTime.sut_id}>
 
 									<td>
-										{getUserName(
-											userTime
-										)}
+										{userTime.user_name || "-"}
 									</td>
 
 									<td>
-										{userTime.minutes ?? "-"}
+										{userTime.minutes}
 									</td>
 
 									<td>
@@ -670,7 +581,7 @@ export default function UserTimesTable({
 											<button
 												type="button"
 												onClick={() =>
-													editUserTime(
+													beginEditing(
 														userTime
 													)
 												}
@@ -683,10 +594,7 @@ export default function UserTimesTable({
 												className="delete-btn"
 												onClick={() =>
 													deleteUserTime(
-														userTimeId,
-														getUserName(
-															userTime
-														)
+														userTime
 													)
 												}
 											>
@@ -711,12 +619,8 @@ export default function UserTimesTable({
 
 								<select
 									name="user_id"
-									value={
-										newUserTime.user_id
-									}
-									onChange={
-										updateNewUserTime
-									}
+									value={newUserTime.user_id}
+									onChange={updateNewUserTime}
 								>
 
 									<option value="">
@@ -729,9 +633,7 @@ export default function UserTimesTable({
 											key={user.id}
 											value={user.id}
 										>
-											{user.name ||
-												user.username ||
-												user.email}
+											{getUserName(user)}
 										</option>
 
 									))}
@@ -747,12 +649,8 @@ export default function UserTimesTable({
 									name="minutes"
 									min="1"
 									placeholder="Minutes"
-									value={
-										newUserTime.minutes
-									}
-									onChange={
-										updateNewUserTime
-									}
+									value={newUserTime.minutes}
+									onChange={updateNewUserTime}
 								/>
 
 							</td>
@@ -762,12 +660,8 @@ export default function UserTimesTable({
 								<input
 									type="date"
 									name="date"
-									value={
-										newUserTime.date
-									}
-									onChange={
-										updateNewUserTime
-									}
+									value={newUserTime.date}
+									onChange={updateNewUserTime}
 								/>
 
 							</td>
@@ -778,9 +672,7 @@ export default function UserTimesTable({
 
 									<button
 										type="button"
-										onClick={
-											createUserTime
-										}
+										onClick={createUserTime}
 										disabled={saving}
 									>
 										{saving
@@ -790,9 +682,7 @@ export default function UserTimesTable({
 
 									<button
 										type="button"
-										onClick={
-											cancelCreating
-										}
+										onClick={cancelCreating}
 										disabled={saving}
 									>
 										X

@@ -589,124 +589,6 @@ export default function ServicesShow() {
 
 					<div className="service-form-section">
 
-						<h3>Service</h3>
-
-						<div className="form-grid">
-
-							<div className="field">
-
-								<label>Check In</label>
-
-								{isEditing ? (
-
-									<input
-										type="date"
-										name="checkin"
-										value={editing.checkin}
-										onChange={updateEdit}
-									/>
-
-								) : (
-
-									<input
-										readOnly
-										value={
-											formatDateDisplay(
-												service.checkin
-											)
-										}
-									/>
-
-								)}
-
-							</div>
-
-							<div className="field">
-
-								<label>Check Out</label>
-
-								{isEditing ? (
-
-									<input
-										type="date"
-										name="checkout"
-										value={editing.checkout}
-										onChange={updateEdit}
-									/>
-
-								) : (
-
-									<input
-										readOnly
-										value={
-											formatDateDisplay(
-												service.checkout
-											)
-										}
-									/>
-
-								)}
-
-							</div>
-
-							<div className="field">
-
-								<label>Kilometers</label>
-
-								<input
-									type="number"
-									name="kms"
-									value={
-										isEditing
-											? editing.kms
-											: service.kms ?? ""
-									}
-									onChange={updateEdit}
-									readOnly={!isEditing}
-								/>
-
-							</div>
-
-							<div className="field field-full">
-
-								<label>Malfunction</label>
-
-								<textarea
-									name="malfunction"
-									value={
-										isEditing
-											? editing.malfunction
-											: service.malfunction || ""
-									}
-									onChange={updateEdit}
-									readOnly={!isEditing}
-								/>
-
-							</div>
-
-							<div className="field field-full">
-
-								<label>Service Performed</label>
-
-								<textarea
-									name="service"
-									value={
-										isEditing
-											? editing.service
-											: service.service || ""
-									}
-									onChange={updateEdit}
-									readOnly={!isEditing}
-								/>
-
-							</div>
-
-						</div>
-
-					</div>
-
-					<div className="service-form-section">
-
 						<h3>Client</h3>
 
 						<div className="form-grid">
@@ -971,6 +853,124 @@ export default function ServicesShow() {
 				</div>
 
 			</div>
+
+					<div className="service-form-section">
+
+						<h3>Service</h3>
+
+						<div className="form-grid">
+
+							<div className="field">
+
+								<label>Check In</label>
+
+								{isEditing ? (
+
+									<input
+										type="date"
+										name="checkin"
+										value={editing.checkin}
+										onChange={updateEdit}
+									/>
+
+								) : (
+
+									<input
+										readOnly
+										value={
+											formatDateDisplay(
+												service.checkin
+											)
+										}
+									/>
+
+								)}
+
+							</div>
+
+							<div className="field">
+
+								<label>Check Out</label>
+
+								{isEditing ? (
+
+									<input
+										type="date"
+										name="checkout"
+										value={editing.checkout}
+										onChange={updateEdit}
+									/>
+
+								) : (
+
+									<input
+										readOnly
+										value={
+											formatDateDisplay(
+												service.checkout
+											)
+										}
+									/>
+
+								)}
+
+							</div>
+
+							<div className="field">
+
+								<label>Kilometers</label>
+
+								<input
+									type="number"
+									name="kms"
+									value={
+										isEditing
+											? editing.kms
+											: service.kms ?? ""
+									}
+									onChange={updateEdit}
+									readOnly={!isEditing}
+								/>
+
+							</div>
+
+							<div className="field field-full">
+
+								<label>Malfunction</label>
+
+								<textarea
+									name="malfunction"
+									value={
+										isEditing
+											? editing.malfunction
+											: service.malfunction || ""
+									}
+									onChange={updateEdit}
+									readOnly={!isEditing}
+								/>
+
+							</div>
+
+							<div className="field field-full">
+
+								<label>Service Performed</label>
+
+								<textarea
+									name="service"
+									value={
+										isEditing
+											? editing.service
+											: service.service || ""
+									}
+									onChange={updateEdit}
+									readOnly={!isEditing}
+								/>
+
+							</div>
+
+						</div>
+
+					</div>
 
 			<div className="service-table-section">
 
