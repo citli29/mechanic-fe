@@ -15,6 +15,7 @@ import ServicesList from "./pages/Services/ServicesList";
 import Home from "./pages/Home/Home";
 
 import "./style/crud.css";
+import SchedulesNew from "./pages/Schedules/SchedulesNew";
 
 function App() {
 
@@ -37,6 +38,7 @@ function App() {
 					<Route path="/schedules" element={<SchedulesList />} />
 					<Route path="/schedules/:id" element={<SchedulesShow />} />
 					<Route path="/services" element={<ServicesList />} />
+					<Route path="/schedules/new" element={<SchedulesNew />} />
 
 				</Route>
 

@@ -173,7 +173,15 @@ export default function SchedulesCalendar() {
 
 		return schedules.filter(schedule => {
 
-			const date = new Date(schedule.date);
+			const [year, month, day] = schedule.date
+			.split("-")
+			.map(Number);
+
+			const date = new Date(
+				year,
+				month - 1,
+				day
+			);
 
 			return (
 				date.getFullYear() === currentMonth.getFullYear() &&
@@ -183,7 +191,6 @@ export default function SchedulesCalendar() {
 		});
 
 	}, [schedules, currentMonth]);
-
 
 	const groupedSchedules = useMemo(() => {
 
@@ -239,7 +246,11 @@ export default function SchedulesCalendar() {
 			day
 		);
 
-		const key = date.toISOString().split("T")[0];
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, "0");
+		const dayNumber = String(date.getDate()).padStart(2, "0");
+
+		const key = `${year}-${month}-${dayNumber}`;
 
 		calendarDays.push({
 			day,
@@ -316,6 +327,11 @@ export default function SchedulesCalendar() {
 					Clear
 				</button>
 
+				<button
+					onClick={() => navigate("/schedules/new")}
+				>
+					Add Schedule
+				</button>
 			</div>
 
 			<div className="calendar">
