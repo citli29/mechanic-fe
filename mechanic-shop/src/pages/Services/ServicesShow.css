@@ -1,999 +1,659 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-
-import api from "../../api/axios";
-
-import AppliedProductsTable from "./AppliedProductsTable";
-import UserTimesTable from "./UserTimesTable";
-
-import "./ServicesShow.css";
-
-export default function ServicesShow() {
-
-	const { id } = useParams();
-	const navigate = useNavigate();
-
-	const emptyService = {
-		client_id: "",
-		car_id: "",
-		checkin: "",
-		checkout: "",
-		kms: "",
-		malfunction: "",
-		service: "",
-	};
-
-	const [service, setService] = useState(null);
-	const [editing, setEditing] = useState(emptyService);
-
-	const [clients, setClients] = useState([]);
-	const [cars, setCars] = useState([]);
-
-	const [isEditing, setIsEditing] = useState(false);
-	const [loading, setLoading] = useState(true);
-	const [saving, setSaving] = useState(false);
-
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
-	useEffect(() => {
-
-		loadData();
-
-	}, [id]);
-
-	async function loadData() {
-
-		setLoading(true);
-
-		try {
-
-			await Promise.all([
-				loadService(),
-				loadClients(),
-				loadCars(),
-			]);
-
-		}
-		finally {
-
-			setLoading(false);
-
-		}
-
-	}
-
-	async function loadService() {
-
-		try {
-
-			const res = await api.get(
-				`/services/${id}`
-			);
-
-			const loadedService =
-				res.data.service ||
-				res.data;
-
-			setService(loadedService);
-
-			setEditing({
-				client_id:
-					loadedService.client_id || "",
-
-				car_id:
-					loadedService.car_id || "",
-
-				checkin:
-					formatDateInput(
-						loadedService.checkin
-					),
-
-				checkout:
-					formatDateInput(
-						loadedService.checkout
-					),
-
-				kms:
-					loadedService.kms ?? "",
-
-				malfunction:
-					loadedService.malfunction || "",
-
-				service:
-					loadedService.service || "",
-			});
-
-		}
-		catch (err) {
-
-			handleApiError(err);
-
-		}
-
-	}
-
-	async function loadClients() {
-
-		try {
-
-			const res = await api.get("/clients");
-
-			setClients(
-				res.data.client_list ||
-				res.data.clients ||
-				[]
-			);
-
-		}
-		catch (err) {
-
-			setClients([]);
-			console.error(err);
-
-		}
-
-	}
-
-	async function loadCars() {
-
-		try {
-
-			const res = await api.get("/cars");
-
-			setCars(
-				res.data.car_list ||
-				res.data.cars ||
-				[]
-			);
-
-		}
-		catch (err) {
-
-			setCars([]);
-			console.error(err);
-
-		}
-
-	}
-
-	function showMessage(type, text) {
-
-		setMessage({
-			type,
-			text,
-		});
-
-		setTimeout(() => {
-
-			setMessage({
-				type: "",
-				text: "",
-			});
-
-		}, 4000);
-
-	}
-
-	function handleApiError(err) {
-
-		if (err.response?.data?.error) {
-
-			showMessage(
-				"error",
-				err.response.data.error
-			);
-
-		}
-		else {
-
-			showMessage(
-				"error",
-				"Something went wrong."
-			);
-
-		}
-
-		console.error(err);
-
-	}
-
-	function updateEdit(e) {
-
-		const { name, value } = e.target;
-
-		setEditing({
-			...editing,
-			[name]: value,
-		});
-
-	}
-
-	function beginEdit() {
-
-		setEditing({
-			client_id:
-				service.client_id || "",
-
-			car_id:
-				service.car_id || "",
-
-			checkin:
-				formatDateInput(
-					service.checkin
-				),
-
-			checkout:
-				formatDateInput(
-					service.checkout
-				),
-
-			kms:
-				service.kms ?? "",
-
-			malfunction:
-				service.malfunction || "",
-
-			service:
-				service.service || "",
-		});
-
-		setIsEditing(true);
-
-	}
-
-	function cancelEdit() {
-
-		setEditing({
-			client_id:
-				service.client_id || "",
-
-			car_id:
-				service.car_id || "",
-
-			checkin:
-				formatDateInput(
-					service.checkin
-				),
-
-			checkout:
-				formatDateInput(
-					service.checkout
-				),
-
-			kms:
-				service.kms ?? "",
-
-			malfunction:
-				service.malfunction || "",
-
-			service:
-				service.service || "",
-		});
-
-		setIsEditing(false);
-
-	}
-
-	async function saveService() {
-
-		setSaving(true);
-
-		try {
-
-			const data = {
-				client_id:
-					editing.client_id
-						? Number(editing.client_id)
-						: null,
-
-				car_id:
-					editing.car_id
-						? Number(editing.car_id)
-						: null,
-
-				checkin:
-					editing.checkin || null,
-
-				checkout:
-					editing.checkout || null,
-
-				kms:
-					editing.kms === ""
-						? null
-						: Number(editing.kms),
-
-				malfunction:
-					editing.malfunction,
-
-				service:
-					editing.service,
-			};
-
-			await api.put(
-				`/services/${id}`,
-				data
-			);
-
-			showMessage(
-				"success",
-				"Service updated successfully."
-			);
-
-			setIsEditing(false);
-
-			await loadService();
-
-		}
-		catch (err) {
-
-			handleApiError(err);
-
-		}
-		finally {
-
-			setSaving(false);
-
-		}
-
-	}
-
-	async function deleteService() {
-
-		const confirmed = window.confirm(
-			"Delete this service?"
-		);
-
-		if (!confirmed) {
-			return;
-		}
-
-		try {
-
-			await api.delete(
-				`/services/${id}`
-			);
-
-			navigate("/services");
-
-		}
-		catch (err) {
-
-			handleApiError(err);
-
-		}
-
-	}
-
-	function formatDateInput(value) {
-
-		if (!value) {
-			return "";
-		}
-
-		const stringValue = String(value);
-
-		if (stringValue.includes("T")) {
-
-			return stringValue.split("T")[0];
-
-		}
-
-		if (stringValue.includes(" ")) {
-
-			return stringValue.split(" ")[0];
-
-		}
-
-		return stringValue.slice(0, 10);
-
-	}
-
-	function formatDateDisplay(value) {
-
-		const dateValue = formatDateInput(value);
-
-		if (!dateValue) {
-			return "-";
-		}
-
-		const [year, month, day] =
-			dateValue.split("-");
-
-		if (!year || !month || !day) {
-			return dateValue;
-		}
-
-		return `${day}/${month}/${year}`;
-
-	}
-
-	function getSelectedClient() {
-
-		return clients.find(
-			client =>
-				Number(client.id) ===
-				Number(
-					isEditing
-						? editing.client_id
-						: service?.client_id
-				)
-		);
-
-	}
-
-	function getSelectedCar() {
-
-		return cars.find(
-			car =>
-				Number(car.id) ===
-				Number(
-					isEditing
-						? editing.car_id
-						: service?.car_id
-				)
-		);
-
-	}
-
-	function getClientValue(field) {
-
-		const client = getSelectedClient();
-
-		const serviceFields = {
-			name: service?.client_name,
-			phone: service?.client_phone,
-			email: service?.client_email,
-			address: service?.client_address,
-			zip_code: service?.client_zip_code,
-			tax_nr: service?.client_tax_nr,
-		};
-
-		return (
-			client?.[field] ||
-			serviceFields[field] ||
-			"-"
-		);
-
-	}
-
-	function getCarValue(field) {
-
-		const car = getSelectedCar();
-
-		const serviceFields = {
-			plate: service?.car_plate,
-			make_name: service?.car_make_name,
-			model_name: service?.car_model_name,
-			year: service?.car_year,
-			month: service?.car_month,
-			cc: service?.car_cc,
-			engine_code: service?.car_engine_code,
-			color_code: service?.car_color_code,
-			chassi_nr: service?.car_chassi_nr,
-		};
-
-		return (
-			car?.[field] ||
-			serviceFields[field] ||
-			"-"
-		);
-
-	}
-
-	if (loading || !service) {
-
-		return (
-
-			<div className="container">
-				Loading...
-			</div>
-
-		);
-
-	}
-
-	return (
-
-		<div className="container">
-
-			<div className="service-title">
-
-				<h1>Service #{id}</h1>
-
-				<button
-					type="button"
-					onClick={() =>
-						navigate("/services")
-					}
-				>
-					Back
-				</button>
-
-			</div>
-
-			{message.text && (
-
-				<div
-					className={
-						`api-message ${message.type}`
-					}
-				>
-					{message.text}
-				</div>
-
-			)}
-
-			<div className="service-form">
-
-				<div className="service-form-header">
-
-					<h2>Service Information</h2>
-
-					<div className="container-buttons">
-
-						{!isEditing ? (
-
-							<>
-
-								<button
-									type="button"
-									onClick={beginEdit}
-								>
-									Edit
-								</button>
-
-								<button
-									type="button"
-									className="delete-btn"
-									onClick={deleteService}
-								>
-									Delete
-								</button>
-
-							</>
-
-						) : (
-
-							<>
-
-								<button
-									type="button"
-									onClick={saveService}
-									disabled={saving}
-								>
-									{saving
-										? "Saving..."
-										: "Save"}
-								</button>
-
-								<button
-									type="button"
-									onClick={cancelEdit}
-									disabled={saving}
-								>
-									Cancel
-								</button>
-
-							</>
-
-						)}
-
-					</div>
-
-				</div>
-
-				<div className="service-form-grid">
-
-					<div className="service-form-section">
-
-						<h3>Service</h3>
-
-						<div className="form-grid">
-
-							<div className="field">
-
-								<label>Check In</label>
-
-								{isEditing ? (
-
-									<input
-										type="date"
-										name="checkin"
-										value={editing.checkin}
-										onChange={updateEdit}
-									/>
-
-								) : (
-
-									<input
-										readOnly
-										value={
-											formatDateDisplay(
-												service.checkin
-											)
-										}
-									/>
-
-								)}
-
-							</div>
-
-							<div className="field">
-
-								<label>Check Out</label>
-
-								{isEditing ? (
-
-									<input
-										type="date"
-										name="checkout"
-										value={editing.checkout}
-										onChange={updateEdit}
-									/>
-
-								) : (
-
-									<input
-										readOnly
-										value={
-											formatDateDisplay(
-												service.checkout
-											)
-										}
-									/>
-
-								)}
-
-							</div>
-
-							<div className="field">
-
-								<label>Kilometers</label>
-
-								<input
-									type="number"
-									name="kms"
-									value={
-										isEditing
-											? editing.kms
-											: service.kms ?? ""
-									}
-									onChange={updateEdit}
-									readOnly={!isEditing}
-								/>
-
-							</div>
-
-							<div className="field field-full">
-
-								<label>Malfunction</label>
-
-								<textarea
-									name="malfunction"
-									value={
-										isEditing
-											? editing.malfunction
-											: service.malfunction || ""
-									}
-									onChange={updateEdit}
-									readOnly={!isEditing}
-								/>
-
-							</div>
-
-							<div className="field field-full">
-
-								<label>Service Performed</label>
-
-								<textarea
-									name="service"
-									value={
-										isEditing
-											? editing.service
-											: service.service || ""
-									}
-									onChange={updateEdit}
-									readOnly={!isEditing}
-								/>
-
-							</div>
-
-						</div>
-
-					</div>
-
-					<div className="service-form-section">
-
-						<h3>Client</h3>
-
-						<div className="form-grid">
-
-							<div className="field field-full">
-
-								<label>Client</label>
-
-								{isEditing ? (
-
-									<select
-										name="client_id"
-										value={editing.client_id}
-										onChange={updateEdit}
-									>
-
-										<option value="">
-											No client
-										</option>
-
-										{clients.map(client => (
-
-											<option
-												key={client.id}
-												value={client.id}
-											>
-												{client.name}
-												{client.phone
-													? ` - ${client.phone}`
-													: ""}
-											</option>
-
-										))}
-
-									</select>
-
-								) : (
-
-									<input
-										readOnly
-										value={getClientValue("name")}
-									/>
-
-								)}
-
-							</div>
-
-							<div className="field">
-
-								<label>Phone</label>
-
-								<input
-									readOnly
-									value={getClientValue("phone")}
-								/>
-
-							</div>
-
-							<div className="field">
-
-								<label>Email</label>
-
-								<input
-									readOnly
-									value={getClientValue("email")}
-								/>
-
-							</div>
-
-							<div className="field field-full">
-
-								<label>Address</label>
-
-								<input
-									readOnly
-									value={getClientValue("address")}
-								/>
-
-							</div>
-
-							<div className="field">
-
-								<label>ZIP Code</label>
-
-								<input
-									readOnly
-									value={getClientValue("zip_code")}
-								/>
-
-							</div>
-
-							<div className="field">
-
-								<label>Tax Number</label>
-
-								<input
-									readOnly
-									value={getClientValue("tax_nr")}
-								/>
-
-							</div>
-
-						</div>
-
-					</div>
-
-					<div className="service-form-section">
-
-						<h3>Car</h3>
-
-						<div className="form-grid">
-
-							<div className="field field-full">
-
-								<label>Car</label>
-
-								{isEditing ? (
-
-									<select
-										name="car_id"
-										value={editing.car_id}
-										onChange={updateEdit}
-									>
-
-										<option value="">
-											No car
-										</option>
-
-										{cars.map(car => (
-
-											<option
-												key={car.id}
-												value={car.id}
-											>
-												{car.plate}
-												{" - "}
-												{car.make_name || ""}
-												{" "}
-												{car.model_name || ""}
-											</option>
-
-										))}
-
-									</select>
-
-								) : (
-
-									<input
-										readOnly
-										value={
-											`${getCarValue("plate")} - ${getCarValue("make_name")} ${getCarValue("model_name")}`
-										}
-									/>
-
-								)}
-
-							</div>
-
-							<div className="field">
-
-								<label>Plate</label>
-
-								<input
-									readOnly
-									value={getCarValue("plate")}
-								/>
-
-							</div>
-
-							<div className="field">
-
-								<label>Make</label>
-
-								<input
-									readOnly
-									value={getCarValue("make_name")}
-								/>
-
-							</div>
-
-							<div className="field">
-
-								<label>Model</label>
-
-								<input
-									readOnly
-									value={getCarValue("model_name")}
-								/>
-
-							</div>
-
-							<div className="field">
-
-								<label>Year</label>
-
-								<input
-									readOnly
-									value={getCarValue("year")}
-								/>
-
-							</div>
-
-							<div className="field">
-
-								<label>Month</label>
-
-								<input
-									readOnly
-									value={getCarValue("month")}
-								/>
-
-							</div>
-
-							<div className="field">
-
-								<label>CC</label>
-
-								<input
-									readOnly
-									value={getCarValue("cc")}
-								/>
-
-							</div>
-
-							<div className="field">
-
-								<label>Engine Code</label>
-
-								<input
-									readOnly
-									value={getCarValue("engine_code")}
-								/>
-
-							</div>
-
-							<div className="field">
-
-								<label>Color Code</label>
-
-								<input
-									readOnly
-									value={getCarValue("color_code")}
-								/>
-
-							</div>
-
-							<div className="field field-full">
-
-								<label>Chassis Number</label>
-
-								<input
-									readOnly
-									value={getCarValue("chassi_nr")}
-								/>
-
-							</div>
-
-						</div>
-
-					</div>
-
-				</div>
-
-			</div>
-
-			<div className="service-table-section">
-
-				<AppliedProductsTable
-					serviceId={id}
-					showMessage={showMessage}
-					handleApiError={handleApiError}
-				/>
-
-			</div>
-
-			<div className="service-table-section">
-
-				<UserTimesTable
-					serviceId={id}
-					showMessage={showMessage}
-					handleApiError={handleApiError}
-				/>
-
-			</div>
-
-		</div>
-
+/* =====================
+   Services Show
+   Uses shared CRUD styles
+===================== */
+
+.service-title {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 22px;
+	padding: 4px 2px;
+}
+
+.service-title h1 {
+	margin: 0;
+	color: #263238;
+	font-size: 30px;
+	line-height: 1.2;
+}
+
+.service-title > button {
+	height: 38px;
+	padding: 0 18px;
+
+	border: 1px solid #c7d0d9;
+	border-radius: 7px;
+
+	background: #ffffff;
+	color: #37474f;
+
+	font-size: 14px;
+	font-weight: 600;
+
+	cursor: pointer;
+	transition:
+		background 0.2s ease,
+		border-color 0.2s ease,
+		transform 0.15s ease,
+		box-shadow 0.2s ease;
+}
+
+.service-title > button:hover {
+	background: #f3f6f8;
+	border-color: #90a4ae;
+	box-shadow: 0 3px 10px rgba(38, 50, 56, 0.12);
+	transform: translateY(-1px);
+}
+
+.service-title > button:active {
+	transform: translateY(0);
+	box-shadow: none;
+}
+
+/* =====================
+   Main Service Card
+===================== */
+
+.service-form {
+	background: #ffffff;
+	border: 1px solid #e1e7ec;
+	border-radius: 12px;
+	box-shadow: 0 6px 20px rgba(31, 45, 61, 0.08);
+	overflow: hidden;
+	margin-bottom: 24px;
+}
+
+.service-form-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 18px 22px;
+	background: linear-gradient(
+		135deg,
+		#1976d2,
+		#1565c0
 	);
+	color: #ffffff;
+}
 
+.service-form-header h2 {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 700;
+}
+
+.service-form-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 20px;
+	padding: 22px;
+}
+
+.service-form-section {
+	background: #fafcfd;
+	border: 1px solid #e3e9ee;
+	border-radius: 10px;
+	padding: 18px;
+}
+
+.service-form > .service-form-section {
+	margin: 0 22px 22px;
+}
+
+.service-form-section h3 {
+	margin: 0 0 16px;
+	padding-bottom: 10px;
+
+	border-bottom: 2px solid #e3edf7;
+
+	color: #263238;
+	font-size: 17px;
+	font-weight: 700;
+}
+
+/* =====================
+   Form Layout
+===================== */
+
+.form-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 16px;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+	min-width: 0;
+}
+
+.field-full {
+	grid-column: 1 / -1;
+}
+
+.field label {
+	color: #455a64;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+
+.field input,
+.field select,
+.field textarea {
+	width: 100%;
+	box-sizing: border-box;
+
+	border: 1px solid #cfd8dc;
+	border-radius: 7px;
+
+	background: #ffffff;
+	color: #263238;
+
+	font-size: 14px;
+
+	transition:
+		border-color 0.2s ease,
+		box-shadow 0.2s ease,
+		background 0.2s ease;
+}
+
+.field input,
+.field select {
+	height: 40px;
+	padding: 0 11px;
+}
+
+.field textarea {
+	min-height: 110px;
+	padding: 10px 11px;
+	resize: vertical;
+	font-family: inherit;
+	line-height: 1.5;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+	outline: none;
+	border-color: #1976d2;
+	box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.12);
+}
+
+.field input[readonly],
+.field textarea[readonly] {
+	background: #f3f6f8;
+	color: #455a64;
+	cursor: default;
+}
+
+.field select:disabled,
+.field input:disabled,
+.field textarea:disabled {
+	background: #eceff1;
+	color: #78909c;
+	cursor: not-allowed;
+}
+
+/* =====================
+   Client / Car Info
+===================== */
+
+.info-box {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px 14px;
+
+	margin-top: 10px;
+	padding: 13px 14px;
+
+	border: 1px solid #dbe5ec;
+	border-left: 4px solid #1976d2;
+	border-radius: 7px;
+
+	background: #f7fafc;
+	color: #455a64;
+
+	font-size: 13px;
+	line-height: 1.45;
+}
+
+.info-box strong {
+	color: #263238;
+}
+
+/* =====================
+   Inline Creation
+===================== */
+
+.inline-create {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 9px;
+	padding: 12px;
+
+	background: #f5f9fc;
+	border: 1px dashed #90a4ae;
+	border-radius: 8px;
+}
+
+.inline-create input,
+.inline-create select {
+	height: 38px;
+}
+
+.inline-create .create-buttons {
+	grid-column: 1 / -1;
+	margin-top: 2px;
+}
+
+.create-buttons {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.create-buttons button {
+	height: 34px;
+	padding: 0 15px;
+
+	border: none;
+	border-radius: 6px;
+
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+
+	transition:
+		background 0.2s ease,
+		transform 0.15s ease;
+}
+
+.create-buttons button:first-child {
+	background: #2e7d32;
+	color: #ffffff;
+}
+
+.create-buttons button:first-child:hover {
+	background: #256428;
+	transform: translateY(-1px);
+}
+
+.create-buttons button:last-child {
+	background: #e0e0e0;
+	color: #37474f;
+}
+
+.create-buttons button:last-child:hover {
+	background: #cfd8dc;
+	transform: translateY(-1px);
+}
+
+/* =====================
+   Main Actions
+===================== */
+
+.service-form .container-buttons {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 9px;
+
+	margin-top: 18px;
+	padding-top: 16px;
+	border-top: 1px solid #e2e8ed;
+}
+
+.service-form .container-buttons button {
+	height: 38px;
+	min-width: 90px;
+	padding: 0 18px;
+
+	border: none;
+	border-radius: 7px;
+
+	background: #1976d2;
+	color: #ffffff;
+
+	font-size: 14px;
+	font-weight: 700;
+
+	cursor: pointer;
+	transition:
+		background 0.2s ease,
+		transform 0.15s ease,
+		box-shadow 0.2s ease;
+}
+
+.service-form .container-buttons button:hover {
+	background: #125aa0;
+	box-shadow: 0 4px 10px rgba(25, 118, 210, 0.2);
+	transform: translateY(-1px);
+}
+
+.service-form .container-buttons button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none;
+	box-shadow: none;
+}
+
+.service-form .container-buttons button:last-child:not(.delete-btn) {
+	background: #eceff1;
+	color: #37474f;
+}
+
+.service-form .container-buttons button:last-child:not(.delete-btn):hover {
+	background: #cfd8dc;
+	box-shadow: 0 4px 10px rgba(55, 71, 79, 0.12);
+}
+
+.service-form .container-buttons .delete-btn {
+	background: #d32f2f !important;
+	color: #ffffff !important;
+}
+
+.service-form .container-buttons .delete-btn:hover {
+	background: #b71c1c !important;
+	box-shadow: 0 4px 10px rgba(211, 47, 47, 0.2);
+}
+
+/* =====================
+   Applied Products / Times
+===================== */
+
+.service-table-section {
+	margin-top: 24px;
+	padding: 20px;
+
+	background: #ffffff;
+	border: 1px solid #e1e7ec;
+	border-radius: 12px;
+	box-shadow: 0 6px 20px rgba(31, 45, 61, 0.07);
+}
+
+.service-table-section .table-title {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+	margin-bottom: 16px;
+}
+
+.service-table-section .table-title h2 {
+	margin: 0;
+	color: #263238;
+	font-size: 20px;
+}
+
+.service-table-section .container-buttons button {
+	height: 36px;
+	padding: 0 16px;
+
+	border: none;
+	border-radius: 6px;
+
+	background: #1976d2;
+	color: #ffffff;
+
+	font-size: 13px;
+	font-weight: 700;
+
+	cursor: pointer;
+	transition:
+		background 0.2s ease,
+		transform 0.15s ease;
+}
+
+.service-table-section .container-buttons button:hover {
+	background: #125aa0;
+	transform: translateY(-1px);
+}
+
+.service-table-section .container-buttons button:last-child:not(.delete-btn) {
+	background: #eceff1;
+	color: #37474f;
+}
+
+.service-table-section .container-buttons button:last-child:not(.delete-btn):hover {
+	background: #cfd8dc;
+}
+
+.service-table-section .table-wrapper {
+	overflow-x: auto;
+	border: 1px solid #e0e6eb;
+	border-radius: 8px;
+}
+
+.service-table-section .table {
+	min-width: 720px;
+	background: #ffffff;
+}
+
+.service-table-section .table th {
+	padding: 12px 10px;
+	font-size: 13px;
+	letter-spacing: 0.02em;
+}
+
+.service-table-section .table td {
+	padding: 11px 10px;
+}
+
+/* =====================
+   Product Search
+===================== */
+
+.product-search {
+	position: relative;
+	margin-bottom: 16px;
+}
+
+.product-search label {
+	display: block;
+	margin-bottom: 7px;
+
+	color: #455a64;
+	font-size: 13px;
+	font-weight: 700;
+}
+
+.product-search > input {
+	width: 100%;
+	height: 46px;
+	padding: 0 14px;
+
+	box-sizing: border-box;
+
+	border: 1px solid #cfd8dc;
+	border-radius: 8px;
+
+	font-size: 15px;
+	background: #ffffff;
+
+	transition:
+		border-color 0.2s ease,
+		box-shadow 0.2s ease;
+}
+
+.product-search > input:focus {
+	outline: none;
+	border-color: #1976d2;
+	box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.12);
+}
+
+.product-search-results {
+	position: absolute;
+	top: calc(100% + 6px);
+	left: 0;
+	right: 0;
+	z-index: 100;
+
+	max-height: 260px;
+	overflow-y: auto;
+
+	background: #ffffff;
+	border: 1px solid #cfd8dc;
+	border-radius: 8px;
+	box-shadow: 0 10px 28px rgba(31, 45, 61, 0.16);
+}
+
+.product-search-option {
+	display: grid;
+	grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.4fr);
+	align-items: center;
+	gap: 14px;
+
+	width: 100%;
+	min-height: 46px;
+	padding: 9px 14px;
+
+	border: none;
+	border-bottom: 1px solid #edf1f4;
+	border-radius: 0;
+
+	background: #ffffff;
+	color: #263238;
+	text-align: left;
+	cursor: pointer;
+}
+
+.product-search-option:last-child {
+	border-bottom: none;
+}
+
+.product-search-option:hover,
+.product-search-option.active {
+	background: #eaf3fb;
+}
+
+.product-search-main {
+	font-weight: 700;
+}
+
+.product-search-meta {
+	color: #607d8b;
+	font-size: 13px;
+}
+
+.product-search-empty {
+	padding: 16px;
+	color: #78909c;
+	text-align: center;
+	font-size: 14px;
+}
+
+/* =====================
+   Responsive
+===================== */
+
+@media (max-width: 950px) {
+
+	.service-form-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.form-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+}
+
+@media (max-width: 650px) {
+
+	.service-title {
+		align-items: flex-start;
+	}
+
+	.service-title h1 {
+		font-size: 25px;
+	}
+
+	.service-form-grid {
+		padding: 14px;
+		gap: 14px;
+	}
+
+	.service-form > .service-form-section {
+		margin: 0 14px 14px;
+	}
+
+	.service-form-section {
+		padding: 14px;
+	}
+
+	.form-grid,
+	.inline-create,
+	.info-box {
+		grid-template-columns: 1fr;
+	}
+
+	.service-form .container-buttons {
+		justify-content: stretch;
+	}
+
+	.service-form .container-buttons button {
+		flex: 1;
+	}
+
+	.service-table-section {
+		padding: 14px;
+	}
+
+	.service-table-section .table-title {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.product-search-option {
+		grid-template-columns: 1fr;
+		gap: 3px;
+	}
+
+}
+/* =====================
+   User Times Header Button
+===================== */
+
+.service-table-section .table-title > button {
+	height: 36px;
+	padding: 0 16px;
+
+	border: none;
+	border-radius: 6px;
+
+	background: #1976d2;
+	color: #ffffff;
+
+	font-size: 13px;
+	font-weight: 700;
+
+	cursor: pointer;
+
+	transition:
+		background 0.2s ease,
+		transform 0.15s ease,
+		box-shadow 0.2s ease;
+}
+
+.service-table-section .table-title > button:hover {
+	background: #125aa0;
+	transform: translateY(-1px);
+	box-shadow: 0 4px 10px rgba(25, 118, 210, 0.2);
+}
+
+.service-table-section .table-title > button:active {
+	transform: translateY(0);
+	box-shadow: none;
+}
+
+.service-table-section .table-title > button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none;
+	box-shadow: none;
 }

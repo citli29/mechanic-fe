@@ -17,6 +17,8 @@ export default function ScheduleDetails() {
 	const [clients, setClients] = useState([]);
 	const [makes, setMakes] = useState([]);
 	const [models, setModels] = useState([]);
+	const [relatedServices, setRelatedServices] = useState([]);
+	const [loadingRelatedServices, setLoadingRelatedServices] = useState(false);
 
 	const [creatingClient, setCreatingClient] = useState(false);
 	const [creatingCar, setCreatingCar] = useState(false);
@@ -72,6 +74,7 @@ export default function ScheduleDetails() {
 				"error",
 				"A client is required before creating the service."
 			);
+
 			return;
 
 		}
@@ -95,6 +98,7 @@ export default function ScheduleDetails() {
 				"error",
 				"A client is required before creating the service."
 			);
+
 			return;
 
 		}
@@ -191,24 +195,11 @@ export default function ScheduleDetails() {
 
 	useEffect(() => {
 
-		if (editing?.make_id) {
-
-			loadModels(editing.make_id);
-
-		}
-		else {
-
-			setModels([]);
-
-		}
-
-	}, [editing?.make_id]);
-	useEffect(() => {
-
 		loadSchedule();
 		loadCars();
 		loadClients();
 		loadMakes();
+		loadRelatedServices();
 
 	}, [id]);
 
@@ -240,10 +231,46 @@ export default function ScheduleDetails() {
 				make_id: res.data.schedule.car_make_id || "",
 				model_id: res.data.schedule.car_model_id || ""
 			});
+
 		}
 		catch (err) {
 
 			handleApiError(err);
+
+		}
+
+	}
+
+	async function loadRelatedServices() {
+
+		setLoadingRelatedServices(true);
+
+		try {
+
+			const res = await api.get("/services");
+
+			const serviceList =
+				res.data.service_list ||
+				res.data.services ||
+				[];
+
+			const matchingServices = serviceList.filter(
+				service =>
+					Number(service.schedule_id) === Number(id)
+			);
+
+			setRelatedServices(matchingServices);
+
+		}
+		catch (err) {
+
+			setRelatedServices([]);
+			handleApiError(err);
+
+		}
+		finally {
+
+			setLoadingRelatedServices(false);
 
 		}
 
@@ -357,6 +384,7 @@ export default function ScheduleDetails() {
 		loadSchedule();
 
 	}
+
 	function updateEdit(e) {
 
 		const { name, value } = e.target;
@@ -382,21 +410,16 @@ export default function ScheduleDetails() {
 				[name]: value
 			};
 
-			if (name === "car_id") {
+			if (name === "car_id" && value !== "") {
 
-				if (value !== "") {
-
-					updated.make_id = "";
-					updated.model_id = "";
-
-				}
+				updated.make_id = "";
+				updated.model_id = "";
 
 			}
 
 			if (name === "make_id") {
 
 				updated.model_id = "";
-				loadModels(value);
 
 			}
 
@@ -405,7 +428,6 @@ export default function ScheduleDetails() {
 		});
 
 	}
-
 
 	function updateNewClient(e) {
 
@@ -418,10 +440,23 @@ export default function ScheduleDetails() {
 
 	}
 
-
 	function updateNewCar(e) {
 
 		const { name, value } = e.target;
+
+		if (name === "make_id" && value === "new") {
+
+			setCreatingMake(true);
+			return;
+
+		}
+
+		if (name === "model_id" && value === "new") {
+
+			setCreatingModel(true);
+			return;
+
+		}
 
 		setNewCar(prev => {
 
@@ -442,7 +477,6 @@ export default function ScheduleDetails() {
 		});
 
 	}
-
 
 	async function createMake() {
 
@@ -476,6 +510,8 @@ export default function ScheduleDetails() {
 				model_id: ""
 			}));
 
+			loadModels(make.id);
+
 			setCreatingMake(false);
 			setNewMakeName("");
 
@@ -492,7 +528,6 @@ export default function ScheduleDetails() {
 		}
 
 	}
-
 
 	async function createModel() {
 
@@ -553,7 +588,6 @@ export default function ScheduleDetails() {
 		}
 
 	}
-
 
 	async function createClient() {
 
@@ -619,7 +653,6 @@ export default function ScheduleDetails() {
 		}
 
 	}
-
 
 	async function createCar() {
 
@@ -690,6 +723,7 @@ export default function ScheduleDetails() {
 		}
 
 	}
+
 	async function saveSchedule() {
 
 		try {
@@ -726,7 +760,7 @@ export default function ScheduleDetails() {
 
 			setIsEditing(false);
 
-			loadSchedule();
+			await loadSchedule();
 
 		}
 		catch (err) {
@@ -737,11 +771,11 @@ export default function ScheduleDetails() {
 
 	}
 
-
 	async function deleteSchedule() {
 
-		if (!window.confirm("Delete this schedule?"))
+		if (!window.confirm("Delete this schedule?")) {
 			return;
+		}
 
 		try {
 
@@ -762,7 +796,6 @@ export default function ScheduleDetails() {
 		}
 
 	}
-
 
 	if (!editing) {
 
@@ -785,6 +818,76 @@ export default function ScheduleDetails() {
 					{message.text}
 				</div>
 			)}
+
+
+			<div className="details-card">
+
+				<h2>Related Services</h2>
+
+				{loadingRelatedServices ? (
+
+					<p>Loading services...</p>
+
+				) : relatedServices.length === 0 ? (
+
+					<p>No services linked to this schedule.</p>
+
+				) : (
+
+					<div className="table-wrapper">
+
+						<table className="table">
+
+							<thead>
+
+								<tr>
+									<th>Service ID</th>
+									<th>Check In</th>
+									<th></th>
+								</tr>
+
+							</thead>
+
+							<tbody>
+
+								{relatedServices.map(service => (
+
+									<tr key={service.id}>
+
+										<td>
+											#{service.id}
+										</td>
+
+										<td>
+											{service.checkin || "-"}
+										</td>
+
+										<td>
+
+											<button
+												type="button"
+												onClick={() =>
+													navigate(`/services/${service.id}`)
+												}
+											>
+												Open Service
+											</button>
+
+										</td>
+
+									</tr>
+
+								))}
+
+							</tbody>
+
+						</table>
+
+					</div>
+
+				)}
+
+			</div>
 
 			<div className="details-card">
 
@@ -882,107 +985,92 @@ export default function ScheduleDetails() {
 
 									<input
 										name="phone"
-											placeholder="Phone"
-											value={newClient.phone}
-											onChange={updateNewClient}
-										/>
+										placeholder="Phone"
+										value={newClient.phone}
+										onChange={updateNewClient}
+									/>
 
-										<input
-											name="email"
-											placeholder="Email"
-											value={newClient.email}
-											onChange={updateNewClient}
-										/>
+									<input
+										name="email"
+										placeholder="Email"
+										value={newClient.email}
+										onChange={updateNewClient}
+									/>
 
-										<input
-											name="address"
-											placeholder="Address"
-											value={newClient.address}
-											onChange={updateNewClient}
-										/>
+									<input
+										name="address"
+										placeholder="Address"
+										value={newClient.address}
+										onChange={updateNewClient}
+									/>
 
-										<input
-											name="zip_code"
-											placeholder="ZIP Code"
-											value={newClient.zip_code}
-											onChange={updateNewClient}
-										/>
+									<input
+										name="zip_code"
+										placeholder="ZIP Code"
+										value={newClient.zip_code}
+										onChange={updateNewClient}
+									/>
 
-										<input
-											name="tax_nr"
-											placeholder="Tax Number"
-											value={newClient.tax_nr}
-											onChange={updateNewClient}
-										/>
+									<input
+										name="tax_nr"
+										placeholder="Tax Number"
+										value={newClient.tax_nr}
+										onChange={updateNewClient}
+									/>
 
-										<div className="create-buttons">
+									<div className="create-buttons">
 
-											<button onClick={createClient}>
-												Add
-											</button>
+										<button onClick={createClient}>
+											Add
+										</button>
 
-											<button
-												onClick={() => {
+										<button
+											onClick={() => {
 
-													setCreatingClient(false);
-													setNewClient(emptyClient);
+												setCreatingClient(false);
+												setNewClient(emptyClient);
 
-												}}
-											>
-												X
-											</button>
-
-										</div>
+											}}
+										>
+											X
+										</button>
 
 									</div>
 
-								)
+								</div>
+
+							)
 
 						) : (
 
-								<>
-									<input
-										readOnly
-										value={
-											schedule.client_name
-												? `${schedule.client_name} (${schedule.client_phone})`
-												: "-"
-										}
-									/>
+							<>
 
-									{selectedClient && (
+								<input
+									readOnly
+									value={
+										schedule.client_name
+											? `${schedule.client_name} (${schedule.client_phone})`
+											: "-"
+									}
+								/>
 
-										<div className="info-box">
+								{selectedClient && (
 
-											<div>
-												<strong>Name:</strong> {selectedClient.name}
-											</div>
+									<div className="info-box">
 
-											<div>
-												<strong>Phone:</strong> {selectedClient.phone}
-											</div>
+										<div><strong>Name:</strong> {selectedClient.name}</div>
+										<div><strong>Phone:</strong> {selectedClient.phone}</div>
+										<div><strong>Email:</strong> {selectedClient.email || "-"}</div>
+										<div><strong>Address:</strong> {selectedClient.address || "-"}</div>
+										<div><strong>ZIP:</strong> {selectedClient.zip_code || "-"}</div>
+										<div><strong>Tax:</strong> {selectedClient.tax_nr || "-"}</div>
 
-											<div>
-												<strong>Email:</strong> {selectedClient.email || "-"}
-											</div>
+									</div>
 
-											<div>
-												<strong>Address:</strong> {selectedClient.address || "-"}
-											</div>
+								)}
 
-											<div>
-												<strong>ZIP:</strong> {selectedClient.zip_code || "-"}
-											</div>
+							</>
 
-											<div>
-												<strong>Tax:</strong> {selectedClient.tax_nr || "-"}
-											</div>
-
-										</div>
-
-									)}
-
-								</>
 						)}
 
 					</div>
@@ -1028,17 +1116,9 @@ export default function ScheduleDetails() {
 
 										<div className="info-box">
 
-											<div>
-												<strong>Plate:</strong> {selectedCar.plate}
-											</div>
-
-											<div>
-												<strong>Make:</strong> {selectedCar.make_name}
-											</div>
-
-											<div>
-												<strong>Model:</strong> {selectedCar.model_name}
-											</div>
+											<div><strong>Plate:</strong> {selectedCar.plate}</div>
+											<div><strong>Make:</strong> {selectedCar.make_name}</div>
+											<div><strong>Model:</strong> {selectedCar.model_name}</div>
 
 										</div>
 
@@ -1089,10 +1169,11 @@ export default function ScheduleDetails() {
 									) : (
 
 										<>
+
 											<input
 												placeholder="New make"
 												value={newMakeName}
-												onChange={(e) =>
+												onChange={e =>
 													setNewMakeName(e.target.value)
 												}
 											/>
@@ -1117,7 +1198,8 @@ export default function ScheduleDetails() {
 										</>
 
 									)}
-																		{!creatingModel ? (
+
+									{!creatingModel ? (
 
 										<select
 											name="model_id"
@@ -1154,7 +1236,7 @@ export default function ScheduleDetails() {
 											<input
 												placeholder="New model"
 												value={newModelName}
-												onChange={(e) =>
+												onChange={e =>
 													setNewModelName(e.target.value)
 												}
 											/>
@@ -1167,10 +1249,8 @@ export default function ScheduleDetails() {
 
 												<button
 													onClick={() => {
-
 														setCreatingModel(false);
 														setNewModelName("");
-
 													}}
 												>
 													X
@@ -1194,7 +1274,6 @@ export default function ScheduleDetails() {
 												setCreatingCar(false);
 												setCreatingMake(false);
 												setCreatingModel(false);
-
 												setNewCar(emptyCar);
 
 											}}
@@ -1210,73 +1289,55 @@ export default function ScheduleDetails() {
 
 						) : (
 
-<>
-	<input
-		readOnly
-		value={
-			schedule.car_plate
-				? `${schedule.car_plate} (${schedule.car_make} ${schedule.car_model})`
-				: "-"
-		}
-	/>
+							<>
 
-	{selectedCar && (
+								<input
+									readOnly
+									value={
+										schedule.car_plate
+											? `${schedule.car_plate} (${schedule.car_make} ${schedule.car_model})`
+											: "-"
+									}
+								/>
 
-		<div className="info-box">
+								{selectedCar && (
 
-			<div>
-				<strong>Plate:</strong> {selectedCar.plate}
-			</div>
+									<div className="info-box">
 
-			<div>
-				<strong>Make:</strong> {selectedCar.make_name}
-			</div>
+										<div><strong>Plate:</strong> {selectedCar.plate}</div>
+										<div><strong>Make:</strong> {selectedCar.make_name}</div>
+										<div><strong>Model:</strong> {selectedCar.model_name}</div>
 
-			<div>
-				<strong>Model:</strong> {selectedCar.model_name}
-			</div>
+										{selectedCar.year && (
+											<div><strong>Year:</strong> {selectedCar.year}</div>
+										)}
 
-			{selectedCar.year && (
-				<div>
-					<strong>Year:</strong> {selectedCar.year}
-				</div>
-			)}
+										{selectedCar.month && (
+											<div><strong>Month:</strong> {selectedCar.month}</div>
+										)}
 
-			{selectedCar.month && (
-				<div>
-					<strong>Month:</strong> {selectedCar.month}
-				</div>
-			)}
+										{selectedCar.engine_code && (
+											<div><strong>Engine:</strong> {selectedCar.engine_code}</div>
+										)}
 
-			{selectedCar.engine_code && (
-				<div>
-					<strong>Engine:</strong> {selectedCar.engine_code}
-				</div>
-			)}
+										{selectedCar.cc && (
+											<div><strong>CC:</strong> {selectedCar.cc}</div>
+										)}
 
-			{selectedCar.cc && (
-				<div>
-					<strong>CC:</strong> {selectedCar.cc}
-				</div>
-			)}
+										{selectedCar.color_code && (
+											<div><strong>Color:</strong> {selectedCar.color_code}</div>
+										)}
 
-			{selectedCar.color_code && (
-				<div>
-					<strong>Color:</strong> {selectedCar.color_code}
-				</div>
-			)}
+										{selectedCar.chassi_nr && (
+											<div><strong>Chassis:</strong> {selectedCar.chassi_nr}</div>
+										)}
 
-			{selectedCar.chassi_nr && (
-				<div>
-					<strong>Chassis:</strong> {selectedCar.chassi_nr}
-				</div>
-			)}
+									</div>
 
-		</div>
+								)}
 
-	)}
+							</>
 
-</>
 						)}
 
 					</div>
@@ -1314,14 +1375,15 @@ export default function ScheduleDetails() {
 
 								) : (
 
-										<input
-											readOnly
-											value={schedule.car_make || "-"}
-										/>
+									<input
+										readOnly
+										value={schedule.car_make || "-"}
+									/>
 
-									)}
+								)}
 
 							</div>
+
 							<div className="field">
 
 								<label>Model</label>
@@ -1352,14 +1414,16 @@ export default function ScheduleDetails() {
 
 								) : (
 
-										<input
-											readOnly
-											value={schedule.car_model || "-"}
-										/>
+									<input
+										readOnly
+										value={schedule.car_model || "-"}
+									/>
 
-									)}
+								)}
 
-							</div>						</>
+							</div>
+
+						</>
 
 					)}
 
@@ -1414,6 +1478,7 @@ export default function ScheduleDetails() {
 				</div>
 
 			</div>
+
 
 			{creatingService && (
 
