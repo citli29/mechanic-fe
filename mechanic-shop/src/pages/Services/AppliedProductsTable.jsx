@@ -1,38 +1,93 @@
-import { useEffect, useState } from "react";
+import {
+	useEffect,
+	useMemo,
+	useRef,
+	useState
+} from "react";
+
 import api from "../../api/axios";
 
 export default function AppliedProductsTable({
-
 	serviceId,
 	showMessage,
 	handleApiError
-
 }) {
-
-	const emptyAppliedProduct = {
-		product_id: "",
-		quantity: 1,
-		is_applied: 1,
-	};
 
 	const [appliedProducts, setAppliedProducts] = useState([]);
 	const [products, setProducts] = useState([]);
 
-	const [editing, setEditing] = useState(null);
-	const [creating, setCreating] = useState(false);
+	const [isEditing, setIsEditing] = useState(false);
+	const [editedProducts, setEditedProducts] = useState({});
 
-	const [newAppliedProduct, setNewAppliedProduct] = useState(
-		emptyAppliedProduct
-	);
+	const [search, setSearch] = useState("");
+	const [searchOpen, setSearchOpen] = useState(false);
+	const [highlightedIndex, setHighlightedIndex] = useState(0);
 
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [adding, setAdding] = useState(false);
+
+	const searchRef = useRef(null);
 
 	useEffect(() => {
 
-		loadData();
+		function handleClickOutside(event) {
 
+			if (
+				searchRef.current &&
+				!searchRef.current.contains(event.target)
+			) {
+				setSearchOpen(false);
+			}
+
+		}
+
+		document.addEventListener(
+			"mousedown",
+			handleClickOutside
+		);
+
+		return () => {
+
+			document.removeEventListener(
+				"mousedown",
+				handleClickOutside
+			);
+
+		};
+
+	}, []);
+
+	useEffect(() => {
+		loadData();
 	}, [serviceId]);
+
+	const filteredProducts = useMemo(() => {
+
+		const value = search.trim().toLowerCase();
+
+		if (!value) {
+			return [];
+		}
+
+		return products.filter(product => {
+
+			const searchable = [
+				product.name,
+				product.reference,
+				product.product_type_name,
+				product.type_name,
+				product.type
+			]
+				.filter(Boolean)
+				.join(" ")
+				.toLowerCase();
+
+			return searchable.includes(value);
+
+		});
+
+	}, [products, search]);
 
 	async function loadData() {
 
@@ -42,7 +97,7 @@ export default function AppliedProductsTable({
 
 			await Promise.all([
 				loadAppliedProducts(),
-				loadProducts(),
+				loadProducts()
 			]);
 
 		}
@@ -111,25 +166,21 @@ export default function AppliedProductsTable({
 	function handleError(err) {
 
 		if (handleApiError) {
-
 			handleApiError(err);
-
 		}
 		else {
-
 			console.error(err);
-
 		}
 
 	}
 
-	function getAppliedProductId(appliedProduct) {
+	function getAppliedProductId(item) {
 
 		return (
-			appliedProduct.service_applied_product_id ||
-			appliedProduct.applied_product_id ||
-			appliedProduct.sap_id ||
-			appliedProduct.id
+			item.service_applied_product_id ||
+			item.applied_product_id ||
+			item.sap_id ||
+			item.id
 		);
 
 	}
@@ -144,46 +195,36 @@ export default function AppliedProductsTable({
 
 	}
 
-	function getProductName(appliedProduct) {
-
-		const product = getProduct(
-			appliedProduct.product_id
-		);
+	function getProductName(item) {
 
 		return (
-			appliedProduct.product_name ||
-			appliedProduct.name ||
-			product?.name ||
+			item.product_name ||
+			item.name ||
+			getProduct(item.product_id)?.name ||
 			"-"
 		);
 
 	}
 
-	function getProductReference(appliedProduct) {
-
-		const product = getProduct(
-			appliedProduct.product_id
-		);
+	function getProductReference(item) {
 
 		return (
-			appliedProduct.product_reference ||
-			appliedProduct.reference ||
-			product?.reference ||
+			item.product_reference ||
+			item.reference ||
+			getProduct(item.product_id)?.reference ||
 			"-"
 		);
 
 	}
 
-	function getProductType(appliedProduct) {
+	function getProductType(item) {
 
-		const product = getProduct(
-			appliedProduct.product_id
-		);
+		const product = getProduct(item.product_id);
 
 		return (
-			appliedProduct.product_type_name ||
-			appliedProduct.type_name ||
-			appliedProduct.product_type ||
+			item.product_type_name ||
+			item.type_name ||
+			item.product_type ||
 			product?.product_type_name ||
 			product?.type_name ||
 			product?.type ||
@@ -192,117 +233,137 @@ export default function AppliedProductsTable({
 
 	}
 
-	function updateNewAppliedProduct(e) {
+	function beginEditing() {
 
-		const { name, value } = e.target;
+		const values = {};
 
-		setNewAppliedProduct({
-			...newAppliedProduct,
-			[name]: value,
+		appliedProducts.forEach(item => {
+
+			const itemId =
+				getAppliedProductId(item);
+
+			values[itemId] = {
+				id: itemId,
+				product_id: item.product_id,
+				quantity: item.quantity ?? 1,
+				is_applied:
+					Number(item.is_applied) === 1
+			};
+
 		});
+
+		setSearchOpen(false);
+		setEditedProducts(values);
+		setIsEditing(true);
 
 	}
 
-	function updateEdit(e) {
+	function cancelEditing() {
 
-		const { name, value } = e.target;
-
-		setEditing({
-			...editing,
-			[name]: value,
-		});
+		setEditedProducts({});
+		setIsEditing(false);
 
 	}
 
-	function beginCreating() {
+	function updateEditedProduct(
+		itemId,
+		field,
+		value
+	) {
 
-		setEditing(null);
-		setCreating(true);
-
-		setNewAppliedProduct({
-			...emptyAppliedProduct,
-		});
-
-	}
-
-	function cancelCreating() {
-
-		setCreating(false);
-
-		setNewAppliedProduct({
-			...emptyAppliedProduct,
-		});
+		setEditedProducts(previous => ({
+			...previous,
+			[itemId]: {
+				...previous[itemId],
+				[field]: value
+			}
+		}));
 
 	}
 
-	function editAppliedProduct(appliedProduct) {
+	async function saveAllAppliedProducts() {
 
-		setCreating(false);
+		const rows = Object.values(
+			editedProducts
+		);
 
-		setEditing({
-			id:
-				getAppliedProductId(
-					appliedProduct
-				),
+		const invalidQuantity = rows.some(row =>
+			row.quantity === "" ||
+			!Number.isFinite(Number(row.quantity)) ||
+			Number(row.quantity) <= 0
+		);
 
-			product_id:
-				appliedProduct.product_id || "",
-
-			quantity:
-				appliedProduct.quantity ?? 1,
-
-			is_applied:
-				Number(appliedProduct.is_applied) === 0
-					? 0
-					: 1,
-		});
-
-	}
-
-	function validateAppliedProduct(appliedProduct) {
-
-		if (!appliedProduct.product_id) {
+		if (invalidQuantity) {
 
 			showMessage?.(
 				"error",
-				"Please select a product."
+				"Every quantity must be greater than 0."
 			);
-
-			return false;
-
-		}
-
-		if (
-			appliedProduct.quantity === "" ||
-			Number(appliedProduct.quantity) < 1
-		) {
-
-			showMessage?.(
-				"error",
-				"Quantity must be at least 1."
-			);
-
-			return false;
-
-		}
-
-		return true;
-
-	}
-
-	async function createAppliedProduct() {
-
-		if (
-			!validateAppliedProduct(
-				newAppliedProduct
-			)
-		) {
 
 			return;
 
 		}
 
 		setSaving(true);
+
+		try {
+
+			await Promise.all(
+				rows.map(row =>
+					api.put(
+						`/services/${serviceId}/applied_products/${row.id}`,
+						{
+							service_id:
+								Number(serviceId),
+
+							product_id:
+								Number(row.product_id),
+
+							quantity:
+								Number(row.quantity),
+
+							is_applied:
+								row.is_applied ? 1 : 0
+						}
+					)
+				)
+			);
+
+			showMessage?.(
+				"success",
+				"Applied products updated successfully."
+			);
+
+			setIsEditing(false);
+			setEditedProducts({});
+
+			await loadAppliedProducts();
+
+		}
+		catch (err) {
+
+			handleError(err);
+
+		}
+		finally {
+
+			setSaving(false);
+
+		}
+
+	}
+
+	async function addProduct(product) {
+
+		if (
+			!product ||
+			adding ||
+			isEditing
+		) {
+			return;
+		}
+
+		setAdding(true);
 
 		try {
 
@@ -313,32 +374,21 @@ export default function AppliedProductsTable({
 						Number(serviceId),
 
 					product_id:
-						Number(
-							newAppliedProduct.product_id
-						),
+						Number(product.id),
 
-					quantity:
-						Number(
-							newAppliedProduct.quantity
-						),
-
-					is_applied:
-						Number(
-							newAppliedProduct.is_applied
-						),
+					quantity: 1,
+					is_applied: 0
 				}
 			);
 
 			showMessage?.(
 				"success",
-				"Applied product created successfully."
+				"Product added successfully."
 			);
 
-			setCreating(false);
-
-			setNewAppliedProduct({
-				...emptyAppliedProduct,
-			});
+			setSearch("");
+			setHighlightedIndex(0);
+			setSearchOpen(false);
 
 			await loadAppliedProducts();
 
@@ -350,64 +400,72 @@ export default function AppliedProductsTable({
 		}
 		finally {
 
-			setSaving(false);
+			setAdding(false);
 
 		}
 
 	}
 
-	async function saveAppliedProduct() {
+	function handleSearchKeyDown(event) {
 
-		if (!validateAppliedProduct(editing)) {
+		if (event.key === "Escape") {
+
+			event.preventDefault();
+			setSearchOpen(false);
+			return;
+
+		}
+
+		if (filteredProducts.length === 0) {
 			return;
 		}
 
-		setSaving(true);
+		if (event.key === "ArrowDown") {
 
-		try {
+			event.preventDefault();
 
-			await api.put(
-				`/services/${serviceId}/applied_products/${editing.id}`,
-				{
-					service_id:
-						Number(serviceId),
-
-					product_id:
-						Number(editing.product_id),
-
-					quantity:
-						Number(editing.quantity),
-
-					is_applied:
-						Number(editing.is_applied),
-				}
+			setHighlightedIndex(previous =>
+				Math.min(
+					previous + 1,
+					filteredProducts.length - 1
+				)
 			);
 
-			showMessage?.(
-				"success",
-				"Applied product updated successfully."
+			return;
+
+		}
+
+		if (event.key === "ArrowUp") {
+
+			event.preventDefault();
+
+			setHighlightedIndex(previous =>
+				Math.max(previous - 1, 0)
 			);
 
-			setEditing(null);
-
-			await loadAppliedProducts();
+			return;
 
 		}
-		catch (err) {
 
-			handleError(err);
+		if (event.key === "Enter") {
 
-		}
-		finally {
+			event.preventDefault();
 
-			setSaving(false);
+			const selected =
+				filteredProducts[
+					highlightedIndex
+				];
+
+			if (selected) {
+				addProduct(selected);
+			}
 
 		}
 
 	}
 
 	async function deleteAppliedProduct(
-		id,
+		itemId,
 		productName
 	) {
 
@@ -422,19 +480,13 @@ export default function AppliedProductsTable({
 		try {
 
 			await api.delete(
-				`/services/${serviceId}/applied_products/${id}`
+				`/services/${serviceId}/applied_products/${itemId}`
 			);
 
 			showMessage?.(
 				"success",
 				"Applied product deleted successfully."
 			);
-
-			if (editing?.id === id) {
-
-				setEditing(null);
-
-			}
 
 			await loadAppliedProducts();
 
@@ -449,283 +501,326 @@ export default function AppliedProductsTable({
 
 	return (
 
-		<div>
+		<div className="applied-products-section">
 
 			<div className="table-title">
 
 				<h2>Applied Products</h2>
 
-				{!creating && (
+				<div className="container-buttons">
 
-					<button
-						type="button"
-						onClick={beginCreating}
-					>
-						Add Applied Product
-					</button>
+					{!isEditing ? (
+
+						<button
+							type="button"
+							onClick={beginEditing}
+							disabled={
+								loading ||
+								appliedProducts.length === 0
+							}
+						>
+							Edit
+						</button>
+
+					) : (
+
+						<>
+
+							<button
+								type="button"
+								onClick={
+									saveAllAppliedProducts
+								}
+								disabled={saving}
+							>
+								{saving
+									? "Saving..."
+									: "Save"}
+							</button>
+
+							<button
+								type="button"
+								onClick={cancelEditing}
+								disabled={saving}
+							>
+								Cancel
+							</button>
+
+						</>
+
+					)}
+
+				</div>
+
+			</div>
+
+			<div
+				className="product-search"
+				ref={searchRef}
+			>
+
+				<label htmlFor="applied-product-search">
+					Add product
+				</label>
+
+				<input
+					id="applied-product-search"
+					type="text"
+					placeholder="Search by name, reference or type..."
+					value={search}
+					onFocus={() =>
+						setSearchOpen(true)
+					}
+					onChange={event => {
+
+						setSearch(
+							event.target.value
+						);
+
+						setHighlightedIndex(0);
+						setSearchOpen(true);
+
+					}}
+					onKeyDown={
+						handleSearchKeyDown
+					}
+					disabled={
+						adding ||
+						isEditing
+					}
+				/>
+
+				{searchOpen && (
+
+					<div className="product-search-results">
+
+						{search.trim() === "" ? (
+
+							<div className="product-search-empty">
+								Start typing to search products.
+							</div>
+
+						) : filteredProducts.length === 0 ? (
+
+							<div className="product-search-empty">
+								No products found.
+							</div>
+
+						) : (
+
+							filteredProducts.map(
+								(product, index) => (
+
+									<button
+										key={product.id}
+										type="button"
+										className={
+											index ===
+											highlightedIndex
+												? "product-search-option active"
+												: "product-search-option"
+										}
+										onMouseEnter={() =>
+											setHighlightedIndex(
+												index
+											)
+										}
+										onClick={() =>
+											addProduct(product)
+										}
+										disabled={adding}
+									>
+
+										<span className="product-search-main">
+											{product.name}
+										</span>
+
+										<span className="product-search-meta">
+
+											{product.reference ||
+												"-"}
+
+											{" · "}
+
+											{product.product_type_name ||
+												product.type_name ||
+												product.type ||
+												"-"}
+
+										</span>
+
+									</button>
+
+								)
+							)
+
+						)}
+
+					</div>
 
 				)}
 
 			</div>
 
-			<table className="table">
+			<div className="table-wrapper">
 
-				<thead>
+				<table className="table">
 
-					<tr>
-
-						<th>Product</th>
-						<th>Reference</th>
-						<th>Type</th>
-						<th>Quantity</th>
-						<th>Applied</th>
-						<th></th>
-
-					</tr>
-
-				</thead>
-
-				<tbody>
-
-					{loading && (
+					<thead>
 
 						<tr>
-
-							<td colSpan={6}>
-								Loading...
-							</td>
-
+							<th>Product</th>
+							<th>Reference</th>
+							<th>Type</th>
+							<th>Quantity</th>
+							<th>Applied</th>
+							<th></th>
 						</tr>
 
-					)}
+					</thead>
 
-					{!loading &&
-						appliedProducts.length === 0 &&
-						!creating && (
+					<tbody>
+
+						{loading && (
 
 							<tr>
-
 								<td colSpan={6}>
-									No applied products found.
+									Loading...
 								</td>
-
 							</tr>
 
 						)}
 
-					{!loading &&
-						appliedProducts.map(
-							appliedProduct => {
+						{!loading &&
+							appliedProducts.length === 0 && (
 
-								const appliedProductId =
+								<tr>
+									<td colSpan={6}>
+										No applied products found.
+									</td>
+								</tr>
+
+							)}
+
+						{!loading &&
+							appliedProducts.map(item => {
+
+								const itemId =
 									getAppliedProductId(
-										appliedProduct
+										item
 									);
 
-								if (
-									editing?.id ===
-									appliedProductId
-								) {
-
-									const selectedProduct =
-										getProduct(
-											editing.product_id
-										);
-
-									return (
-
-										<tr
-											key={appliedProductId}
-											className="editing"
-										>
-
-											<td>
-
-												<select
-													name="product_id"
-													value={
-														editing.product_id
-													}
-													onChange={
-														updateEdit
-													}
-												>
-
-													<option value="">
-														Select Product
-													</option>
-
-													{products.map(
-														product => (
-
-															<option
-																key={
-																	product.id
-																}
-																value={
-																	product.id
-																}
-															>
-																{product.name}
-															</option>
-
-														)
-													)}
-
-												</select>
-
-											</td>
-
-											<td>
-												{selectedProduct
-													?.reference ||
-													"-"}
-											</td>
-
-											<td>
-												{selectedProduct
-													?.product_type_name ||
-													selectedProduct
-														?.type_name ||
-													selectedProduct
-														?.type ||
-													"-"}
-											</td>
-
-											<td>
-
-												<input
-													type="number"
-													name="quantity"
-													min="1"
-													value={
-														editing.quantity
-													}
-													onChange={
-														updateEdit
-													}
-												/>
-
-											</td>
-
-											<td>
-
-												<select
-													name="is_applied"
-													value={
-														editing.is_applied
-													}
-													onChange={
-														updateEdit
-													}
-												>
-
-													<option value={1}>
-														Yes
-													</option>
-
-													<option value={0}>
-														No
-													</option>
-
-												</select>
-
-											</td>
-
-											<td>
-
-												<div className="container-buttons">
-
-													<button
-														type="button"
-														onClick={
-															saveAppliedProduct
-														}
-														disabled={saving}
-													>
-														{saving
-															? "Saving..."
-															: "Save"}
-													</button>
-
-													<button
-														type="button"
-														onClick={() =>
-															setEditing(null)
-														}
-														disabled={saving}
-													>
-														X
-													</button>
-
-												</div>
-
-											</td>
-
-										</tr>
-
-									);
-
-								}
+								const editedItem =
+									editedProducts[
+										itemId
+									];
 
 								return (
 
-									<tr key={appliedProductId}>
+									<tr
+										key={itemId}
+										className={
+											isEditing
+												? "editing"
+												: ""
+										}
+									>
 
 										<td>
 											{getProductName(
-												appliedProduct
+												item
 											)}
 										</td>
 
 										<td>
 											{getProductReference(
-												appliedProduct
+												item
 											)}
 										</td>
 
 										<td>
 											{getProductType(
-												appliedProduct
+												item
 											)}
 										</td>
 
 										<td>
-											{appliedProduct.quantity ??
-												"-"}
-										</td>
 
-										<td>
-											{Number(
-												appliedProduct.is_applied
-											) === 1
-												? "Yes"
-												: "No"}
-										</td>
+											{isEditing ? (
 
-										<td>
-
-											<div className="container-buttons">
-
-												<button
-													type="button"
-													onClick={() =>
-														editAppliedProduct(
-															appliedProduct
-														)
+												<input
+													type="number"
+													min="0.01"
+													step="any"
+													value={
+														editedItem
+															?.quantity ??
+														""
 													}
-												>
-													Edit
-												</button>
+													onChange={
+														event =>
+															updateEditedProduct(
+																itemId,
+																"quantity",
+																event
+																	.target
+																	.value
+															)
+													}
+												/>
+
+											) : (
+
+												item.quantity ??
+												"-"
+
+											)}
+
+										</td>
+
+										<td>
+
+											<input
+												type="checkbox"
+												checked={
+													isEditing
+														? Boolean(
+															editedItem
+																?.is_applied
+														)
+														: Number(
+															item.is_applied
+														) === 1
+												}
+												onChange={
+													event =>
+														updateEditedProduct(
+															itemId,
+															"is_applied",
+															event
+																.target
+																.checked
+														)
+												}
+												disabled={
+													!isEditing
+												}
+											/>
+
+										</td>
+
+										<td>
+
+											{!isEditing && (
 
 												<button
 													type="button"
 													className="delete-btn"
 													onClick={() =>
 														deleteAppliedProduct(
-															appliedProductId,
+															itemId,
 															getProductName(
-																appliedProduct
+																item
 															)
 														)
 													}
@@ -733,7 +828,7 @@ export default function AppliedProductsTable({
 													Delete
 												</button>
 
-											</div>
+											)}
 
 										</td>
 
@@ -741,140 +836,13 @@ export default function AppliedProductsTable({
 
 								);
 
-							}
-						)}
+							})}
 
-					{creating && (
+					</tbody>
 
-						<tr className="editing">
+				</table>
 
-							<td>
-
-								<select
-									name="product_id"
-									value={
-										newAppliedProduct.product_id
-									}
-									onChange={
-										updateNewAppliedProduct
-									}
-								>
-
-									<option value="">
-										Select Product
-									</option>
-
-									{products.map(product => (
-
-										<option
-											key={product.id}
-											value={product.id}
-										>
-											{product.name}
-										</option>
-
-									))}
-
-								</select>
-
-							</td>
-
-							<td>
-								{getProduct(
-									newAppliedProduct.product_id
-								)?.reference || "-"}
-							</td>
-
-							<td>
-								{getProduct(
-									newAppliedProduct.product_id
-								)?.product_type_name ||
-									getProduct(
-										newAppliedProduct.product_id
-									)?.type_name ||
-									getProduct(
-										newAppliedProduct.product_id
-									)?.type ||
-									"-"}
-							</td>
-
-							<td>
-
-								<input
-									type="number"
-									name="quantity"
-									min="1"
-									value={
-										newAppliedProduct.quantity
-									}
-									onChange={
-										updateNewAppliedProduct
-									}
-								/>
-
-							</td>
-
-							<td>
-
-								<select
-									name="is_applied"
-									value={
-										newAppliedProduct.is_applied
-									}
-									onChange={
-										updateNewAppliedProduct
-									}
-								>
-
-									<option value={1}>
-										Yes
-									</option>
-
-									<option value={0}>
-										No
-									</option>
-
-								</select>
-
-							</td>
-
-							<td>
-
-								<div className="container-buttons">
-
-									<button
-										type="button"
-										onClick={
-											createAppliedProduct
-										}
-										disabled={saving}
-									>
-										{saving
-											? "Adding..."
-											: "Add"}
-									</button>
-
-									<button
-										type="button"
-										onClick={
-											cancelCreating
-										}
-										disabled={saving}
-									>
-										X
-									</button>
-
-								</div>
-
-							</td>
-
-						</tr>
-
-					)}
-
-				</tbody>
-
-			</table>
+			</div>
 
 		</div>
 

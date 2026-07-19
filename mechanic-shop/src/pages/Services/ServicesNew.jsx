@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios";
 
 import "./ServicesShow.css";
+import "./ServicesNew.css";
 
 export default function ServicesNew() {
 

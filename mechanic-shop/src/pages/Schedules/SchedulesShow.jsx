@@ -57,10 +57,7 @@ export default function ScheduleDetails() {
 
 	const emptyService = {
 		kms: "",
-		checkin: "",
-		checkout: "",
-		malfunction: "",
-		service: ""
+		checkin: ""
 	};
 
 	const [creatingService, setCreatingService] = useState(false);
@@ -68,41 +65,53 @@ export default function ScheduleDetails() {
 	const [creatingServiceLoading, setCreatingServiceLoading] = useState(false);
 
 	function beginCreateService() {
-		setServiceForm({
-			kms: "",
-			checkin: schedule.date || "",
-			checkout: "",
-			malfunction: schedule.description || "",
-			service: ""
-		});
 
-		setCreatingService(true);
-	}
+		if (!editing?.client_id) {
 
-	async function createServiceFromSchedule() {
-		if (!schedule.client_id) {
 			showMessage(
 				"error",
 				"A client is required before creating the service."
 			);
 			return;
+
+		}
+
+		setServiceForm({
+			kms: "",
+			checkin: editing.date || schedule?.date || ""
+		});
+
+		setCreatingService(true);
+
+	}
+
+	async function createServiceFromSchedule() {
+
+		const clientId = editing?.client_id;
+
+		if (!clientId) {
+
+			showMessage(
+				"error",
+				"A client is required before creating the service."
+			);
+			return;
+
 		}
 
 		setCreatingServiceLoading(true);
 
 		try {
+
 			const data = {
-				client_id: Number(schedule.client_id),
-				car_id: schedule.car_id
-					? Number(schedule.car_id)
+				client_id: Number(clientId),
+				car_id: editing?.car_id
+					? Number(editing.car_id)
 					: null,
 				kms: serviceForm.kms === ""
 					? null
 					: Number(serviceForm.kms),
 				checkin: serviceForm.checkin || null,
-				checkout: serviceForm.checkout || null,
-				malfunction: serviceForm.malfunction || null,
-				service: serviceForm.service || null,
 				schedule_id: Number(id)
 			};
 
@@ -113,23 +122,32 @@ export default function ScheduleDetails() {
 
 			const newServiceId =
 				res.data.service?.id ||
-					res.data.service_id;
+				res.data.service_id;
 
 			if (!newServiceId) {
+
 				throw new Error(
 					"The API did not return the new service ID."
 				);
+
 			}
 
 			navigate(`/services/${newServiceId}`);
+
 		}
 		catch (err) {
+
 			handleApiError(err);
+
 		}
 		finally {
+
 			setCreatingServiceLoading(false);
+
 		}
+
 	}
+
 	function showMessage(type, text) {
 
 		setMessage({
@@ -1363,6 +1381,7 @@ export default function ScheduleDetails() {
 							>
 								Delete
 							</button>
+
 							<button
 								type="button"
 								onClick={beginCreateService}
@@ -1383,12 +1402,7 @@ export default function ScheduleDetails() {
 							<button onClick={cancelEdit}>
 								Cancel
 							</button>
-							<button
-								type="button"
-								onClick={beginCreateService}
-							>
-								Create Service
-							</button>
+
 						</>
 
 					)}
@@ -1400,30 +1414,34 @@ export default function ScheduleDetails() {
 				</div>
 
 			</div>
+
 			{creatingService && (
-	<div className="details-card">
 
-		<h2>Create Service</h2>
+				<div className="details-card">
 
-		<div className="details-grid">
+					<h2>Create Service</h2>
 
-			<div className="field">
-				<label>Check In</label>
-
-				<input
-					type="date"
-					value={serviceForm.checkin}
-					onChange={e =>
-						setServiceForm(prev => ({
-							...prev,
-							checkin: e.target.value
-						}))
-					}
-				/>
-			</div>
-
+					<div className="details-grid">
 
 						<div className="field">
+
+							<label>Check In</label>
+
+							<input
+								type="date"
+								value={serviceForm.checkin}
+								onChange={e =>
+									setServiceForm(prev => ({
+										...prev,
+										checkin: e.target.value
+									}))
+								}
+							/>
+
+						</div>
+
+						<div className="field">
+
 							<label>Kilometers</label>
 
 							<input
@@ -1436,6 +1454,7 @@ export default function ScheduleDetails() {
 									}))
 								}
 							/>
+
 						</div>
 
 					</div>
@@ -1445,8 +1464,7 @@ export default function ScheduleDetails() {
 						<button
 							type="button"
 							onClick={createServiceFromSchedule}
-							disabled={!schedule.client_id}
-							//disabled={creatingServiceLoading}
+							disabled={creatingServiceLoading}
 						>
 							{creatingServiceLoading
 								? "Creating..."
@@ -1467,6 +1485,7 @@ export default function ScheduleDetails() {
 					</div>
 
 				</div>
+
 			)}
 
 		</div>
