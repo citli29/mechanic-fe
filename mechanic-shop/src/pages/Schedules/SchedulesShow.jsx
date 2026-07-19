@@ -55,6 +55,81 @@ export default function ScheduleDetails() {
 		text: ""
 	});
 
+	const emptyService = {
+		kms: "",
+		checkin: "",
+		checkout: "",
+		malfunction: "",
+		service: ""
+	};
+
+	const [creatingService, setCreatingService] = useState(false);
+	const [serviceForm, setServiceForm] = useState(emptyService);
+	const [creatingServiceLoading, setCreatingServiceLoading] = useState(false);
+
+	function beginCreateService() {
+		setServiceForm({
+			kms: "",
+			checkin: schedule.date || "",
+			checkout: "",
+			malfunction: schedule.description || "",
+			service: ""
+		});
+
+		setCreatingService(true);
+	}
+
+	async function createServiceFromSchedule() {
+		if (!schedule.client_id) {
+			showMessage(
+				"error",
+				"A client is required before creating the service."
+			);
+			return;
+		}
+
+		setCreatingServiceLoading(true);
+
+		try {
+			const data = {
+				client_id: Number(schedule.client_id),
+				car_id: schedule.car_id
+					? Number(schedule.car_id)
+					: null,
+				kms: serviceForm.kms === ""
+					? null
+					: Number(serviceForm.kms),
+				checkin: serviceForm.checkin || null,
+				checkout: serviceForm.checkout || null,
+				malfunction: serviceForm.malfunction || null,
+				service: serviceForm.service || null,
+				schedule_id: Number(id)
+			};
+
+			const res = await api.post(
+				`/schedules/${id}/create_service`,
+				data
+			);
+
+			const newServiceId =
+				res.data.service?.id ||
+					res.data.service_id;
+
+			if (!newServiceId) {
+				throw new Error(
+					"The API did not return the new service ID."
+				);
+			}
+
+			navigate(`/services/${newServiceId}`);
+		}
+		catch (err) {
+			handleApiError(err);
+		}
+		finally {
+			setCreatingServiceLoading(false);
+		}
+	}
 	function showMessage(type, text) {
 
 		setMessage({
@@ -1288,6 +1363,12 @@ export default function ScheduleDetails() {
 							>
 								Delete
 							</button>
+							<button
+								type="button"
+								onClick={beginCreateService}
+							>
+								Create Service
+							</button>
 
 						</>
 
@@ -1302,7 +1383,12 @@ export default function ScheduleDetails() {
 							<button onClick={cancelEdit}>
 								Cancel
 							</button>
-
+							<button
+								type="button"
+								onClick={beginCreateService}
+							>
+								Create Service
+							</button>
 						</>
 
 					)}
@@ -1314,6 +1400,74 @@ export default function ScheduleDetails() {
 				</div>
 
 			</div>
+			{creatingService && (
+	<div className="details-card">
+
+		<h2>Create Service</h2>
+
+		<div className="details-grid">
+
+			<div className="field">
+				<label>Check In</label>
+
+				<input
+					type="date"
+					value={serviceForm.checkin}
+					onChange={e =>
+						setServiceForm(prev => ({
+							...prev,
+							checkin: e.target.value
+						}))
+					}
+				/>
+			</div>
+
+
+						<div className="field">
+							<label>Kilometers</label>
+
+							<input
+								type="number"
+								value={serviceForm.kms}
+								onChange={e =>
+									setServiceForm(prev => ({
+										...prev,
+										kms: e.target.value
+									}))
+								}
+							/>
+						</div>
+
+					</div>
+
+					<div className="details-actions">
+
+						<button
+							type="button"
+							onClick={createServiceFromSchedule}
+							disabled={!schedule.client_id}
+							//disabled={creatingServiceLoading}
+						>
+							{creatingServiceLoading
+								? "Creating..."
+								: "Create Service"}
+						</button>
+
+						<button
+							type="button"
+							onClick={() => {
+								setCreatingService(false);
+								setServiceForm(emptyService);
+							}}
+							disabled={creatingServiceLoading}
+						>
+							Cancel
+						</button>
+
+					</div>
+
+				</div>
+			)}
 
 		</div>
 
