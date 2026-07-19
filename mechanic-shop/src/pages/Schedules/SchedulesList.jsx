@@ -22,7 +22,7 @@ export default function SchedulesList() {
 
 	const [editing, setEditing] = useState(null);
 
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(true);
 
 	const [message, setMessage] = useState({
 		type: "",
@@ -82,7 +82,6 @@ export default function SchedulesList() {
 
 	useEffect(() => {
 
-		loadSchedules();
 		loadClients();
 		loadCars();
 
@@ -146,7 +145,9 @@ export default function SchedulesList() {
 				params
 			});
 
-			setSchedules(res.data.schedule_list || []);
+			setSchedules(
+				res.data.schedule_list || []
+			);
 
 		}
 		catch (err) {
@@ -168,7 +169,9 @@ export default function SchedulesList() {
 
 			const res = await api.get("/clients");
 
-			setClients(res.data.client_list || []);
+			setClients(
+				res.data.client_list || []
+			);
 
 		}
 		catch (err) {
@@ -186,7 +189,9 @@ export default function SchedulesList() {
 
 			const res = await api.get("/cars");
 
-			setCars(res.data.car_list || []);
+			setCars(
+				res.data.car_list || []
+			);
 
 		}
 		catch (err) {
@@ -202,7 +207,6 @@ export default function SchedulesList() {
 
 		let { name, value } = e.target;
 
-		// Only allow numbers for date fields
 		if (["day", "month", "year"].includes(name)) {
 
 			value = value.replace(/\D/g, "");
@@ -225,15 +229,17 @@ export default function SchedulesList() {
 				[name]: value
 			};
 
-			// If year is removed, clear month and day
 			if (name === "year" && value === "") {
+
 				updated.month = "";
 				updated.day = "";
+
 			}
 
-			// If month is removed, clear day
 			if (name === "month" && value === "") {
+
 				updated.day = "";
+
 			}
 
 			return updated;
@@ -291,10 +297,10 @@ export default function SchedulesList() {
 
 		const { name, value } = e.target;
 
-		setEditing({
-			...editing,
+		setEditing(prev => ({
+			...prev,
 			[name]: value
-		});
+		}));
 
 	}
 
@@ -308,6 +314,7 @@ export default function SchedulesList() {
 		}));
 
 	}
+
 	async function saveSchedule() {
 
 		try {
@@ -382,7 +389,6 @@ export default function SchedulesList() {
 			);
 
 			setCreatingSchedule(false);
-
 			setNewSchedule(emptySchedule);
 
 			loadSchedules();
@@ -421,49 +427,17 @@ export default function SchedulesList() {
 
 	}
 
-	// return (
-
-	/*
-	Replace your old date filter with these three inputs:
-
-	<input
-		name="day"
-		placeholder="DD"
-		maxLength={2}
-		value={filters.day}
-		onChange={updateFilter}
-		onBlur={padDateField}
-		disabled={!filters.month}
-	/>
-
-	<input
-		name="month"
-		placeholder="MM"
-		maxLength={2}
-		value={filters.month}
-		onChange={updateFilter}
-		onBlur={padDateField}
-		disabled={!filters.year}
-	/>
-
-	<input
-		name="year"
-		placeholder="YYYY"
-		maxLength={4}
-		value={filters.year}
-		onChange={updateFilter}
-	/>
-
-	*/
 	return (
 		<div className="container">
 
 			<h1>Schedules</h1>
 
 			{message.text && (
+
 				<div className={`api-message ${message.type}`}>
 					{message.text}
 				</div>
+
 			)}
 
 			<div className="filters">
@@ -495,6 +469,7 @@ export default function SchedulesList() {
 					onBlur={padDateField}
 					disabled={!filters.month}
 				/>
+
 				<input
 					name="client_name"
 					placeholder="Client"
@@ -527,7 +502,11 @@ export default function SchedulesList() {
 					Clear
 				</button>
 
-				<button onClick={() => navigate("/schedules/new")}>
+				<button
+					onClick={() =>
+						navigate("/schedules/new")
+					}
+				>
 					Add Schedule
 				</button>
 
@@ -535,113 +514,140 @@ export default function SchedulesList() {
 
 			<div className="table-wrapper">
 
-			<table className="table">
+				<table className="table">
 
-				<thead>
-					<tr>
-						<th>Date</th>
-						<th>Client</th>
-						<th>Phone</th>
-						<th>Plate</th>
-						<th>Make</th>
-						<th>Model</th>
-						<th>Description</th>
-						<th></th>
-					</tr>
-				</thead>
-
-				<tbody>
-
-					{loading ? (
+					<thead>
 
 						<tr>
-							<td colSpan={8}>
-								Loading...
-							</td>
+
+							<th>Date</th>
+							<th>Client</th>
+							<th>Phone</th>
+							<th>Plate</th>
+							<th>Make</th>
+							<th>Model</th>
+							<th>Description</th>
+							<th></th>
+
 						</tr>
 
-					) : schedules.length === 0 ? (
+					</thead>
+
+					<tbody>
+
+						{loading && schedules.length === 0 ? (
 
 							<tr>
+
+								<td colSpan={8}>
+									Loading...
+								</td>
+
+							</tr>
+
+						) : !loading && schedules.length === 0 ? (
+
+							<tr>
+
 								<td colSpan={8}>
 									No schedules found.
 								</td>
+
 							</tr>
 
 						) : (
 
-								schedules.map(schedule => (
+							schedules.map(schedule => (
 
-									<tr
-										key={schedule.id}
-										onClick={() => navigate(`/schedules/${schedule.id}`)}
-										style={{ cursor: "pointer" }}
-									>
+								<tr
+									key={schedule.id}
+									onClick={() =>
+										navigate(`/schedules/${schedule.id}`)
+									}
+									style={{
+										cursor: "pointer"
+									}}
+								>
 
-										<td>{schedule.date}</td>
+									<td>
+										{schedule.date || "-"}
+									</td>
 
-										<td>
-											{schedule.client_name || "-"}
-										</td>
+									<td>
+										{schedule.client_name || "-"}
+									</td>
 
-										<td>
-											{schedule.client_phone || "-"}
-										</td>
+									<td>
+										{schedule.client_phone || "-"}
+									</td>
 
-										<td>
-											{schedule.car_plate || "-"}
-										</td>
+									<td>
+										{schedule.car_plate || "-"}
+									</td>
 
-										<td>
-											{schedule.car_make || "-"}
-										</td>
+									<td>
+										{schedule.car_make || "-"}
+									</td>
 
-										<td>
-											{schedule.car_model || "-"}
-										</td>
+									<td>
+										{schedule.car_model || "-"}
+									</td>
 
-										<td>
-											{schedule.description}
-										</td>
+									<td>
+										{schedule.description || "-"}
+									</td>
 
-										<td>
+									<td>
 
-											<div className="container-buttons">
+										<div className="container-buttons">
 
-												<button
-													onClick={(e) => {
-														e.stopPropagation();
-														navigate(`/schedules/${schedule.id}`);
-													}}
-												>
-													Open
-												</button>
+											<button
+												onClick={(e) => {
 
-												<button
-													className="delete-btn"
-													onClick={(e) => {
-														e.stopPropagation();
-														deleteSchedule(schedule.id);
-													}}
-												>
-													Delete
-												</button>
+													e.stopPropagation();
 
-											</div>
+													navigate(
+														`/schedules/${schedule.id}`
+													);
 
-										</td>
+												}}
+											>
+												Open
+											</button>
 
-									</tr>
+											<button
+												className="delete-btn"
+												onClick={(e) => {
 
-								))
+													e.stopPropagation();
 
-							)}
+													deleteSchedule(
+														schedule.id
+													);
 
-				</tbody>
+												}}
+											>
+												Delete
+											</button>
 
-			</table>
+										</div>
+
+									</td>
+
+								</tr>
+
+							))
+
+						)}
+
+					</tbody>
+
+				</table>
+
 			</div>
 
 		</div>
 	);
+
 }
+

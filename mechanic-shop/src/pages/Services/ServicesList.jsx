@@ -18,7 +18,7 @@ export default function ServicesList() {
 		car_model: ""
 	});
 
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(true);
 
 	const [message, setMessage] = useState({
 		type: "",
@@ -65,12 +65,6 @@ export default function ServicesList() {
 		console.error(err);
 
 	}
-
-	useEffect(() => {
-
-		loadServices();
-
-	}, []);
 
 	useEffect(() => {
 
@@ -130,7 +124,9 @@ export default function ServicesList() {
 				params
 			});
 
-			setServices(res.data.service_list || []);
+			setServices(
+				res.data.service_list || []
+			);
 
 		}
 		catch (err) {
@@ -234,9 +230,11 @@ export default function ServicesList() {
 			<h1>Services</h1>
 
 			{message.text && (
+
 				<div className={`api-message ${message.type}`}>
 					{message.text}
 				</div>
+
 			)}
 
 			<div className="filters">
@@ -301,107 +299,119 @@ export default function ServicesList() {
 					Clear
 				</button>
 
-				<button onClick={() => navigate("/services/new")}>
+				<button
+					onClick={() =>
+						navigate("/services/new")
+					}
+				>
 					Add Service
 				</button>
 
 			</div>
 
-
 			<div className="table-wrapper">
 
-			<table className="table">
+				<table className="table">
 
-				<thead>
-
-					<tr>
-
-						<th>Check In</th>
-						<th>Check Out</th>
-						<th>Client</th>
-						<th>Phone</th>
-						<th>Plate</th>
-						<th>Make</th>
-						<th>Model</th>
-						<th>Kms</th>
-					</tr>
-
-				</thead>
-
-				<tbody>
-
-					{loading ? (
+					<thead>
 
 						<tr>
 
-							<td colSpan={9}>
-								Loading...
-							</td>
+							<th>Check In</th>
+							<th>Check Out</th>
+							<th>Client</th>
+							<th>Phone</th>
+							<th>Plate</th>
+							<th>Make</th>
+							<th>Model</th>
+							<th>Kms</th>
 
 						</tr>
 
-					) : services.length === 0 ? (
+					</thead>
 
-						<tr>
+					<tbody>
 
-							<td colSpan={9}>
-								No services found.
-							</td>
+						{loading && services.length === 0 ? (
 
-						</tr>
+							<tr>
 
-					) : (
-
-						services.map(service => (
-													<tr
-								key={service.id}
-								onClick={() => navigate(`/services/${service.id}`)}
-								style={{ cursor: "pointer" }}
-							>
-
-								<td>
-									{service.checkin || "-"}
-								</td>
-
-								<td>
-									{service.checkout || "-"}
-								</td>
-
-								<td>
-									{service.client_name || "-"}
-								</td>
-
-								<td>
-									{service.client_phone || "-"}
-								</td>
-
-								<td>
-									{service.car_plate || "-"}
-								</td>
-
-								<td>
-									{service.car_make_name || "-"}
-								</td>
-
-								<td>
-									{service.car_model_name || "-"}
-								</td>
-
-								<td>
-									{service.kms ?? "-"}
+								<td colSpan={8}>
+									Loading...
 								</td>
 
 							</tr>
 
-						))
+						) : !loading && services.length === 0 ? (
 
-					)}
+							<tr>
 
-				</tbody>
+								<td colSpan={8}>
+									No services found.
+								</td>
 
-			</table>
+							</tr>
+
+						) : (
+
+							services.map(service => (
+
+								<tr
+									key={service.id}
+									onClick={() =>
+										navigate(`/services/${service.id}`)
+									}
+									style={{
+										cursor: "pointer"
+									}}
+								>
+
+									<td>
+										{service.checkin || "-"}
+									</td>
+
+									<td>
+										{service.checkout || "-"}
+									</td>
+
+									<td>
+										{service.client_name || "-"}
+									</td>
+
+									<td>
+										{service.client_phone || "-"}
+									</td>
+
+									<td>
+										{service.car_plate || "-"}
+									</td>
+
+									<td>
+										{service.car_make_name || "-"}
+									</td>
+
+									<td>
+										{service.car_model_name || "-"}
+									</td>
+
+									<td>
+										{service.kms ?? "-"}
+									</td>
+
+								</tr>
+
+							))
+
+						)}
+
+					</tbody>
+
+				</table>
+
 			</div>
+
 		</div>
 	);
 
 }
+
