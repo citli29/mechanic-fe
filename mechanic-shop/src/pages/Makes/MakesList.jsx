@@ -234,6 +234,8 @@ export default function MakesList() {
 
 			</div>
 
+			<div className="table-wrapper">
+
 			<table className="table">
 
 				<thead>
@@ -350,8 +352,8 @@ export default function MakesList() {
 				</tbody>
 
 			</table>
+			</div>
 
 		</div>
 	);
-	// return (...)
 }

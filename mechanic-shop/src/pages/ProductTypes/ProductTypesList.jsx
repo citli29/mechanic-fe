@@ -247,6 +247,8 @@ export default function ProductTypesList() {
 
 			</div>
 
+			<div className="table-wrapper">
+
 			<table className="table">
 
 				<thead>
@@ -374,6 +376,7 @@ export default function ProductTypesList() {
 				</tbody>
 
 			</table>
+			</div>
 
 
 		</div>

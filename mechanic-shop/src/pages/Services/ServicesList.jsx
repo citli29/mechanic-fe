@@ -307,6 +307,9 @@ export default function ServicesList() {
 
 			</div>
 
+
+			<div className="table-wrapper">
+
 			<table className="table">
 
 				<thead>
@@ -397,6 +400,7 @@ export default function ServicesList() {
 				</tbody>
 
 			</table>
+			</div>
 		</div>
 	);
 

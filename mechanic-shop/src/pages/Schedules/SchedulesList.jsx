@@ -533,6 +533,8 @@ export default function SchedulesList() {
 
 			</div>
 
+			<div className="table-wrapper">
+
 			<table className="table">
 
 				<thead>
@@ -638,6 +640,7 @@ export default function SchedulesList() {
 				</tbody>
 
 			</table>
+			</div>
 
 		</div>
 	);

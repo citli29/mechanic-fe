@@ -345,6 +345,8 @@ export default function ClientsList() {
 
 			</div>
 
+			<div className="table-wrapper">
+
 			<table className="table">
 
 				<thead>
@@ -597,6 +599,7 @@ export default function ClientsList() {
 				</tbody>
 
 			</table>
+			</div>
 
 		</div>
 

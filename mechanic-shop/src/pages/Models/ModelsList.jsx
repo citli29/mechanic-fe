@@ -298,6 +298,8 @@ export default function ModelsList() {
 
 			</div>
 
+			<div className="table-wrapper">
+
 			<table className="table">
 
 				<thead>
@@ -468,6 +470,7 @@ export default function ModelsList() {
 				</tbody>
 
 			</table>
+			</div>
 
 		</div>
 	);
