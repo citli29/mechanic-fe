@@ -10,14 +10,14 @@ export default function Footer() {
 
 				<div className="footer-brand">
 					<h3>Oficina Lima</h3>
-					<p>Auto Repair Management System</p>
+					<p>Sistema de Gestão - Reparação Automóvel</p>
 				</div>
 
 				<div className="footer-links">
 
-					<a href="/services">Services</a>
-					<a href="/schedules">Schedules</a>
-					<a href="/schedules_calendar">Calendar</a>
+					<a href="/services">Serviços</a>
+					<a href="/schedules">Marcações</a>
+					<a href="/schedules_calendar">Calendário</a>
 
 				</div>
 

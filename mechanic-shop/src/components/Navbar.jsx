@@ -35,21 +35,21 @@ export default function Navbar() {
 							to="/schedules_calendar"
 							className={linkClass}
 						>
-							Calendar
+							Calendário
 						</NavLink>
 
 						<NavLink
 							to="/services"
 							className={linkClass}
 						>
-							Services
+							Serviços
 						</NavLink>
 
 						<NavLink
 							to="/schedules"
 							className={linkClass}
 						>
-							Schedules
+							Marcações
 						</NavLink>
 
 					</div>
@@ -57,7 +57,7 @@ export default function Navbar() {
 					<details className="navbar-dropdown">
 
 						<summary>
-							Management
+							Gestão
 
 							<span className="navbar-dropdown-arrow">
 								⌄
@@ -70,28 +70,28 @@ export default function Navbar() {
 								to="/clients"
 								className={linkClass}
 							>
-								Clients
+								Clientes
 							</NavLink>
 
 							<NavLink
 								to="/cars"
 								className={linkClass}
 							>
-								Cars
+								Viaturas
 							</NavLink>
 
 							<NavLink
 								to="/makes"
 								className={linkClass}
 							>
-								Makes
+								Marcas
 							</NavLink>
 
 							<NavLink
 								to="/models"
 								className={linkClass}
 							>
-								Models
+								Modelos
 							</NavLink>
 
 							<div className="navbar-dropdown-divider" />
@@ -100,14 +100,14 @@ export default function Navbar() {
 								to="/products"
 								className={linkClass}
 							>
-								Products
+								Produtos
 							</NavLink>
 
 							<NavLink
 								to="/product_types"
 								className={linkClass}
 							>
-								Product Types
+								Tipos de Produtos
 							</NavLink>
 
 						</div>

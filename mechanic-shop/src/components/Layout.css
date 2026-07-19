@@ -1,17 +1,55 @@
-.layout {
+/* =====================
+   Application Layout
+===================== */
 
-	min-height: 100vh;
-
-	display: flex;
-	flex-direction: column;
-
+html,
+body,
+#root {
+	min-height: 100%;
+	margin: 0;
 }
 
-.page-content {
+body {
+	background: #f3f4f6;
+}
 
+.app-layout {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+}
+
+/*
+   Navbar, page content and footer all use this exact width.
+*/
+.app-content {
+	width: min(100% - 40px, 1400px);
+	margin-inline: auto;
+	box-sizing: border-box;
+}
+
+.app-main {
 	flex: 1;
+	width: 100%;
+	padding: 28px 0 40px;
+}
 
-	padding: 25px;
+/* Remove width restrictions from page containers */
+.app-main .container {
+	width: 100%;
+	max-width: none;
+	margin: 0;
+	box-sizing: border-box;
+}
 
+@media (max-width: 650px) {
+
+	.app-content {
+		width: min(100% - 24px, 1400px);
+	}
+
+	.app-main {
+		padding: 20px 0 30px;
+	}
 
 }

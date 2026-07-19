@@ -356,7 +356,7 @@ export default function CarsList() {
 	return (
 		<div className="container">
 
-			<h1>Cars</h1>
+			<h1>Viaturas</h1>
 
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
@@ -369,41 +369,41 @@ export default function CarsList() {
 
 				<input
 					name="plate"
-					placeholder="Plate"
+					placeholder="Matricula"
 					value={filters.plate}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="year"
-					placeholder="Year"
+					placeholder="Ano"
 					value={filters.year}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="month"
-					placeholder="Month"
+					placeholder="Mes"
 					value={filters.month}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="make_name"
-					placeholder="Make"
+					placeholder="Marca"
 					value={filters.make_name}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="model_name"
-					placeholder="Model"
+					placeholder="Modelo"
 					value={filters.model_name}
 					onChange={updateFilter}
 				/>
 
 				<button onClick={clearFilters}>
-					Clear
+					Limpar
 				</button>
 
 				<button
@@ -412,7 +412,7 @@ export default function CarsList() {
 						setNewCar(emptyCar);
 					}}
 				>
-					Add Car
+					Adicionar Viatura
 				</button>
 
 			</div>
@@ -424,15 +424,15 @@ export default function CarsList() {
 
 				<thead>
 					<tr>
-						<th>Plate</th>
-						<th>Make</th>
-						<th>Model</th>
-						<th>Month</th>
-						<th>Year</th>
+						<th>Matricula</th>
+						<th>Marca</th>
+						<th>Modelo</th>
+						<th>Mes</th>
+						<th>Ano</th>
 						<th>CC</th>
-						<th>Engine</th>
-						<th>Color</th>
-						<th>Chassi</th>
+						<th>Cod. Motor</th>
+						<th>Cod. Cor</th>
+						<th>Nr. Chassi</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -716,7 +716,7 @@ export default function CarsList() {
 										>
 
 											<option value="">
-												Make
+												Marca
 											</option>
 
 											{makes.map(make => (
@@ -793,7 +793,7 @@ export default function CarsList() {
 										>
 
 											<option value="">
-												Model
+												Modelo
 											</option>
 
 											{models.map(model => (
@@ -943,7 +943,7 @@ export default function CarsList() {
 												editCar(car);
 											}}
 										>
-											Edit
+											Editar
 										</button>
 
 									</td>

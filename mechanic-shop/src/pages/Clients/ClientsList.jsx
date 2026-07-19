@@ -302,7 +302,7 @@ export default function ClientsList() {
 	return (
 		<div className="container">
 
-			<h1>Clients</h1>
+			<h1>Clientes</h1>
 
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
@@ -314,14 +314,14 @@ export default function ClientsList() {
 
 				<input
 					name="name"
-					placeholder="Name"
+					placeholder="Nome"
 					value={filters.name}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="phone"
-					placeholder="Phone"
+					placeholder="Telemovel"
 					value={filters.phone}
 					onChange={updateFilter}
 				/>
@@ -334,12 +334,12 @@ export default function ClientsList() {
 				/>
 
 				<button onClick={clearFilters}>
-					Clear
+					Limpar
 				</button>
 
 				{!creating && (
 					<button onClick={() => setCreating(true)}>
-						Add Client
+						Adicionar Cliente
 					</button>
 				)}
 
@@ -351,12 +351,12 @@ export default function ClientsList() {
 
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Phone</th>
+						<th>Nome</th>
+						<th>Telemovel</th>
 						<th>Email</th>
-						<th>Address</th>
-						<th>ZIP Code</th>
-						<th>Tax Nº</th>
+						<th>Morada</th>
+						<th>Cod. Postal</th>
+						<th>NIF</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -370,7 +370,7 @@ export default function ClientsList() {
 
 							<input
 								name="name"
-								placeholder="Client name"
+								placeholder="Nome"
 								value={newClient.name}
 								onChange={updateNewClient}
 							/>
@@ -381,7 +381,7 @@ export default function ClientsList() {
 
 							<input
 								name="phone"
-								placeholder="Phone"
+								placeholder="Telemovel"
 								value={newClient.phone}
 								onChange={updateNewClient}
 							/>
@@ -403,7 +403,7 @@ export default function ClientsList() {
 
 							<input
 								name="address"
-								placeholder="Address"
+								placeholder="Morada"
 								value={newClient.address}
 								onChange={updateNewClient}
 							/>
@@ -414,7 +414,7 @@ export default function ClientsList() {
 
 							<input
 								name="zip_code"
-								placeholder="ZIP Code"
+								placeholder="Cod. Postal"
 								value={newClient.zip_code}
 								onChange={updateNewClient}
 							/>
@@ -425,7 +425,7 @@ export default function ClientsList() {
 
 							<input
 								name="tax_nr"
-								placeholder="Tax Number"
+								placeholder="NIF"
 								value={newClient.tax_nr}
 								onChange={updateNewClient}
 							/>
@@ -437,7 +437,7 @@ export default function ClientsList() {
 							<div className="container-buttons">
 
 								<button onClick={createClient}>
-									Add
+									Adicionar
 								</button>
 
 								<button
@@ -571,7 +571,7 @@ export default function ClientsList() {
 								<button
 									onClick={() => editClient(client)}
 								>
-									Edit
+									Editar
 								</button>
 
 								<button
@@ -583,7 +583,7 @@ export default function ClientsList() {
 										)
 									}
 								>
-									Delete
+									Apagar
 								</button>
 
 							</div>
