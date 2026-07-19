@@ -829,7 +829,7 @@ export default function ScheduleDetails() {
 
 				) : relatedServices.length === 0 ? (
 
-					<p>No services linked to this schedule.</p>
+					<p>Sem serviços associados a esta marcação.</p>
 
 				) : (
 
@@ -840,8 +840,8 @@ export default function ScheduleDetails() {
 							<thead>
 
 								<tr>
-									<th>Service ID</th>
-									<th>Check In</th>
+									<th>ID do Serviço</th>
+									<th>Entrada</th>
 									<th></th>
 								</tr>
 
@@ -869,7 +869,7 @@ export default function ScheduleDetails() {
 													navigate(`/services/${service.id}`)
 												}
 											>
-												Open Service
+												Abrir Serviço
 											</button>
 
 										</td>
@@ -894,7 +894,7 @@ export default function ScheduleDetails() {
 
 					<div className="field">
 
-						<label>Date</label>
+						<label>Data</label>
 
 						<input
 							type="date"
@@ -908,7 +908,7 @@ export default function ScheduleDetails() {
 
 					<div className="field field-full">
 
-						<label>Description</label>
+						<label>Descrição</label>
 
 						<textarea
 							name="description"
@@ -921,7 +921,7 @@ export default function ScheduleDetails() {
 
 					<div className="field">
 
-						<label>Client</label>
+						<label>Cliente</label>
 
 						{isEditing ? (
 
@@ -936,7 +936,7 @@ export default function ScheduleDetails() {
 									>
 
 										<option value="">
-											No client
+											Sem clientes
 										</option>
 
 										{clients.map(client => (
@@ -949,7 +949,7 @@ export default function ScheduleDetails() {
 										))}
 
 										<option value="new">
-											+ Create new client
+											+ Criar Novo Cliente
 										</option>
 
 									</select>
@@ -958,12 +958,12 @@ export default function ScheduleDetails() {
 
 										<div className="info-box">
 
-											<div><strong>Name:</strong> {selectedClient.name}</div>
-											<div><strong>Phone:</strong> {selectedClient.phone}</div>
+											<div><strong>Nome:</strong> {selectedClient.name}</div>
+											<div><strong>Telemóvel:</strong> {selectedClient.phone}</div>
 											<div><strong>Email:</strong> {selectedClient.email || "-"}</div>
-											<div><strong>Address:</strong> {selectedClient.address || "-"}</div>
-											<div><strong>ZIP:</strong> {selectedClient.zip_code || "-"}</div>
-											<div><strong>Tax:</strong> {selectedClient.tax_nr || "-"}</div>
+											<div><strong>Morada:</strong> {selectedClient.address || "-"}</div>
+											<div><strong>Cod. Postal:</strong> {selectedClient.zip_code || "-"}</div>
+											<div><strong>NIF:</strong> {selectedClient.tax_nr || "-"}</div>
 
 										</div>
 
@@ -977,14 +977,14 @@ export default function ScheduleDetails() {
 
 									<input
 										name="name"
-										placeholder="Client name"
+										placeholder="Nome"
 										value={newClient.name}
 										onChange={updateNewClient}
 									/>
 
 									<input
 										name="phone"
-										placeholder="Phone"
+										placeholder="Telemóvel"
 										value={newClient.phone}
 										onChange={updateNewClient}
 									/>
@@ -998,21 +998,21 @@ export default function ScheduleDetails() {
 
 									<input
 										name="address"
-										placeholder="Address"
+										placeholder="Morada"
 										value={newClient.address}
 										onChange={updateNewClient}
 									/>
 
 									<input
 										name="zip_code"
-										placeholder="ZIP Code"
+										placeholder="Cod. Postal"
 										value={newClient.zip_code}
 										onChange={updateNewClient}
 									/>
 
 									<input
 										name="tax_nr"
-										placeholder="Tax Number"
+										placeholder="NIF"
 										value={newClient.tax_nr}
 										onChange={updateNewClient}
 									/>
@@ -1020,7 +1020,7 @@ export default function ScheduleDetails() {
 									<div className="create-buttons">
 
 										<button onClick={createClient}>
-											Add
+											Adicionar
 										</button>
 
 										<button
@@ -1057,12 +1057,12 @@ export default function ScheduleDetails() {
 
 									<div className="info-box">
 
-										<div><strong>Name:</strong> {selectedClient.name}</div>
-										<div><strong>Phone:</strong> {selectedClient.phone}</div>
+										<div><strong>Nome:</strong> {selectedClient.name}</div>
+										<div><strong>Telemóvel:</strong> {selectedClient.phone}</div>
 										<div><strong>Email:</strong> {selectedClient.email || "-"}</div>
-										<div><strong>Address:</strong> {selectedClient.address || "-"}</div>
-										<div><strong>ZIP:</strong> {selectedClient.zip_code || "-"}</div>
-										<div><strong>Tax:</strong> {selectedClient.tax_nr || "-"}</div>
+										<div><strong>Morada:</strong> {selectedClient.address || "-"}</div>
+										<div><strong>Cod. Postal:</strong> {selectedClient.zip_code || "-"}</div>
+										<div><strong>NIF:</strong> {selectedClient.tax_nr || "-"}</div>
 
 									</div>
 
@@ -1076,7 +1076,7 @@ export default function ScheduleDetails() {
 
 					<div className="field">
 
-						<label>Car</label>
+						<label>Viatura</label>
 
 						{isEditing ? (
 
@@ -1091,7 +1091,7 @@ export default function ScheduleDetails() {
 									>
 
 										<option value="">
-											No car
+											Sem Viatura
 										</option>
 
 										{cars.map(car => (
@@ -1106,7 +1106,7 @@ export default function ScheduleDetails() {
 										))}
 
 										<option value="new">
-											+ Create new car
+											+ Criar Nova Viatura
 										</option>
 
 									</select>
@@ -1115,9 +1115,9 @@ export default function ScheduleDetails() {
 
 										<div className="info-box">
 
-											<div><strong>Plate:</strong> {selectedCar.plate}</div>
-											<div><strong>Make:</strong> {selectedCar.make_name}</div>
-											<div><strong>Model:</strong> {selectedCar.model_name}</div>
+											<div><strong>Matrícula:</strong> {selectedCar.plate}</div>
+											<div><strong>Marca:</strong> {selectedCar.make_name}</div>
+											<div><strong>Modelo:</strong> {selectedCar.model_name}</div>
 
 										</div>
 
@@ -1131,7 +1131,7 @@ export default function ScheduleDetails() {
 
 									<input
 										name="plate"
-										placeholder="Plate"
+										placeholder="Matrícula"
 										value={newCar.plate}
 										onChange={updateNewCar}
 									/>
@@ -1145,7 +1145,7 @@ export default function ScheduleDetails() {
 										>
 
 											<option value="">
-												Select Make
+												Selecionar Marca
 											</option>
 
 											{makes.map(make => (
@@ -1160,7 +1160,7 @@ export default function ScheduleDetails() {
 											))}
 
 											<option value="new">
-												+ Create new make
+												+ Criar Nova Marca
 											</option>
 
 										</select>
@@ -1180,7 +1180,7 @@ export default function ScheduleDetails() {
 											<div className="create-buttons">
 
 												<button onClick={createMake}>
-													Add
+													Adicionar
 												</button>
 
 												<button
@@ -1208,7 +1208,7 @@ export default function ScheduleDetails() {
 										>
 
 											<option value="">
-												Select Model
+												Selecionar Modelo
 											</option>
 
 											{models.map(model => (
@@ -1223,7 +1223,7 @@ export default function ScheduleDetails() {
 											))}
 
 											<option value="new">
-												+ Create new model
+												+ Criar Novo Modelo
 											</option>
 
 										</select>
@@ -1233,7 +1233,7 @@ export default function ScheduleDetails() {
 										<>
 
 											<input
-												placeholder="New model"
+												placeholder="Novo Modelo"
 												value={newModelName}
 												onChange={e =>
 													setNewModelName(e.target.value)
@@ -1243,7 +1243,7 @@ export default function ScheduleDetails() {
 											<div className="create-buttons">
 
 												<button onClick={createModel}>
-													Add
+													Adicionar
 												</button>
 
 												<button
@@ -1264,7 +1264,7 @@ export default function ScheduleDetails() {
 									<div className="create-buttons">
 
 										<button onClick={createCar}>
-											Add Car
+											Adicionar Viatura
 										</button>
 
 										<button
@@ -1277,7 +1277,7 @@ export default function ScheduleDetails() {
 
 											}}
 										>
-											Cancel
+											Cancelar
 										</button>
 
 									</div>
@@ -1303,20 +1303,20 @@ export default function ScheduleDetails() {
 
 									<div className="info-box">
 
-										<div><strong>Plate:</strong> {selectedCar.plate}</div>
-										<div><strong>Make:</strong> {selectedCar.make_name}</div>
-										<div><strong>Model:</strong> {selectedCar.model_name}</div>
+										<div><strong>Matrícula:</strong> {selectedCar.plate}</div>
+										<div><strong>Marca:</strong> {selectedCar.make_name}</div>
+										<div><strong>Modelo:</strong> {selectedCar.model_name}</div>
 
 										{selectedCar.year && (
-											<div><strong>Year:</strong> {selectedCar.year}</div>
+											<div><strong>Ano:</strong> {selectedCar.year}</div>
 										)}
 
 										{selectedCar.month && (
-											<div><strong>Month:</strong> {selectedCar.month}</div>
+											<div><strong>Mês:</strong> {selectedCar.month}</div>
 										)}
 
 										{selectedCar.engine_code && (
-											<div><strong>Engine:</strong> {selectedCar.engine_code}</div>
+											<div><strong>Cod. Motor:</strong> {selectedCar.engine_code}</div>
 										)}
 
 										{selectedCar.cc && (
@@ -1324,11 +1324,11 @@ export default function ScheduleDetails() {
 										)}
 
 										{selectedCar.color_code && (
-											<div><strong>Color:</strong> {selectedCar.color_code}</div>
+											<div><strong>Cod. Cor:</strong> {selectedCar.color_code}</div>
 										)}
 
 										{selectedCar.chassi_nr && (
-											<div><strong>Chassis:</strong> {selectedCar.chassi_nr}</div>
+											<div><strong>Nr. Chassi:</strong> {selectedCar.chassi_nr}</div>
 										)}
 
 									</div>
@@ -1347,7 +1347,7 @@ export default function ScheduleDetails() {
 
 							<div className="field">
 
-								<label>Make</label>
+								<label>Marca</label>
 
 								{isEditing ? (
 
@@ -1358,7 +1358,7 @@ export default function ScheduleDetails() {
 									>
 
 										<option value="">
-											Select Make
+											Selecionar Marca
 										</option>
 
 										{makes.map(make => (
@@ -1385,7 +1385,7 @@ export default function ScheduleDetails() {
 
 							<div className="field">
 
-								<label>Model</label>
+								<label>Modelo</label>
 
 								{isEditing ? (
 
@@ -1397,7 +1397,7 @@ export default function ScheduleDetails() {
 									>
 
 										<option value="">
-											Select Model
+											Selecionar Modelo
 										</option>
 
 										{models.map(model => (
@@ -1435,21 +1435,21 @@ export default function ScheduleDetails() {
 						<>
 
 							<button onClick={beginEdit}>
-								Edit
+								Editar
 							</button>
 
 							<button
 								className="delete-btn"
 								onClick={deleteSchedule}
 							>
-								Delete
+								Apagar
 							</button>
 
 							<button
 								type="button"
 								onClick={beginCreateService}
 							>
-								Create Service
+								Criar Serviço
 							</button>
 
 						</>
@@ -1459,11 +1459,11 @@ export default function ScheduleDetails() {
 						<>
 
 							<button onClick={saveSchedule}>
-								Save
+								Guardar
 							</button>
 
 							<button onClick={cancelEdit}>
-								Cancel
+								Cancelar
 							</button>
 
 						</>
@@ -1471,7 +1471,7 @@ export default function ScheduleDetails() {
 					)}
 
 					<button onClick={() => navigate("/schedules_calendar")}>
-						Back
+						Voltar
 					</button>
 
 				</div>
@@ -1489,7 +1489,7 @@ export default function ScheduleDetails() {
 
 						<div className="field">
 
-							<label>Check In</label>
+							<label>Entrada</label>
 
 							<input
 								type="date"
@@ -1506,7 +1506,7 @@ export default function ScheduleDetails() {
 
 						<div className="field">
 
-							<label>Kilometers</label>
+							<label>Kilometros</label>
 
 							<input
 								type="number"
@@ -1531,8 +1531,8 @@ export default function ScheduleDetails() {
 							disabled={creatingServiceLoading}
 						>
 							{creatingServiceLoading
-								? "Creating..."
-								: "Create Service"}
+								? "A Criar..."
+								: "Criar Serviço"}
 						</button>
 
 						<button
@@ -1543,7 +1543,7 @@ export default function ScheduleDetails() {
 							}}
 							disabled={creatingServiceLoading}
 						>
-							Cancel
+							Cancelar
 						</button>
 
 					</div>

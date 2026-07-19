@@ -227,7 +227,7 @@ export default function ServicesList() {
 	return (
 		<div className="container">
 
-			<h1>Services</h1>
+			<h1>Serviços</h1>
 
 			{message.text && (
 
@@ -241,7 +241,7 @@ export default function ServicesList() {
 
 				<input
 					name="year"
-					placeholder="YYYY"
+					placeholder="AAAA"
 					maxLength={4}
 					value={filters.year}
 					onChange={updateFilter}
@@ -269,34 +269,34 @@ export default function ServicesList() {
 
 				<input
 					name="client_name"
-					placeholder="Client"
+					placeholder="Cliente"
 					value={filters.client_name}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="car_plate"
-					placeholder="Plate"
+					placeholder="Matrícula"
 					value={filters.car_plate}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="car_make"
-					placeholder="Make"
+					placeholder="Marca"
 					value={filters.car_make}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="car_model"
-					placeholder="Model"
+					placeholder="Modelo"
 					value={filters.car_model}
 					onChange={updateFilter}
 				/>
 
 				<button onClick={clearFilters}>
-					Clear
+					Limpar
 				</button>
 
 				<button
@@ -304,7 +304,7 @@ export default function ServicesList() {
 						navigate("/services/new")
 					}
 				>
-					Add Service
+					Adicionar Serviço
 				</button>
 
 			</div>
@@ -317,13 +317,13 @@ export default function ServicesList() {
 
 						<tr>
 
-							<th>Check In</th>
-							<th>Check Out</th>
+							<th>Entrada</th>
+							<th>Saída</th>
 							<th>Client</th>
-							<th>Phone</th>
-							<th>Plate</th>
-							<th>Make</th>
-							<th>Model</th>
+							<th>Telemóvel</th>
+							<th>Matrícula</th>
+							<th>Marca</th>
+							<th>Modelo</th>
 							<th>Kms</th>
 
 						</tr>
@@ -337,7 +337,7 @@ export default function ServicesList() {
 							<tr>
 
 								<td colSpan={8}>
-									Loading...
+									A Carregar...
 								</td>
 
 							</tr>
@@ -347,7 +347,7 @@ export default function ServicesList() {
 							<tr>
 
 								<td colSpan={8}>
-									No services found.
+									Sem Serviços.
 								</td>
 
 							</tr>

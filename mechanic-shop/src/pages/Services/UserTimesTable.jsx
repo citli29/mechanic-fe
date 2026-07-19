@@ -400,7 +400,7 @@ export default function UserTimesTable({
 
 				<div className="table-title">
 
-					<h2>User Times</h2>
+					<h2>Tempos de Serviço</h2>
 
 					{!creating && (
 
@@ -408,7 +408,7 @@ export default function UserTimesTable({
 							type="button"
 							onClick={beginCreating}
 						>
-							Add User Time
+							Adicionar Tempo de Serviço
 						</button>
 
 					)}
@@ -422,9 +422,9 @@ export default function UserTimesTable({
 
 					<tr>
 
-						<th>User</th>
-						<th>Minutes</th>
-						<th>Date</th>
+						<th>Funcinario</th>
+						<th>Minutos</th>
+						<th>Data</th>
 						<th></th>
 
 					</tr>
@@ -438,7 +438,7 @@ export default function UserTimesTable({
 						<tr>
 
 							<td colSpan={4}>
-								Loading...
+								A Carregar...
 							</td>
 
 						</tr>
@@ -452,7 +452,7 @@ export default function UserTimesTable({
 							<tr>
 
 								<td colSpan={4}>
-									No user times found.
+									Sem Tempos de Serviço.
 								</td>
 
 							</tr>
@@ -484,7 +484,7 @@ export default function UserTimesTable({
 											>
 
 												<option value="">
-													Select User
+													Selecionar Funcionario
 												</option>
 
 												{users.map(user => (
@@ -535,8 +535,8 @@ export default function UserTimesTable({
 													disabled={saving}
 												>
 													{saving
-														? "Saving..."
-														: "Save"}
+														? "A Guardar..."
+														: "Guardar"}
 												</button>
 
 												<button
@@ -587,7 +587,7 @@ export default function UserTimesTable({
 													)
 												}
 											>
-												Edit
+												Editar
 											</button>
 
 											<button
@@ -599,7 +599,7 @@ export default function UserTimesTable({
 													)
 												}
 											>
-												Delete
+												Apagar
 											</button>
 
 										</div>
@@ -625,7 +625,7 @@ export default function UserTimesTable({
 								>
 
 									<option value="">
-										Select User
+										Selecionar Funcionario
 									</option>
 
 									{users.map(user => (
@@ -649,7 +649,7 @@ export default function UserTimesTable({
 									type="number"
 									name="minutes"
 									min="1"
-									placeholder="Minutes"
+									placeholder="Minutos"
 									value={newUserTime.minutes}
 									onChange={updateNewUserTime}
 								/>
@@ -677,8 +677,8 @@ export default function UserTimesTable({
 										disabled={saving}
 									>
 										{saving
-											? "Adding..."
-											: "Add"}
+											? "A Adicionar..."
+											: "Adicionar"}
 									</button>
 
 									<button

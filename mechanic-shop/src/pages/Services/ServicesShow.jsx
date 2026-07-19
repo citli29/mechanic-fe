@@ -965,7 +965,7 @@ export default function ServicesShow() {
 
 			<div className="service-title">
 
-				<h1>Service #{id}</h1>
+				<h1>Serviço #{id}</h1>
 
 				<button
 					type="button"
@@ -973,7 +973,7 @@ export default function ServicesShow() {
 						navigate("/schedules_calendar")
 					}
 				>
-					Back
+					Volar
 				</button>
 
 			</div>
@@ -994,18 +994,18 @@ export default function ServicesShow() {
 
 				<div className="service-form-header">
 
-					<h2>Service Information</h2>
+					<h2>Informação de Serviço</h2>
 			</div>
 
 				<div className="service-form-grid">
 
 					<div className="service-form-section">
 
-						<h3>Client</h3>
+						<h3>Cliente</h3>
 
 						<div className="field">
 
-							<label>Client</label>
+							<label>Cliente</label>
 
 							{isEditing ? (
 
@@ -1020,7 +1020,7 @@ export default function ServicesShow() {
 										>
 
 											<option value="">
-												No client
+												Sem Cliente
 											</option>
 
 											{clients.map(client => (
@@ -1038,7 +1038,7 @@ export default function ServicesShow() {
 											))}
 
 											<option value="new">
-												+ Create new client
+												+ Criar Novo Cliente
 											</option>
 
 										</select>
@@ -1048,12 +1048,12 @@ export default function ServicesShow() {
 											<div className="info-box">
 
 												<div>
-													<strong>Name:</strong>{" "}
+													<strong>Nome:</strong>{" "}
 													{selectedClient.name}
 												</div>
 
 												<div>
-													<strong>Phone:</strong>{" "}
+													<strong>Telemóvel:</strong>{" "}
 													{selectedClient.phone || "-"}
 												</div>
 
@@ -1063,17 +1063,17 @@ export default function ServicesShow() {
 												</div>
 
 												<div>
-													<strong>Address:</strong>{" "}
+													<strong>Morada:</strong>{" "}
 													{selectedClient.address || "-"}
 												</div>
 
 												<div>
-													<strong>ZIP:</strong>{" "}
+													<strong>Cod. Postal:</strong>{" "}
 													{selectedClient.zip_code || "-"}
 												</div>
 
 												<div>
-													<strong>Tax:</strong>{" "}
+													<strong>NIF:</strong>{" "}
 													{selectedClient.tax_nr || "-"}
 												</div>
 
@@ -1089,14 +1089,14 @@ export default function ServicesShow() {
 
 										<input
 											name="name"
-											placeholder="Client name"
+											placeholder="Nome"
 											value={newClient.name}
 											onChange={updateNewClient}
 										/>
 
 										<input
 											name="phone"
-											placeholder="Phone"
+											placeholder="Telemóvel"
 											value={newClient.phone}
 											onChange={updateNewClient}
 										/>
@@ -1110,21 +1110,21 @@ export default function ServicesShow() {
 
 										<input
 											name="address"
-											placeholder="Address"
+											placeholder="Morada"
 											value={newClient.address}
 											onChange={updateNewClient}
 										/>
 
 										<input
 											name="zip_code"
-											placeholder="ZIP Code"
+											placeholder="Cod. Postal"
 											value={newClient.zip_code}
 											onChange={updateNewClient}
 										/>
 
 										<input
 											name="tax_nr"
-											placeholder="Tax Number"
+											placeholder="NIF"
 											value={newClient.tax_nr}
 											onChange={updateNewClient}
 										/>
@@ -1135,7 +1135,7 @@ export default function ServicesShow() {
 												type="button"
 												onClick={createClient}
 											>
-												Add
+												Adicionar
 											</button>
 
 											<button
@@ -1179,12 +1179,12 @@ export default function ServicesShow() {
 										<div className="info-box">
 
 											<div>
-												<strong>Name:</strong>{" "}
+												<strong>Nome:</strong>{" "}
 												{getClientValue("name")}
 											</div>
 
 											<div>
-												<strong>Phone:</strong>{" "}
+												<strong>Telemóvel:</strong>{" "}
 												{getClientValue("phone")}
 											</div>
 
@@ -1194,17 +1194,17 @@ export default function ServicesShow() {
 											</div>
 
 											<div>
-												<strong>Address:</strong>{" "}
+												<strong>Morada:</strong>{" "}
 												{getClientValue("address")}
 											</div>
 
 											<div>
-												<strong>ZIP:</strong>{" "}
+												<strong>Cod. Postal:</strong>{" "}
 												{getClientValue("zip_code")}
 											</div>
 
 											<div>
-												<strong>Tax:</strong>{" "}
+												<strong>NIF:</strong>{" "}
 												{getClientValue("tax_nr")}
 											</div>
 
@@ -1226,7 +1226,7 @@ export default function ServicesShow() {
 
 						<div className="field">
 
-							<label>Car</label>
+							<label>Viatura</label>
 
 							{isEditing ? (
 
@@ -1241,7 +1241,7 @@ export default function ServicesShow() {
 										>
 
 											<option value="">
-												No car
+												Sem Viatura
 											</option>
 
 											{cars.map(car => (
@@ -1262,7 +1262,7 @@ export default function ServicesShow() {
 											))}
 
 											<option value="new">
-												+ Create new car
+												+ Criar Nova Viatura
 											</option>
 
 										</select>
@@ -1272,24 +1272,24 @@ export default function ServicesShow() {
 											<div className="info-box">
 
 												<div>
-													<strong>Plate:</strong>{" "}
+													<strong>Matrícula:</strong>{" "}
 													{selectedCar.plate || "-"}
 												</div>
 
 												<div>
-													<strong>Make:</strong>{" "}
+													<strong>Marca:</strong>{" "}
 													{selectedCar.make_name || "-"}
 												</div>
 
 												<div>
-													<strong>Model:</strong>{" "}
+													<strong>Modelo:</strong>{" "}
 													{selectedCar.model_name || "-"}
 												</div>
 
 												{selectedCar.year && (
 
 													<div>
-														<strong>Year:</strong>{" "}
+														<strong>Ano:</strong>{" "}
 														{selectedCar.year}
 													</div>
 
@@ -1298,7 +1298,7 @@ export default function ServicesShow() {
 												{selectedCar.month && (
 
 													<div>
-														<strong>Month:</strong>{" "}
+														<strong>Mes:</strong>{" "}
 														{selectedCar.month}
 													</div>
 
@@ -1307,7 +1307,7 @@ export default function ServicesShow() {
 												{selectedCar.engine_code && (
 
 													<div>
-														<strong>Engine:</strong>{" "}
+														<strong>Cod. Motor:</strong>{" "}
 														{selectedCar.engine_code}
 													</div>
 
@@ -1325,7 +1325,7 @@ export default function ServicesShow() {
 												{selectedCar.color_code && (
 
 													<div>
-														<strong>Color:</strong>{" "}
+														<strong>Cod. Motor:</strong>{" "}
 														{selectedCar.color_code}
 													</div>
 
@@ -1334,7 +1334,7 @@ export default function ServicesShow() {
 												{selectedCar.chassi_nr && (
 
 													<div>
-														<strong>Chassis:</strong>{" "}
+														<strong>Nr. Chassi:</strong>{" "}
 														{selectedCar.chassi_nr}
 													</div>
 
@@ -1352,7 +1352,7 @@ export default function ServicesShow() {
 
 										<input
 											name="plate"
-											placeholder="Plate"
+											placeholder="Matrícula"
 											value={newCar.plate}
 											onChange={updateNewCar}
 										/>
@@ -1366,7 +1366,7 @@ export default function ServicesShow() {
 											>
 
 												<option value="">
-													Select Make
+													Selecionar Marca
 												</option>
 
 												{makes.map(make => (
@@ -1381,7 +1381,7 @@ export default function ServicesShow() {
 												))}
 
 												<option value="new">
-													+ Create new make
+													+ Criar Nova Marca
 												</option>
 
 											</select>
@@ -1406,7 +1406,7 @@ export default function ServicesShow() {
 														type="button"
 														onClick={createMake}
 													>
-														Add
+														Adicionar
 													</button>
 
 													<button
@@ -1437,7 +1437,7 @@ export default function ServicesShow() {
 											>
 
 												<option value="">
-													Select Model
+													Selecionar Modelo
 												</option>
 
 												{models.map(model => (
@@ -1452,7 +1452,7 @@ export default function ServicesShow() {
 												))}
 
 												<option value="new">
-													+ Create new model
+													+ Criar Novo Modelo
 												</option>
 
 											</select>
@@ -1462,7 +1462,7 @@ export default function ServicesShow() {
 											<>
 
 												<input
-													placeholder="New model"
+													placeholder="Novo modelo"
 													value={newModelName}
 													onChange={e =>
 														setNewModelName(
@@ -1477,7 +1477,7 @@ export default function ServicesShow() {
 														type="button"
 														onClick={createModel}
 													>
-														Add
+														Adicionar
 													</button>
 
 													<button
@@ -1503,7 +1503,7 @@ export default function ServicesShow() {
 											type="number"
 											min="1"
 											max="12"
-											placeholder="Month"
+											placeholder="Mes"
 											value={newCar.month}
 											onChange={updateNewCar}
 										/>
@@ -1511,7 +1511,7 @@ export default function ServicesShow() {
 										<input
 											name="year"
 											type="number"
-											placeholder="Year"
+											placeholder="Ano"
 											value={newCar.year}
 											onChange={updateNewCar}
 										/>
@@ -1526,21 +1526,21 @@ export default function ServicesShow() {
 
 										<input
 											name="engine_code"
-											placeholder="Engine code"
+											placeholder="Cod. Motor"
 											value={newCar.engine_code}
 											onChange={updateNewCar}
 										/>
 
 										<input
 											name="color_code"
-											placeholder="Color code"
+											placeholder="Cod. Cor"
 											value={newCar.color_code}
 											onChange={updateNewCar}
 										/>
 
 										<input
 											name="chassi_nr"
-											placeholder="Chassis number"
+											placeholder="Nr. Chassi"
 											value={newCar.chassi_nr}
 											onChange={updateNewCar}
 										/>
@@ -1551,7 +1551,7 @@ export default function ServicesShow() {
 												type="button"
 												onClick={createCar}
 											>
-												Add Car
+												Adicionar Viatura
 											</button>
 
 											<button
@@ -1568,7 +1568,7 @@ export default function ServicesShow() {
 
 												}}
 											>
-												Cancel
+												Cancelar
 											</button>
 
 										</div>
@@ -1598,24 +1598,24 @@ export default function ServicesShow() {
 										<div className="info-box">
 
 											<div>
-												<strong>Plate:</strong>{" "}
+												<strong>Matrícula:</strong>{" "}
 												{getCarValue("plate")}
 											</div>
 
 											<div>
-												<strong>Make:</strong>{" "}
+												<strong>Marca:</strong>{" "}
 												{getCarValue("make_name")}
 											</div>
 
 											<div>
-												<strong>Model:</strong>{" "}
+												<strong>Modelo:</strong>{" "}
 												{getCarValue("model_name")}
 											</div>
 
 											{getCarValue("year") !== "-" && (
 
 												<div>
-													<strong>Year:</strong>{" "}
+													<strong>Ano:</strong>{" "}
 													{getCarValue("year")}
 												</div>
 
@@ -1624,7 +1624,7 @@ export default function ServicesShow() {
 											{getCarValue("month") !== "-" && (
 
 												<div>
-													<strong>Month:</strong>{" "}
+													<strong>Mes:</strong>{" "}
 													{getCarValue("month")}
 												</div>
 
@@ -1633,7 +1633,7 @@ export default function ServicesShow() {
 											{getCarValue("engine_code") !== "-" && (
 
 												<div>
-													<strong>Engine:</strong>{" "}
+													<strong>Cod. Motor:</strong>{" "}
 													{getCarValue("engine_code")}
 												</div>
 
@@ -1651,7 +1651,7 @@ export default function ServicesShow() {
 											{getCarValue("color_code") !== "-" && (
 
 												<div>
-													<strong>Color:</strong>{" "}
+													<strong>Cod. Cor:</strong>{" "}
 													{getCarValue("color_code")}
 												</div>
 
@@ -1660,7 +1660,7 @@ export default function ServicesShow() {
 											{getCarValue("chassi_nr") !== "-" && (
 
 												<div>
-													<strong>Chassis:</strong>{" "}
+													<strong>Nr. Chassi:</strong>{" "}
 													{getCarValue("chassi_nr")}
 												</div>
 
@@ -1683,13 +1683,13 @@ export default function ServicesShow() {
 
 				<div className="service-form-section">
 
-					<h3>Service</h3>
+					<h3>Serviço</h3>
 
 					<div className="form-grid">
 
 						<div className="field">
 
-							<label>Check In</label>
+							<label>Entrada</label>
 
 							{isEditing ? (
 
@@ -1717,7 +1717,7 @@ export default function ServicesShow() {
 
 						<div className="field">
 
-							<label>Check Out</label>
+							<label>Saída</label>
 
 							{isEditing ? (
 
@@ -1745,7 +1745,7 @@ export default function ServicesShow() {
 
 						<div className="field">
 
-							<label>Kilometers</label>
+							<label>Kilometros</label>
 
 							<input
 								type="number"
@@ -1763,7 +1763,7 @@ export default function ServicesShow() {
 
 						<div className="field field-full">
 
-							<label>Malfunction</label>
+							<label>Descrição Avaria</label>
 
 							<textarea
 								name="malfunction"
@@ -1780,7 +1780,7 @@ export default function ServicesShow() {
 
 						<div className="field field-full">
 
-							<label>Service Performed</label>
+							<label>Serviço Realizado</label>
 
 							<textarea
 								name="service"
@@ -1808,7 +1808,7 @@ export default function ServicesShow() {
 									type="button"
 									onClick={beginEdit}
 								>
-									Edit
+									Editar
 								</button>
 
 								<button
@@ -1816,7 +1816,7 @@ export default function ServicesShow() {
 									className="delete-btn"
 									onClick={deleteService}
 								>
-									Delete
+									Apagar
 								</button>
 
 							</>
@@ -1831,8 +1831,8 @@ export default function ServicesShow() {
 									disabled={saving}
 								>
 									{saving
-										? "Saving..."
-										: "Save"}
+										? "A Guardar..."
+										: "Guardar"}
 								</button>
 
 								<button
@@ -1840,7 +1840,7 @@ export default function ServicesShow() {
 									onClick={cancelEdit}
 									disabled={saving}
 								>
-									Cancel
+									Cancelar
 								</button>
 
 							</>
