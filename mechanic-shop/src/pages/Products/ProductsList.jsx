@@ -348,7 +348,7 @@ export default function ProductsList() {
 
 		<div className="container">
 
-			<h1>Products</h1>
+			<h1>Produtos</h1>
 
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
@@ -360,27 +360,27 @@ export default function ProductsList() {
 
 				<input
 					name="name"
-					placeholder="Name"
+					placeholder="Nome"
 					value={filters.name}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="reference"
-					placeholder="Reference"
+					placeholder="Referencia"
 					value={filters.reference}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="p_t_name"
-					placeholder="Product Type"
+					placeholder="Tipo de Produto"
 					value={filters.p_t_name}
 					onChange={updateFilter}
 				/>
 
 				<button onClick={clearFilters}>
-					Clear
+					Limpar
 				</button>
 
 				<button
@@ -389,7 +389,7 @@ export default function ProductsList() {
 						setNewProduct(emptyProduct);
 					}}
 				>
-					Add Product
+					Adicionar Produto
 				</button>
 
 			</div>
@@ -402,9 +402,9 @@ export default function ProductsList() {
 
 					<tr>
 
-						<th>Name</th>
-						<th>Reference</th>
-						<th>Product Type</th>
+						<th>Nome</th>
+						<th>Referencia</th>
+						<th>Tipo de Produto</th>
 						<th></th>
 
 					</tr>
@@ -452,7 +452,7 @@ export default function ProductsList() {
 									>
 
 										<option value="">
-											Product Type
+											Tipo de Produto
 										</option>
 
 										{productTypes.map(type => (
@@ -467,7 +467,7 @@ export default function ProductsList() {
 										))}
 
 										<option value="new">
-											+ Create new Product Type
+											+ Adicionar Tipo de Produto
 										</option>
 
 									</select>
@@ -479,7 +479,7 @@ export default function ProductsList() {
 									<div className="inline-create">
 
 										<input
-											placeholder="Product Type"
+											placeholder="Tipo de Produto"
 											value={newProductTypeName}
 											onChange={(e) =>
 												setNewProductTypeName(e.target.value)
@@ -489,7 +489,7 @@ export default function ProductsList() {
 										<div className="create-buttons">
 
 											<button onClick={createProductType}>
-												Add
+												Adicionar
 											</button>
 
 											<button
@@ -516,7 +516,7 @@ export default function ProductsList() {
 								<div className="container-buttons">
 
 									<button onClick={createProduct}>
-										Add
+										Adicionar
 									</button>
 
 									<button
@@ -585,7 +585,7 @@ export default function ProductsList() {
 										>
 
 											<option value="">
-												Product Type
+												Tipo de Produto
 											</option>
 
 											{productTypes.map(type => (
@@ -600,7 +600,7 @@ export default function ProductsList() {
 											))}
 
 											<option value="new">
-												+ Create new Product Type
+												+ Criar Tipo de Produto
 											</option>
 
 										</select>
@@ -622,7 +622,7 @@ export default function ProductsList() {
 											<div className="create-buttons">
 
 												<button onClick={createProductType}>
-													Add
+													Adicionar
 												</button>
 
 												<button
@@ -649,7 +649,7 @@ export default function ProductsList() {
 									<div className="container-buttons">
 
 										<button onClick={saveProduct}>
-											Save
+											Guardar
 										</button>
 
 										<button
@@ -683,14 +683,14 @@ export default function ProductsList() {
 											<button
 												onClick={() => editProduct(product)}
 											>
-												Edit
+												Editar
 											</button>
 
 											<button
 												className="delete-btn"
 												onClick={() => deleteProduct(product.id)}
 											>
-												Delete
+												Apagar
 											</button>
 
 										</div>

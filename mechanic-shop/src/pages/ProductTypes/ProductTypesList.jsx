@@ -214,7 +214,7 @@ export default function ProductTypesList() {
 	return (
 		<div className="container">
 
-			<h1>Product Types</h1>
+			<h1>Tipos de Produto</h1>
 
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
@@ -226,13 +226,13 @@ export default function ProductTypesList() {
 
 				<input
 					name="name"
-					placeholder="Product Type"
+					placeholder="Tipo de Produto"
 					value={filters.name}
 					onChange={updateFilter}
 				/>
 
 				<button onClick={clearFilters}>
-					Clear
+					Limpar
 				</button>
 
 				{!creating && (
@@ -240,7 +240,7 @@ export default function ProductTypesList() {
 					<button
 						onClick={() => setCreating(true)}
 					>
-						Add 
+						Adicionar 
 					</button>
 
 				)}
@@ -253,7 +253,7 @@ export default function ProductTypesList() {
 
 				<thead>
 					<tr>
-						<th>Name</th>
+						<th>Tipo de Produto</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -265,7 +265,7 @@ export default function ProductTypesList() {
 
 							<td>
 								<input
-									placeholder="Product Type"
+									placeholder="Tipo de Produto"
 									value={newName}
 									onChange={(e) =>
 										setNewName(e.target.value)
@@ -278,7 +278,7 @@ export default function ProductTypesList() {
 								<div className="container-buttons">
 
 									<button onClick={createProductType}>
-										Add
+										Adicionar
 									</button>
 
 									<button
@@ -319,7 +319,7 @@ export default function ProductTypesList() {
 									<div className="container-buttons">
 
 										<button onClick={saveProductType}>
-											Save
+											Guardar
 										</button>
 
 										<button
@@ -351,7 +351,7 @@ export default function ProductTypesList() {
 													editProductType(productType)
 												}
 											>
-												Edit
+												Editar
 											</button>
 
 											<button
@@ -360,7 +360,7 @@ export default function ProductTypesList() {
 													deleteProductType(productType.id)
 												}
 											>
-												Delete
+												Apagar
 											</button>
 
 										</div>

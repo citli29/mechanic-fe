@@ -800,7 +800,7 @@ export default function ScheduleDetails() {
 
 		return (
 			<div className="container">
-				Loading...
+				A Carregar...
 			</div>
 		);
 
@@ -810,7 +810,7 @@ export default function ScheduleDetails() {
 
 		<div className="container">
 
-			<h1>Schedule #{id}</h1>
+			<h1>Marcação #{id}</h1>
 
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
@@ -821,11 +821,11 @@ export default function ScheduleDetails() {
 
 			<div className="details-card">
 
-				<h2>Related Services</h2>
+				<h2>Seriços Relacionados</h2>
 
 				{loadingRelatedServices ? (
 
-					<p>Loading services...</p>
+					<p>A carregar serviços...</p>
 
 				) : relatedServices.length === 0 ? (
 

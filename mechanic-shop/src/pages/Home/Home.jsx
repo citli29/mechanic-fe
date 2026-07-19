@@ -6,7 +6,7 @@ export default function Home() {
 
 			<h1>Oficina Lima</h1>
 
-			<p>Welcome to the management system.</p>
+			<p>Bem-vindo ao Sistema de Gestão da Oficina Lima.</p>
 
 		</div>
 

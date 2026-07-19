@@ -430,7 +430,7 @@ export default function SchedulesList() {
 	return (
 		<div className="container">
 
-			<h1>Schedules</h1>
+			<h1>Marcações</h1>
 
 			{message.text && (
 
@@ -444,7 +444,7 @@ export default function SchedulesList() {
 
 				<input
 					name="year"
-					placeholder="YYYY"
+					placeholder="AAAA"
 					maxLength={4}
 					value={filters.year}
 					onChange={updateFilter}
@@ -472,34 +472,34 @@ export default function SchedulesList() {
 
 				<input
 					name="client_name"
-					placeholder="Client"
+					placeholder="Cliente"
 					value={filters.client_name}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="car_plate"
-					placeholder="Plate"
+					placeholder="Matrícula"
 					value={filters.car_plate}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="car_make"
-					placeholder="Make"
+					placeholder="Marca"
 					value={filters.car_make}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="car_model"
-					placeholder="Model"
+					placeholder="Modelo"
 					value={filters.car_model}
 					onChange={updateFilter}
 				/>
 
 				<button onClick={clearFilters}>
-					Clear
+					Limpar
 				</button>
 
 				<button
@@ -507,7 +507,7 @@ export default function SchedulesList() {
 						navigate("/schedules/new")
 					}
 				>
-					Add Schedule
+					Adicionar Marcação
 				</button>
 
 			</div>
@@ -520,13 +520,13 @@ export default function SchedulesList() {
 
 						<tr>
 
-							<th>Date</th>
-							<th>Client</th>
-							<th>Phone</th>
-							<th>Plate</th>
-							<th>Make</th>
-							<th>Model</th>
-							<th>Description</th>
+							<th>Data</th>
+							<th>Cliente</th>
+							<th>Telemóvel</th>
+							<th>Matrícula</th>
+							<th>Marca</th>
+							<th>Modelo</th>
+							<th>Descrição</th>
 							<th></th>
 
 						</tr>
@@ -540,7 +540,7 @@ export default function SchedulesList() {
 							<tr>
 
 								<td colSpan={8}>
-									Loading...
+									A Carregar...
 								</td>
 
 							</tr>
@@ -550,7 +550,7 @@ export default function SchedulesList() {
 							<tr>
 
 								<td colSpan={8}>
-									No schedules found.
+									Sem Marcações.
 								</td>
 
 							</tr>
@@ -602,20 +602,6 @@ export default function SchedulesList() {
 										<div className="container-buttons">
 
 											<button
-												onClick={(e) => {
-
-													e.stopPropagation();
-
-													navigate(
-														`/schedules/${schedule.id}`
-													);
-
-												}}
-											>
-												Open
-											</button>
-
-											<button
 												className="delete-btn"
 												onClick={(e) => {
 
@@ -627,7 +613,7 @@ export default function SchedulesList() {
 
 												}}
 											>
-												Delete
+												Apagar
 											</button>
 
 										</div>

@@ -288,7 +288,7 @@ export default function SchedulesNew() {
 
 	}, [calendarMonth]);
 
-	const calendarTitle = new Intl.DateTimeFormat("en-GB", {
+	const calendarTitle = new Intl.DateTimeFormat("pt-PT", {
 		month: "long",
 		year: "numeric"
 	}).format(calendarMonth);
@@ -701,7 +701,7 @@ export default function SchedulesNew() {
 
 		<div className="container">
 
-			<h1>New Schedule</h1>
+			<h1>Nova Marcação</h1>
 
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
@@ -720,7 +720,7 @@ export default function SchedulesNew() {
 					</div>
 
 					<div className="mini-calendar-weekdays">
-						<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+						<span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sab</span><span>Dom</span>
 					</div>
 
 					<div className="mini-calendar-grid">
@@ -753,8 +753,8 @@ export default function SchedulesNew() {
 					</div>
 
 					<div className="mini-calendar-legend">
-						<span><i className="legend-dot appointments-dot" />Appointments</span>
-						<span><i className="legend-dot selected-dot" />Selected</span>
+						<span><i className="legend-dot appointments-dot" />Marcações</span>
+						<span><i className="legend-dot selected-dot" />Selecionado</span>
 					</div>
 
 				</section>
@@ -765,7 +765,7 @@ export default function SchedulesNew() {
 
 					<div className="field">
 
-						<label>Date</label>
+						<label>Data</label>
 
 						<input
 							type="date"
@@ -778,7 +778,7 @@ export default function SchedulesNew() {
 
 					<div className="field field-full">
 
-						<label>Description</label>
+						<label>Descrição</label>
 
 						<textarea
 							name="description"
@@ -790,7 +790,7 @@ export default function SchedulesNew() {
 
 					<div className="field">
 
-						<label>Client</label>
+						<label>Cliente</label>
 
 						{
 
@@ -805,7 +805,7 @@ export default function SchedulesNew() {
 									>
 
 										<option value="">
-											No client
+											Sem Cliente
 										</option>
 
 										{clients.map(client => (
@@ -818,7 +818,7 @@ export default function SchedulesNew() {
 										))}
 
 										<option value="new">
-											+ Create new client
+											+ Criar Novo Cliente
 										</option>
 
 									</select>
@@ -827,12 +827,12 @@ export default function SchedulesNew() {
 
 										<div className="info-box">
 
-											<div><strong>Name:</strong> {selectedClient.name}</div>
-											<div><strong>Phone:</strong> {selectedClient.phone}</div>
+											<div><strong>Nome:</strong> {selectedClient.name}</div>
+											<div><strong>Telemóvel:</strong> {selectedClient.phone}</div>
 											<div><strong>Email:</strong> {selectedClient.email || "-"}</div>
-											<div><strong>Address:</strong> {selectedClient.address || "-"}</div>
-											<div><strong>ZIP:</strong> {selectedClient.zip_code || "-"}</div>
-											<div><strong>Tax:</strong> {selectedClient.tax_nr || "-"}</div>
+											<div><strong>Morada:</strong> {selectedClient.address || "-"}</div>
+											<div><strong>Cod. Postal:</strong> {selectedClient.zip_code || "-"}</div>
+											<div><strong>NIF:</strong> {selectedClient.tax_nr || "-"}</div>
 
 										</div>
 
@@ -846,14 +846,14 @@ export default function SchedulesNew() {
 
 									<input
 										name="name"
-										placeholder="Client name"
+										placeholder="Nome"
 										value={newClient.name}
 										onChange={updateNewClient}
 									/>
 
 									<input
 										name="phone"
-											placeholder="Phone"
+											placeholder="Telemóvel"
 											value={newClient.phone}
 											onChange={updateNewClient}
 										/>
@@ -867,21 +867,21 @@ export default function SchedulesNew() {
 
 										<input
 											name="address"
-											placeholder="Address"
+											placeholder="Morada"
 											value={newClient.address}
 											onChange={updateNewClient}
 										/>
 
 										<input
 											name="zip_code"
-											placeholder="ZIP Code"
+											placeholder="Cod. Postal"
 											value={newClient.zip_code}
 											onChange={updateNewClient}
 										/>
 
 										<input
 											name="tax_nr"
-											placeholder="Tax Number"
+											placeholder="NIF"
 											value={newClient.tax_nr}
 											onChange={updateNewClient}
 										/>
@@ -889,7 +889,7 @@ export default function SchedulesNew() {
 										<div className="create-buttons">
 
 											<button onClick={createClient}>
-												Add
+												Adicionar
 											</button>
 
 											<button
@@ -913,7 +913,7 @@ export default function SchedulesNew() {
 
 					<div className="field">
 
-						<label>Car</label>
+						<label>Viatura</label>
 
 						{
 
@@ -928,7 +928,7 @@ export default function SchedulesNew() {
 									>
 
 										<option value="">
-											No car
+											Sem Viatura
 										</option>
 
 										{cars.map(car => (
@@ -943,7 +943,7 @@ export default function SchedulesNew() {
 										))}
 
 										<option value="new">
-											+ Create new car
+											+ Criar Nova Viaturas
 										</option>
 
 									</select>
@@ -953,15 +953,15 @@ export default function SchedulesNew() {
 										<div className="info-box">
 
 											<div>
-												<strong>Plate:</strong> {selectedCar.plate}
+												<strong>Matrícula:</strong> {selectedCar.plate}
 											</div>
 
 											<div>
-												<strong>Make:</strong> {selectedCar.make_name}
+												<strong>Marca:</strong> {selectedCar.make_name}
 											</div>
 
 											<div>
-												<strong>Model:</strong> {selectedCar.model_name}
+												<strong>Modelo:</strong> {selectedCar.model_name}
 											</div>
 
 										</div>
@@ -976,7 +976,7 @@ export default function SchedulesNew() {
 
 									<input
 										name="plate"
-										placeholder="Plate"
+										placeholder="Matrícula"
 										value={newCar.plate}
 										onChange={updateNewCar}
 									/>
@@ -990,7 +990,7 @@ export default function SchedulesNew() {
 										>
 
 											<option value="">
-												Select Make
+												Selecionar Marca
 											</option>
 
 											{makes.map(make => (
@@ -1005,7 +1005,7 @@ export default function SchedulesNew() {
 											))}
 
 											<option value="new">
-												+ Create new make
+												+ Criar Nova Marca
 											</option>
 
 										</select>
@@ -1014,7 +1014,7 @@ export default function SchedulesNew() {
 
 										<>
 											<input
-												placeholder="New make"
+												placeholder="Nova Marca"
 												value={newMakeName}
 												onChange={(e) =>
 													setNewMakeName(e.target.value)
@@ -1024,7 +1024,7 @@ export default function SchedulesNew() {
 											<div className="create-buttons">
 
 												<button onClick={createMake}>
-													Add
+													Adicionar
 												</button>
 
 												<button
@@ -1051,7 +1051,7 @@ export default function SchedulesNew() {
 										>
 
 											<option value="">
-												Select Model
+												Selecionar Modelo
 											</option>
 
 											{models.map(model => (
@@ -1066,7 +1066,7 @@ export default function SchedulesNew() {
 											))}
 
 											<option value="new">
-												+ Create new model
+												+ Criar Novo Modelo
 											</option>
 
 										</select>
@@ -1076,7 +1076,7 @@ export default function SchedulesNew() {
 										<>
 
 											<input
-												placeholder="New model"
+												placeholder="Novo Modelo"
 												value={newModelName}
 												onChange={(e) =>
 													setNewModelName(e.target.value)
@@ -1086,7 +1086,7 @@ export default function SchedulesNew() {
 											<div className="create-buttons">
 
 												<button onClick={createModel}>
-													Add
+													Adicionar
 												</button>
 
 												<button
@@ -1109,7 +1109,7 @@ export default function SchedulesNew() {
 									<div className="create-buttons">
 
 										<button onClick={createCar}>
-											Add Car
+											Adicionar Viatura
 										</button>
 
 										<button
@@ -1123,7 +1123,7 @@ export default function SchedulesNew() {
 
 											}}
 										>
-											Cancel
+											Cancelar
 										</button>
 
 									</div>
@@ -1142,7 +1142,7 @@ export default function SchedulesNew() {
 
 							<div className="field">
 
-								<label>Make</label>
+								<label>Marca</label>
 
 								<select
 									name="make_id"
@@ -1151,7 +1151,7 @@ export default function SchedulesNew() {
 								>
 
 									<option value="">
-										Select Make
+										Selecionar Marca
 									</option>
 
 									{makes.map(make => (
@@ -1171,7 +1171,7 @@ export default function SchedulesNew() {
 
 							<div className="field">
 
-								<label>Model</label>
+								<label>Modelo</label>
 
 								<select
 									name="model_id"
@@ -1181,7 +1181,7 @@ export default function SchedulesNew() {
 								>
 
 									<option value="">
-										Select Model
+										Selecionar Modelo
 									</option>
 
 									{models.map(model => (
@@ -1207,11 +1207,11 @@ export default function SchedulesNew() {
 
 				<div className="details-actions">
 					<button onClick={createSchedule}>
-						Create
+						Criar
 					</button>
 
 					<button onClick={() => navigate("/schedules")}>
-						Cancel
+						Cancelar
 					</button>
 				</div>
 

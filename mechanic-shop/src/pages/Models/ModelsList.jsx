@@ -262,7 +262,7 @@ export default function ModelsList() {
 	return (
 		<div className="container">
 
-			<h1>Models</h1>
+			<h1>Modelos</h1>
 
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
@@ -274,25 +274,25 @@ export default function ModelsList() {
 
 				<input
 					name="name"
-					placeholder="Model"
+					placeholder="Modelo"
 					value={filters.name}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="make_name"
-					placeholder="Make"
+					placeholder="Marca"
 					value={filters.make_name}
 					onChange={updateFilter}
 				/>
 
 				<button onClick={clearFilters}>
-					Clear
+					Limpar
 				</button>
 
 				{!creating && (
 					<button onClick={() => setCreating(true)}>
-						Add Model
+						Adicionar Modelo
 					</button>
 				)}
 
@@ -304,8 +304,8 @@ export default function ModelsList() {
 
 				<thead>
 					<tr>
-						<th>Model</th>
-						<th>Make</th>
+						<th>Modelo</th>
+						<th>Marca</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -318,7 +318,7 @@ export default function ModelsList() {
 							<td>
 								<input
 									name="name"
-									placeholder="Model name"
+									placeholder="Modelo"
 									value={newModel.name}
 									onChange={updateNewModel}
 								/>
@@ -331,7 +331,7 @@ export default function ModelsList() {
 									onChange={updateNewModel}
 								>
 									<option value="">
-										Select Make
+										Selecionar Marca
 									</option>
 
 									{makes.map(make => (
@@ -349,7 +349,7 @@ export default function ModelsList() {
 								<div className="container-buttons">
 
 									<button onClick={createModel}>
-										Add
+										Adicionar
 									</button>
 
 									<button
@@ -396,7 +396,7 @@ export default function ModelsList() {
 									>
 
 										<option value="">
-											Select Make
+											Selecionar Modelo
 										</option>
 
 										{makes.map(make => (
@@ -415,7 +415,7 @@ export default function ModelsList() {
 									<div className="container-buttons">
 
 										<button onClick={saveModel}>
-											Save
+											Guardar
 										</button>
 
 										<button
@@ -443,7 +443,7 @@ export default function ModelsList() {
 											<button
 												onClick={() => editModel(model)}
 											>
-												Edit
+												Editar
 											</button>
 
 											<button
@@ -455,7 +455,7 @@ export default function ModelsList() {
 													)
 												}
 											>
-												Delete
+												Apagar
 											</button>
 
 										</div>

@@ -261,17 +261,22 @@ export default function SchedulesCalendar() {
 	}
 
 
-	const monthName = currentMonth.toLocaleString(
-		"default",
+	const formattedMonthName = currentMonth.toLocaleString(
+		"pt-PT",
 		{
 			month: "long",
 			year: "numeric"
 		}
-	); 
+	);
+
+	const monthName =
+		formattedMonthName.charAt(0).toUpperCase() +
+			formattedMonthName.slice(1);
+
 	return (
 		<div className="container">
 
-			<h1>Schedule</h1>
+			<h1>Calendário</h1>
 
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
@@ -297,53 +302,53 @@ export default function SchedulesCalendar() {
 
 				<input
 					name="car_plate"
-					placeholder="Plate"
+					placeholder="Matrícula"
 					value={filters.car_plate}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="car_make"
-					placeholder="Make"
+					placeholder="Marca"
 					value={filters.car_make}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="car_model"
-					placeholder="Model"
+					placeholder="Modelo"
 					value={filters.car_model}
 					onChange={updateFilter}
 				/>
 
 				<input
 					name="client_name"
-					placeholder="Client"
+					placeholder="Cliente"
 					value={filters.client_name}
 					onChange={updateFilter}
 				/>
 
 				<button onClick={clearFilters}>
-					Clear
+					Limpar
 				</button>
 
 				<button
 					onClick={() => navigate("/schedules/new")}
 				>
-					Add Schedule
+					Adicionar Marcação
 				</button>
 			</div>
 
 			<div className="calendar-wrapper">
 			<div className="calendar">
 
-				<div className="calendar-header">Mon</div>
-				<div className="calendar-header">Tue</div>
-				<div className="calendar-header">Wed</div>
-				<div className="calendar-header">Thu</div>
-				<div className="calendar-header">Fri</div>
-				<div className="calendar-header">Sat</div>
-				<div className="calendar-header">Sun</div>
+				<div className="calendar-header">Seg</div>
+				<div className="calendar-header">Ter</div>
+				<div className="calendar-header">Qua</div>
+				<div className="calendar-header">Qui</div>
+				<div className="calendar-header">Sex</div>
+				<div className="calendar-header">Sab</div>
+				<div className="calendar-header">Dom</div>
 
 				{calendarDays.map((day, index) => (
 

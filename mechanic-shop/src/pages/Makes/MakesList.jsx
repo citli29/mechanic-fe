@@ -205,7 +205,7 @@ export default function MakesList() {
 	return (
 		<div className="container">
 
-			<h1>Makes</h1>
+			<h1>Marcas</h1>
 
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
@@ -217,18 +217,18 @@ export default function MakesList() {
 
 				<input
 					name="name"
-					placeholder="Make"
+					placeholder="Marca"
 					value={filters.name}
 					onChange={updateFilter}
 				/>
 
 				<button onClick={clearFilters}>
-					Clear
+					Limpar
 				</button>
 
 				{!creating && (
 					<button onClick={() => setCreating(true)}>
-						Add Make
+						Adicionar Marca
 					</button>
 				)}
 
@@ -240,7 +240,7 @@ export default function MakesList() {
 
 				<thead>
 					<tr>
-						<th>Name</th>
+						<th>Marca</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -252,7 +252,7 @@ export default function MakesList() {
 
 							<td>
 								<input
-									placeholder="Make name"
+									placeholder="Marca"
 									value={newMakeName}
 									onChange={(e) => setNewMakeName(e.target.value)}
 								/>
@@ -262,7 +262,7 @@ export default function MakesList() {
 								<div className="container-buttons">
 
 									<button onClick={createMake}>
-										Add
+										Adicionar
 									</button>
 
 									<button
@@ -301,7 +301,7 @@ export default function MakesList() {
 									<div className="container-buttons">
 
 										<button onClick={saveMake}>
-											Save
+											Guardar
 										</button>
 
 										<button onClick={() => setEditing(null)}>
@@ -325,7 +325,7 @@ export default function MakesList() {
 											<button
 												onClick={() => editMake(make)}
 											>
-												Edit
+												Editar
 											</button>
 
 											<button
@@ -337,7 +337,7 @@ export default function MakesList() {
 													)
 												}
 											>
-												Delete
+												Apagar
 											</button>
 
 										</div>
