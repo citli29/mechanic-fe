@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
-import "./SchedulesShow.css";
+import "./SchedulesNew.css";
 
 export default function SchedulesNew() {
 
@@ -17,6 +17,12 @@ export default function SchedulesNew() {
 	};
 
 	const [editing, setEditing] = useState(emptySchedule);
+
+	const today = new Date();
+	const [calendarMonth, setCalendarMonth] = useState(
+		new Date(today.getFullYear(), today.getMonth(), 1)
+	);
+	const [schedules, setSchedules] = useState([]);
 
 	const [cars, setCars] = useState([]);
 	const [clients, setClients] = useState([]);
@@ -106,6 +112,7 @@ export default function SchedulesNew() {
 		loadCars();
 		loadClients();
 		loadMakes();
+		loadSchedules();
 
 	}, []);
 
@@ -123,6 +130,27 @@ export default function SchedulesNew() {
 		}
 
 	}, [editing.make_id]);
+
+	async function loadSchedules() {
+
+		try {
+
+			const res = await api.get("/schedules");
+
+			setSchedules(
+				res.data.schedule_list ||
+				res.data.schedules ||
+				[]
+			);
+
+		}
+		catch {
+
+			setSchedules([]);
+
+		}
+
+	}
 
 	async function loadCars() {
 
@@ -201,6 +229,91 @@ export default function SchedulesNew() {
 
 	}
 
+	function formatDateKey(date) {
+
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, "0");
+		const day = String(date.getDate()).padStart(2, "0");
+
+		return `${year}-${month}-${day}`;
+
+	}
+
+	function parseScheduleDate(value) {
+
+		if (!value)
+			return "";
+
+		return String(value).slice(0, 10);
+
+	}
+
+	const appointmentsByDate = useMemo(() => {
+
+		return schedules.reduce((result, schedule) => {
+
+			const dateKey = parseScheduleDate(schedule.date);
+
+			if (!dateKey)
+				return result;
+
+			result[dateKey] = (result[dateKey] || 0) + 1;
+
+			return result;
+
+		}, {});
+
+	}, [schedules]);
+
+	const calendarDays = useMemo(() => {
+
+		const year = calendarMonth.getFullYear();
+		const month = calendarMonth.getMonth();
+		const firstDay = new Date(year, month, 1);
+		const lastDay = new Date(year, month + 1, 0);
+
+		const mondayOffset = (firstDay.getDay() + 6) % 7;
+		const days = [];
+
+		for (let index = 0; index < mondayOffset; index += 1)
+			days.push(null);
+
+		for (let day = 1; day <= lastDay.getDate(); day += 1)
+			days.push(new Date(year, month, day));
+
+		while (days.length % 7 !== 0)
+			days.push(null);
+
+		return days;
+
+	}, [calendarMonth]);
+
+	const calendarTitle = new Intl.DateTimeFormat("en-GB", {
+		month: "long",
+		year: "numeric"
+	}).format(calendarMonth);
+
+	function changeCalendarMonth(offset) {
+
+		setCalendarMonth(prev =>
+			new Date(
+				prev.getFullYear(),
+				prev.getMonth() + offset,
+				1
+			)
+		);
+
+	}
+
+	function selectCalendarDate(date) {
+
+		setEditing(prev => ({
+			...prev,
+			date: formatDateKey(date)
+		}));
+
+	}
+
 	const selectedClient = clients.find(
 		client => client.id === Number(editing.client_id)
 	);
@@ -212,6 +325,14 @@ export default function SchedulesNew() {
 	function updateEdit(e) {
 
 		const { name, value } = e.target;
+
+		if (name === "date" && value) {
+
+			const [year, month] = value.split("-").map(Number);
+
+			setCalendarMonth(new Date(year, month - 1, 1));
+
+		}
 
 		if (name === "client_id" && value === "new") {
 
@@ -580,13 +701,63 @@ export default function SchedulesNew() {
 
 		<div className="container">
 
-			<h1>New Schdeule</h1>
+			<h1>New Schedule</h1>
 
 			{message.text && (
 				<div className={`api-message ${message.type}`}>
 					{message.text}
 				</div>
 			)}
+
+			<div className="schedule-new-layout">
+
+				<section className="mini-calendar-card">
+
+					<div className="mini-calendar-navigation">
+						<button type="button" onClick={() => changeCalendarMonth(-1)}>‹</button>
+						<h2>{calendarTitle}</h2>
+						<button type="button" onClick={() => changeCalendarMonth(1)}>›</button>
+					</div>
+
+					<div className="mini-calendar-weekdays">
+						<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+					</div>
+
+					<div className="mini-calendar-grid">
+						{calendarDays.map((date, index) => {
+							if (!date)
+								return <div key={`empty-${index}`} className="mini-calendar-day empty" />;
+
+							const dateKey = formatDateKey(date);
+							const count = appointmentsByDate[dateKey] || 0;
+							const selected = editing.date === dateKey;
+							const current = formatDateKey(today) === dateKey;
+
+							return (
+								<button
+									key={dateKey}
+									type="button"
+									className={[
+										"mini-calendar-day",
+										count > 0 ? "has-appointments" : "",
+										selected ? "selected" : "",
+										current ? "today" : ""
+									].filter(Boolean).join(" ")}
+									onClick={() => selectCalendarDate(date)}
+								>
+									<span>{date.getDate()}</span>
+									{count > 0 && <strong>{count}</strong>}
+								</button>
+							);
+						})}
+					</div>
+
+					<div className="mini-calendar-legend">
+						<span><i className="legend-dot appointments-dot" />Appointments</span>
+						<span><i className="legend-dot selected-dot" />Selected</span>
+					</div>
+
+				</section>
 
 			<div className="details-card">
 
@@ -1047,9 +1218,10 @@ export default function SchedulesNew() {
 
 			</div>
 
+			</div>
+
 		</div>
 
 	);
 
 }
-

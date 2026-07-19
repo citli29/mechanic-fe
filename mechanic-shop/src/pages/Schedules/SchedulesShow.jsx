@@ -1470,7 +1470,7 @@ export default function ScheduleDetails() {
 
 					)}
 
-					<button onClick={() => navigate("/schedules")}>
+					<button onClick={() => navigate("/schedules_calendar")}>
 						Back
 					</button>
 

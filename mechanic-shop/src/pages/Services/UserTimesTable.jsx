@@ -398,23 +398,24 @@ export default function UserTimesTable({
 
 		<div>
 
-			<div className="table-title">
+				<div className="table-title">
 
-				<h2>User Times</h2>
+					<h2>User Times</h2>
 
-				{!creating && (
+					{!creating && (
 
-					<button
-						type="button"
-						onClick={beginCreating}
-					>
-						Add User Time
-					</button>
+						<button
+							type="button"
+							onClick={beginCreating}
+						>
+							Add User Time
+						</button>
 
-				)}
+					)}
 
-			</div>
+				</div>
 
+			<div className="table-wrapper">
 			<table className="table">
 
 				<thead>
@@ -699,6 +700,7 @@ export default function UserTimesTable({
 				</tbody>
 
 			</table>
+			</div>
 
 		</div>
 

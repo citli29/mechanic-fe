@@ -970,7 +970,7 @@ export default function ServicesShow() {
 				<button
 					type="button"
 					onClick={() =>
-						navigate("/services")
+						navigate("/schedules_calendar")
 					}
 				>
 					Back

@@ -1,0 +1,284 @@
+/* =====================
+   New Schedule Layout
+===================== */
+
+.schedule-new-layout {
+	display: grid;
+	grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+	align-items: start;
+	gap: 22px;
+}
+
+/* =====================
+   Mini Calendar Card
+===================== */
+
+.mini-calendar-card {
+	position: sticky;
+	top: 88px;
+
+	padding: 16px;
+
+	background: #ffffff;
+	border: 1px solid #dbe1e8;
+	border-radius: 12px;
+	box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+}
+
+.mini-calendar-navigation {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+
+	margin-bottom: 14px;
+	padding-bottom: 12px;
+
+	border-bottom: 2px solid #f59e0b;
+}
+
+.mini-calendar-navigation h2 {
+	margin: 0;
+
+	color: #111827;
+	font-size: 17px;
+	font-weight: 800;
+	text-align: center;
+	text-transform: capitalize;
+}
+
+.mini-calendar-navigation button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 34px;
+	height: 34px;
+
+	border: none;
+	border-radius: 8px;
+
+	background: #f59e0b;
+	color: #111827;
+
+	font-size: 21px;
+	font-weight: 800;
+	cursor: pointer;
+
+	transition:
+		background 0.2s ease,
+		color 0.2s ease,
+		transform 0.15s ease;
+}
+
+.mini-calendar-navigation button:hover {
+	background: #d97706;
+	color: #ffffff;
+	transform: translateY(-1px);
+}
+
+/* =====================
+   Calendar Grid
+===================== */
+
+.mini-calendar-weekdays,
+.mini-calendar-grid {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 5px;
+}
+
+.mini-calendar-weekdays {
+	margin-bottom: 6px;
+}
+
+.mini-calendar-weekdays span {
+	padding: 5px 0;
+
+	color: #64748b;
+	font-size: 10px;
+	font-weight: 800;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.mini-calendar-day {
+	position: relative;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	min-width: 0;
+	aspect-ratio: 1;
+	padding: 0;
+
+	border: 1px solid transparent;
+	border-radius: 8px;
+
+	background: #f8fafc;
+	color: #374151;
+
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 700;
+	cursor: pointer;
+
+	transition:
+		background 0.15s ease,
+		border-color 0.15s ease,
+		color 0.15s ease,
+		transform 0.15s ease,
+		box-shadow 0.15s ease;
+}
+
+.mini-calendar-day:hover {
+	background: #fff7e6;
+	border-color: #f59e0b;
+	transform: translateY(-1px);
+}
+
+.mini-calendar-day.empty {
+	background: transparent;
+	border-color: transparent;
+	cursor: default;
+}
+
+.mini-calendar-day.empty:hover {
+	transform: none;
+}
+
+.mini-calendar-day.today {
+	border-color: #94a3b8;
+}
+
+.mini-calendar-day.has-appointments {
+	background: #eef2ff;
+	border-color: #c7d2fe;
+	color: #312e81;
+}
+
+.mini-calendar-day.has-appointments:hover {
+	background: #e0e7ff;
+	border-color: #818cf8;
+}
+
+.mini-calendar-day.selected {
+	background: #f59e0b;
+	border-color: #d97706;
+	color: #111827;
+	box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.mini-calendar-day.selected:hover {
+	background: #d97706;
+	color: #ffffff;
+}
+
+.mini-calendar-day strong {
+	position: absolute;
+	top: -5px;
+	right: -5px;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	min-width: 17px;
+	height: 17px;
+	padding: 0 4px;
+
+	border: 2px solid #ffffff;
+	border-radius: 999px;
+
+	background: #4f46e5;
+	color: #ffffff;
+
+	font-size: 9px;
+	font-weight: 800;
+	line-height: 1;
+}
+
+.mini-calendar-day.selected strong {
+	background: #111827;
+}
+
+/* =====================
+   Calendar Legend
+===================== */
+
+.mini-calendar-legend {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 12px;
+
+	margin-top: 14px;
+	padding-top: 12px;
+
+	border-top: 1px solid #e5e7eb;
+}
+
+.mini-calendar-legend span {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+
+	color: #64748b;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.legend-dot {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+}
+
+.appointments-dot {
+	background: #4f46e5;
+}
+
+.selected-dot {
+	background: #f59e0b;
+}
+
+/* =====================
+   Responsive
+===================== */
+
+@media (max-width: 950px) {
+
+	.schedule-new-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.mini-calendar-card {
+		position: static;
+		max-width: 420px;
+	}
+
+}
+
+@media (max-width: 520px) {
+
+	.mini-calendar-card {
+		padding: 12px;
+	}
+
+	.mini-calendar-weekdays,
+	.mini-calendar-grid {
+		gap: 3px;
+	}
+
+	.mini-calendar-day {
+		border-radius: 6px;
+		font-size: 11px;
+	}
+
+}
+.details-actions {
+	margin-top: 8px;
+}
