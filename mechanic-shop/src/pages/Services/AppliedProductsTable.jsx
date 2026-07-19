@@ -15,6 +15,7 @@ export default function AppliedProductsTable({
 
 	const [appliedProducts, setAppliedProducts] = useState([]);
 	const [products, setProducts] = useState([]);
+	const [productTypes, setProductTypes] = useState([]);
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [editedProducts, setEditedProducts] = useState({});
@@ -26,6 +27,16 @@ export default function AppliedProductsTable({
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [adding, setAdding] = useState(false);
+	const [creatingProduct, setCreatingProduct] = useState(false);
+	const [creatingProductLoading, setCreatingProductLoading] = useState(false);
+
+	const emptyProduct = {
+		name: "",
+		reference: "",
+		product_type_id: ""
+	};
+
+	const [newProduct, setNewProduct] = useState(emptyProduct);
 
 	const searchRef = useRef(null);
 
@@ -97,7 +108,8 @@ export default function AppliedProductsTable({
 
 			await Promise.all([
 				loadAppliedProducts(),
-				loadProducts()
+				loadProducts(),
+				loadProductTypes()
 			]);
 
 		}
@@ -158,6 +170,177 @@ export default function AppliedProductsTable({
 
 			setProducts([]);
 			handleError(err);
+
+		}
+
+	}
+
+	async function loadProductTypes() {
+
+		try {
+
+			const res = await api.get("/product_types");
+
+			setProductTypes(
+				res.data.product_type_list ||
+				res.data.product_types ||
+				res.data.items ||
+				(Array.isArray(res.data)
+					? res.data
+					: [])
+			);
+
+		}
+		catch (err) {
+
+			setProductTypes([]);
+			handleError(err);
+
+		}
+
+	}
+
+	function updateNewProduct(event) {
+
+		const { name, value } = event.target;
+
+		setNewProduct(previous => ({
+			...previous,
+			[name]: value
+		}));
+
+	}
+
+	function beginCreatingProduct() {
+
+		setSearchOpen(false);
+		setNewProduct(previous => ({
+			...previous,
+			name: previous.name || search.trim()
+		}));
+		setCreatingProduct(true);
+
+	}
+
+	function cancelCreatingProduct() {
+
+		setCreatingProduct(false);
+		setNewProduct(emptyProduct);
+
+	}
+
+	async function createProductAndAdd() {
+
+		if (!newProduct.name.trim()) {
+
+			showMessage?.(
+				"error",
+				"O nome do produto é obrigatório."
+			);
+
+			return;
+
+		}
+
+		if (!newProduct.product_type_id) {
+
+			showMessage?.(
+				"error",
+				"Selecione um tipo de produto."
+			);
+
+			return;
+
+		}
+
+		setCreatingProductLoading(true);
+
+		try {
+
+			const res = await api.post(
+				"/products",
+				{
+					name: newProduct.name.trim(),
+					reference:
+						newProduct.reference.trim(),
+					product_type_id:
+						Number(newProduct.product_type_id)
+				}
+			);
+
+			let createdProduct =
+				res.data.product ||
+				res.data.created_product ||
+				res.data;
+
+			if (!createdProduct?.id) {
+
+				const productsRes = await api.get(
+					"/products"
+				);
+
+				const productList =
+					productsRes.data.product_list ||
+					productsRes.data.products ||
+					productsRes.data.items ||
+					(Array.isArray(productsRes.data)
+						? productsRes.data
+						: []);
+
+				setProducts(productList);
+
+				createdProduct = [...productList]
+					.reverse()
+					.find(product =>
+						product.name ===
+							newProduct.name.trim() &&
+						(product.reference || "") ===
+							newProduct.reference.trim()
+					);
+
+			}
+
+			if (!createdProduct?.id) {
+
+				throw new Error(
+					"A API não devolveu o ID do novo produto."
+				);
+
+			}
+
+			setProducts(previous => {
+
+				const exists = previous.some(
+					product =>
+						Number(product.id) ===
+						Number(createdProduct.id)
+				);
+
+				return exists
+					? previous
+					: [...previous, createdProduct];
+
+			});
+
+			await addProduct(createdProduct);
+
+			showMessage?.(
+				"success",
+				"Produto criado e adicionado com sucesso."
+			);
+
+			setCreatingProduct(false);
+			setNewProduct(emptyProduct);
+
+		}
+		catch (err) {
+
+			handleError(err);
+
+		}
+		finally {
+
+			setCreatingProductLoading(false);
 
 		}
 
@@ -297,7 +480,7 @@ export default function AppliedProductsTable({
 
 			showMessage?.(
 				"error",
-				"Every quantity must be greater than 0."
+				"Todas as quantidades têm de ser superiores a 0."
 			);
 
 			return;
@@ -331,7 +514,7 @@ export default function AppliedProductsTable({
 
 			showMessage?.(
 				"success",
-				"Applied products updated successfully."
+				"Produtos aplicados atualizados com sucesso."
 			);
 
 			setIsEditing(false);
@@ -383,7 +566,7 @@ export default function AppliedProductsTable({
 
 			showMessage?.(
 				"success",
-				"Product added successfully."
+				"Produto adicionado com sucesso."
 			);
 
 			setSearch("");
@@ -470,7 +653,7 @@ export default function AppliedProductsTable({
 	) {
 
 		const confirmed = window.confirm(
-			`Delete "${productName}"?`
+			`Eliminar "${productName}"?`
 		);
 
 		if (!confirmed) {
@@ -485,7 +668,7 @@ export default function AppliedProductsTable({
 
 			showMessage?.(
 				"success",
-				"Applied product deleted successfully."
+				"Produto aplicado eliminado com sucesso."
 			);
 
 			await loadAppliedProducts();
@@ -505,7 +688,7 @@ export default function AppliedProductsTable({
 
 			<div className="table-title">
 
-				<h2>Applied Products</h2>
+				<h2>Produtos aplicados</h2>
 
 				<div className="container-buttons">
 
@@ -519,7 +702,7 @@ export default function AppliedProductsTable({
 								appliedProducts.length === 0
 							}
 						>
-							Edit
+							Editar
 						</button>
 
 					) : (
@@ -534,8 +717,8 @@ export default function AppliedProductsTable({
 								disabled={saving}
 							>
 								{saving
-									? "Saving..."
-									: "Save"}
+									? "A guardar..."
+									: "Guardar"}
 							</button>
 
 							<button
@@ -543,7 +726,7 @@ export default function AppliedProductsTable({
 								onClick={cancelEditing}
 								disabled={saving}
 							>
-								Cancel
+								Cancelar
 							</button>
 
 						</>
@@ -560,13 +743,13 @@ export default function AppliedProductsTable({
 			>
 
 				<label htmlFor="applied-product-search">
-					Add product
+					Adicionar produto
 				</label>
 
 				<input
 					id="applied-product-search"
 					type="text"
-					placeholder="Search by name, reference or type..."
+					placeholder="Pesquisar por nome, referência ou tipo..."
 					value={search}
 					onFocus={() =>
 						setSearchOpen(true)
@@ -597,13 +780,25 @@ export default function AppliedProductsTable({
 						{search.trim() === "" ? (
 
 							<div className="product-search-empty">
-								Start typing to search products.
+								Comece a escrever para pesquisar produtos.
 							</div>
 
 						) : filteredProducts.length === 0 ? (
 
 							<div className="product-search-empty">
-								No products found.
+
+								<span>
+									Nenhum produto encontrado.
+								</span>
+
+								<button
+									type="button"
+									onClick={beginCreatingProduct}
+									disabled={adding}
+								>
+									Criar “{search.trim()}”
+								</button>
+
 							</div>
 
 						) : (
@@ -662,6 +857,107 @@ export default function AppliedProductsTable({
 
 			</div>
 
+			{!creatingProduct && (
+			<div className="container-buttons">
+
+				<button
+					type="button"
+					onClick={beginCreatingProduct}
+					disabled={
+						adding ||
+						isEditing
+					}
+				>
+					Criar novo produto
+				</button>
+
+				</div>
+			) }
+
+			{creatingProduct && (
+
+				<div className="inline-create-form">
+
+					<h3>Criar produto</h3>
+
+					    <div className="field">
+
+					<input
+						type="text"
+						name="name"
+						placeholder="Nome do produto"
+						value={newProduct.name}
+						onChange={updateNewProduct}
+						disabled={creatingProductLoading}
+					/>
+					</div>
+
+					    <div className="field">
+
+					<input
+						type="text"
+						name="reference"
+						placeholder="Referência"
+						value={newProduct.reference}
+						onChange={updateNewProduct}
+						disabled={creatingProductLoading}
+					/>
+					</div>
+
+				    <div className="field">
+
+					<select
+						name="product_type_id"
+						value={newProduct.product_type_id}
+						onChange={updateNewProduct}
+						disabled={creatingProductLoading}
+					>
+
+						<option value="">
+							Selecionar tipo
+						</option>
+
+						{productTypes.map(productType => (
+
+							<option
+								key={productType.id}
+								value={productType.id}
+							>
+								{productType.name}
+							</option>
+
+						))}
+
+					</select>
+					</div>
+
+
+					<div className="container-buttons">
+
+						<button
+							type="button"
+							onClick={createProductAndAdd}
+							disabled={creatingProductLoading}
+						>
+							{creatingProductLoading
+								? "A criar..."
+								: "Criar e adicionar"}
+						</button>
+
+						<button
+							type="button"
+							onClick={cancelCreatingProduct}
+							disabled={creatingProductLoading}
+						>
+							Cancelar
+						</button>
+
+					</div>
+
+				</div>
+
+			)}
+
 			<div className="table-wrapper">
 
 				<table className="table">
@@ -669,11 +965,11 @@ export default function AppliedProductsTable({
 					<thead>
 
 						<tr>
-							<th>Product</th>
-							<th>Reference</th>
-							<th>Type</th>
-							<th>Quantity</th>
-							<th>Applied</th>
+							<th>Produto</th>
+							<th>Referência</th>
+							<th>Tipo</th>
+							<th>Quantidade</th>
+							<th>Aplicado</th>
 							<th></th>
 						</tr>
 
@@ -685,7 +981,7 @@ export default function AppliedProductsTable({
 
 							<tr>
 								<td colSpan={6}>
-									Loading...
+									A carregar...
 								</td>
 							</tr>
 
@@ -696,7 +992,7 @@ export default function AppliedProductsTable({
 
 								<tr>
 									<td colSpan={6}>
-										No applied products found.
+										Nenhum produto aplicado encontrado.
 									</td>
 								</tr>
 
