@@ -334,6 +334,7 @@ export default function SchedulesCalendar() {
 				</button>
 			</div>
 
+			<div className="calendar-wrapper">
 			<div className="calendar">
 
 				<div className="calendar-header">Mon</div>
@@ -399,6 +400,7 @@ export default function SchedulesCalendar() {
 
 				))}
 
+			</div>
 			</div>
 
 		</div>

@@ -4,72 +4,119 @@
 
 .month-navigation {
 	display: flex;
-	justify-content: center;
 	align-items: center;
+	justify-content: center;
 	gap: 20px;
 
 	margin-bottom: 25px;
+	padding: 14px 18px;
+
+	background: #ffffff;
+	border: 1px solid #dbe1e8;
+	border-radius: 12px;
+	box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
 }
 
 .month-navigation h2 {
-	margin: 0;
 	min-width: 220px;
-	text-align: center;
+	margin: 0;
 
-	color: white;
+	color: #111827;
+	font-size: 22px;
+	font-weight: 800;
+	text-align: center;
 }
 
 .month-navigation button {
-	width: 38px;
-	height: 38px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 
-	background: #1976d2;
-	color: white;
+	width: 40px;
+	height: 40px;
 
 	border: none;
-	border-radius: 5px;
+	border-radius: 8px;
+
+	background: #f59e0b;
+	color: #111827;
+
+	font-family: inherit;
+	font-size: 20px;
+	font-weight: 800;
 
 	cursor: pointer;
 
-	font-size: 18px;
+	transition:
+		background 0.2s ease,
+		color 0.2s ease,
+		transform 0.15s ease,
+		box-shadow 0.2s ease;
 }
 
 .month-navigation button:hover {
-	background: #125aa0;
+	background: #d97706;
+	color: #ffffff;
+
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+}
+
+.month-navigation button:active {
+	transform: translateY(0);
+	box-shadow: none;
+}
+
+.month-navigation button:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+	transform: none;
+	box-shadow: none;
 }
 
 
 /* =====================
-   Calendar
+   Calendar Wrapper
 ===================== */
 
 .calendar {
 	display: grid;
-
-	grid-template-columns: repeat(7, 1fr);
-
+	grid-template-columns: repeat(7, minmax(130px, 1fr));
 	gap: 1px;
 
-	background: #ddd;
+	min-width: 910px;
 
-	border: 1px solid #ddd;
+	overflow: hidden;
+
+	background: #dbe1e8;
+	border: 1px solid #dbe1e8;
+	border-radius: 12px;
+	box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
 }
 
 
-/* Weekday header */
+/* =====================
+   Weekday Header
+===================== */
 
 .calendar-header {
+	padding: 13px 10px;
 
-	background: #1976d2;
+	background: linear-gradient(
+		135deg,
+		#111827,
+		#1f2937
+	);
 
-	color: white;
+	color: #f9fafb;
 
-	font-weight: bold;
-
+	font-size: 13px;
+	font-weight: 800;
+	letter-spacing: 0.04em;
 	text-align: center;
+	text-transform: uppercase;
 
-	padding: 12px;
-
+	border-bottom: 3px solid #f59e0b;
 }
 
 
@@ -78,34 +125,80 @@
 ===================== */
 
 .calendar-day {
-
-	background: white;
-
-	min-height: 140px;
-
-	padding: 8px;
-
 	display: flex;
 	flex-direction: column;
 
+	min-height: 145px;
+	padding: 10px;
+
+	background: #ffffff;
+
+	transition:
+		background 0.15s ease,
+		box-shadow 0.15s ease;
 }
 
+.calendar-day:hover {
+	background: #fffdf7;
+	box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.25);
+}
 
 .calendar-day.empty {
+	background: #f8fafc;
+}
 
-	background: #f8f8f8;
-
+.calendar-day.empty:hover {
+	box-shadow: none;
 }
 
 
+/* =====================
+   Day Number
+===================== */
+
 .day-number {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 
-	font-weight: bold;
+	width: 30px;
+	height: 30px;
+	margin-bottom: 9px;
 
-	margin-bottom: 8px;
+	border-radius: 50%;
 
-	color: #555;
+	color: #374151;
+	font-size: 13px;
+	font-weight: 800;
+}
 
+.calendar-day:hover .day-number {
+	background: #fef3c7;
+	color: #92400e;
+}
+
+
+/* Optional classes for current day */
+
+.calendar-day.today {
+	background: #fffbeb;
+	box-shadow: inset 0 0 0 2px #f59e0b;
+}
+
+.calendar-day.today .day-number {
+	background: #f59e0b;
+	color: #111827;
+}
+
+
+/* Optional class for past days */
+
+.calendar-day.past-day {
+	background: #f8fafc;
+}
+
+.calendar-day.past-day .day-number {
+	color: #94a3b8;
 }
 
 
@@ -114,66 +207,236 @@
 ===================== */
 
 .appointments {
-
 	display: flex;
-
 	flex-direction: column;
+	gap: 7px;
 
-	gap: 6px;
-
+	min-width: 0;
 }
 
 
-/* Individual appointment */
+/* =====================
+   Individual Appointment
+===================== */
 
 .appointment {
+	position: relative;
 
-	background: #1976d2;
+	padding: 8px 9px 8px 12px;
 
-	color: white;
+	overflow: hidden;
 
-	padding: 6px 8px;
+	border: 1px solid #fde68a;
+	border-left: 4px solid #f59e0b;
+	border-radius: 7px;
 
-	border-radius: 5px;
+	background: #fffbeb;
+	color: #374151;
+
+	font-size: 12px;
+	line-height: 1.35;
 
 	cursor: pointer;
 
-	font-size: 12px;
-
-	transition: background 0.15s;
-
+	transition:
+		background 0.15s ease,
+		border-color 0.15s ease,
+		transform 0.15s ease,
+		box-shadow 0.15s ease;
 }
-
 
 .appointment:hover {
+	background: #fef3c7;
+	border-color: #f59e0b;
 
-	background: #125aa0;
-
+	transform: translateY(-1px);
+	box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
 }
 
+.appointment:focus-visible {
+	outline: none;
+	box-shadow:
+		0 0 0 3px rgba(245, 158, 11, 0.22),
+		0 4px 10px rgba(15, 23, 42, 0.12);
+}
+
+
+/* =====================
+   Appointment Content
+===================== */
 
 .appointment-plate {
+	display: block;
 
-	font-weight: bold;
+	overflow: hidden;
 
+	color: #111827;
+	font-size: 12px;
+	font-weight: 800;
+
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
-
 
 .appointment-client {
+	display: block;
 
+	margin-top: 2px;
+
+	overflow: hidden;
+
+	color: #475569;
 	font-size: 11px;
+	font-weight: 600;
 
-	opacity: .95;
-
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
-
 .appointment-description {
+	display: -webkit-box;
+	margin-top: 4px;
 
+	overflow: hidden;
+
+	color: #64748b;
 	font-size: 11px;
-
-	margin-top: 3px;
+	line-height: 1.35;
 
 	word-break: break-word;
 
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
 }
+
+
+/* =====================
+   Appointment Variants
+===================== */
+
+.appointment.completed {
+	background: #ecfdf5;
+	border-color: #a7f3d0;
+	border-left-color: #16a34a;
+}
+
+.appointment.completed:hover {
+	background: #dcfce7;
+	border-color: #4ade80;
+}
+
+.appointment.cancelled {
+	background: #fef2f2;
+	border-color: #fecaca;
+	border-left-color: #dc2626;
+}
+
+.appointment.cancelled:hover {
+	background: #fee2e2;
+	border-color: #f87171;
+}
+
+.appointment.pending {
+	background: #fffbeb;
+	border-color: #fde68a;
+	border-left-color: #f59e0b;
+}
+
+
+/* =====================
+   Calendar Scroll Wrapper
+===================== */
+
+.calendar-wrapper {
+	width: 100%;
+	overflow-x: auto;
+	padding-bottom: 6px;
+
+	scrollbar-width: thin;
+	scrollbar-color: #94a3b8 #e5e7eb;
+}
+
+.calendar-wrapper::-webkit-scrollbar {
+	height: 10px;
+}
+
+.calendar-wrapper::-webkit-scrollbar-track {
+	background: #e5e7eb;
+	border-radius: 10px;
+}
+
+.calendar-wrapper::-webkit-scrollbar-thumb {
+	border: 2px solid #e5e7eb;
+	border-radius: 10px;
+	background: #94a3b8;
+}
+
+.calendar-wrapper::-webkit-scrollbar-thumb:hover {
+	background: #64748b;
+}
+
+
+/* =====================
+   Responsive
+===================== */
+
+@media (max-width: 950px) {
+
+	.month-navigation {
+		gap: 14px;
+	}
+
+	.calendar {
+		grid-template-columns: repeat(7, minmax(120px, 1fr));
+		min-width: 840px;
+	}
+
+	.calendar-day {
+		min-height: 135px;
+	}
+
+}
+
+
+@media (max-width: 650px) {
+
+	.month-navigation {
+		gap: 10px;
+		padding: 12px;
+	}
+
+	.month-navigation h2 {
+		min-width: 0;
+		flex: 1;
+
+		font-size: 18px;
+	}
+
+	.month-navigation button {
+		flex-shrink: 0;
+
+		width: 38px;
+		height: 38px;
+	}
+
+	.calendar {
+		grid-template-columns: repeat(7, minmax(110px, 1fr));
+		min-width: 770px;
+	}
+
+	.calendar-header {
+		padding: 11px 7px;
+		font-size: 11px;
+	}
+
+	.calendar-day {
+		min-height: 125px;
+		padding: 8px;
+	}
+
+	.appointment {
+		padding: 7px 8px 7px 10px;
+	}
+
+}
+
