@@ -1756,7 +1756,7 @@ export default function ServicesNew() {
 
 						<div className="field field-full">
 
-							<label>Descrição</label>
+							<label>Avaria</label>
 
 							<textarea
 								name="malfunction"

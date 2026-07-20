@@ -387,27 +387,31 @@ export default function SchedulesNew() {
 	}
 
 	function updateNewCar(e) {
-
 		const { name, value } = e.target;
 
-		setNewCar(prev => {
+		if (name === "make_id" && value === "new") {
+			setCreatingMake(true);
+			return;
+		}
 
+		if (name === "model_id" && value === "new") {
+			setCreatingModel(true);
+			return;
+		}
+
+		setNewCar(prev => {
 			const updated = {
 				...prev,
 				[name]: value
 			};
 
 			if (name === "make_id") {
-
 				updated.model_id = "";
 				loadModels(value);
-
 			}
 
 			return updated;
-
 		});
-
 	}
 	async function createMake() {
 
