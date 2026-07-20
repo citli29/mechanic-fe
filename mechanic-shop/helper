@@ -1,0 +1,12 @@
+#!/bin/sh
+
+case "$1" in
+	-s)
+		npm run dev -- --host
+		;;
+	*)
+		echo "Usage: $0 {-s}"
+		exit 1
+		;;
+esac
+
