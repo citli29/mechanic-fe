@@ -2,7 +2,8 @@
 
 case "$1" in
 	-s)
-		pm2 start npm --name oficina-fe -- run dev -- --host
+		npm run build
+		pm2 serve dist 5173 --name oficina-fe --spa
 		;;
 	*)
 		echo "Usage: $0 {-s}"
