@@ -2,7 +2,7 @@
 
 case "$1" in
 	-s)
-		npm run dev -- --host
+		pm2 start npm --name oficina-fe -- run dev -- --host
 		;;
 	*)
 		echo "Usage: $0 {-s}"
