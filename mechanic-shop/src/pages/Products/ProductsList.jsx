@@ -455,6 +455,10 @@ export default function ProductsList() {
 											Tipo de Produto
 										</option>
 
+										<option value="new">
+											+ Adicionar Tipo de Produto
+										</option>
+
 										{productTypes.map(type => (
 
 											<option
@@ -465,10 +469,6 @@ export default function ProductsList() {
 											</option>
 
 										))}
-
-										<option value="new">
-											+ Adicionar Tipo de Produto
-										</option>
 
 									</select>
 
@@ -588,6 +588,10 @@ export default function ProductsList() {
 												Tipo de Produto
 											</option>
 
+											<option value="new">
+												+ Criar Tipo de Produto
+											</option>
+
 											{productTypes.map(type => (
 
 												<option
@@ -598,10 +602,6 @@ export default function ProductsList() {
 												</option>
 
 											))}
-
-											<option value="new">
-												+ Criar Tipo de Produto
-											</option>
 
 										</select>
 

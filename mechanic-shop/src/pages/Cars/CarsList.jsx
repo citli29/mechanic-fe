@@ -475,6 +475,10 @@ export default function CarsList() {
 											Make
 										</option>
 
+										<option value="new">
+											+ Create new make
+										</option>
+
 										{makes.map(make => (
 
 											<option
@@ -485,10 +489,6 @@ export default function CarsList() {
 											</option>
 
 										))}
-
-										<option value="new">
-											+ Create new make
-										</option>
 
 									</select>
 

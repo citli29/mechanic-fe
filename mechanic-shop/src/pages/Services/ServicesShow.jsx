@@ -1038,6 +1038,10 @@ export default function ServicesShow() {
 												Sem Cliente
 											</option>
 
+											<option value="new">
+												+ Criar Novo Cliente
+											</option>
+
 											{clients.map(client => (
 
 												<option
@@ -1052,9 +1056,6 @@ export default function ServicesShow() {
 
 											))}
 
-											<option value="new">
-												+ Criar Novo Cliente
-											</option>
 
 										</select>
 
@@ -1259,6 +1260,10 @@ export default function ServicesShow() {
 												Sem Viatura
 											</option>
 
+											<option value="new">
+												+ Criar Nova Viatura
+											</option>
+
 											{cars.map(car => (
 
 												<option
@@ -1276,9 +1281,6 @@ export default function ServicesShow() {
 
 											))}
 
-											<option value="new">
-												+ Criar Nova Viatura
-											</option>
 
 										</select>
 
@@ -1384,6 +1386,10 @@ export default function ServicesShow() {
 													Selecionar Marca
 												</option>
 
+												<option value="new">
+													+ Criar Nova Marca
+												</option>
+
 												{makes.map(make => (
 
 													<option
@@ -1394,10 +1400,6 @@ export default function ServicesShow() {
 													</option>
 
 												))}
-
-												<option value="new">
-													+ Criar Nova Marca
-												</option>
 
 											</select>
 
@@ -1455,6 +1457,10 @@ export default function ServicesShow() {
 													Selecionar Modelo
 												</option>
 
+												<option value="new">
+													+ Criar Novo Modelo
+												</option>
+
 												{models.map(model => (
 
 													<option
@@ -1465,10 +1471,6 @@ export default function ServicesShow() {
 													</option>
 
 												))}
-
-												<option value="new">
-													+ Criar Novo Modelo
-												</option>
 
 											</select>
 

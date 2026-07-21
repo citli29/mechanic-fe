@@ -812,6 +812,10 @@ export default function SchedulesNew() {
 											Sem Cliente
 										</option>
 
+										<option value="new">
+											+ Criar Novo Cliente
+										</option>
+
 										{clients.map(client => (
 											<option
 												key={client.id}
@@ -820,10 +824,6 @@ export default function SchedulesNew() {
 												{client.name} ({client.phone})
 											</option>
 										))}
-
-										<option value="new">
-											+ Criar Novo Cliente
-										</option>
 
 									</select>
 
@@ -935,6 +935,10 @@ export default function SchedulesNew() {
 											Sem Viatura
 										</option>
 
+										<option value="new">
+											+ Criar Nova Viaturas
+										</option>
+
 										{cars.map(car => (
 
 											<option
@@ -945,10 +949,6 @@ export default function SchedulesNew() {
 											</option>
 
 										))}
-
-										<option value="new">
-											+ Criar Nova Viaturas
-										</option>
 
 									</select>
 
@@ -997,6 +997,10 @@ export default function SchedulesNew() {
 												Selecionar Marca
 											</option>
 
+											<option value="new">
+												+ Criar Nova Marca
+											</option>
+
 											{makes.map(make => (
 
 												<option
@@ -1007,10 +1011,6 @@ export default function SchedulesNew() {
 												</option>
 
 											))}
-
-											<option value="new">
-												+ Criar Nova Marca
-											</option>
 
 										</select>
 
@@ -1058,6 +1058,10 @@ export default function SchedulesNew() {
 												Selecionar Modelo
 											</option>
 
+											<option value="new">
+												+ Criar Novo Modelo
+											</option>
+
 											{models.map(model => (
 
 												<option
@@ -1068,10 +1072,6 @@ export default function SchedulesNew() {
 												</option>
 
 											))}
-
-											<option value="new">
-												+ Criar Novo Modelo
-											</option>
 
 										</select>
 
