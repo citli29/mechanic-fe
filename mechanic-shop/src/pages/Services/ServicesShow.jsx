@@ -20,6 +20,7 @@ export default function ServicesShow() {
 		checkout: "",
 		kms: "",
 		malfunction: "",
+		schedule_id: "",
 		service: ""
 	};
 
@@ -151,6 +152,9 @@ export default function ServicesShow() {
 
 				malfunction:
 					loadedService.malfunction || "",
+
+				schedule_id:
+					loadedService.schedule_id || "",
 
 				service:
 					loadedService.service || ""
@@ -417,6 +421,9 @@ export default function ServicesShow() {
 
 			malfunction:
 				service.malfunction || "",
+			schedule_id: 
+				service.schedule_id ?? "",
+
 
 			service:
 				service.service || ""
@@ -434,6 +441,10 @@ export default function ServicesShow() {
 
 			car_id:
 				service.car_id || "",
+
+			schedule_id: 
+				service.schedule_id ?? "",
+
 
 			checkin:
 				formatDateInput(
@@ -765,10 +776,14 @@ export default function ServicesShow() {
 				malfunction:
 					editing.malfunction,
 
+				schedule_id:
+					editing.schedule_id,
+
 				service:
 					editing.service
 			};
 
+			console.log("Updating service:", data);
 			await api.put(
 				`/services/${id}`,
 				data
