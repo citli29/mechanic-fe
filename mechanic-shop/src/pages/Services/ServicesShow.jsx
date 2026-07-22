@@ -22,6 +22,7 @@ export default function ServicesShow() {
 		malfunction: "",
 		schedule_id: "",
 		service: "",
+		note: "",
 		is_finished: false
 	};
 
@@ -162,6 +163,8 @@ export default function ServicesShow() {
 
 				service:
 					loadedService.service || "",
+				note:
+					loadedService.note || "",
 
 				is_finished:
 					Boolean(loadedService.is_finished)
@@ -354,6 +357,8 @@ export default function ServicesShow() {
 
 			service:
 				values.service,
+			note:
+				values.note,
 
 			is_finished:
 				Boolean(values.is_finished)
@@ -1464,6 +1469,18 @@ editing.is_finished
 								type="number"
 								name="kms"
 								value={editing.kms}
+								onChange={updateEdit}
+							/>
+
+						</div>
+
+						<div className="field field-full">
+
+							<label>Notas/Observações</label>
+
+							<textarea
+								name="note"
+								value={editing.note}
 								onChange={updateEdit}
 							/>
 
