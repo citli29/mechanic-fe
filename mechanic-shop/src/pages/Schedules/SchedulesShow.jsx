@@ -821,7 +821,7 @@ export default function ScheduleDetails() {
 
 			<div className="details-card">
 
-				<h2>Seriços Relacionados</h2>
+				<h2>Serviços Relacionados</h2>
 
 				{loadingRelatedServices ? (
 
