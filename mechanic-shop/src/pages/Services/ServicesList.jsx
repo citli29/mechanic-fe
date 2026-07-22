@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import api from "../../api/axios";
+import "./ServicesList.css";
 
 export default function ServicesList() {
 
@@ -15,7 +17,8 @@ export default function ServicesList() {
 		client_name: "",
 		car_plate: "",
 		car_make: "",
-		car_model: ""
+		car_model: "",
+		only_unfinished: true
 	});
 
 	const [loading, setLoading] = useState(true);
@@ -120,9 +123,15 @@ export default function ServicesList() {
 			if (filters.car_model)
 				params.car_model = filters.car_model;
 
-			const res = await api.get("/services", {
-				params
-			});
+			if (filters.only_unfinished)
+				params.is_finished = false;
+
+			const res = await api.get(
+				"/services",
+				{
+					params
+				}
+			);
 
 			setServices(
 				res.data.service_list || []
@@ -144,20 +153,37 @@ export default function ServicesList() {
 
 	function updateFilter(e) {
 
-		let { name, value } = e.target;
+		const {
+			name,
+			value,
+			type,
+			checked
+		} = e.target;
 
-		if (["day", "month", "year"].includes(name)) {
+		let updatedValue =
+			type === "checkbox"
+				? checked
+				: value;
 
-			value = value.replace(/\D/g, "");
+		if (
+			type !== "checkbox" &&
+			["day", "month", "year"].includes(name)
+		) {
+
+			updatedValue =
+				updatedValue.replace(/\D/g, "");
 
 			if (name === "day")
-				value = value.slice(0, 2);
+				updatedValue =
+					updatedValue.slice(0, 2);
 
 			if (name === "month")
-				value = value.slice(0, 2);
+				updatedValue =
+					updatedValue.slice(0, 2);
 
 			if (name === "year")
-				value = value.slice(0, 4);
+				updatedValue =
+					updatedValue.slice(0, 4);
 
 		}
 
@@ -165,17 +191,23 @@ export default function ServicesList() {
 
 			const updated = {
 				...prev,
-				[name]: value
+				[name]: updatedValue
 			};
 
-			if (name === "year" && value === "") {
+			if (
+				name === "year" &&
+				updatedValue === ""
+			) {
 
 				updated.month = "";
 				updated.day = "";
 
 			}
 
-			if (name === "month" && value === "") {
+			if (
+				name === "month" &&
+				updatedValue === ""
+			) {
 
 				updated.day = "";
 
@@ -219,19 +251,25 @@ export default function ServicesList() {
 			client_name: "",
 			car_plate: "",
 			car_make: "",
-			car_model: ""
+			car_model: "",
+			only_unfinished: true
 		});
 
 	}
 
 	return (
+
 		<div className="container">
 
 			<h1>Serviços</h1>
 
 			{message.text && (
 
-				<div className={`api-message ${message.type}`}>
+				<div
+					className={
+						`api-message ${message.type}`
+					}
+				>
 					{message.text}
 				</div>
 
@@ -295,11 +333,32 @@ export default function ServicesList() {
 					onChange={updateFilter}
 				/>
 
-				<button onClick={clearFilters}>
+				<label className="unfinished-filter">
+
+					<input
+						type="checkbox"
+						name="only_unfinished"
+						checked={
+							filters.only_unfinished
+						}
+						onChange={updateFilter}
+					/>
+
+					<span>
+						Serviços por terminar
+					</span>
+
+				</label>
+
+				<button
+					type="button"
+					onClick={clearFilters}
+				>
 					Limpar
 				</button>
 
 				<button
+					type="button"
 					onClick={() =>
 						navigate("/services/new")
 					}
@@ -319,12 +378,13 @@ export default function ServicesList() {
 
 							<th>Entrada</th>
 							<th>Saída</th>
-							<th>Client</th>
+							<th>Cliente</th>
 							<th>Telemóvel</th>
 							<th>Matrícula</th>
 							<th>Marca</th>
 							<th>Modelo</th>
 							<th>Kms</th>
+							<th>Estado</th>
 
 						</tr>
 
@@ -336,7 +396,7 @@ export default function ServicesList() {
 
 							<tr>
 
-								<td colSpan={8}>
+								<td colSpan={9}>
 									A Carregar...
 								</td>
 
@@ -346,7 +406,7 @@ export default function ServicesList() {
 
 							<tr>
 
-								<td colSpan={8}>
+								<td colSpan={9}>
 									Sem Serviços.
 								</td>
 
@@ -354,53 +414,85 @@ export default function ServicesList() {
 
 						) : (
 
-							services.map(service => (
+							services.map(service => {
 
-								<tr
-									key={service.id}
-									onClick={() =>
-										navigate(`/services/${service.id}`)
-									}
-									style={{
-										cursor: "pointer"
-									}}
-								>
+								const isFinished =
+									Boolean(
+										service.is_finished
+									);
 
-									<td>
-										{service.checkin || "-"}
-									</td>
+								return (
 
-									<td>
-										{service.checkout || "-"}
-									</td>
+									<tr
+										key={service.id}
+										className={
+											isFinished
+												? "service-finished-row"
+												: ""
+										}
+										onClick={() =>
+											navigate(
+												`/services/${service.id}`
+											)
+										}
+										style={{
+											cursor: "pointer"
+										}}
+									>
 
-									<td>
-										{service.client_name || "-"}
-									</td>
+										<td>
+											{service.checkin || "-"}
+										</td>
 
-									<td>
-										{service.client_phone || "-"}
-									</td>
+										<td>
+											{service.checkout || "-"}
+										</td>
 
-									<td>
-										{service.car_plate || "-"}
-									</td>
+										<td>
+											{service.client_name || "-"}
+										</td>
 
-									<td>
-										{service.car_make_name || "-"}
-									</td>
+										<td>
+											{service.client_phone || "-"}
+										</td>
 
-									<td>
-										{service.car_model_name || "-"}
-									</td>
+										<td>
+											{service.car_plate || "-"}
+										</td>
 
-									<td>
-										{service.kms ?? "-"}
-									</td>
+										<td>
+											{service.car_make_name || "-"}
+										</td>
 
-								</tr>
+										<td>
+											{service.car_model_name || "-"}
+										</td>
 
-							))
+										<td>
+											{service.kms ?? "-"}
+										</td>
+
+										<td>
+
+											<span
+												className={
+													isFinished
+														? "service-status service-status-finished"
+														: "service-status service-status-pending"
+												}
+											>
+												{isFinished
+													? "Terminado"
+													: "Por terminar"}
+											</span>
+
+										</td>
+
+									</tr>
+
+								);
+
+							})
 
 						)}
 
@@ -411,7 +503,7 @@ export default function ServicesList() {
 			</div>
 
 		</div>
+
 	);
 
 }
-
