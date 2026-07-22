@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import api from "../../api/axios";
@@ -64,7 +64,9 @@ export default function ServicesShow() {
 	const [newMakeName, setNewMakeName] = useState("");
 	const [newModelName, setNewModelName] = useState("");
 
-	const [isEditing, setIsEditing] = useState(false);
+	const editingRef = useRef(emptyService);
+	const saveQueueRef = useRef(Promise.resolve());
+	const saveVersionRef = useRef(0);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 
@@ -130,7 +132,7 @@ export default function ServicesShow() {
 
 			setService(loadedService);
 
-			setEditing({
+			const editableService = {
 				client_id:
 					loadedService.client_id || "",
 
@@ -158,7 +160,10 @@ export default function ServicesShow() {
 
 				service:
 					loadedService.service || ""
-			});
+			};
+
+			setEditing(editableService);
+			editingRef.current = editableService;
 
 		}
 		catch (err) {
@@ -312,9 +317,92 @@ export default function ServicesShow() {
 
 	}
 
+	function buildServicePayload(values) {
+
+		return {
+			client_id:
+				values.client_id
+					? Number(values.client_id)
+					: null,
+
+			car_id:
+				values.car_id
+					? Number(values.car_id)
+					: null,
+
+			checkin:
+				values.checkin || null,
+
+			checkout:
+				values.checkout || null,
+
+			kms:
+				values.kms === ""
+					? null
+					: Number(values.kms),
+
+			malfunction:
+				values.malfunction,
+
+			schedule_id:
+				values.schedule_id || null,
+
+			service:
+				values.service
+		};
+
+	}
+
+	function queueServiceUpdate(values) {
+
+		const data = buildServicePayload(values);
+		const requestVersion =
+			++saveVersionRef.current;
+
+		setSaving(true);
+
+		const request = saveQueueRef.current
+			.catch(() => undefined)
+			.then(async () => {
+
+				await api.put(
+					`/services/${id}`,
+					data
+				);
+
+				setService(prev => ({
+					...prev,
+					...data
+				}));
+
+			});
+
+		saveQueueRef.current = request;
+
+		return request
+			.catch(err => {
+
+				handleApiError(err);
+
+			})
+			.finally(() => {
+
+				if (
+					requestVersion ===
+					saveVersionRef.current
+				) {
+
+					setSaving(false);
+
+				}
+
+			});
+
+	}
+
 	function updateEdit(e) {
 
-		const { name, value } = e.target;
+		const { name, value, type } = e.target;
 
 		if (
 			name === "client_id" &&
@@ -336,10 +424,15 @@ export default function ServicesShow() {
 
 		}
 
-		setEditing(prev => ({
-			...prev,
+		const updated = {
+			...editingRef.current,
 			[name]: value
-		}));
+		};
+
+		editingRef.current = updated;
+		setEditing(updated);
+
+		queueServiceUpdate(updated);
 
 	}
 
@@ -397,89 +490,6 @@ export default function ServicesShow() {
 
 	}
 
-	function beginEdit() {
-
-		setEditing({
-			client_id:
-				service.client_id || "",
-
-			car_id:
-				service.car_id || "",
-
-			checkin:
-				formatDateInput(
-					service.checkin
-				),
-
-			checkout:
-				formatDateInput(
-					service.checkout
-				),
-
-			kms:
-				service.kms ?? "",
-
-			malfunction:
-				service.malfunction || "",
-			schedule_id: 
-				service.schedule_id ?? "",
-
-
-			service:
-				service.service || ""
-		});
-
-		setIsEditing(true);
-
-	}
-
-	function cancelEdit() {
-
-		setEditing({
-			client_id:
-				service.client_id || "",
-
-			car_id:
-				service.car_id || "",
-
-			schedule_id: 
-				service.schedule_id ?? "",
-
-
-			checkin:
-				formatDateInput(
-					service.checkin
-				),
-
-			checkout:
-				formatDateInput(
-					service.checkout
-				),
-
-			kms:
-				service.kms ?? "",
-
-			malfunction:
-				service.malfunction || "",
-
-			service:
-				service.service || ""
-		});
-
-		setCreatingClient(false);
-		setCreatingCar(false);
-		setCreatingMake(false);
-		setCreatingModel(false);
-
-		setNewClient(emptyClient);
-		setNewCar(emptyCar);
-
-		setNewMakeName("");
-		setNewModelName("");
-
-		setIsEditing(false);
-
-	}
 
 	async function createClient() {
 
@@ -529,10 +539,14 @@ export default function ServicesShow() {
 				client
 			]);
 
-			setEditing(prev => ({
-				...prev,
-				client_id: client.id
-			}));
+			const updatedService = {
+				...editingRef.current,
+				client_id: String(client.id)
+			};
+
+			editingRef.current = updatedService;
+			setEditing(updatedService);
+			await queueServiceUpdate(updatedService);
 
 			setCreatingClient(false);
 			setNewClient(emptyClient);
@@ -718,10 +732,14 @@ export default function ServicesShow() {
 				car
 			]);
 
-			setEditing(prev => ({
-				...prev,
-				car_id: car.id
-			}));
+			const updatedService = {
+				...editingRef.current,
+				car_id: String(car.id)
+			};
+
+			editingRef.current = updatedService;
+			setEditing(updatedService);
+			await queueServiceUpdate(updatedService);
 
 			setCreatingCar(false);
 			setCreatingMake(false);
@@ -745,84 +763,6 @@ export default function ServicesShow() {
 
 	}
 
-	async function saveService() {
-
-		setSaving(true);
-
-		try {
-
-			const data = {
-				client_id:
-					editing.client_id
-						? Number(editing.client_id)
-						: null,
-
-				car_id:
-					editing.car_id
-						? Number(editing.car_id)
-						: null,
-
-				checkin:
-					editing.checkin || null,
-
-				checkout:
-					editing.checkout || null,
-
-				kms:
-					editing.kms === ""
-						? null
-						: Number(editing.kms),
-
-				malfunction:
-					editing.malfunction,
-
-				schedule_id:
-					editing.schedule_id,
-
-				service:
-					editing.service
-			};
-
-			console.log("Updating service:", data);
-			await api.put(
-				`/services/${id}`,
-				data
-			);
-
-			showMessage(
-				"success",
-				"Service updated successfully."
-			);
-
-			setCreatingClient(false);
-			setCreatingCar(false);
-			setCreatingMake(false);
-			setCreatingModel(false);
-
-			setNewClient(emptyClient);
-			setNewCar(emptyCar);
-
-			setIsEditing(false);
-
-			await Promise.all([
-				loadService(),
-				loadClients(),
-				loadCars()
-			]);
-
-		}
-		catch (err) {
-
-			handleApiError(err);
-
-		}
-		finally {
-
-			setSaving(false);
-
-		}
-
-	}
 
 	async function deleteService() {
 
@@ -875,92 +815,17 @@ export default function ServicesShow() {
 
 	}
 
-	function formatDateDisplay(value) {
-
-		const dateValue = formatDateInput(value);
-
-		if (!dateValue) {
-			return "-";
-		}
-
-		const [year, month, day] =
-			dateValue.split("-");
-
-		if (!year || !month || !day) {
-			return dateValue;
-		}
-
-		return `${day}/${month}/${year}`;
-
-	}
-
 	const selectedClient = clients.find(
 		client =>
 			Number(client.id) ===
-			Number(
-				isEditing
-					? editing.client_id
-					: service?.client_id
-			)
+			Number(editing.client_id)
 	);
 
 	const selectedCar = cars.find(
 		car =>
 			Number(car.id) ===
-			Number(
-				isEditing
-					? editing.car_id
-					: service?.car_id
-			)
+			Number(editing.car_id)
 	);
-
-	function getClientValue(field) {
-
-		const serviceFields = {
-			name: service?.client_name,
-			phone: service?.client_phone,
-			email: service?.client_email,
-			address: service?.client_address,
-			zip_code: service?.client_zip_code,
-			tax_nr: service?.client_tax_nr
-		};
-
-		return (
-			selectedClient?.[field] ||
-			serviceFields[field] ||
-			"-"
-		);
-
-	}
-
-	function getCarValue(field) {
-
-		const serviceFields = {
-			plate: service?.car_plate,
-
-			make_name:
-				service?.car_make_name ||
-				service?.car_make,
-
-			model_name:
-				service?.car_model_name ||
-				service?.car_model,
-
-			year: service?.car_year,
-			month: service?.car_month,
-			cc: service?.car_cc,
-			engine_code: service?.car_engine_code,
-			color_code: service?.car_color_code,
-			chassi_nr: service?.car_chassi_nr
-		};
-
-		return (
-			selectedCar?.[field] ||
-			serviceFields[field] ||
-			"-"
-		);
-
-	}
 
 	if (loading || !service) {
 
@@ -1022,9 +887,7 @@ export default function ServicesShow() {
 
 							<label>Cliente</label>
 
-							{isEditing ? (
-
-								!creatingClient ? (
+								{!creatingClient ? (
 
 									<>
 
@@ -1170,67 +1033,7 @@ export default function ServicesShow() {
 
 									</div>
 
-								)
-
-							) : (
-
-								<>
-
-									<input
-										readOnly
-										value={
-											service.client_name
-												? `${service.client_name}${service.client_phone
-													? ` (${service.client_phone})`
-													: ""}`
-												: "-"
-										}
-									/>
-
-									{(
-										selectedClient ||
-										service.client_name
-									) && (
-
-										<div className="info-box">
-
-											<div>
-												<strong>Nome:</strong>{" "}
-												{getClientValue("name")}
-											</div>
-
-											<div>
-												<strong>Telemóvel:</strong>{" "}
-												{getClientValue("phone")}
-											</div>
-
-											<div>
-												<strong>Email:</strong>{" "}
-												{getClientValue("email")}
-											</div>
-
-											<div>
-												<strong>Morada:</strong>{" "}
-												{getClientValue("address")}
-											</div>
-
-											<div>
-												<strong>Cod. Postal:</strong>{" "}
-												{getClientValue("zip_code")}
-											</div>
-
-											<div>
-												<strong>NIF:</strong>{" "}
-												{getClientValue("tax_nr")}
-											</div>
-
-										</div>
-
-									)}
-
-								</>
-
-							)}
+								)}
 
 						</div>
 
@@ -1244,9 +1047,7 @@ export default function ServicesShow() {
 
 							<label>Viatura</label>
 
-							{isEditing ? (
-
-								!creatingCar ? (
+								{!creatingCar ? (
 
 									<>
 
@@ -1592,104 +1393,7 @@ export default function ServicesShow() {
 
 									</div>
 
-								)
-
-							) : (
-
-								<>
-
-									<input
-										readOnly
-										value={
-											service.car_plate
-												? `${service.car_plate} (${getCarValue("make_name")} ${getCarValue("model_name")})`
-												: "-"
-										}
-									/>
-
-									{(
-										selectedCar ||
-										service.car_plate
-									) && (
-
-										<div className="info-box">
-
-											<div>
-												<strong>Matrícula:</strong>{" "}
-												{getCarValue("plate")}
-											</div>
-
-											<div>
-												<strong>Marca:</strong>{" "}
-												{getCarValue("make_name")}
-											</div>
-
-											<div>
-												<strong>Modelo:</strong>{" "}
-												{getCarValue("model_name")}
-											</div>
-
-											{getCarValue("year") !== "-" && (
-
-												<div>
-													<strong>Ano:</strong>{" "}
-													{getCarValue("year")}
-												</div>
-
-											)}
-
-											{getCarValue("month") !== "-" && (
-
-												<div>
-													<strong>Mes:</strong>{" "}
-													{getCarValue("month")}
-												</div>
-
-											)}
-
-											{getCarValue("engine_code") !== "-" && (
-
-												<div>
-													<strong>Cod. Motor:</strong>{" "}
-													{getCarValue("engine_code")}
-												</div>
-
-											)}
-
-											{getCarValue("cc") !== "-" && (
-
-												<div>
-													<strong>CC:</strong>{" "}
-													{getCarValue("cc")}
-												</div>
-
-											)}
-
-											{getCarValue("color_code") !== "-" && (
-
-												<div>
-													<strong>Cod. Cor:</strong>{" "}
-													{getCarValue("color_code")}
-												</div>
-
-											)}
-
-											{getCarValue("chassi_nr") !== "-" && (
-
-												<div>
-													<strong>Nr. Chassi:</strong>{" "}
-													{getCarValue("chassi_nr")}
-												</div>
-
-											)}
-
-										</div>
-
-									)}
-
-								</>
-
-							)}
+								)}
 
 						</div>
 
@@ -1708,27 +1412,12 @@ export default function ServicesShow() {
 
 							<label>Entrada</label>
 
-							{isEditing ? (
-
-								<input
-									type="date"
-									name="checkin"
-									value={editing.checkin}
-									onChange={updateEdit}
-								/>
-
-							) : (
-
-								<input
-									readOnly
-									value={
-										formatDateDisplay(
-											service.checkin
-										)
-									}
-								/>
-
-							)}
+							<input
+								type="date"
+								name="checkin"
+								value={editing.checkin}
+								onChange={updateEdit}
+							/>
 
 						</div>
 
@@ -1736,27 +1425,12 @@ export default function ServicesShow() {
 
 							<label>Saída</label>
 
-							{isEditing ? (
-
-								<input
-									type="date"
-									name="checkout"
-									value={editing.checkout}
-									onChange={updateEdit}
-								/>
-
-							) : (
-
-								<input
-									readOnly
-									value={
-										formatDateDisplay(
-											service.checkout
-										)
-									}
-								/>
-
-							)}
+							<input
+								type="date"
+								name="checkout"
+								value={editing.checkout}
+								onChange={updateEdit}
+							/>
 
 						</div>
 
@@ -1767,13 +1441,8 @@ export default function ServicesShow() {
 							<input
 								type="number"
 								name="kms"
-								value={
-									isEditing
-										? editing.kms
-										: service.kms ?? ""
-								}
+								value={editing.kms}
 								onChange={updateEdit}
-								readOnly={!isEditing}
 							/>
 
 						</div>
@@ -1784,13 +1453,8 @@ export default function ServicesShow() {
 
 							<textarea
 								name="malfunction"
-								value={
-									isEditing
-										? editing.malfunction
-										: service.malfunction || ""
-								}
+								value={editing.malfunction}
 								onChange={updateEdit}
-								readOnly={!isEditing}
 							/>
 
 						</div>
@@ -1801,13 +1465,8 @@ export default function ServicesShow() {
 
 							<textarea
 								name="service"
-								value={
-									isEditing
-										? editing.service
-										: service.service || ""
-								}
+								value={editing.service}
 								onChange={updateEdit}
-								readOnly={!isEditing}
 							/>
 
 						</div>
@@ -1817,52 +1476,19 @@ export default function ServicesShow() {
 	
 					<div className="container-buttons">
 
-						{!isEditing ? (
+						<span className="autosave-status">
+							{saving
+								? "A guardar..."
+								: "Alterações guardadas automaticamente"}
+						</span>
 
-							<>
-
-								<button
-									type="button"
-									onClick={beginEdit}
-								>
-									Editar
-								</button>
-
-								<button
-									type="button"
-									className="delete-btn"
-									onClick={deleteService}
-								>
-									Apagar
-								</button>
-
-							</>
-
-						) : (
-
-							<>
-
-								<button
-									type="button"
-									onClick={saveService}
-									disabled={saving}
-								>
-									{saving
-										? "A Guardar..."
-										: "Guardar"}
-								</button>
-
-								<button
-									type="button"
-									onClick={cancelEdit}
-									disabled={saving}
-								>
-									Cancelar
-								</button>
-
-							</>
-
-						)}
+						<button
+							type="button"
+							className="delete-btn"
+							onClick={deleteService}
+						>
+							Apagar
+						</button>
 
 					</div>
 
@@ -1895,4 +1521,3 @@ export default function ServicesShow() {
 	);
 
 }
-

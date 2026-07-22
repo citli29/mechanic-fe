@@ -17,9 +17,6 @@ export default function AppliedProductsTable({
 	const [products, setProducts] = useState([]);
 	const [productTypes, setProductTypes] = useState([]);
 
-	const [isEditing, setIsEditing] = useState(false);
-	const [editedProducts, setEditedProducts] = useState({});
-
 	const [search, setSearch] = useState("");
 	const [searchOpen, setSearchOpen] = useState(false);
 	const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -39,6 +36,9 @@ export default function AppliedProductsTable({
 	const [newProduct, setNewProduct] = useState(emptyProduct);
 
 	const searchRef = useRef(null);
+	const appliedProductsRef = useRef([]);
+	const saveTimersRef = useRef({});
+	const saveQueuesRef = useRef({});
 
 	useEffect(() => {
 
@@ -65,9 +65,17 @@ export default function AppliedProductsTable({
 				handleClickOutside
 			);
 
+			Object.values(saveTimersRef.current).forEach(
+				timer => clearTimeout(timer)
+			);
+
 		};
 
 	}, []);
+
+	useEffect(() => {
+		appliedProductsRef.current = appliedProducts;
+	}, [appliedProducts]);
 
 	useEffect(() => {
 		loadData();
@@ -129,7 +137,7 @@ export default function AppliedProductsTable({
 				`/services/${serviceId}/applied_products`
 			);
 
-			setAppliedProducts(
+			const list =
 				res.data.applied_product_list ||
 				res.data.applied_products ||
 				res.data.service_applied_product_list ||
@@ -137,12 +145,15 @@ export default function AppliedProductsTable({
 				res.data.items ||
 				(Array.isArray(res.data)
 					? res.data
-					: [])
-			);
+					: []);
+
+			appliedProductsRef.current = list;
+			setAppliedProducts(list);
 
 		}
 		catch (err) {
 
+			appliedProductsRef.current = [];
 			setAppliedProducts([]);
 			handleError(err);
 
@@ -416,123 +427,156 @@ export default function AppliedProductsTable({
 
 	}
 
-	function beginEditing() {
-
-		const values = {};
-
-		appliedProducts.forEach(item => {
-
-			const itemId =
-				getAppliedProductId(item);
-
-			values[itemId] = {
-				id: itemId,
-				product_id: item.product_id,
-				quantity: item.quantity ?? 1,
-				is_applied:
-					Number(item.is_applied) === 1
-			};
-
-		});
-
-		setSearchOpen(false);
-		setEditedProducts(values);
-		setIsEditing(true);
-
-	}
-
-	function cancelEditing() {
-
-		setEditedProducts({});
-		setIsEditing(false);
-
-	}
-
-	function updateEditedProduct(
+	function updateAppliedProductLocally(
 		itemId,
 		field,
 		value
 	) {
 
-		setEditedProducts(previous => ({
-			...previous,
-			[itemId]: {
-				...previous[itemId],
-				[field]: value
-			}
-		}));
+		const updatedProducts =
+			appliedProductsRef.current.map(item =>
+				Number(getAppliedProductId(item)) ===
+				Number(itemId)
+					? {
+						...item,
+						[field]: value
+					}
+					: item
+			);
+
+		appliedProductsRef.current = updatedProducts;
+		setAppliedProducts(updatedProducts);
 
 	}
 
-	async function saveAllAppliedProducts() {
+	function getAppliedProductById(itemId) {
 
-		const rows = Object.values(
-			editedProducts
+		return appliedProductsRef.current.find(item =>
+			Number(getAppliedProductId(item)) ===
+			Number(itemId)
 		);
 
-		const invalidQuantity = rows.some(row =>
-			row.quantity === "" ||
-			!Number.isFinite(Number(row.quantity)) ||
-			Number(row.quantity) <= 0
+	}
+
+	function queueAppliedProductSave(itemId, values) {
+
+		const previousQueue =
+			saveQueuesRef.current[itemId] ||
+			Promise.resolve();
+
+		const nextQueue = previousQueue
+			.catch(() => undefined)
+			.then(async () => {
+
+				setSaving(true);
+
+				await api.put(
+					`/services/${serviceId}/applied_products/${itemId}`,
+					{
+						service_id:
+							Number(serviceId),
+
+						product_id:
+							Number(values.product_id),
+
+						quantity:
+							Number(values.quantity),
+
+						is_applied:
+							values.is_applied ? 1 : 0
+					}
+				);
+
+			})
+			.catch(err => {
+				handleError(err);
+			})
+			.finally(() => {
+
+				if (
+					saveQueuesRef.current[itemId] ===
+					nextQueue
+				) {
+					delete saveQueuesRef.current[itemId];
+				}
+
+				if (
+					Object.keys(saveQueuesRef.current)
+						.length === 0
+				) {
+					setSaving(false);
+				}
+
+			});
+
+		saveQueuesRef.current[itemId] = nextQueue;
+
+	}
+
+	function updateAppliedProduct(
+		itemId,
+		field,
+		value
+	) {
+
+		const currentItem =
+			getAppliedProductById(itemId);
+
+		if (!currentItem) {
+			return;
+		}
+
+		const updatedItem = {
+			...currentItem,
+			[field]: value
+		};
+
+		updateAppliedProductLocally(
+			itemId,
+			field,
+			value
 		);
 
-		if (invalidQuantity) {
+		if (field === "quantity") {
 
-			showMessage?.(
-				"error",
-				"Todas as quantidades têm de ser superiores a 0."
-			);
+			if (saveTimersRef.current[itemId]) {
+				clearTimeout(
+					saveTimersRef.current[itemId]
+				);
+			}
+
+			if (
+				value === "" ||
+				!Number.isFinite(Number(value)) ||
+				Number(value) <= 0
+			) {
+				return;
+			}
+
+			saveTimersRef.current[itemId] =
+				setTimeout(() => {
+
+					delete saveTimersRef.current[itemId];
+					const latestItem =
+						getAppliedProductById(itemId);
+
+					if (latestItem) {
+						queueAppliedProductSave(
+							itemId,
+							latestItem
+						);
+					}
+
+				}, 600);
 
 			return;
 
 		}
 
-		setSaving(true);
-
-		try {
-
-			await Promise.all(
-				rows.map(row =>
-					api.put(
-						`/services/${serviceId}/applied_products/${row.id}`,
-						{
-							service_id:
-								Number(serviceId),
-
-							product_id:
-								Number(row.product_id),
-
-							quantity:
-								Number(row.quantity),
-
-							is_applied:
-								row.is_applied ? 1 : 0
-						}
-					)
-				)
-			);
-
-			showMessage?.(
-				"success",
-				"Produtos aplicados atualizados com sucesso."
-			);
-
-			setIsEditing(false);
-			setEditedProducts({});
-
-			await loadAppliedProducts();
-
-		}
-		catch (err) {
-
-			handleError(err);
-
-		}
-		finally {
-
-			setSaving(false);
-
-		}
+		queueAppliedProductSave(
+			itemId,
+			updatedItem
+		);
 
 	}
 
@@ -540,8 +584,7 @@ export default function AppliedProductsTable({
 
 		if (
 			!product ||
-			adding ||
-			isEditing
+			adding
 		) {
 			return;
 		}
@@ -690,50 +733,9 @@ export default function AppliedProductsTable({
 
 				<h2>Produtos aplicados</h2>
 
-				<div className="container-buttons">
-
-					{!isEditing ? (
-
-						<button
-							type="button"
-							onClick={beginEditing}
-							disabled={
-								loading ||
-								appliedProducts.length === 0
-							}
-						>
-							Editar
-						</button>
-
-					) : (
-
-						<>
-
-							<button
-								type="button"
-								onClick={
-									saveAllAppliedProducts
-								}
-								disabled={saving}
-							>
-								{saving
-									? "A guardar..."
-									: "Guardar"}
-							</button>
-
-							<button
-								type="button"
-								onClick={cancelEditing}
-								disabled={saving}
-							>
-								Cancelar
-							</button>
-
-						</>
-
-					)}
-
-				</div>
+				{saving && (
+					<span>A guardar...</span>
+				)}
 
 			</div>
 
@@ -767,10 +769,7 @@ export default function AppliedProductsTable({
 					onKeyDown={
 						handleSearchKeyDown
 					}
-					disabled={
-						adding ||
-						isEditing
-					}
+					disabled={adding}
 				/>
 
 				{searchOpen && (
@@ -858,21 +857,18 @@ export default function AppliedProductsTable({
 			</div>
 
 			{!creatingProduct && (
-			<div className="container-buttons">
+				<div className="container-buttons">
 
-				<button
-					type="button"
-					onClick={beginCreatingProduct}
-					disabled={
-						adding ||
-						isEditing
-					}
-				>
-					Criar novo produto
-				</button>
+					<button
+						type="button"
+						onClick={beginCreatingProduct}
+						disabled={adding}
+					>
+						Criar novo produto
+					</button>
 
 				</div>
-			) }
+			)}
 
 			{creatingProduct && (
 
@@ -880,57 +876,56 @@ export default function AppliedProductsTable({
 
 					<h3>Criar produto</h3>
 
-					    <div className="field">
+					<div className="field">
 
-					<input
-						type="text"
-						name="name"
-						placeholder="Nome do produto"
-						value={newProduct.name}
-						onChange={updateNewProduct}
-						disabled={creatingProductLoading}
-					/>
+						<input
+							type="text"
+							name="name"
+							placeholder="Nome do produto"
+							value={newProduct.name}
+							onChange={updateNewProduct}
+							disabled={creatingProductLoading}
+						/>
 					</div>
 
-					    <div className="field">
+					<div className="field">
 
-					<input
-						type="text"
-						name="reference"
-						placeholder="Referência"
-						value={newProduct.reference}
-						onChange={updateNewProduct}
-						disabled={creatingProductLoading}
-					/>
+						<input
+							type="text"
+							name="reference"
+							placeholder="Referência"
+							value={newProduct.reference}
+							onChange={updateNewProduct}
+							disabled={creatingProductLoading}
+						/>
 					</div>
 
-				    <div className="field">
+					<div className="field">
 
-					<select
-						name="product_type_id"
-						value={newProduct.product_type_id}
-						onChange={updateNewProduct}
-						disabled={creatingProductLoading}
-					>
+						<select
+							name="product_type_id"
+							value={newProduct.product_type_id}
+							onChange={updateNewProduct}
+							disabled={creatingProductLoading}
+						>
 
-						<option value="">
-							Selecionar tipo
-						</option>
-
-						{productTypes.map(productType => (
-
-							<option
-								key={productType.id}
-								value={productType.id}
-							>
-								{productType.name}
+							<option value="">
+								Selecionar tipo
 							</option>
 
-						))}
+							{productTypes.map(productType => (
 
-					</select>
+								<option
+									key={productType.id}
+									value={productType.id}
+								>
+									{productType.name}
+								</option>
+
+							))}
+
+						</select>
 					</div>
-
 
 					<div className="container-buttons">
 
@@ -1006,21 +1001,9 @@ export default function AppliedProductsTable({
 										item
 									);
 
-								const editedItem =
-									editedProducts[
-										itemId
-									];
-
 								return (
 
-									<tr
-										key={itemId}
-										className={
-											isEditing
-												? "editing"
-												: ""
-										}
-									>
+									<tr key={itemId}>
 
 										<td>
 											{getProductName(
@@ -1042,35 +1025,22 @@ export default function AppliedProductsTable({
 
 										<td>
 
-											{isEditing ? (
-
-												<input
-													type="number"
-													min="0.01"
-													step="any"
-													value={
-														editedItem
-															?.quantity ??
-														""
-													}
-													onChange={
-														event =>
-															updateEditedProduct(
-																itemId,
-																"quantity",
-																event
-																	.target
-																	.value
-															)
-													}
-												/>
-
-											) : (
-
-												item.quantity ??
-												"-"
-
-											)}
+											<input
+												type="number"
+												min="0.01"
+												step="any"
+												value={
+													item.quantity ??
+													""
+												}
+												onChange={event =>
+													updateAppliedProduct(
+														itemId,
+														"quantity",
+														event.target.value
+													)
+												}
+											/>
 
 										</td>
 
@@ -1079,27 +1049,17 @@ export default function AppliedProductsTable({
 											<input
 												type="checkbox"
 												checked={
-													isEditing
-														? Boolean(
-															editedItem
-																?.is_applied
-														)
-														: Number(
-															item.is_applied
-														) === 1
+													Number(
+														item.is_applied
+													) === 1 ||
+													item.is_applied === true
 												}
-												onChange={
-													event =>
-														updateEditedProduct(
-															itemId,
-															"is_applied",
-															event
-																.target
-																.checked
-														)
-												}
-												disabled={
-													!isEditing
+												onChange={event =>
+													updateAppliedProduct(
+														itemId,
+														"is_applied",
+														event.target.checked
+													)
 												}
 											/>
 
@@ -1107,24 +1067,20 @@ export default function AppliedProductsTable({
 
 										<td>
 
-											{!isEditing && (
-
-												<button
-													type="button"
-													className="delete-btn"
-													onClick={() =>
-														deleteAppliedProduct(
-															itemId,
-															getProductName(
-																item
-															)
+											<button
+												type="button"
+												className="delete-btn"
+												onClick={() =>
+													deleteAppliedProduct(
+														itemId,
+														getProductName(
+															item
 														)
-													}
-												>
-													Delete
-												</button>
-
-											)}
+													)
+												}
+											>
+												Delete
+											</button>
 
 										</td>
 

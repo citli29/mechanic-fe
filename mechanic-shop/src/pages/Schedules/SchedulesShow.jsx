@@ -1445,13 +1445,13 @@ export default function ScheduleDetails() {
 								Apagar
 							</button>
 
-							<button
+						{!relatedServices.length > 0 &&	(<button
 								type="button"
 								onClick={beginCreateService}
 							>
 								Criar Serviço
 							</button>
-
+							)}
 						</>
 
 					) : (
