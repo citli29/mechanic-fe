@@ -241,38 +241,29 @@ export default function ScheduleDetails() {
 	}
 
 	async function loadRelatedServices() {
-
 		setLoadingRelatedServices(true);
 
 		try {
-
-			const res = await api.get("/services");
+			const res = await api.get("/services", {
+				params: {
+					schedule_id: id
+				}
+			});
 
 			const serviceList =
 				res.data.service_list ||
-				res.data.services ||
-				[];
+					res.data.services ||
+					[];
 
-			const matchingServices = serviceList.filter(
-				service =>
-					Number(service.schedule_id) === Number(id)
-			);
-
-			setRelatedServices(matchingServices);
-
+			setRelatedServices(serviceList);
 		}
 		catch (err) {
-
 			setRelatedServices([]);
 			handleApiError(err);
-
 		}
 		finally {
-
 			setLoadingRelatedServices(false);
-
 		}
-
 	}
 
 	async function loadCars() {
