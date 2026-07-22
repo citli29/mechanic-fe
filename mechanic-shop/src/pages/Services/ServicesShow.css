@@ -2,6 +2,26 @@
    Services Show
    Uses shared CRUD styles
 ===================== */
+.service-page-finished {
+	background:
+		linear-gradient(
+			135deg,
+			#bbf7d0 0%,
+			#86efac 45%,
+			#4ade80 100%
+		);
+	box-shadow:
+		inset 0 6px 0 #15803d;
+}
+.service-page-finished .service-title h1 {
+	color: #15803d;
+}
+.service-page-finished .service-form,
+.service-page-finished .service-table-section {
+	border-color: #86efac;
+	box-shadow:
+		0 6px 20px rgba(22, 163, 74, 0.12);
+}
 
 .service-title {
 	display: flex;

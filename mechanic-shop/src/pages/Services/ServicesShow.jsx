@@ -21,7 +21,8 @@ export default function ServicesShow() {
 		kms: "",
 		malfunction: "",
 		schedule_id: "",
-		service: ""
+		service: "",
+		is_finished: false
 	};
 
 	const emptyClient = {
@@ -67,6 +68,7 @@ export default function ServicesShow() {
 	const editingRef = useRef(emptyService);
 	const saveQueueRef = useRef(Promise.resolve());
 	const saveVersionRef = useRef(0);
+
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 
@@ -159,7 +161,10 @@ export default function ServicesShow() {
 					loadedService.schedule_id || "",
 
 				service:
-					loadedService.service || ""
+					loadedService.service || "",
+
+				is_finished:
+					Boolean(loadedService.is_finished)
 			};
 
 			setEditing(editableService);
@@ -348,7 +353,10 @@ export default function ServicesShow() {
 				values.schedule_id || null,
 
 			service:
-				values.service
+				values.service,
+
+			is_finished:
+				Boolean(values.is_finished)
 		};
 
 	}
@@ -356,6 +364,7 @@ export default function ServicesShow() {
 	function queueServiceUpdate(values) {
 
 		const data = buildServicePayload(values);
+
 		const requestVersion =
 			++saveVersionRef.current;
 
@@ -402,7 +411,12 @@ export default function ServicesShow() {
 
 	function updateEdit(e) {
 
-		const { name, value, type } = e.target;
+		const {
+			name,
+			value,
+			type,
+			checked
+		} = e.target;
 
 		if (
 			name === "client_id" &&
@@ -426,7 +440,10 @@ export default function ServicesShow() {
 
 		const updated = {
 			...editingRef.current,
-			[name]: value
+			[name]:
+				type === "checkbox"
+					? checked
+					: value
 		};
 
 		editingRef.current = updated;
@@ -490,7 +507,6 @@ export default function ServicesShow() {
 
 	}
 
-
 	async function createClient() {
 
 		if (!newClient.name.trim()) {
@@ -546,6 +562,7 @@ export default function ServicesShow() {
 
 			editingRef.current = updatedService;
 			setEditing(updatedService);
+
 			await queueServiceUpdate(updatedService);
 
 			setCreatingClient(false);
@@ -739,6 +756,7 @@ export default function ServicesShow() {
 
 			editingRef.current = updatedService;
 			setEditing(updatedService);
+
 			await queueServiceUpdate(updatedService);
 
 			setCreatingCar(false);
@@ -762,7 +780,6 @@ export default function ServicesShow() {
 		}
 
 	}
-
 
 	async function deleteService() {
 
@@ -841,8 +858,15 @@ export default function ServicesShow() {
 
 	return (
 
-		<div className="container">
-
+		<div
+			className={
+				`container ${
+editing.is_finished
+? "service-page-finished"
+: ""
+}`
+			}
+		>
 			<div className="service-title">
 
 				<h1>Serviço #{id}</h1>
@@ -853,7 +877,7 @@ export default function ServicesShow() {
 						navigate("/schedules_calendar")
 					}
 				>
-					Volar
+					Voltar
 				</button>
 
 			</div>
@@ -875,7 +899,8 @@ export default function ServicesShow() {
 				<div className="service-form-header">
 
 					<h2>Informação de Serviço</h2>
-			</div>
+
+				</div>
 
 				<div className="service-form-grid">
 
@@ -887,153 +912,152 @@ export default function ServicesShow() {
 
 							<label>Cliente</label>
 
-								{!creatingClient ? (
+							{!creatingClient ? (
 
-									<>
+								<>
 
-										<select
-											name="client_id"
-											value={editing.client_id || ""}
-											onChange={updateEdit}
-										>
+									<select
+										name="client_id"
+										value={editing.client_id || ""}
+										onChange={updateEdit}
+									>
 
-											<option value="">
-												Sem Cliente
+										<option value="">
+											Sem Cliente
+										</option>
+
+										<option value="new">
+											+ Criar Novo Cliente
+										</option>
+
+										{clients.map(client => (
+
+											<option
+												key={client.id}
+												value={client.id}
+											>
+												{client.name}
+												{client.phone
+													? ` (${client.phone})`
+													: ""}
 											</option>
 
-											<option value="new">
-												+ Criar Novo Cliente
-											</option>
+										))}
 
-											{clients.map(client => (
+									</select>
 
-												<option
-													key={client.id}
-													value={client.id}
-												>
-													{client.name}
-													{client.phone
-														? ` (${client.phone})`
-														: ""}
-												</option>
+									{selectedClient && (
 
-											))}
+										<div className="info-box">
 
-
-										</select>
-
-										{selectedClient && (
-
-											<div className="info-box">
-
-												<div>
-													<strong>Nome:</strong>{" "}
-													{selectedClient.name}
-												</div>
-
-												<div>
-													<strong>Telemóvel:</strong>{" "}
-													{selectedClient.phone || "-"}
-												</div>
-
-												<div>
-													<strong>Email:</strong>{" "}
-													{selectedClient.email || "-"}
-												</div>
-
-												<div>
-													<strong>Morada:</strong>{" "}
-													{selectedClient.address || "-"}
-												</div>
-
-												<div>
-													<strong>Cod. Postal:</strong>{" "}
-													{selectedClient.zip_code || "-"}
-												</div>
-
-												<div>
-													<strong>NIF:</strong>{" "}
-													{selectedClient.tax_nr || "-"}
-												</div>
-
+											<div>
+												<strong>Nome:</strong>{" "}
+												{selectedClient.name}
 											</div>
 
-										)}
+											<div>
+												<strong>Telemóvel:</strong>{" "}
+												{selectedClient.phone || "-"}
+											</div>
 
-									</>
+											<div>
+												<strong>Email:</strong>{" "}
+												{selectedClient.email || "-"}
+											</div>
 
-								) : (
+											<div>
+												<strong>Morada:</strong>{" "}
+												{selectedClient.address || "-"}
+											</div>
 
-									<div className="inline-create">
+											<div>
+												<strong>Cod. Postal:</strong>{" "}
+												{selectedClient.zip_code || "-"}
+											</div>
 
-										<input
-											name="name"
-											placeholder="Nome"
-											value={newClient.name}
-											onChange={updateNewClient}
-										/>
-
-										<input
-											name="phone"
-											placeholder="Telemóvel"
-											value={newClient.phone}
-											onChange={updateNewClient}
-										/>
-
-										<input
-											name="email"
-											placeholder="Email"
-											value={newClient.email}
-											onChange={updateNewClient}
-										/>
-
-										<input
-											name="address"
-											placeholder="Morada"
-											value={newClient.address}
-											onChange={updateNewClient}
-										/>
-
-										<input
-											name="zip_code"
-											placeholder="Cod. Postal"
-											value={newClient.zip_code}
-											onChange={updateNewClient}
-										/>
-
-										<input
-											name="tax_nr"
-											placeholder="NIF"
-											value={newClient.tax_nr}
-											onChange={updateNewClient}
-										/>
-
-										<div className="create-buttons">
-
-											<button
-												type="button"
-												onClick={createClient}
-											>
-												Adicionar
-											</button>
-
-											<button
-												type="button"
-												onClick={() => {
-
-													setCreatingClient(false);
-													setNewClient(emptyClient);
-
-												}}
-											>
-												X
-											</button>
+											<div>
+												<strong>NIF:</strong>{" "}
+												{selectedClient.tax_nr || "-"}
+											</div>
 
 										</div>
 
+									)}
+
+								</>
+
+							) : (
+
+								<div className="inline-create">
+
+									<input
+										name="name"
+										placeholder="Nome"
+										value={newClient.name}
+										onChange={updateNewClient}
+									/>
+
+									<input
+										name="phone"
+										placeholder="Telemóvel"
+										value={newClient.phone}
+										onChange={updateNewClient}
+									/>
+
+									<input
+										name="email"
+										placeholder="Email"
+										value={newClient.email}
+										onChange={updateNewClient}
+									/>
+
+									<input
+										name="address"
+										placeholder="Morada"
+										value={newClient.address}
+										onChange={updateNewClient}
+									/>
+
+									<input
+										name="zip_code"
+										placeholder="Cod. Postal"
+										value={newClient.zip_code}
+										onChange={updateNewClient}
+									/>
+
+									<input
+										name="tax_nr"
+										placeholder="NIF"
+										value={newClient.tax_nr}
+										onChange={updateNewClient}
+									/>
+
+									<div className="create-buttons">
+
+										<button
+											type="button"
+											onClick={createClient}
+										>
+											Adicionar
+										</button>
+
+										<button
+											type="button"
+											onClick={() => {
+
+												setCreatingClient(false);
+												setNewClient(emptyClient);
+
+											}}
+										>
+											X
+										</button>
+
 									</div>
 
-								)}
+								</div>
+
+							)}
 
 						</div>
 
@@ -1047,360 +1071,358 @@ export default function ServicesShow() {
 
 							<label>Viatura</label>
 
-								{!creatingCar ? (
+							{!creatingCar ? (
 
-									<>
+								<>
+
+									<select
+										name="car_id"
+										value={editing.car_id || ""}
+										onChange={updateEdit}
+									>
+
+										<option value="">
+											Sem Viatura
+										</option>
+
+										<option value="new">
+											+ Criar Nova Viatura
+										</option>
+
+										{cars.map(car => (
+
+											<option
+												key={car.id}
+												value={car.id}
+											>
+												{car.plate}
+												{(
+													car.make_name ||
+													car.model_name
+												)
+													? ` (${car.make_name || ""} ${car.model_name || ""})`
+													: ""}
+											</option>
+
+										))}
+
+									</select>
+
+									{selectedCar && (
+
+										<div className="info-box">
+
+											<div>
+												<strong>Matrícula:</strong>{" "}
+												{selectedCar.plate || "-"}
+											</div>
+
+											<div>
+												<strong>Marca:</strong>{" "}
+												{selectedCar.make_name || "-"}
+											</div>
+
+											<div>
+												<strong>Modelo:</strong>{" "}
+												{selectedCar.model_name || "-"}
+											</div>
+
+											{selectedCar.year && (
+
+												<div>
+													<strong>Ano:</strong>{" "}
+													{selectedCar.year}
+												</div>
+
+											)}
+
+											{selectedCar.month && (
+
+												<div>
+													<strong>Mes:</strong>{" "}
+													{selectedCar.month}
+												</div>
+
+											)}
+
+											{selectedCar.engine_code && (
+
+												<div>
+													<strong>Cod. Motor:</strong>{" "}
+													{selectedCar.engine_code}
+												</div>
+
+											)}
+
+											{selectedCar.cc && (
+
+												<div>
+													<strong>CC:</strong>{" "}
+													{selectedCar.cc}
+												</div>
+
+											)}
+
+											{selectedCar.color_code && (
+
+												<div>
+													<strong>Cod. Motor:</strong>{" "}
+													{selectedCar.color_code}
+												</div>
+
+											)}
+
+											{selectedCar.chassi_nr && (
+
+												<div>
+													<strong>Nr. Chassi:</strong>{" "}
+													{selectedCar.chassi_nr}
+												</div>
+
+											)}
+
+										</div>
+
+									)}
+
+								</>
+
+							) : (
+
+								<div className="inline-create">
+
+									<input
+										name="plate"
+										placeholder="Matrícula"
+										value={newCar.plate}
+										onChange={updateNewCar}
+									/>
+
+									{!creatingMake ? (
 
 										<select
-											name="car_id"
-											value={editing.car_id || ""}
-											onChange={updateEdit}
+											name="make_id"
+											value={newCar.make_id}
+											onChange={updateNewCar}
 										>
 
 											<option value="">
-												Sem Viatura
+												Selecionar Marca
 											</option>
 
 											<option value="new">
-												+ Criar Nova Viatura
+												+ Criar Nova Marca
 											</option>
 
-											{cars.map(car => (
+											{makes.map(make => (
 
 												<option
-													key={car.id}
-													value={car.id}
+													key={make.id}
+													value={make.id}
 												>
-													{car.plate}
-													{(
-														car.make_name ||
-														car.model_name
-													)
-														? ` (${car.make_name || ""} ${car.model_name || ""})`
-														: ""}
+													{make.name}
 												</option>
 
 											))}
 
-
 										</select>
 
-										{selectedCar && (
+									) : (
 
-											<div className="info-box">
+										<>
 
-												<div>
-													<strong>Matrícula:</strong>{" "}
-													{selectedCar.plate || "-"}
-												</div>
+											<input
+												placeholder="New make"
+												value={newMakeName}
+												onChange={e =>
+													setNewMakeName(
+														e.target.value
+													)
+												}
+											/>
 
-												<div>
-													<strong>Marca:</strong>{" "}
-													{selectedCar.make_name || "-"}
-												</div>
+											<div className="create-buttons">
 
-												<div>
-													<strong>Modelo:</strong>{" "}
-													{selectedCar.model_name || "-"}
-												</div>
+												<button
+													type="button"
+													onClick={createMake}
+												>
+													Adicionar
+												</button>
 
-												{selectedCar.year && (
+												<button
+													type="button"
+													onClick={() => {
 
-													<div>
-														<strong>Ano:</strong>{" "}
-														{selectedCar.year}
-													</div>
+														setCreatingMake(false);
+														setNewMakeName("");
 
-												)}
-
-												{selectedCar.month && (
-
-													<div>
-														<strong>Mes:</strong>{" "}
-														{selectedCar.month}
-													</div>
-
-												)}
-
-												{selectedCar.engine_code && (
-
-													<div>
-														<strong>Cod. Motor:</strong>{" "}
-														{selectedCar.engine_code}
-													</div>
-
-												)}
-
-												{selectedCar.cc && (
-
-													<div>
-														<strong>CC:</strong>{" "}
-														{selectedCar.cc}
-													</div>
-
-												)}
-
-												{selectedCar.color_code && (
-
-													<div>
-														<strong>Cod. Motor:</strong>{" "}
-														{selectedCar.color_code}
-													</div>
-
-												)}
-
-												{selectedCar.chassi_nr && (
-
-													<div>
-														<strong>Nr. Chassi:</strong>{" "}
-														{selectedCar.chassi_nr}
-													</div>
-
-												)}
+													}}
+												>
+													X
+												</button>
 
 											</div>
 
-										)}
+										</>
 
-									</>
+									)}
 
-								) : (
+									{!creatingModel ? (
 
-									<div className="inline-create">
-
-										<input
-											name="plate"
-											placeholder="Matrícula"
-											value={newCar.plate}
+										<select
+											name="model_id"
+											value={newCar.model_id}
 											onChange={updateNewCar}
-										/>
+											disabled={!newCar.make_id}
+										>
 
-										{!creatingMake ? (
+											<option value="">
+												Selecionar Modelo
+											</option>
 
-											<select
-												name="make_id"
-												value={newCar.make_id}
-												onChange={updateNewCar}
-											>
+											<option value="new">
+												+ Criar Novo Modelo
+											</option>
 
-												<option value="">
-													Selecionar Marca
+											{models.map(model => (
+
+												<option
+													key={model.id}
+													value={model.id}
+												>
+													{model.name}
 												</option>
 
-												<option value="new">
-													+ Criar Nova Marca
-												</option>
+											))}
 
-												{makes.map(make => (
+										</select>
 
-													<option
-														key={make.id}
-														value={make.id}
-													>
-														{make.name}
-													</option>
+									) : (
 
-												))}
+										<>
 
-											</select>
+											<input
+												placeholder="Novo modelo"
+												value={newModelName}
+												onChange={e =>
+													setNewModelName(
+														e.target.value
+													)
+												}
+											/>
 
-										) : (
+											<div className="create-buttons">
 
-											<>
+												<button
+													type="button"
+													onClick={createModel}
+												>
+													Adicionar
+												</button>
 
-												<input
-													placeholder="New make"
-													value={newMakeName}
-													onChange={e =>
-														setNewMakeName(
-															e.target.value
-														)
-													}
-												/>
+												<button
+													type="button"
+													onClick={() => {
 
-												<div className="create-buttons">
+														setCreatingModel(false);
+														setNewModelName("");
 
-													<button
-														type="button"
-														onClick={createMake}
-													>
-														Adicionar
-													</button>
+													}}
+												>
+													X
+												</button>
 
-													<button
-														type="button"
-														onClick={() => {
+											</div>
 
-															setCreatingMake(false);
-															setNewMakeName("");
+										</>
 
-														}}
-													>
-														X
-													</button>
+									)}
 
-												</div>
+									<input
+										name="month"
+										type="number"
+										min="1"
+										max="12"
+										placeholder="Mes"
+										value={newCar.month}
+										onChange={updateNewCar}
+									/>
 
-											</>
+									<input
+										name="year"
+										type="number"
+										placeholder="Ano"
+										value={newCar.year}
+										onChange={updateNewCar}
+									/>
 
-										)}
+									<input
+										name="cc"
+										type="number"
+										placeholder="CC"
+										value={newCar.cc}
+										onChange={updateNewCar}
+									/>
 
-										{!creatingModel ? (
+									<input
+										name="engine_code"
+										placeholder="Cod. Motor"
+										value={newCar.engine_code}
+										onChange={updateNewCar}
+									/>
 
-											<select
-												name="model_id"
-												value={newCar.model_id}
-												onChange={updateNewCar}
-												disabled={!newCar.make_id}
-											>
+									<input
+										name="color_code"
+										placeholder="Cod. Cor"
+										value={newCar.color_code}
+										onChange={updateNewCar}
+									/>
 
-												<option value="">
-													Selecionar Modelo
-												</option>
+									<input
+										name="chassi_nr"
+										placeholder="Nr. Chassi"
+										value={newCar.chassi_nr}
+										onChange={updateNewCar}
+									/>
 
-												<option value="new">
-													+ Criar Novo Modelo
-												</option>
+									<div className="create-buttons">
 
-												{models.map(model => (
+										<button
+											type="button"
+											onClick={createCar}
+										>
+											Adicionar Viatura
+										</button>
 
-													<option
-														key={model.id}
-														value={model.id}
-													>
-														{model.name}
-													</option>
+										<button
+											type="button"
+											onClick={() => {
 
-												))}
+												setCreatingCar(false);
+												setCreatingMake(false);
+												setCreatingModel(false);
 
-											</select>
+												setNewCar(emptyCar);
+												setNewMakeName("");
+												setNewModelName("");
 
-										) : (
-
-											<>
-
-												<input
-													placeholder="Novo modelo"
-													value={newModelName}
-													onChange={e =>
-														setNewModelName(
-															e.target.value
-														)
-													}
-												/>
-
-												<div className="create-buttons">
-
-													<button
-														type="button"
-														onClick={createModel}
-													>
-														Adicionar
-													</button>
-
-													<button
-														type="button"
-														onClick={() => {
-
-															setCreatingModel(false);
-															setNewModelName("");
-
-														}}
-													>
-														X
-													</button>
-
-												</div>
-
-											</>
-
-										)}
-
-										<input
-											name="month"
-											type="number"
-											min="1"
-											max="12"
-											placeholder="Mes"
-											value={newCar.month}
-											onChange={updateNewCar}
-										/>
-
-										<input
-											name="year"
-											type="number"
-											placeholder="Ano"
-											value={newCar.year}
-											onChange={updateNewCar}
-										/>
-
-										<input
-											name="cc"
-											type="number"
-											placeholder="CC"
-											value={newCar.cc}
-											onChange={updateNewCar}
-										/>
-
-										<input
-											name="engine_code"
-											placeholder="Cod. Motor"
-											value={newCar.engine_code}
-											onChange={updateNewCar}
-										/>
-
-										<input
-											name="color_code"
-											placeholder="Cod. Cor"
-											value={newCar.color_code}
-											onChange={updateNewCar}
-										/>
-
-										<input
-											name="chassi_nr"
-											placeholder="Nr. Chassi"
-											value={newCar.chassi_nr}
-											onChange={updateNewCar}
-										/>
-
-										<div className="create-buttons">
-
-											<button
-												type="button"
-												onClick={createCar}
-											>
-												Adicionar Viatura
-											</button>
-
-											<button
-												type="button"
-												onClick={() => {
-
-													setCreatingCar(false);
-													setCreatingMake(false);
-													setCreatingModel(false);
-
-													setNewCar(emptyCar);
-													setNewMakeName("");
-													setNewModelName("");
-
-												}}
-											>
-												Cancelar
-											</button>
-
-										</div>
+											}}
+										>
+											Cancelar
+										</button>
 
 									</div>
 
-								)}
+								</div>
+
+							)}
 
 						</div>
 
 					</div>
 
 				</div>
-
 
 				<div className="service-form-section">
 
@@ -1473,7 +1495,6 @@ export default function ServicesShow() {
 
 					</div>
 
-	
 					<div className="container-buttons">
 
 						<span className="autosave-status">
@@ -1514,7 +1535,23 @@ export default function ServicesShow() {
 					handleApiError={handleApiError}
 				/>
 
+				<div className="field">
+
+					<label htmlFor="service-is-finished">
+						Serviço terminado
+					</label>
+
+					<input
+						id="service-is-finished"
+						type="checkbox"
+						name="is_finished"
+						checked={Boolean(editing.is_finished)}
+						onChange={updateEdit}
+					/>
+
+				</div>
 			</div>
+
 
 		</div>
 
