@@ -17,7 +17,8 @@ export default function ServicesNew() {
 		checkout: "",
 		kms: "",
 		malfunction: "",
-		service: ""
+		service: "",
+		is_finished: false
 	};
 
 	const emptyClient = {
@@ -764,7 +765,9 @@ export default function ServicesNew() {
 						: Number(editing.kms),
 
 				malfunction: editing.malfunction || null,
-				service: editing.service || null
+				service: editing.service || null,
+				is_finished: false
+
 			};
 
 			const res = await api.post(
