@@ -1436,7 +1436,7 @@ export default function ScheduleDetails() {
 								Apagar
 							</button>
 
-						{!relatedServices.length > 0 &&	(<button
+						{relatedServices.length === 0 && !creatingService  &&	(<button
 								type="button"
 								onClick={beginCreateService}
 							>
@@ -1474,7 +1474,7 @@ export default function ScheduleDetails() {
 
 				<div className="details-card">
 
-					<h2>Create Service</h2>
+					<h2>Criar Serviço</h2>
 
 					<div className="details-grid">
 
