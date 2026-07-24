@@ -1062,7 +1062,7 @@ export default function UserTimesTable({
 
 			</div>
 
-			<div className="table-title">
+			<div className="table-title punches-section">
 
 				<h2>Registos de Ponto</h2>
 
@@ -1079,7 +1079,7 @@ export default function UserTimesTable({
 
 			</div>
 
-			<div className="table-wrapper">
+			<div className="table-wrapper ">
 
 				<table className="table">
 
