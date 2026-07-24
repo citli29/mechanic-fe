@@ -1,12 +1,53 @@
+import { useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import "./Navbar.css";
 
 export default function Navbar() {
 
+	const dropdownRef = useRef(null);
+
 	const linkClass = ({ isActive }) =>
 		isActive
 			? "navbar-link active"
 			: "navbar-link";
+
+	useEffect(() => {
+
+		function handleOutsideClick(event) {
+
+			const dropdown = dropdownRef.current;
+
+			if (
+				dropdown &&
+				dropdown.open &&
+				!dropdown.contains(event.target)
+			) {
+				dropdown.removeAttribute("open");
+			}
+
+		}
+
+		document.addEventListener(
+			"mousedown",
+			handleOutsideClick
+		);
+
+		return () => {
+
+			document.removeEventListener(
+				"mousedown",
+				handleOutsideClick
+			);
+
+		};
+
+	}, []);
+
+	function closeDropdown() {
+
+		dropdownRef.current?.removeAttribute("open");
+
+	}
 
 	return (
 
@@ -17,6 +58,7 @@ export default function Navbar() {
 				<NavLink
 					to="/"
 					className="navbar-logo"
+					onClick={closeDropdown}
 				>
 					<span className="navbar-logo-icon">
 						OL
@@ -34,6 +76,7 @@ export default function Navbar() {
 						<NavLink
 							to="/schedules_calendar"
 							className={linkClass}
+							onClick={closeDropdown}
 						>
 							Calendário
 						</NavLink>
@@ -41,6 +84,7 @@ export default function Navbar() {
 						<NavLink
 							to="/services"
 							className={linkClass}
+							onClick={closeDropdown}
 						>
 							Serviços
 						</NavLink>
@@ -48,13 +92,17 @@ export default function Navbar() {
 						<NavLink
 							to="/schedules"
 							className={linkClass}
+							onClick={closeDropdown}
 						>
 							Marcações
 						</NavLink>
 
 					</div>
 
-					<details className="navbar-dropdown">
+					<details
+						ref={dropdownRef}
+						className="navbar-dropdown"
+					>
 
 						<summary>
 							Gestão
@@ -69,6 +117,7 @@ export default function Navbar() {
 							<NavLink
 								to="/clients"
 								className={linkClass}
+								onClick={closeDropdown}
 							>
 								Clientes
 							</NavLink>
@@ -76,6 +125,7 @@ export default function Navbar() {
 							<NavLink
 								to="/cars"
 								className={linkClass}
+								onClick={closeDropdown}
 							>
 								Viaturas
 							</NavLink>
@@ -83,6 +133,7 @@ export default function Navbar() {
 							<NavLink
 								to="/makes"
 								className={linkClass}
+								onClick={closeDropdown}
 							>
 								Marcas
 							</NavLink>
@@ -90,6 +141,7 @@ export default function Navbar() {
 							<NavLink
 								to="/models"
 								className={linkClass}
+								onClick={closeDropdown}
 							>
 								Modelos
 							</NavLink>
@@ -99,6 +151,7 @@ export default function Navbar() {
 							<NavLink
 								to="/products"
 								className={linkClass}
+								onClick={closeDropdown}
 							>
 								Produtos
 							</NavLink>
@@ -106,6 +159,7 @@ export default function Navbar() {
 							<NavLink
 								to="/product_types"
 								className={linkClass}
+								onClick={closeDropdown}
 							>
 								Tipos de Produtos
 							</NavLink>
