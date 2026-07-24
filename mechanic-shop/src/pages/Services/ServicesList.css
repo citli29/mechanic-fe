@@ -60,3 +60,16 @@
 	background: #fef3c7;
 	color: #92400e;
 }
+
+.service-status-delivered {
+	background: #2563eb;
+	color: #ffffff;
+}
+
+.table tbody tr.service-delivered-row td {
+	background: #bfdbfe;
+}
+
+.table tbody tr.service-delivered-row:hover td {
+	background: #93c5fd;
+}

@@ -420,17 +420,19 @@ export default function ServicesList() {
 									Boolean(
 										service.is_finished
 									);
+								const isDelivered = Boolean(service.checkout);
 
 								return (
 
 									<tr
 										key={service.id}
-										className={
-											isFinished
-												? "service-finished-row"
-												: ""
-										}
-										onClick={() =>
+												className={
+													isDelivered
+														? "service-delivered-row"
+														: isFinished
+															? "service-finished-row"
+															: ""
+												}	onClick={() =>
 											navigate(
 												`/services/${service.id}`
 											)
@@ -472,21 +474,26 @@ export default function ServicesList() {
 											{service.kms ?? "-"}
 										</td>
 
-										<td>
 
-											<span
-												className={
-													isFinished
-														? "service-status service-status-finished"
-														: "service-status service-status-pending"
-												}
-											>
-												{isFinished
-													? "Terminado"
-													: "Por terminar"}
-											</span>
-
-										</td>
+												<td>
+													<span
+														className={
+															`service-status ${
+isDelivered
+? "service-status-delivered"
+: isFinished
+? "service-status-finished"
+: "service-status-pending"
+}`
+														}
+													>
+														{isDelivered
+															? "Entregue"
+															: isFinished
+																? "Terminado"
+																: "Por terminar"}
+													</span>
+												</td>
 
 									</tr>
 
