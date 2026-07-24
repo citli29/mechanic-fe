@@ -367,55 +367,40 @@ export default function ServicesShow() {
 	}
 
 	function queueServiceUpdate(values) {
-
 		const data = buildServicePayload(values);
-
-		const requestVersion =
-			++saveVersionRef.current;
+		const requestVersion = ++saveVersionRef.current;
 
 		setSaving(true);
 
 		const request = saveQueueRef.current
-			.catch(() => undefined)
-			.then(async () => {
+		.catch(() => undefined)
+		.then(async () => {
+			await api.put(`/services/${id}`, data);
 
-				await api.put(
-					`/services/${id}`,
-					data
-				);
+			setService(prev => ({
+				...prev,
+				...data
+			}));
 
-				setService(prev => ({
-					...prev,
-					...data
-				}));
+			if (data.is_finished) {
+				showMessage("success", "Serviço terminado com sucesso.");
+			}
 
-			});
+			if (data.checkout) {
+				showMessage("success", "Viatura entregue com sucesso.");
+			}
+		});
 
 		saveQueueRef.current = request;
 
-		return request
-			.catch(err => {
-
-				handleApiError(err);
-
-			})
-			.finally(() => {
-
-				if (
-					requestVersion ===
-					saveVersionRef.current
-				) {
-
-					setSaving(false);
-
-				}
-
-			});
-
+		return request.finally(() => {
+			if (requestVersion === saveVersionRef.current) {
+				setSaving(false);
+			}
+		});
 	}
 
 	function updateEdit(e) {
-
 		const {
 			name,
 			value,
@@ -423,41 +408,28 @@ export default function ServicesShow() {
 			checked
 		} = e.target;
 
-		if (
-			name === "client_id" &&
-			value === "new"
-		) {
-
+		if (name === "client_id" && value === "new") {
 			setCreatingClient(true);
-			return;
-
+			return Promise.resolve();
 		}
 
-		if (
-			name === "car_id" &&
-			value === "new"
-		) {
-
+		if (name === "car_id" && value === "new") {
 			setCreatingCar(true);
-			return;
-
+			return Promise.resolve();
 		}
 
 		const updated = {
 			...editingRef.current,
-			[name]:
-				type === "checkbox"
-					? checked
-					: value
+			[name]: type === "checkbox"
+				? checked
+				: value
 		};
 
 		editingRef.current = updated;
 		setEditing(updated);
 
-		queueServiceUpdate(updated);
-
+		return queueServiceUpdate(updated);
 	}
-
 	function updateNewClient(e) {
 
 		const { name, value } = e.target;
@@ -813,6 +785,15 @@ export default function ServicesShow() {
 
 	}
 
+	async function updateIsFinished(event) {
+		try {
+			await updateEdit(event);
+		}
+		catch (error) {
+			handleApiError(error);
+			await loadService();
+		}
+	}
 	function formatDateInput(value) {
 
 		if (!value) {
@@ -866,10 +847,13 @@ export default function ServicesShow() {
 		<div
 			className={
 				`container ${
-editing.is_finished
-? "service-page-finished"
-: ""
-}`
+				Boolean(service.checkout) ?
+				"service-page-delivered"
+				:
+				service.is_finished
+				? "service-page-finished"
+				: ""
+				}`
 			}
 		>
 			<div className="service-title">
@@ -1563,7 +1547,7 @@ editing.is_finished
 						type="checkbox"
 						name="is_finished"
 						checked={Boolean(editing.is_finished)}
-						onChange={updateEdit}
+						onChange={updateIsFinished}
 					/>
 
 				</div>
