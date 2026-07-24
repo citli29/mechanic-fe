@@ -366,41 +366,168 @@ export default function ServicesShow() {
 
 	}
 
-	function queueServiceUpdate(values) {
+	function showUpdateSuccess(fieldName, data) {
+
+		switch (fieldName) {
+
+			case "client_id": {
+
+				if (!data.client_id) {
+
+					showMessage(
+						"success",
+						"Cliente removido com sucesso."
+					);
+
+					break;
+
+				}
+
+				const client = clients.find(
+					item =>
+						Number(item.id) ===
+						Number(data.client_id)
+				);
+
+				showMessage(
+					"success",
+					client
+						? `${client.name} selecionado com sucesso.`
+						: "Cliente selecionado com sucesso."
+				);
+
+				break;
+
+			}
+
+			case "car_id": {
+
+				if (!data.car_id) {
+
+					showMessage(
+						"success",
+						"Viatura removida com sucesso."
+					);
+
+					break;
+
+				}
+
+				const car = cars.find(
+					item =>
+						Number(item.id) ===
+						Number(data.car_id)
+				);
+
+				const carDescription = car
+					? [
+						car.plate,
+						car.make_name,
+						car.model_name
+					]
+						.filter(Boolean)
+						.join(" ")
+					: "Viatura";
+
+				showMessage(
+					"success",
+					`${carDescription} selecionada com sucesso.`
+				);
+
+				break;
+
+			}
+
+			case "checkin":
+
+				showMessage(
+					"success",
+					data.checkin
+						? `Entrada atualizada para ${formatDateMessage(data.checkin)}.`
+						: "Data de entrada removida com sucesso."
+				);
+
+				break;
+
+			case "checkout":
+
+				showMessage(
+					"success",
+					data.checkout
+						? `Saída atualizada para ${formatDateMessage(data.checkout)}.`
+						: "Data de saída removida com sucesso."
+				);
+
+				break;
+
+			case "is_finished":
+
+				showMessage(
+					"success",
+					data.is_finished
+						? "Serviço terminado com sucesso."
+						: "Serviço reaberto com sucesso."
+				);
+
+				break;
+
+			default:
+				break;
+
+		}
+
+	}
+
+	function formatDateMessage(value) {
+
+		if (!value) {
+			return "";
+		}
+
+		const [year, month, day] = String(value)
+			.slice(0, 10)
+			.split("-");
+
+		return `${day}/${month}/${year}`;
+
+	}
+
+	function queueServiceUpdate(values, changedField) {
+
 		const data = buildServicePayload(values);
 		const requestVersion = ++saveVersionRef.current;
 
 		setSaving(true);
 
 		const request = saveQueueRef.current
-		.catch(() => undefined)
-		.then(async () => {
-			await api.put(`/services/${id}`, data);
+			.catch(() => undefined)
+			.then(async () => {
 
-			setService(prev => ({
-				...prev,
-				...data
-			}));
+				await api.put(`/services/${id}`, data);
 
-			if (data.is_finished) {
-				showMessage("success", "Serviço terminado com sucesso.");
-			}
+				setService(prev => ({
+					...prev,
+					...data
+				}));
 
-			if (data.checkout) {
-				showMessage("success", "Viatura entregue com sucesso.");
-			}
-		});
+				showUpdateSuccess(changedField, data);
+
+			});
 
 		saveQueueRef.current = request;
 
 		return request.finally(() => {
+
 			if (requestVersion === saveVersionRef.current) {
 				setSaving(false);
 			}
+
 		});
+
 	}
 
-	function updateEdit(e) {
+	async function updateEdit(e) {
+
 		const {
 			name,
 			value,
@@ -410,12 +537,12 @@ export default function ServicesShow() {
 
 		if (name === "client_id" && value === "new") {
 			setCreatingClient(true);
-			return Promise.resolve();
+			return;
 		}
 
 		if (name === "car_id" && value === "new") {
 			setCreatingCar(true);
-			return Promise.resolve();
+			return;
 		}
 
 		const updated = {
@@ -428,7 +555,18 @@ export default function ServicesShow() {
 		editingRef.current = updated;
 		setEditing(updated);
 
-		return queueServiceUpdate(updated);
+		try {
+
+			await queueServiceUpdate(updated, name);
+
+		}
+		catch (error) {
+
+			handleApiError(error);
+			await loadService();
+
+		}
+
 	}
 	function updateNewClient(e) {
 
@@ -785,14 +923,10 @@ export default function ServicesShow() {
 
 	}
 
-	async function updateIsFinished(event) {
-		try {
-			await updateEdit(event);
-		}
-		catch (error) {
-			handleApiError(error);
-			await loadService();
-		}
+	function updateIsFinished(event) {
+
+		updateEdit(event);
+
 	}
 	function formatDateInput(value) {
 
