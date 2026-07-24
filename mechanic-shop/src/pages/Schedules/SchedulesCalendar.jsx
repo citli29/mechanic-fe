@@ -104,7 +104,7 @@ export default function SchedulesCalendar() {
 				params
 			});
 
-			setSchedules(res.data.schedule_list || []);
+			setSchedules(res.data.schedule_list);
 
 		}
 		catch (err) {
@@ -169,13 +169,38 @@ export default function SchedulesCalendar() {
 	}
 
 
+	function getAppointmentStatusClass(schedule) {
+
+		if (schedule.service_checkout) {
+
+			return "appointment-delivered";
+
+		}
+
+		if (schedule.service_is_finished === 1) {
+
+			return "appointment-finished";
+
+		}
+
+		if (schedule.service_id !== null) {
+
+			return "appointment-with-service";
+
+		}
+
+		return "appointment-without-service";
+
+	}
+
+
 	const monthSchedules = useMemo(() => {
 
 		return schedules.filter(schedule => {
 
 			const [year, month, day] = schedule.date
-			.split("-")
-			.map(Number);
+				.split("-")
+				.map(Number);
 
 			const date = new Date(
 				year,
@@ -185,12 +210,13 @@ export default function SchedulesCalendar() {
 
 			return (
 				date.getFullYear() === currentMonth.getFullYear() &&
-					date.getMonth() === currentMonth.getMonth()
+				date.getMonth() === currentMonth.getMonth()
 			);
 
 		});
 
 	}, [schedules, currentMonth]);
+
 
 	const groupedSchedules = useMemo(() => {
 
@@ -269,9 +295,11 @@ export default function SchedulesCalendar() {
 		}
 	);
 
+
 	const monthName =
 		formattedMonthName.charAt(0).toUpperCase() +
-			formattedMonthName.slice(1);
+		formattedMonthName.slice(1);
+
 
 	return (
 		<div className="container">
@@ -337,77 +365,89 @@ export default function SchedulesCalendar() {
 				>
 					Adicionar Marcação
 				</button>
+
 			</div>
 
 			<div className="calendar-wrapper">
-			<div className="calendar">
 
-				<div className="calendar-header">Seg</div>
-				<div className="calendar-header">Ter</div>
-				<div className="calendar-header">Qua</div>
-				<div className="calendar-header">Qui</div>
-				<div className="calendar-header">Sex</div>
-				<div className="calendar-header">Sab</div>
-				<div className="calendar-header">Dom</div>
+				<div className="calendar">
 
-				{calendarDays.map((day, index) => (
+					<div className="calendar-header">Seg</div>
+					<div className="calendar-header">Ter</div>
+					<div className="calendar-header">Qua</div>
+					<div className="calendar-header">Qui</div>
+					<div className="calendar-header">Sex</div>
+					<div className="calendar-header">Sab</div>
+					<div className="calendar-header">Dom</div>
 
-					<div
-						key={index}
-						className={`calendar-day ${!day ? "empty" : ""}`}
-					>
+					{calendarDays.map((day, index) => (
 
-						{day && (
-							<>
+						<div
+							key={index}
+							className={`calendar-day ${!day ? "empty" : ""}`}
+						>
 
-								<div className="day-number">
-									{day.day}
-								</div>
+							{day && (
+								<>
 
-								<div className="appointments">
+									<div className="day-number">
+										{day.day}
+									</div>
 
-									{day.schedules.map(schedule => (
+									<div className="appointments">
 
-										<div
-											key={schedule.id}
-											className="appointment"
-											onClick={() =>
-												navigate(`/schedules/${schedule.id}`)
-											}
-										>
+										{day.schedules.map(schedule => (
 
-											<div className="appointment-plate">
-												{schedule.car_plate
-													? `${schedule.car_plate} - ${[schedule.car_make, schedule.car_model]
-.filter(Boolean)
-.join(" ")}`
-													: [schedule.car_make, schedule.car_model]
-														.filter(Boolean)
-														.join(" ") || "No Car"}
-											</div>										<div className="appointment-client">
-												{schedule.client_name || "No Client"}
+											<div
+												key={schedule.id}
+												className={`appointment ${getAppointmentStatusClass(schedule)}`}
+												onClick={() =>
+													navigate(`/schedules/${schedule.id}`)
+												}
+											>
+
+												<div className="appointment-plate">
+													{schedule.car_plate
+														? `${schedule.car_plate} - ${[
+															schedule.car_make,
+															schedule.car_model
+														]
+															.filter(Boolean)
+															.join(" ")}`
+														: [
+															schedule.car_make,
+															schedule.car_model
+														]
+															.filter(Boolean)
+															.join(" ") || "No Car"}
+												</div>
+
+												<div className="appointment-client">
+													{schedule.client_name || "No Client"}
+												</div>
+
+												<div className="appointment-description">
+													{schedule.description}
+												</div>
+
 											</div>
 
-											<div className="appointment-description">
-												{schedule.description}
-											</div>
+										))}
 
-										</div>
+									</div>
 
-									))}
+								</>
+							)}
 
-								</div>
+						</div>
 
-							</>
-						)}
+					))}
 
-					</div>
+				</div>
 
-				))}
-
-			</div>
 			</div>
 
 		</div>
 	);
+
 }
