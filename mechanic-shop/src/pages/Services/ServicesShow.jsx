@@ -92,7 +92,6 @@ export default function ServicesShow() {
 
 		}
 		else {
-
 			setModels([]);
 
 		}

@@ -1,6 +1,5 @@
 import {
 	useEffect,
-	useMemo,
 	useRef,
 	useState
 } from "react";
@@ -81,32 +80,17 @@ export default function AppliedProductsTable({
 		loadData();
 	}, [serviceId]);
 
-	const filteredProducts = useMemo(() => {
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			if (search.trim()) {
+				loadProducts(search);
+			} else {
+				setProducts([]);
+			}
+		}, 300);
 
-		const value = search.trim().toLowerCase();
-
-		if (!value) {
-			return [];
-		}
-
-		return products.filter(product => {
-
-			const searchable = [
-				product.name,
-				product.reference,
-				product.product_type_name,
-				product.type_name,
-				product.type
-			]
-				.filter(Boolean)
-				.join(" ")
-				.toLowerCase();
-
-			return searchable.includes(value);
-
-		});
-
-	}, [products, search]);
+		return () => clearTimeout(timeout);
+	}, [search]);
 
 	async function loadData() {
 
@@ -116,7 +100,6 @@ export default function AppliedProductsTable({
 
 			await Promise.all([
 				loadAppliedProducts(),
-				loadProducts(),
 				loadProductTypes()
 			]);
 
@@ -137,15 +120,7 @@ export default function AppliedProductsTable({
 				`/services/${serviceId}/applied_products`
 			);
 
-			const list =
-				res.data.applied_product_list ||
-				res.data.applied_products ||
-				res.data.service_applied_product_list ||
-				res.data.sap_list ||
-				res.data.items ||
-				(Array.isArray(res.data)
-					? res.data
-					: []);
+			const list = res.data.sap_list || [];
 
 			appliedProductsRef.current = list;
 			setAppliedProducts(list);
@@ -161,19 +136,18 @@ export default function AppliedProductsTable({
 
 	}
 
-	async function loadProducts() {
+	async function loadProducts(search = "") {
 
 		try {
 
-			const res = await api.get("/products");
+			const res = await api.get("/products", {
+				params: {
+					name: search
+				}
+			});
 
 			setProducts(
-				res.data.product_list ||
-				res.data.products ||
-				res.data.items ||
-				(Array.isArray(res.data)
-					? res.data
-					: [])
+				res.data.product_list || []
 			);
 
 		}
@@ -193,12 +167,7 @@ export default function AppliedProductsTable({
 			const res = await api.get("/product_types");
 
 			setProductTypes(
-				res.data.product_type_list ||
-				res.data.product_types ||
-				res.data.items ||
-				(Array.isArray(res.data)
-					? res.data
-					: [])
+				res.data.product_type_list || []
 			);
 
 		}
@@ -280,9 +249,7 @@ export default function AppliedProductsTable({
 			);
 
 			let createdProduct =
-				res.data.product ||
-				res.data.created_product ||
-				res.data;
+				res.data.product;
 
 			if (!createdProduct?.id) {
 
@@ -290,13 +257,7 @@ export default function AppliedProductsTable({
 					"/products"
 				);
 
-				const productList =
-					productsRes.data.product_list ||
-					productsRes.data.products ||
-					productsRes.data.items ||
-					(Array.isArray(productsRes.data)
-						? productsRes.data
-						: []);
+				const productList = productsRes.data.product_list || [];
 
 				setProducts(productList);
 
@@ -345,14 +306,10 @@ export default function AppliedProductsTable({
 
 		}
 		catch (err) {
-
 			handleError(err);
-
 		}
 		finally {
-
 			setCreatingProductLoading(false);
-
 		}
 
 	}
@@ -368,85 +325,27 @@ export default function AppliedProductsTable({
 
 	}
 
-	function getAppliedProductId(item) {
+	function getAppliedProductId(item) { return item.sap_id; }
 
-		return (
-			item.service_applied_product_id ||
-			item.applied_product_id ||
-			item.sap_id ||
-			item.id
-		);
+	function getProductName(item) { return item.product_name; }
 
-	}
+	function getProductReference(item) { return item.product_reference || "-"; }
 
-	function getProduct(productId) {
+	function getProductType(item) { return  item.product_type_name || "-"; }
 
-		return products.find(
-			product =>
-				Number(product.id) ===
-				Number(productId)
-		);
-
-	}
-
-	function getProductName(item) {
-
-		return (
-			item.product_name ||
-			item.name ||
-			getProduct(item.product_id)?.name ||
-			"-"
-		);
-
-	}
-
-	function getProductReference(item) {
-
-		return (
-			item.product_reference ||
-			item.reference ||
-			getProduct(item.product_id)?.reference ||
-			"-"
-		);
-
-	}
-
-	function getProductType(item) {
-
-		const product = getProduct(item.product_id);
-
-		return (
-			item.product_type_name ||
-			item.type_name ||
-			item.product_type ||
-			product?.product_type_name ||
-			product?.type_name ||
-			product?.type ||
-			"-"
-		);
-
-	}
-
-	function updateAppliedProductLocally(
-		itemId,
-		field,
-		value
-	) {
-
-		const updatedProducts =
-			appliedProductsRef.current.map(item =>
-				Number(getAppliedProductId(item)) ===
-				Number(itemId)
-					? {
-						...item,
-						[field]: value
-					}
-					: item
+	function updateAppliedProductLocally( itemId, field, value) {
+		const updatedProducts = appliedProductsRef.current.map( 
+			item => 
+				Number(getAppliedProductId(item)) === Number(itemId) 
+				? {
+					...item,
+					[field]: value
+				} : 
+					item
 			);
 
 		appliedProductsRef.current = updatedProducts;
 		setAppliedProducts(updatedProducts);
-
 	}
 
 	function getAppliedProductById(itemId) {
@@ -642,7 +541,7 @@ export default function AppliedProductsTable({
 
 		}
 
-		if (filteredProducts.length === 0) {
+		if (products.length === 0) {
 			return;
 		}
 
@@ -653,7 +552,7 @@ export default function AppliedProductsTable({
 			setHighlightedIndex(previous =>
 				Math.min(
 					previous + 1,
-					filteredProducts.length - 1
+					products.length - 1
 				)
 			);
 
@@ -678,7 +577,7 @@ export default function AppliedProductsTable({
 			event.preventDefault();
 
 			const selected =
-				filteredProducts[
+				products[
 					highlightedIndex
 				];
 
@@ -782,7 +681,7 @@ export default function AppliedProductsTable({
 								Comece a escrever para pesquisar produtos.
 							</div>
 
-						) : filteredProducts.length === 0 ? (
+						) : products.length === 0 ? (
 
 							<div className="product-search-empty">
 
@@ -802,7 +701,7 @@ export default function AppliedProductsTable({
 
 						) : (
 
-							filteredProducts.map(
+							products.map(
 								(product, index) => (
 
 									<button
@@ -831,15 +730,11 @@ export default function AppliedProductsTable({
 
 										<span className="product-search-meta">
 
-											{product.reference ||
-												"-"}
+											{product.reference || "-"}
 
 											{" · "}
 
-											{product.product_type_name ||
-												product.type_name ||
-												product.type ||
-												"-"}
+											{product.product_type_name || "-"}
 
 										</span>
 
