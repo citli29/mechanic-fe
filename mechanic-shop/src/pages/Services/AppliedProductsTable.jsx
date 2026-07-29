@@ -42,50 +42,31 @@ export default function AppliedProductsTable({
 	useEffect(() => {
 
 		function handleClickOutside(event) {
-
-			if (
-				searchRef.current &&
-				!searchRef.current.contains(event.target)
-			) {
+			if ( searchRef.current &&
+				!searchRef.current.contains(event.target)) {
 				setSearchOpen(false);
 			}
-
 		}
 
-		document.addEventListener(
-			"mousedown",
-			handleClickOutside
-		);
+		document.addEventListener("mousedown", handleClickOutside);
 
 		return () => {
-
-			document.removeEventListener(
-				"mousedown",
-				handleClickOutside
-			);
-
-			Object.values(saveTimersRef.current).forEach(
-				timer => clearTimeout(timer)
-			);
-
+			document.removeEventListener( "mousedown", handleClickOutside);
+			Object.values(saveTimersRef.current).forEach( timer => clearTimeout(timer));
 		};
 
 	}, []);
 
-	useEffect(() => {
-		appliedProductsRef.current = appliedProducts;
-	}, [appliedProducts]);
-
-	useEffect(() => {
-		loadData();
-	}, [serviceId]);
+	useEffect(() => { loadData(); }, [serviceId]); 
+	useEffect(() => { appliedProductsRef.current = appliedProducts; }, [appliedProducts]);
 
 	useEffect(() => {
 		const timeout = setTimeout(() => {
 			if (search.trim()) {
 				loadProducts(search);
 			} else {
-				setProducts([]);
+				loadProducts();
+				console.log(products);
 			}
 		}, 300);
 
@@ -93,38 +74,25 @@ export default function AppliedProductsTable({
 	}, [search]);
 
 	async function loadData() {
-
 		setLoading(true);
-
 		try {
-
 			await Promise.all([
 				loadAppliedProducts(),
 				loadProductTypes()
 			]);
-
 		}
 		finally {
-
 			setLoading(false);
-
 		}
-
 	}
 
 	async function loadAppliedProducts() {
-
 		try {
-
-			const res = await api.get(
-				`/services/${serviceId}/applied_products`
-			);
+			const res = await api.get(`/services/${serviceId}/applied_products`);
 
 			const list = res.data.sap_list || [];
-
 			appliedProductsRef.current = list;
 			setAppliedProducts(list);
-
 		}
 		catch (err) {
 
@@ -137,151 +105,81 @@ export default function AppliedProductsTable({
 	}
 
 	async function loadProducts(search = "") {
-
 		try {
-
 			const res = await api.get("/products", {
 				params: {
 					name: search
 				}
 			});
-
-			setProducts(
-				res.data.product_list || []
-			);
-
+			setProducts(res.data.product_list || []);
 		}
 		catch (err) {
-
 			setProducts([]);
 			handleError(err);
-
 		}
-
 	}
 
 	async function loadProductTypes() {
-
 		try {
-
 			const res = await api.get("/product_types");
-
-			setProductTypes(
-				res.data.product_type_list || []
-			);
-
+			setProductTypes( res.data.product_type_list || []);
 		}
 		catch (err) {
-
 			setProductTypes([]);
 			handleError(err);
-
 		}
-
 	}
 
 	function updateNewProduct(event) {
-
 		const { name, value } = event.target;
-
 		setNewProduct(previous => ({
 			...previous,
 			[name]: value
 		}));
-
 	}
 
 	function beginCreatingProduct() {
-
 		setSearchOpen(false);
 		setNewProduct(previous => ({
 			...previous,
 			name: previous.name || search.trim()
 		}));
 		setCreatingProduct(true);
-
 	}
 
 	function cancelCreatingProduct() {
-
 		setCreatingProduct(false);
 		setNewProduct(emptyProduct);
-
 	}
 
 	async function createProductAndAdd() {
-
 		if (!newProduct.name.trim()) {
-
-			showMessage?.(
-				"error",
-				"O nome do produto é obrigatório."
-			);
-
+			showMessage?.("error", "O nome do produto é obrigatório.");
 			return;
-
 		}
 
 		if (!newProduct.product_type_id) {
-
-			showMessage?.(
-				"error",
-				"Selecione um tipo de produto."
-			);
-
+			showMessage?.( "error", "Selecione um tipo de produto.");
 			return;
-
 		}
 
 		setCreatingProductLoading(true);
 
 		try {
-
-			const res = await api.post(
-				"/products",
+			const res = await api.post( "/products",
 				{
 					name: newProduct.name.trim(),
-					reference:
-						newProduct.reference.trim(),
-					product_type_id:
-						Number(newProduct.product_type_id)
+					reference: newProduct.reference.trim(),
+					product_type_id: Number(newProduct.product_type_id)
 				}
 			);
 
-			let createdProduct =
-				res.data.product;
+			let createdProduct = res.data.product;
 
-			if (!createdProduct?.id) {
-
-				const productsRes = await api.get(
-					"/products"
-				);
-
-				const productList = productsRes.data.product_list || [];
-
-				setProducts(productList);
-
-				createdProduct = [...productList]
-					.reverse()
-					.find(product =>
-						product.name ===
-							newProduct.name.trim() &&
-						(product.reference || "") ===
-							newProduct.reference.trim()
-					);
-
-			}
-
-			if (!createdProduct?.id) {
-
-				throw new Error(
-					"A API não devolveu o ID do novo produto."
-				);
-
-			}
+			if (!createdProduct) 
+				throw new Error( "A API não devolveu o ID do novo produto.");
 
 			setProducts(previous => {
-
 				const exists = previous.some(
 					product =>
 						Number(product.id) ===
@@ -291,19 +189,14 @@ export default function AppliedProductsTable({
 				return exists
 					? previous
 					: [...previous, createdProduct];
-
 			});
 
 			await addProduct(createdProduct);
 
-			showMessage?.(
-				"success",
-				"Produto criado e adicionado com sucesso."
-			);
+			showMessage?.("success", "Produto criado e adicionado com sucesso.");
 
 			setCreatingProduct(false);
 			setNewProduct(emptyProduct);
-
 		}
 		catch (err) {
 			handleError(err);
@@ -349,108 +242,62 @@ export default function AppliedProductsTable({
 	}
 
 	function getAppliedProductById(itemId) {
-
 		return appliedProductsRef.current.find(item =>
 			Number(getAppliedProductId(item)) ===
 			Number(itemId)
 		);
-
 	}
 
 	function queueAppliedProductSave(itemId, values) {
 
-		const previousQueue =
-			saveQueuesRef.current[itemId] ||
-			Promise.resolve();
+		const previousQueue = saveQueuesRef.current[itemId] || Promise.resolve();
 
-		const nextQueue = previousQueue
-			.catch(() => undefined)
-			.then(async () => {
-
+		const nextQueue = previousQueue.catch(() => undefined).then(async () => 
+			{
 				setSaving(true);
-
-				await api.put(
-					`/services/${serviceId}/applied_products/${itemId}`,
+				await api.put( `/services/${serviceId}/applied_products/${itemId}`,
 					{
 						service_id:
 							Number(serviceId),
-
 						product_id:
 							Number(values.product_id),
-
 						quantity:
 							Number(values.quantity),
-
 						is_applied:
 							values.is_applied ? 1 : 0
 					}
 				);
-
 			})
-			.catch(err => {
-				handleError(err);
-			})
+			.catch(err => { handleError(err); })
 			.finally(() => {
-
-				if (
-					saveQueuesRef.current[itemId] ===
-					nextQueue
-				) {
+				if (saveQueuesRef.current[itemId] === nextQueue) 
 					delete saveQueuesRef.current[itemId];
-				}
-
-				if (
-					Object.keys(saveQueuesRef.current)
-						.length === 0
-				) {
+				if (Object.keys(saveQueuesRef.current).length === 0) 
 					setSaving(false);
-				}
-
 			});
 
 		saveQueuesRef.current[itemId] = nextQueue;
-
 	}
 
-	function updateAppliedProduct(
-		itemId,
-		field,
-		value
-	) {
+	function updateAppliedProduct(itemId, field, value) {
 
-		const currentItem =
-			getAppliedProductById(itemId);
+		const currentItem = getAppliedProductById(itemId);
 
-		if (!currentItem) {
-			return;
-		}
+		if (!currentItem) return;
 
-		const updatedItem = {
-			...currentItem,
-			[field]: value
-		};
+		const updatedItem = { ...currentItem, [field]: value};
 
-		updateAppliedProductLocally(
-			itemId,
-			field,
-			value
-		);
+		updateAppliedProductLocally(itemId, field, value);
 
 		if (field === "quantity") {
 
-			if (saveTimersRef.current[itemId]) {
-				clearTimeout(
-					saveTimersRef.current[itemId]
-				);
-			}
+			if (saveTimersRef.current[itemId]) 
+				clearTimeout(saveTimersRef.current[itemId]);
+			
 
-			if (
-				value === "" ||
-				!Number.isFinite(Number(value)) ||
-				Number(value) <= 0
-			) {
+			if ( value === "" || !Number.isFinite(Number(value)) || Number(value) <= 0) 
 				return;
-			}
+			
 
 			saveTimersRef.current[itemId] =
 				setTimeout(() => {

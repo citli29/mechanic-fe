@@ -18,6 +18,7 @@ import "./style/crud.css";
 import SchedulesNew from "./pages/Schedules/SchedulesNew";
 import ServicesShow from "./pages/Services/ServicesShow";
 import ServicesNew from "./pages/Services/ServicesNew";
+import TestPage from "./components/TestPage";
 
 function App() {
 
@@ -43,6 +44,9 @@ function App() {
 					<Route path="/services/new" element={<ServicesNew />} />
 					<Route path="/services/:id" element={<ServicesShow />} />
 					<Route path="/schedules/new" element={<SchedulesNew />} />
+
+
+					<Route path="/test" element={<TestPage/>} />
 
 				</Route>
 
