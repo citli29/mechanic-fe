@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Layout from "./components/Layout";
+import Layout from "./components/Layout/Layout";
 
 import MakesList from "./pages/Makes/MakesList";
 import ModelsList from "./pages/Models/ModelsList";

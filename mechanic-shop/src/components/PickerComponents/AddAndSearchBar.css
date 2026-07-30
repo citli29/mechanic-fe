@@ -1,0 +1,183 @@
+/* AddAndSearchBar.css */
+
+.add-search-bar {
+	container-type: inline-size;
+
+	position: relative;
+
+	width: 100%;
+	padding: 13px;
+
+	color: #475569;
+	background: #fffbeb;
+
+	border: 1px solid #fde68a;
+	border-left: 5px solid #f59e0b;
+	border-radius: 7px;
+
+	box-sizing: border-box;
+}
+
+.add-search-bar *,
+.add-search-bar *::before,
+.add-search-bar *::after {
+	box-sizing: border-box;
+}
+
+/* ===========================
+   Input
+=========================== */
+
+.add-search-bar .search-input {
+	display: block;
+
+	width: 100%;
+	height: 2.75rem;
+	min-width: 0;
+
+	padding: 0.65rem 0.75rem;
+
+	border: 1px solid #bdbdbd;
+	border-radius: 0.35rem;
+
+	font: inherit;
+	color: var(--text-main);
+
+	background: #fff;
+	outline: none;
+}
+
+.add-search-bar .search-input::placeholder {
+	color: #94a3b8;
+}
+
+.add-search-bar .search-input:focus {
+	border-color: #555;
+	outline: none;
+}
+
+/* ===========================
+   Error
+=========================== */
+
+.add-search-bar .search-input.error {
+	border-color: var(--danger);
+	color: var(--danger);
+}
+
+.add-search-bar .search-input.error:focus {
+	border-color: var(--danger-hover);
+	color: var(--danger-hover);
+}
+
+.add-search-bar .search-dropdown.error {
+	display: none;
+}
+
+/* ===========================
+   Dropdown
+=========================== */
+
+.add-search-bar .search-dropdown {
+	position: absolute;
+
+	top: calc(100% + 0.25rem);
+	left: 0;
+	right: 0;
+
+	max-height: calc(var(--visible-items, 5) * 2.75rem);
+
+	overflow-y: auto;
+	overflow-x: hidden;
+
+	background: #fff;
+
+	border: 1px solid #fde68a;
+	border-left: 5px solid #f59e0b;
+	border-radius: 7px;
+
+	box-shadow: 0 0.5rem 1rem var(--shadow-soft);
+
+	z-index: 1000;
+
+	scrollbar-width: thin;
+}
+
+/* ===========================
+   Dropdown items
+=========================== */
+
+.add-search-bar .search-dropdown-item {
+	display: flex;
+	align-items: center;
+
+	width: 100%;
+	min-height: 2.75rem;
+
+	padding: 0.55rem 0.75rem;
+
+	border: 0;
+
+	text-align: center;
+	font: inherit;
+
+	justify-content: space-around;
+	background: #fff;
+	color: var(--text-main);
+
+	cursor: pointer;
+}
+.add-search-bar .search-dropdown-item > *{
+	flex: 1;
+}
+
+.add-search-bar .search-dropdown-item + .search-dropdown-item {
+	border-top: 1px solid #fde68a;
+}
+
+.add-search-bar .search-dropdown-item:hover,
+.add-search-bar .search-dropdown-item:focus {
+	background: #fffbeb;
+	outline: none;
+}
+
+.add-search-bar .search-dropdown-item.add-item {
+	color: #b45309;
+	font-weight: 600;
+	background: #fff7d6;
+}
+
+.add-search-bar .search-dropdown-item.add-item:hover,
+.add-search-bar .search-dropdown-item.add-item:focus {
+	background: #fef3c7;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@container (max-width: 400px) {
+	.add-search-bar {
+		padding: 10px;
+	}
+
+	.add-search-bar .search-input {
+		height: 2.75rem;
+		padding: 0.45rem 0.65rem;
+	}
+
+	.add-search-bar .search-dropdown-item {
+		min-height: 2.4rem;
+		padding: 0.45rem 0.65rem;
+	}
+}
+.add-search-bar .search-input:disabled {
+	background: #f1f1f1;
+	color: #888;
+	cursor: not-allowed;
+	opacity: 0.75;
+}
+
+.add-search-bar.disabled {
+	opacity: 0.85;
+}

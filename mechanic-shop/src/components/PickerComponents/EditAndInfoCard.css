@@ -1,0 +1,435 @@
+/* EditAndInfoCard.css */
+
+.edit-info-card {
+	--label-width: 12rem;
+
+	container-type: inline-size;
+
+	width: 100%;
+	padding: 13px;
+
+	color: #475569;
+	background: #fffbeb;
+
+	border: 1px solid #fde68a;
+	border-left: 5px solid #f59e0b;
+	border-radius: 7px;
+
+	box-sizing: border-box;
+}
+
+.edit-info-card *,
+.edit-info-card *::before,
+.edit-info-card *::after {
+	box-sizing: border-box;
+}
+
+/* ===========================
+   Header
+=========================== */
+
+.edit-info-card .form-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0;
+	margin:0;
+
+	width: 100%;
+}
+
+.edit-info-card.inline .form-header {
+	gap: 1rem;
+}
+
+.edit-info-card .form-header h3 {
+	flex-shrink: 0;
+	margin: 0;
+	margin-bottom:8px;
+}
+
+.edit-info-card .form-error {
+	flex: 1;
+
+	min-height: 1rem;
+	margin: 0;
+
+	color: var(--danger);
+	font-size: 0.5rem;
+	text-align: right;
+
+	white-space: nowrap;
+	overflow-x: auto;
+	overflow-y: hidden;
+
+	scrollbar-width: none;
+}
+
+.edit-info-card .form-error::-webkit-scrollbar {
+	display: none;
+}
+
+/* ===========================
+   Fields
+=========================== */
+
+.edit-info-card .card-fields {
+	display: flex;
+	gap: 1rem;
+
+	width: 100%;
+	min-width: 0;
+}
+
+/* ===========================
+   Stacked layout
+=========================== */
+
+.edit-info-card.stacked .card-fields {
+	flex-direction: column;
+}
+
+.edit-info-card.stacked .card-field {
+	width: 100%;
+}
+
+/* ===========================
+   Inline layout
+=========================== */
+
+.edit-info-card.inline .card-fields::-webkit-scrollbar {
+	display: none;
+}
+
+/* ===========================
+   Individual field
+=========================== */
+
+.edit-info-card .card-field {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+
+	min-width: 0;
+}
+
+.edit-info-card .card-field label {
+	flex: 0 0 var(--label-width);
+
+	font-weight: 600;
+	color: var(--text-main);
+	text-align: left;
+
+}
+
+/* ===========================
+   Inputs
+=========================== */
+
+.edit-info-card input,
+.edit-info-card select,
+.edit-info-card textarea {
+	display: block;
+	flex: 1;
+
+	width: 100%;
+	min-width: 0;
+
+	padding: 0.65rem 0.75rem;
+
+	border: 1px solid transparent;
+	border-radius: 0.35rem;
+
+	font: inherit;
+	color: inherit;
+
+	background: transparent;
+	outline: none;
+}
+
+.edit-info-card input:not([type="checkbox"]),
+.edit-info-card select {
+	height: 2.75rem;
+}
+
+.edit-info-card textarea {
+	min-height: 6rem;
+	resize: vertical;
+}
+
+/* ===========================
+   Editing
+=========================== */
+
+.edit-info-card.editing input,
+.edit-info-card.editing select,
+.edit-info-card.editing textarea {
+	border-color: #bdbdbd;
+	background: #fff;
+}
+
+.edit-info-card.editing input:focus,
+.edit-info-card.editing select:focus,
+.edit-info-card.editing textarea:focus {
+	border-color: #555;
+}
+
+/* ===========================
+   Viewing
+=========================== */
+
+.edit-info-card.viewing input,
+.edit-info-card.viewing select,
+.edit-info-card.viewing textarea {
+	border-color: transparent;
+	background: transparent;
+
+	cursor: default;
+	opacity: 1;
+}
+
+.edit-info-card.viewing input:disabled,
+.edit-info-card.viewing select:disabled,
+.edit-info-card.viewing textarea:disabled {
+	color: inherit;
+	background: transparent;
+	opacity: 1;
+
+	-webkit-text-fill-color: currentColor;
+}
+
+.edit-info-card.viewing select:disabled {
+	appearance: none;
+	-webkit-appearance: none;
+	background-image: none;
+}
+
+/* ===========================
+   Checkbox
+=========================== */
+
+.edit-info-card input[type="checkbox"] {
+	flex: none;
+
+	width: 1.1rem;
+	height: 1.1rem;
+	padding: 0;
+}
+
+.edit-info-card.viewing input[type="checkbox"] {
+	pointer-events: none;
+}
+
+/* ===========================
+   Buttons
+=========================== */
+
+.edit-info-card .card-buttons {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.75rem;
+
+	width: 100%;
+	min-height: 2.75rem;
+}
+
+.edit-info-card .card-buttons button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+
+	min-width: 2.5rem;
+	min-height: 2.5rem;
+	padding: 0.55rem 0.75rem;
+
+	border: 1px solid #bdbdbd;
+	border-radius: 0.35rem;
+
+	font: inherit;
+
+	color: var(--text-main);
+	background: var(--accent);
+
+	cursor: pointer;
+}
+
+.edit-info-card .card-buttons button:disabled {
+	cursor: not-allowed;
+	opacity: 0.65;
+}
+
+
+.edit-info-card.stacked .card-buttons {
+	display: flex;
+	width: 100%;
+	gap: 0.75rem;
+	margin-top: 0.5rem;
+}
+
+.edit-info-card.stacked .card-buttons button {
+	flex: 1;
+	min-width: 0;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+/* Component <= 600px */
+
+@container (max-width: 600px) {
+	.edit-info-card .card-fields {
+		flex-direction: column;
+		flex-wrap: nowrap;
+		align-items: stretch;
+
+		overflow: visible;
+	}
+
+	.edit-info-card .card-field,
+	.edit-info-card.inline .card-field {
+		flex: none;
+		width: 100%;
+	}
+
+	.edit-info-card.inline .card-field input,
+	.edit-info-card.inline .card-field select,
+	.edit-info-card.inline .card-field textarea {
+		width: 100%;
+	}
+
+	.edit-info-card.inline .card-buttons {
+		width: 100%;
+		margin-left: 0;
+		justify-content: flex-end;
+	}
+
+	.edit-info-card.inline .form-header {
+		gap:0;
+	}
+	.edit-info-card .form-header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.edit-info-card .form-error {
+		width: 100%;
+		text-align: left;
+		min-height:0.8rem;
+		
+		padding:0;
+		font-size: 0.8rem;
+	}
+}
+
+.edit-info-card.stacked .card-field label {
+	padding-left:0.65rem;
+}
+/* Component <= 400px */
+
+@container (max-width: 400px) {
+	.edit-info-card.stacked .card-field {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.35rem;
+	}
+
+	.edit-info-card.stacked .card-field label {
+		flex: none;
+		width: 100%;
+	}
+
+	.edit-info-card.stacked input,
+	.edit-info-card.stacked select,
+	.edit-info-card.stacked textarea {
+		flex: none;
+		width: 100%;
+	}
+}
+/* ==================================
+   FINAL INLINE LAYOUT OVERRIDES
+   Keep this at the bottom of the file
+================================== */
+
+.edit-info-card.inline .card-fields {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 1rem;
+
+	width: 100%;
+	min-width: 0;
+
+	overflow: visible;
+}
+
+.edit-info-card.inline .card-field {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+
+	flex: 1 1 0;
+	width: 0;
+	min-width: 0;
+}
+
+.edit-info-card.inline .card-field label {
+	flex: 0 0 auto;
+	width: auto;
+
+	white-space: nowrap;
+}
+
+.edit-info-card.inline .card-field input:not([type="checkbox"]),
+.edit-info-card.inline .card-field select,
+.edit-info-card.inline .card-field textarea {
+	flex: 1 1 0;
+
+	width: 0;
+	min-width: 0;
+}
+
+.edit-info-card.inline .card-buttons {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	flex: 0 0 auto;
+	gap: 0.5rem;
+
+	width: auto;
+	min-width: max-content;
+	min-height: 2.75rem;
+
+	margin: 0 0 0 auto;
+
+	visibility: visible;
+	overflow: visible;
+}
+
+.edit-info-card.inline .card-buttons button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+
+	width: 2.5rem;
+	min-width: 2.5rem;
+	height: 2.5rem;
+	min-height: 2.5rem;
+	padding: 0;
+
+	visibility: visible;
+}
+
+.edit-info-card .card-buttons button.option {
+	background: var(--option);
+}
+.edit-info-card .card-buttons button.cancel {
+	background: var(--cancel);
+}
+.edit-info-card .card-buttons button.confirm {
+	background: var(--confirm);
+}
