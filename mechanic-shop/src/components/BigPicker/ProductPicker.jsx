@@ -1,17 +1,13 @@
-	/*
-	 * const fields = [
-];
-	 * */
-
 import { useEffect, useState } from "react";
 
 import AddAndSearchBar from "./../PickerComponents/AddAndSearchBar";
 import AddForm from "./../PickerComponents/AddForm";
 import EditAndInfoCard from "./../PickerComponents/EditAndInfoCard";
+import "./style/ProductPicker.css";
 
 export default function ProductPicker({
 	onSelect,
-	width="1200px",
+	width="100%",
 	has_edit=true
 }) {
 
@@ -49,7 +45,7 @@ export default function ProductPicker({
 		},
 			{
 				name: "product_type_id",
-				label: "T. Prodruto",
+				label: "T. Produto",
 				type: "select",
 				// Endpoint that returns the options
 				url: "/product_types",
@@ -71,7 +67,7 @@ export default function ProductPicker({
 	},[selectedProduct]);
 
 	return (
-		<div style={{maxwidth:width}}>
+		<div style={{maxWidth:width}}>
 
 			{!selectedProduct && !isCreate &&(<AddAndSearchBar
 					url="/products"

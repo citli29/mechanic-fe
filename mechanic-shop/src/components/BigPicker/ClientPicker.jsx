@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import AddAndSearchBar from "./../PickerComponents/AddAndSearchBar";
 import AddForm from "./../PickerComponents/AddForm";
 import EditAndInfoCard from "./../PickerComponents/EditAndInfoCard";
+import "./style/ClientPicker.css";
 
 export default function ClientPicker({
 	onSelect,
-	width="1200px",
+	width="100%",
 	has_edit=true
 }) {
 
@@ -37,6 +38,18 @@ export default function ClientPicker({
 			label: "Telemóvel",
 			type: "text",
 		},
+		{	name: "tax_nr",
+			label: "NIF",
+			type: "text",
+		},
+		{	name: "email",
+			label: "Email",
+			type: "text",
+		},
+		{	name: "address",
+			label: "Morada",
+			type: "text",
+		},
 		{	name: "zip_code",
 			label: "Cod.Postal",
 			type: "text",
@@ -48,7 +61,7 @@ export default function ClientPicker({
 	},[selectedClient]);
 
 	return (
-		<div style={{maxwidth:width}}>
+		<div className="client-picker" style={{maxWidth:width}}>
 			{!selectedClient && !isCreate &&(<AddAndSearchBar
 					url="/clients"
 					item_term="Cliente"
@@ -74,7 +87,7 @@ export default function ClientPicker({
 					onAdd={response => {
 						console.log(response);
 						setIsCreate(false);
-						setSelectedMake(response.data.client);
+						setSelectedClient(response.data.client);
 					}}
 					onCancel={()=>{setIsCreate(false);}}
 					css_class="client-form"
@@ -90,7 +103,7 @@ export default function ClientPicker({
 						item_term="Cliente"
 						onUpdate={response => {
 							console.log(response);
-							setSelectedMake(response.data.client);
+							setSelectedClient(response.data.client);
 							onSelect(response.data.client)
 						}}
 						onRemove={()=>{setSelectedClient(null)}}

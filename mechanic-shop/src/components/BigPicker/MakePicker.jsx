@@ -6,12 +6,14 @@ import EditAndInfoCard from "./../PickerComponents/EditAndInfoCard";
 
 export default function MakePicker({
 	onSelect,
-	width="400px",
-	has_edit=true
+	width = "400px",
+	has_edit = true,
+	make_id = null,
 }) {
+	const [selectedMake, setSelectedMake] = useState(
+		make_id ? { id: make_id } : null
+	);
 
-
-	const [selectedMake, setSelectedMake] = useState(null);
 	const [isCreate, setIsCreate] = useState(false);
 	const [searchName, setSearchName] = useState("");
 
@@ -19,75 +21,100 @@ export default function MakePicker({
 		{
 			name: "name",
 			label: "Nome",
-			emptyLabel: "S/Nome"
+			emptyLabel: "S/Nome",
 		},
 	];
+
 	const makeFields = [
-		{	name: "name",
+		{
+			name: "name",
 			label: "Marca",
 			type: "text",
 			value: searchName,
 		},
+	];
 
-	]
-	useEffect(()=>{
-		onSelect(selectedMake);
-	},[selectedMake])
+	/*
+	 * Keep the picker synchronized if the make_id
+	 * received from the parent changes.
+	 */
+	useEffect(() => {
+		setIsCreate(false);
+		setSearchName("");
+
+		if (make_id) {
+			setSelectedMake({ id: make_id });
+		} else {
+			setSelectedMake(null);
+		}
+	}, [make_id]);
+
 	return (
-		<div style={{width:width}}>
-			{!selectedMake && !isCreate &&(<AddAndSearchBar
+		<div style={{ width }}>
+			{!selectedMake && !isCreate && (
+				<AddAndSearchBar
 					url="/makes"
 					item_term="Marca"
 					list_term="make_list"
 					search_term="name"
-					onSelect={make => {
+					onSelect={(make) => {
 						setSelectedMake(make);
+						onSelect?.(make);
 					}}
-					onAdd={(n)=> {setIsCreate(true);
-						setSearchName(n);
+					onAdd={(name) => {
+						setIsCreate(true);
+						setSearchName(name);
 					}}
 					fields={defSearch}
 					hasAdd={!isCreate}
 					css_class="make-search"
-				/>)}
+				/>
+			)}
 
-			{isCreate ?(
+			{isCreate ? (
 				<AddForm
 					url="/makes"
 					list_term="make"
 					item_term="Marca"
 					fields={makeFields}
-					onAdd={response => {
-						console.log(response);
+					onAdd={(response) => {
+						const make = response.data.make;
+
 						setIsCreate(false);
-						setSelectedMake(response.data.make);
+						setSelectedMake(make);
+						onSelect?.(make);
 					}}
-					onCancel={()=>{setIsCreate(false);}}
+					onCancel={() => {
+						setIsCreate(false);
+					}}
 					css_class="make-form"
 					is_inline={true}
 					has_title={false}
-			/>
-			):( selectedMake && (
+				/>
+			) : (
+				selectedMake && (
 					<EditAndInfoCard
-						item_id = {selectedMake?selectedMake.id:null}
+						item_id={selectedMake.id}
 						fields={makeFields}
 						url="/makes"
 						list_term="make"
 						item_term="Marca"
-						onUpdate={response => {
-							console.log(response);
-							setSelectedMake(response.data.make);
-							onSelect(response.data.make)
+						onUpdate={(response) => {
+							const make = response.data.make;
+
+							setSelectedMake(make);
+							onSelect?.(make);
 						}}
-						onRemove={()=>{setSelectedMake(null)}}
+						onRemove={() => {
+							setSelectedMake(null);
+							onSelect?.(null);
+						}}
 						is_inline={true}
 						has_title={false}
 						has_edit={has_edit}
 					/>
-				))}
-
-</div>
+				)
+			)}
+		</div>
 	);
 }
-
-

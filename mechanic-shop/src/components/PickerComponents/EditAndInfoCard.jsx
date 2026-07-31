@@ -212,7 +212,7 @@ export default function EditAndInfoCard({
 			setIsEditing(false);
 		} catch (err) {
 			console.error("Failed to update item:", err);
-			setError(err.response?.data?.error ?? "");
+			setError(err.response?.data?.error );
 		} finally {
 			setIsSubmitting(false);
 		}

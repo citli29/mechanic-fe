@@ -1,0 +1,100 @@
+/* ProductPicker.css */
+
+/* Make the picker respect the supplied maximum width */
+.product-picker {
+	width: 100%;
+	min-width: 0;
+}
+
+/* ===========================
+   Inline fields container
+=========================== */
+
+.add-form.inline.product-form .card-fields,
+.edit-info-card.inline.product-card .card-fields {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: flex-end;
+	gap: 1rem;
+
+	width: 100%;
+	min-width: 0;
+
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+
+/*
+ * Grow fields to fill the available line.
+ * Once each field reaches its minimum width,
+ * the container begins scrolling.
+ */
+.add-form.inline.product-form .card-field,
+.edit-info-card.inline.product-card .card-field {
+	flex: 1 0 14rem;
+
+	width: auto;
+	min-width: 14rem;
+	max-width: none;
+}
+
+/* Let controls fill their field */
+.add-form.inline.product-form .card-field input:not([type="checkbox"]),
+.add-form.inline.product-form .card-field select,
+.add-form.inline.product-form .card-field textarea,
+.edit-info-card.inline.product-card .card-field input:not([type="checkbox"]),
+.edit-info-card.inline.product-card .card-field select,
+.edit-info-card.inline.product-card .card-field textarea {
+	width: 100%;
+	min-width: 0;
+}
+
+/* ===========================
+   Buttons
+=========================== */
+
+/*
+ * Buttons do not grow or shrink.
+ * margin-left:auto pushes them to the right when everything fits.
+ * sticky keeps them visible when the fields overflow.
+ */
+.add-form.inline.product-form .card-buttons,
+.edit-info-card.inline.product-card .card-buttons {
+	position: sticky;
+	right: 0;
+	z-index: 10;
+
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	gap: 0.65rem;
+
+	margin-left: auto;
+	padding-left: 1rem;
+
+	background: #fffbeb;
+
+	box-shadow: -8px 0 8px -8px rgba(0, 0, 0, 0.14);
+}
+
+/* Medium-sized product buttons */
+.add-form.inline.product-form .card-buttons button,
+.edit-info-card.inline.product-card .card-buttons button {
+	flex: 0 0 auto;
+
+	width: auto;
+	min-width: 6.5rem;
+	padding: 0.55rem 1rem;
+
+	font-size: 0.925rem;
+	font-weight: 600;
+
+	border-radius: 0.5rem;
+}
+
+/* Optional subtle hover */
+.add-form.inline.product-form .card-buttons button:hover,
+.edit-info-card.inline.product-card .card-buttons button:hover {
+	transform: translateY(-1px);
+}

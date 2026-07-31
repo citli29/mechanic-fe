@@ -55,7 +55,7 @@
 	margin: 0;
 
 	color: var(--danger);
-	font-size: 0.5rem;
+	font-size: 0.9rem;
 	text-align: right;
 
 	white-space: nowrap;
@@ -353,6 +353,7 @@
    Keep this at the bottom of the file
 ================================== */
 
+/* Inline row is the horizontal scroller */
 .edit-info-card.inline .card-fields {
 	display: flex;
 	flex-direction: row;
@@ -363,36 +364,55 @@
 	width: 100%;
 	min-width: 0;
 
-	overflow: visible;
+	overflow-x: auto;
+	overflow-y: hidden;
+
+	white-space: nowrap;
+	scrollbar-width: none;
 }
 
+.edit-info-card.inline .card-fields::-webkit-scrollbar {
+	display: none;
+}
+
+/* Fields keep a usable width instead of shrinking */
 .edit-info-card.inline .card-field {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
 
-	flex: 1 1 0;
-	width: 0;
-	min-width: 0;
+	flex: 0 0 auto;
+	width: auto;
+	min-width: 16rem;
 }
 
 .edit-info-card.inline .card-field label {
 	flex: 0 0 auto;
 	width: auto;
-
 	white-space: nowrap;
 }
 
 .edit-info-card.inline .card-field input:not([type="checkbox"]),
-.edit-info-card.inline .card-field select,
-.edit-info-card.inline .card-field textarea {
-	flex: 1 1 0;
+.edit-info-card.inline .card-field select {
+	flex: 1 1 auto;
 
-	width: 0;
-	min-width: 0;
+	width: 10rem;
+	min-width: 10rem;
 }
 
+.edit-info-card.inline .card-field textarea {
+	flex: 1 1 auto;
+
+	width: 16rem;
+	min-width: 16rem;
+}
+
+/* Buttons remain pinned to the right side of the scroller */
 .edit-info-card.inline .card-buttons {
+	position: sticky;
+	right: 0;
+	z-index: 10;
+
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
@@ -403,16 +423,33 @@
 	min-width: max-content;
 	min-height: 2.75rem;
 
-	margin: 0 0 0 auto;
+	margin-left: auto;
+	padding-left: 1rem;
 
-	visibility: visible;
-	overflow: visible;
+	background: #fffbeb;
+}
+
+/* Optional fade so fields do not look abruptly hidden */
+.edit-info-card.inline .card-buttons::before {
+	content: "";
+
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: -1rem;
+
+	width: 1rem;
+
+	background: linear-gradient(
+		to right,
+		transparent,
+		#fffbeb
+	);
+
+	pointer-events: none;
 }
 
 .edit-info-card.inline .card-buttons button {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
 	flex: 0 0 auto;
 
 	width: 2.5rem;
@@ -420,10 +457,7 @@
 	height: 2.5rem;
 	min-height: 2.5rem;
 	padding: 0;
-
-	visibility: visible;
 }
-
 .edit-info-card .card-buttons button.option {
 	background: var(--option);
 }

@@ -3,16 +3,18 @@ import { useState } from "react";
 import AddAndSearchBar from "./../PickerComponents/AddAndSearchBar";
 import AddForm from "./../PickerComponents/AddForm";
 import EditAndInfoCard from "./../PickerComponents/EditAndInfoCard";
-
+import MakePicker from "./MakePicker";
+import ModelPicker from "./ModelPicker";
 export default function CarPicker({
 	onSelect,
-	width="300px",
+	width="100%",
 	has_edit=true
 }) {
 
 
 	const [selectedMake, setSelectedMake] = useState(null);
 	const [selectedModel, setSelectedModel] = useState(null);
+	const [selectedCar, setSelectedCar] = useState(null);
 	const [isCreate, setIsCreate] = useState(false);
 	const [searchName, setSearchName] = useState("");
 

@@ -55,7 +55,7 @@
 	margin: 0;
 
 	color: var(--danger);
-	font-size: 0.5rem;
+	font-size: 0.9rem;
 	text-align: right;
 
 	white-space: nowrap;
@@ -354,6 +354,11 @@
    Keep this at the bottom of the file
 ================================== */
 
+/* ==================================
+   FINAL INLINE LAYOUT OVERRIDES
+   Keep this at the bottom of the file
+================================== */
+
 .add-form.inline .card-fields {
 	display: flex;
 	flex-direction: row;
@@ -364,36 +369,62 @@
 	width: 100%;
 	min-width: 0;
 
-	overflow: visible;
+	overflow-x: auto;
+	overflow-y: hidden;
+
+	white-space: nowrap;
+	scrollbar-width: none;
 }
 
+.add-form.inline .card-fields::-webkit-scrollbar {
+	display: none;
+}
+
+/*
+ * Fields keep their size.
+ * The entire .card-fields row scrolls instead.
+ */
 .add-form.inline .card-field {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
 
-	flex: 1 1 0;
-	width: 0;
-	min-width: 0;
+	flex: 0 0 auto;
+	width: auto;
+	min-width: 16rem;
 }
 
 .add-form.inline .card-field label {
 	flex: 0 0 auto;
 	width: auto;
+	height: 2.75rem;
 
 	white-space: nowrap;
 }
 
+/* Normal inputs and selects */
 .add-form.inline .card-field input:not([type="checkbox"]),
-.add-form.inline .card-field select,
-.add-form.inline .card-field textarea {
-	flex: 1 1 0;
+.add-form.inline .card-field select {
+	flex: 1 1 auto;
 
-	width: 0;
-	min-width: 0;
+	width: 10rem;
+	min-width: 10rem;
 }
 
+/* Textareas need more room */
+.add-form.inline .card-field textarea {
+	flex: 1 1 auto;
+
+	width: 16rem;
+	min-width: 16rem;
+}
+
+/* Buttons remain pinned to the right */
 .add-form.inline .card-buttons {
+	position: sticky;
+	right: 0;
+	z-index: 10;
+
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
@@ -404,11 +435,16 @@
 	min-width: max-content;
 	min-height: 2.75rem;
 
-	margin: 0 0 0 auto;
+	margin-left: auto;
+	padding-left: 1rem;
+
+	background: #fffbeb;
 
 	visibility: visible;
 	opacity: 1;
 	overflow: visible;
+
+	box-shadow: -8px 0 8px -8px rgba(0, 0, 0, 0.15);
 }
 
 .add-form.inline .card-buttons button {

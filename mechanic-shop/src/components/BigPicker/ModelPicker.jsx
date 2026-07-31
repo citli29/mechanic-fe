@@ -6,12 +6,15 @@ import EditAndInfoCard from "./../PickerComponents/EditAndInfoCard";
 
 export default function ModelPicker({
 	onSelect,
-	width="400px",
-	has_edit=true,
-	make_id=null
+	width = "400px",
+	has_edit = true,
+	make_id = null,
+	model_id = null,
 }) {
+	const [selectedModel, setSelectedModel] = useState(
+		model_id ? { id: model_id } : null
+	);
 
-	const [selectedModel, setSelectedModel] = useState(null);
 	const [isCreate, setIsCreate] = useState(false);
 	const [searchName, setSearchName] = useState("");
 
@@ -19,7 +22,7 @@ export default function ModelPicker({
 		{
 			name: "name",
 			label: "Nome",
-			emptyLabel: "S/Nome"
+			emptyLabel: "S/Nome",
 		},
 	];
 
@@ -35,71 +38,98 @@ export default function ModelPicker({
 			type: "text",
 			value: searchName,
 		},
-	]
+	];
 
+	/*
+	 * Keep the picker synchronized when the parent changes
+	 * either the make or the selected model.
+	 */
 	useEffect(() => {
-		setSelectedModel(null); 
-		setIsCreate(false); 
-		setSearchName(""); 
-		if (make_id == null) { 
-			onSelect?.(null); 
-		} }, [make_id]);
+		setIsCreate(false);
+		setSearchName("");
+
+		if (!make_id) {
+			setSelectedModel(null);
+			onSelect?.(null);
+			return;
+		}
+
+		if (model_id) {
+			setSelectedModel({ id: model_id });
+		} else {
+			setSelectedModel(null);
+		}
+	}, [make_id, model_id]);
+
 	return (
-		<div style={{width:width}}>
-			{!selectedModel && !isCreate &&(<AddAndSearchBar
-				disabled ={!make_id?true:false}
-				url={`/models?make_id=${make_id}`}
-				item_term="Modelo"
-				list_term="model_list"
-				search_term="name"
-				onSelect={model => {
-					setSelectedModel(model);
-				}}
-				onAdd={(n)=> {setIsCreate(true);
-					setSearchName(n);
-				}}
-				fields={defSearch}
-				hasAdd={!isCreate}
-				css_class="make-search"
-			/>
+		<div style={{ width }}>
+			{!selectedModel && !isCreate && (
+				<AddAndSearchBar
+					disabled={!make_id}
+					url={`/models?make_id=${make_id}`}
+					item_term="Modelo"
+					list_term="model_list"
+					search_term="name"
+					onSelect={(model) => {
+						setSelectedModel(model);
+						onSelect?.(model);
+					}}
+					onAdd={(name) => {
+						setIsCreate(true);
+						setSearchName(name);
+					}}
+					fields={defSearch}
+					hasAdd={!isCreate}
+					css_class="make-search"
+				/>
 			)}
-			{make_id && isCreate ?(
+
+			{make_id && isCreate ? (
 				<AddForm
 					url="/models"
 					list_term="model"
-					item_term="Marca"
+					item_term="Modelo"
 					fields={modelFields}
-					onAdd={response => {
-						console.log(response);
+					onAdd={(response) => {
+						const model = response.data.model;
+
 						setIsCreate(false);
-						setSelectedModel(response.data.model);
+						setSelectedModel(model);
+						onSelect?.(model);
 					}}
-					onCancel={()=>{setIsCreate(false);}}
+					onCancel={() => {
+						setIsCreate(false);
+					}}
 					css_class="make-form"
 					is_inline={true}
 					has_title={false}
-			/>
-			):(make_id && selectedModel && (
+				/>
+			) : (
+				make_id &&
+				selectedModel && (
 					<EditAndInfoCard
-						item_id = {selectedModel?selectedModel.id:null}
+						item_id={selectedModel.id}
 						fields={modelFields}
 						url="/models"
 						list_term="model"
-						item_term="Marca"
-						onUpdate={response => {
-							console.log(response);
-							setSelectedModel(response.data.model);
-							onSelect(response.data.model)
+						item_term="Modelo"
+						onUpdate={(response) => {
+							const model = response.data.model;
+
+							setSelectedModel(model);
+							onSelect?.(model);
 						}}
-						onRemove={()=>{setSelectedModel(null)}}
+						onRemove={() => {
+							setSelectedModel(null);
+							onSelect?.(null);
+						}}
 						is_inline={true}
 						has_title={false}
 						has_edit={has_edit}
-					/>)
-				)}
-
-</div>
+						css_class="make-card"
+					/>
+				)
+			)}
+		</div>
 	);
 }
-
-
