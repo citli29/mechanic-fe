@@ -67,7 +67,7 @@ export default function MakePicker({
 					}}
 					fields={defSearch}
 					hasAdd={!isCreate}
-					css_class="make-search"
+					css_class="make-add-search-bar"
 				/>
 			)}
 
@@ -87,7 +87,7 @@ export default function MakePicker({
 					onCancel={() => {
 						setIsCreate(false);
 					}}
-					css_class="make-form"
+					css_class="make-add-form"
 					is_inline={true}
 					has_title={false}
 				/>
@@ -112,6 +112,7 @@ export default function MakePicker({
 						is_inline={true}
 						has_title={false}
 						has_edit={has_edit}
+						css_class="make-edit-info-card"
 					/>
 				)
 			)}

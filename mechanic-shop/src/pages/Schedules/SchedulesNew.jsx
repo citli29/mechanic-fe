@@ -138,9 +138,7 @@ export default function SchedulesNew() {
 			const res = await api.get("/schedules");
 
 			setSchedules(
-				res.data.schedule_list ||
-				res.data.schedules ||
-				[]
+				res.data.schedule_list 
 			);
 
 		}

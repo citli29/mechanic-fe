@@ -80,7 +80,7 @@ export default function ModelPicker({
 					}}
 					fields={defSearch}
 					hasAdd={!isCreate}
-					css_class="make-search"
+					css_class="model-add-search-bar"
 				/>
 			)}
 
@@ -100,7 +100,7 @@ export default function ModelPicker({
 					onCancel={() => {
 						setIsCreate(false);
 					}}
-					css_class="make-form"
+					css_class="model-add-form"
 					is_inline={true}
 					has_title={false}
 				/>
@@ -126,7 +126,7 @@ export default function ModelPicker({
 						is_inline={true}
 						has_title={false}
 						has_edit={has_edit}
-						css_class="make-card"
+						css_class="model-edit-info-card"
 					/>
 				)
 			)}

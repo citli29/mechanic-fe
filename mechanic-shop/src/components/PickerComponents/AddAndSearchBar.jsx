@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import api from "./../../api/axios";
-import "./AddAndSearchBar.css";
+//import "./AddAndSearchBar.css";
 
 // @url: api call to get the items
 // @search_term: the column to search the item (usually the normalized one)
@@ -202,6 +202,15 @@ export default function AddAndSearchBar({
 					))}
 				</div>
 			)}
+			{hasAdd && (
+				<button
+					className="add-button"
+					type="button"
+					onClick={handleAdd}
+				>
+					<i className="fa-solid fa-plus"></i>
+				</button>
+			) }
 		</div>
 	);
 }

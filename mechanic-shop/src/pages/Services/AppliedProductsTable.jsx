@@ -1,77 +1,30 @@
 import {
 	useEffect,
 	useRef,
-	useState
+	useState,
+	forwardRef,
+	useImperativeHandle
 } from "react";
 
 import api from "../../api/axios";
 
-export default function AppliedProductsTable({
+const AppliedProductsTable = forwardRef(function AppliedProductsTable({
 	serviceId,
 	showMessage,
 	handleApiError
-}) {
+},ref) {
 
 	const [appliedProducts, setAppliedProducts] = useState([]);
-	const [products, setProducts] = useState([]);
-	const [productTypes, setProductTypes] = useState([]);
-
-	const [search, setSearch] = useState("");
-	const [searchOpen, setSearchOpen] = useState(false);
-	const [highlightedIndex, setHighlightedIndex] = useState(0);
 
 	const [loading, setLoading] = useState(false);
-	const [saving, setSaving] = useState(false);
 	const [adding, setAdding] = useState(false);
-	const [creatingProduct, setCreatingProduct] = useState(false);
-	const [creatingProductLoading, setCreatingProductLoading] = useState(false);
 
-	const emptyProduct = {
-		name: "",
-		reference: "",
-		product_type_id: ""
-	};
-
-	const [newProduct, setNewProduct] = useState(emptyProduct);
-
-	const searchRef = useRef(null);
 	const appliedProductsRef = useRef([]);
 	const saveTimersRef = useRef({});
 	const saveQueuesRef = useRef({});
 
-	useEffect(() => {
-
-		function handleClickOutside(event) {
-			if ( searchRef.current &&
-				!searchRef.current.contains(event.target)) {
-				setSearchOpen(false);
-			}
-		}
-
-		document.addEventListener("mousedown", handleClickOutside);
-
-		return () => {
-			document.removeEventListener( "mousedown", handleClickOutside);
-			Object.values(saveTimersRef.current).forEach( timer => clearTimeout(timer));
-		};
-
-	}, []);
-
 	useEffect(() => { loadData(); }, [serviceId]); 
 	useEffect(() => { appliedProductsRef.current = appliedProducts; }, [appliedProducts]);
-
-	useEffect(() => {
-		const timeout = setTimeout(() => {
-			if (search.trim()) {
-				loadProducts(search);
-			} else {
-				loadProducts();
-				console.log(products);
-			}
-		}, 300);
-
-		return () => clearTimeout(timeout);
-	}, [search]);
 
 	async function loadData() {
 		setLoading(true);
@@ -95,27 +48,44 @@ export default function AppliedProductsTable({
 			setAppliedProducts(list);
 		}
 		catch (err) {
-
 			appliedProductsRef.current = [];
 			setAppliedProducts([]);
 			handleError(err);
-
 		}
-
 	}
 
-	async function loadProducts(search = "") {
+	async function addProduct(product) {
+
+		if ( !product || adding) {
+			return;
+		}
+
+		setAdding(true);
+
 		try {
-			const res = await api.get("/products", {
-				params: {
-					name: search
+			await api.post(
+				`/services/${serviceId}/applied_products`,
+				{
+					service_id:
+						Number(serviceId),
+
+					product_id:
+						Number(product.id),
+
+					quantity: 1,
+					is_applied: 0
 				}
-			});
-			setProducts(res.data.product_list || []);
+			);
+
+			showMessage?.("success","Produto adicionado com sucesso.");
+
+			await loadAppliedProducts();
 		}
 		catch (err) {
-			setProducts([]);
 			handleError(err);
+		}
+		finally {
+			setAdding(false);
 		}
 	}
 
@@ -128,83 +98,6 @@ export default function AppliedProductsTable({
 			setProductTypes([]);
 			handleError(err);
 		}
-	}
-
-	function updateNewProduct(event) {
-		const { name, value } = event.target;
-		setNewProduct(previous => ({
-			...previous,
-			[name]: value
-		}));
-	}
-
-	function beginCreatingProduct() {
-		setSearchOpen(false);
-		setNewProduct(previous => ({
-			...previous,
-			name: previous.name || search.trim()
-		}));
-		setCreatingProduct(true);
-	}
-
-	function cancelCreatingProduct() {
-		setCreatingProduct(false);
-		setNewProduct(emptyProduct);
-	}
-
-	async function createProductAndAdd() {
-		if (!newProduct.name.trim()) {
-			showMessage?.("error", "O nome do produto é obrigatório.");
-			return;
-		}
-
-		if (!newProduct.product_type_id) {
-			showMessage?.( "error", "Selecione um tipo de produto.");
-			return;
-		}
-
-		setCreatingProductLoading(true);
-
-		try {
-			const res = await api.post( "/products",
-				{
-					name: newProduct.name.trim(),
-					reference: newProduct.reference.trim(),
-					product_type_id: Number(newProduct.product_type_id)
-				}
-			);
-
-			let createdProduct = res.data.product;
-
-			if (!createdProduct) 
-				throw new Error( "A API não devolveu o ID do novo produto.");
-
-			setProducts(previous => {
-				const exists = previous.some(
-					product =>
-						Number(product.id) ===
-						Number(createdProduct.id)
-				);
-
-				return exists
-					? previous
-					: [...previous, createdProduct];
-			});
-
-			await addProduct(createdProduct);
-
-			showMessage?.("success", "Produto criado e adicionado com sucesso.");
-
-			setCreatingProduct(false);
-			setNewProduct(emptyProduct);
-		}
-		catch (err) {
-			handleError(err);
-		}
-		finally {
-			setCreatingProductLoading(false);
-		}
-
 	}
 
 	function handleError(err) {
@@ -326,116 +219,6 @@ export default function AppliedProductsTable({
 
 	}
 
-	async function addProduct(product) {
-
-		if (
-			!product ||
-			adding
-		) {
-			return;
-		}
-
-		setAdding(true);
-
-		try {
-
-			await api.post(
-				`/services/${serviceId}/applied_products`,
-				{
-					service_id:
-						Number(serviceId),
-
-					product_id:
-						Number(product.id),
-
-					quantity: 1,
-					is_applied: 0
-				}
-			);
-
-			showMessage?.(
-				"success",
-				"Produto adicionado com sucesso."
-			);
-
-			setSearch("");
-			setHighlightedIndex(0);
-			setSearchOpen(false);
-
-			await loadAppliedProducts();
-
-		}
-		catch (err) {
-
-			handleError(err);
-
-		}
-		finally {
-
-			setAdding(false);
-
-		}
-
-	}
-
-	function handleSearchKeyDown(event) {
-
-		if (event.key === "Escape") {
-
-			event.preventDefault();
-			setSearchOpen(false);
-			return;
-
-		}
-
-		if (products.length === 0) {
-			return;
-		}
-
-		if (event.key === "ArrowDown") {
-
-			event.preventDefault();
-
-			setHighlightedIndex(previous =>
-				Math.min(
-					previous + 1,
-					products.length - 1
-				)
-			);
-
-			return;
-
-		}
-
-		if (event.key === "ArrowUp") {
-
-			event.preventDefault();
-
-			setHighlightedIndex(previous =>
-				Math.max(previous - 1, 0)
-			);
-
-			return;
-
-		}
-
-		if (event.key === "Enter") {
-
-			event.preventDefault();
-
-			const selected =
-				products[
-					highlightedIndex
-				];
-
-			if (selected) {
-				addProduct(selected);
-			}
-
-		}
-
-	}
-
 	async function deleteAppliedProduct(
 		itemId,
 		productName
@@ -461,246 +244,26 @@ export default function AppliedProductsTable({
 			);
 
 			await loadAppliedProducts();
-
 		}
 		catch (err) {
-
 			handleError(err);
-
 		}
-
 	}
 
+	useImperativeHandle(
+		ref,
+		() => ({
+			addProduct,
+			reload: loadAppliedProducts
+		}),
+		[serviceId, adding]
+	);
+
 	return (
-
 		<div className="applied-products-section">
-
-			<div className="table-title">
-
-				<h2>Produtos aplicados</h2>
-
-				{saving && (
-					<span>A guardar...</span>
-				)}
-
-			</div>
-
-			<div
-				className="product-search"
-				ref={searchRef}
-			>
-
-				<label htmlFor="applied-product-search">
-					Adicionar produto
-				</label>
-
-				<input
-					id="applied-product-search"
-					type="text"
-					placeholder="Pesquisar por nome, referência ou tipo..."
-					value={search}
-					onFocus={() =>
-						setSearchOpen(true)
-					}
-					onChange={event => {
-
-						setSearch(
-							event.target.value
-						);
-
-						setHighlightedIndex(0);
-						setSearchOpen(true);
-
-					}}
-					onKeyDown={
-						handleSearchKeyDown
-					}
-					disabled={adding}
-				/>
-
-				{searchOpen && (
-
-					<div className="product-search-results">
-
-						{search.trim() === "" ? (
-
-							<div className="product-search-empty">
-								Comece a escrever para pesquisar produtos.
-							</div>
-
-						) : products.length === 0 ? (
-
-							<div className="product-search-empty">
-
-								<span>
-									Nenhum produto encontrado.
-								</span>
-
-								<button
-									type="button"
-									onClick={beginCreatingProduct}
-									disabled={adding}
-								>
-									Criar “{search.trim()}”
-								</button>
-
-							</div>
-
-						) : (
-
-							products.map(
-								(product, index) => (
-
-									<button
-										key={product.id}
-										type="button"
-										className={
-											index ===
-											highlightedIndex
-												? "product-search-option active"
-												: "product-search-option"
-										}
-										onMouseEnter={() =>
-											setHighlightedIndex(
-												index
-											)
-										}
-										onClick={() =>
-											addProduct(product)
-										}
-										disabled={adding}
-									>
-
-										<span className="product-search-main">
-											{product.name}
-										</span>
-
-										<span className="product-search-meta">
-
-											{product.reference || "-"}
-
-											{" · "}
-
-											{product.product_type_name || "-"}
-
-										</span>
-
-									</button>
-
-								)
-							)
-
-						)}
-
-					</div>
-
-				)}
-
-			</div>
-
-			{!creatingProduct && (
-				<div className="container-buttons">
-
-					<button
-						type="button"
-						onClick={beginCreatingProduct}
-						disabled={adding}
-					>
-						Criar novo produto
-					</button>
-
-				</div>
-			)}
-
-			{creatingProduct && (
-
-				<div className="inline-create-form">
-
-					<h3>Criar produto</h3>
-
-					<div className="field">
-
-						<input
-							type="text"
-							name="name"
-							placeholder="Nome do produto"
-							value={newProduct.name}
-							onChange={updateNewProduct}
-							disabled={creatingProductLoading}
-						/>
-					</div>
-
-					<div className="field">
-
-						<input
-							type="text"
-							name="reference"
-							placeholder="Referência"
-							value={newProduct.reference}
-							onChange={updateNewProduct}
-							disabled={creatingProductLoading}
-						/>
-					</div>
-
-					<div className="field">
-
-						<select
-							name="product_type_id"
-							value={newProduct.product_type_id}
-							onChange={updateNewProduct}
-							disabled={creatingProductLoading}
-						>
-
-							<option value="">
-								Selecionar tipo
-							</option>
-
-							{productTypes.map(productType => (
-
-								<option
-									key={productType.id}
-									value={productType.id}
-								>
-									{productType.name}
-								</option>
-
-							))}
-
-						</select>
-					</div>
-
-					<div className="container-buttons">
-
-						<button
-							type="button"
-							onClick={createProductAndAdd}
-							disabled={creatingProductLoading}
-						>
-							{creatingProductLoading
-								? "A criar..."
-								: "Criar e adicionar"}
-						</button>
-
-						<button
-							type="button"
-							onClick={cancelCreatingProduct}
-							disabled={creatingProductLoading}
-						>
-							Cancelar
-						</button>
-
-					</div>
-
-				</div>
-
-			)}
-
 			<div className="table-wrapper">
-
 				<table className="table">
-
 					<thead>
-
 						<tr>
 							<th>Produto</th>
 							<th>Referência</th>
@@ -709,137 +272,84 @@ export default function AppliedProductsTable({
 							<th>Aplicado</th>
 							<th></th>
 						</tr>
-
 					</thead>
 
 					<tbody>
-
 						{loading && (
-
 							<tr>
 								<td colSpan={6}>
 									A carregar...
 								</td>
 							</tr>
-
 						)}
 
-						{!loading &&
-							appliedProducts.length === 0 && (
+						{!loading && appliedProducts.length === 0 && (
+							<tr>
+								<td colSpan={6}>
+									Nenhum produto aplicado encontrado.
+								</td>
+							</tr>
+						)}
 
-								<tr>
-									<td colSpan={6}>
-										Nenhum produto aplicado encontrado.
+						{!loading && appliedProducts.map(item => {
+
+							const itemId = getAppliedProductId( item);
+
+							return (
+								<tr key={itemId}>
+
+									<td> {getProductName(item)} </td>
+									<td> {getProductReference(item)} </td>
+									<td> {getProductType( item)} </td>
+									<td> <input
+										type="number"
+										min="0.001"
+										step="any"
+										value={ item.quantity ?? "" }
+										onChange={event =>
+											updateAppliedProduct(
+												itemId,
+												"quantity",
+												event.target.value
+											)
+										}
+									/>
+									</td>
+									<td> <input
+										type="checkbox"
+										checked={
+											Number(
+												item.is_applied
+											) === 1 ||
+												item.is_applied === true
+										}
+										onChange={event =>
+											updateAppliedProduct(
+												itemId,
+												"is_applied",
+												event.target.checked
+											)
+										}
+									/>
+									</td>
+									<td>
+										<button
+											type="button"
+											className="delete-btn"
+											onClick={() =>
+												deleteAppliedProduct(itemId, getProductName(item))
+											}
+										>
+											<i className="fa-regular fa-trash-can"></i>
+										</button>
 									</td>
 								</tr>
-
-							)}
-
-						{!loading &&
-							appliedProducts.map(item => {
-
-								const itemId =
-									getAppliedProductId(
-										item
-									);
-
-								return (
-
-									<tr key={itemId}>
-
-										<td>
-											{getProductName(
-												item
-											)}
-										</td>
-
-										<td>
-											{getProductReference(
-												item
-											)}
-										</td>
-
-										<td>
-											{getProductType(
-												item
-											)}
-										</td>
-
-										<td>
-
-											<input
-												type="number"
-												min="0.01"
-												step="any"
-												value={
-													item.quantity ??
-													""
-												}
-												onChange={event =>
-													updateAppliedProduct(
-														itemId,
-														"quantity",
-														event.target.value
-													)
-												}
-											/>
-
-										</td>
-
-										<td>
-
-											<input
-												type="checkbox"
-												checked={
-													Number(
-														item.is_applied
-													) === 1 ||
-													item.is_applied === true
-												}
-												onChange={event =>
-													updateAppliedProduct(
-														itemId,
-														"is_applied",
-														event.target.checked
-													)
-												}
-											/>
-
-										</td>
-
-										<td>
-
-											<button
-												type="button"
-												className="delete-btn"
-												onClick={() =>
-													deleteAppliedProduct(
-														itemId,
-														getProductName(
-															item
-														)
-													)
-												}
-											>
-												Delete
-											</button>
-
-										</td>
-
-									</tr>
-
-								);
-
-							})}
-
+							);
+						})}
 					</tbody>
-
 				</table>
-
 			</div>
-
 		</div>
-
 	);
-
-}
+})
+export default AppliedProductsTable;

@@ -14,14 +14,15 @@ import ClientsList from "./pages/Clients/ClientsList";
 import ServicesList from "./pages/Services/ServicesList";
 import Home from "./pages/Home/Home";
 
-import "./style/crud.css";
+//import "./style/crud.css";
 import SchedulesNew from "./pages/Schedules/SchedulesNew";
-import ServicesShow from "./pages/Services/ServicesShow";
+//import ServicesShow from "./pages/Services/ServicesShow";
 import ServicesNew from "./pages/Services/ServicesNew";
 import TestPage from "./components/TestPage";
 
 function App() {
 
+	//<Route path="/services/:id" element={<ServicesShow />} />
 	return (
 
 		<BrowserRouter>
@@ -42,7 +43,6 @@ function App() {
 					<Route path="/schedules/:id" element={<SchedulesShow />} />
 					<Route path="/services" element={<ServicesList />} />
 					<Route path="/services/new" element={<ServicesNew />} />
-					<Route path="/services/:id" element={<ServicesShow />} />
 					<Route path="/schedules/new" element={<SchedulesNew />} />
 
 

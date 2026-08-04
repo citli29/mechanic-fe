@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "./../../api/axios";
-import "./EditAndInfoCard.css";
+//import "./EditAndInfoCard.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
 	faFloppyDisk,
