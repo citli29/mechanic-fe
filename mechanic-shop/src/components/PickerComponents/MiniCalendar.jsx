@@ -6,7 +6,7 @@ import {
 	useState
 } from "react";
 
-//import "./MiniCalendar.css";
+import "./MiniCalendar.css";
 
 function formatDateKey(date) {
 	const year = date.getFullYear();
@@ -69,6 +69,7 @@ export default function MiniCalendar({
 	date_term = "date",
 	showLegend = true
 }) {
+
 	const today = useMemo(() => new Date(), []);
 
 	const initialMonth = useMemo(() => {
@@ -159,9 +160,7 @@ export default function MiniCalendar({
 		}
 	}, [calendarMonth, loadSchedules, staleTime]);
 
-	useEffect(() => {
-		fetchSchedules();
-	}, [fetchSchedules]);
+	useEffect(() => {fetchSchedules();}, [fetchSchedules]);
 
 	useEffect(() => {
 		const selectedDate = parseDate(value);
@@ -316,32 +315,16 @@ export default function MiniCalendar({
 						);
 					}
 
-					const dateKey =
-						formatDateKey(date);
-
-					const count =
-						appointmentsByDate[dateKey] || 0;
-
-					const selected =
-						value === dateKey;
-
-					const current =
-						todayKey === dateKey;
-
+					const dateKey = formatDateKey(date);
+					const count = appointmentsByDate[dateKey] || 0;
+					const selected = value === dateKey;
+					const current = todayKey === dateKey;
 					const className = [
 						"mini-calendar-day",
-						count > 0
-							? "has-appointments"
-							: "",
-						selected
-							? "selected"
-							: "",
-						current
-							? "today"
-							: ""
-					]
-						.filter(Boolean)
-						.join(" ");
+						count > 0 ? "has-appointments" : "",
+						selected ? "selected" : "",
+						current ? "today" : ""
+					].filter(Boolean).join(" ");
 
 					return (
 						<button
@@ -354,14 +337,10 @@ export default function MiniCalendar({
 								selectDate(date)
 							}
 						>
-							<span>
-								{date.getDate()}
-							</span>
+							<span> {date.getDate()} </span>
 
 							{count > 0 && (
-								<strong>
-									{count}
-								</strong>
+								<strong> {count} </strong>
 							)}
 						</button>
 					);

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
-import "./SchedulesNew.css";
+//import "./SchedulesNew.css";
 
 export default function SchedulesNew() {
 

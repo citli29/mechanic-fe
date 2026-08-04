@@ -8,8 +8,10 @@ import ClientPicker from "./BigPicker/ClientPicker";
 import ProductPicker from "./BigPicker/ProductPicker";
 import CarPicker from "./BigPicker/CarPicker";
 import MiniCalendar from "./PickerComponents/MiniCalendar";
-import AppliedProductsTable from "../pages/Services/AppliedProductsTable";
-
+import AppliedProductsTable from "./Tables/AppliedProductsTable";
+import UserTimesTable from "./Tables/UserTimesTable";	
+import DateItemsCalendar from "./PickerComponents/DateItemsCalendar";
+import SchedulesCalendar from "./PickerComponents/SchedulesCalendar";
 
 export default function TestPage() {
 
@@ -36,6 +38,7 @@ export default function TestPage() {
 
 
 	const appliedProductsTableRef = useRef(null);
+
 	useEffect(()=>{
 		if(selectedProduct === null) return;
 		appliedProductsTableRef.current?.addProduct(selectedProduct);
@@ -93,10 +96,13 @@ export default function TestPage() {
 				value={selectedProduct}
 				//product_id={1}
 			/>
-			<AppliedProductsTable 
-				ref={appliedProductsTableRef}
+			<AppliedProductsTable
 				serviceId={1}
 			/>
+			<UserTimesTable
+				serviceId={1}
+			/>
+			<SchedulesCalendar/>
 		</div>
 	);
 }

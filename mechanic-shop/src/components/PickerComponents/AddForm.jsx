@@ -26,7 +26,6 @@ export default function AddForm({
 	onAdd,
 	onCancel,
 	css_class = "",
-	is_inline = false,
 	has_title = true,
 }) {
 	const initialForm = useMemo(
@@ -204,150 +203,100 @@ export default function AddForm({
 			</div>
 		);
 	}
+	function renderField(field) {
+		switch (field.type) {
+			case "select":
+				return (
+					<select
+						id={`field-${field.name}`}
+						name={field.name}
+						value={form[field.name] ?? ""}
+						onChange={handleChange}
+						required={field.required}
+					>
+						<option value="">
+							{`Selecionar ${field.label}`}
+						</option>
+
+						{(options[field.name] ?? []).map(option => (
+							<option
+								key={option[field.column_value]}
+								value={option[field.column_value] ?? ""}
+							>
+								{option[field.text]}
+							</option>
+						))}
+					</select>
+				);
+
+			case "textarea":
+				return (
+					<textarea
+						id={`field-${field.name}`}
+						name={field.name}
+						placeholder={ field.label }
+						value={ form[field.name] ?? ""}
+						onChange={handleChange}
+						required={field.required}
+						rows={field.rows ?? 4}
+					/>
+				)
+			case "checkbox" : 
+				return(
+					<input
+						id={`field-${field.name}`}
+						type="checkbox"
+						name={field.name}
+						checked={Boolean(form[field.name])}
+						onChange={handleChange}
+					/>
+				)
+			default:
+				return (
+					<input
+						id={`field-${field.name}`}
+						type={ field.type ?? "text" }
+						name={field.name}
+						placeholder={field.label}
+						value={form[field.name]??""}
+						onChange={handleChange}
+						required={field.required}
+					/>
+				);
+		}
+	}
 
 	return (
 		<form
-			className={`add-form ${
-				is_inline ? "inline" : "stacked"
-			} editing ${css_class}`}
+			className={`add-form editing ${css_class}`}
 			onSubmit={handleSubmit}
 		>
 			{has_title && (
 				<div className="form-header">
 					<h3>Criar {item_term}</h3>
-
-					{error && (
-						<p
-							className="form-error"
-							role="alert"
-							aria-live="polite"
-						>
-							{error}
-						</p>
-					)}
 				</div>
 			)}
 
-			<div className="card-fields">
+			<div className="form-fields">
 				{visibleFields.map((field) => (
-					<div
-						className="card-field"
-						key={field.name}
-					>
-						<label
-							htmlFor={`field-${field.name}`}
-						>
+					<div className="form-field" key={field.name} >
+						<label htmlFor={`field-${field.name}`} >
 							{field.label}
 						</label>
-
-						{field.type === "select" ? (
-							<select
-								id={`field-${field.name}`}
-								name={field.name}
-								value={
-									form[field.name] ?? ""
-								}
-								onChange={handleChange}
-								required={field.required}
-							>
-								<option value="">
-									{is_inline
-										? field.label
-										: `Selecionar ${field.label}`}
-								</option>
-
-								{(
-									options[field.name] ??
-									[]
-								).map((option) => (
-									<option
-										key={
-											option[
-												field
-													.column_value
-											]
-										}
-										value={
-											option[
-												field
-													.column_value
-											] ?? ""
-										}
-									>
-										{
-											option[
-												field.text
-											]
-										}
-									</option>
-								))}
-							</select>
-						) : field.type ===
-						  "textarea" ? (
-							<textarea
-								id={`field-${field.name}`}
-								name={field.name}
-								placeholder={
-									is_inline
-										? field.label
-										: ""
-								}
-								value={
-									form[field.name] ?? ""
-								}
-								onChange={handleChange}
-								required={field.required}
-								rows={field.rows ?? 4}
-							/>
-						) : field.type ===
-						  "checkbox" ? (
-							<input
-								id={`field-${field.name}`}
-								type="checkbox"
-								name={field.name}
-								checked={Boolean(
-									form[field.name]
-								)}
-								onChange={handleChange}
-							/>
-						) : (
-							<input
-								id={`field-${field.name}`}
-								type={
-									field.type ?? "text"
-								}
-								name={field.name}
-								placeholder={
-									is_inline
-										? field.label
-										: ""
-								}
-								value={
-									form[field.name] ?? ""
-								}
-								onChange={handleChange}
-								required={field.required}
-							/>
-						)}
+						{renderField(field)} 
 					</div>
 				))}
-
-				{is_inline && formButtons()}
 			</div>
 
-			{!has_title && error && (
-				<div className="form-header">
-					<p
-						className="form-error"
-						role="alert"
-						aria-live="polite"
-					>
+			{error && (
+				<div className="error-card">
+					<p role="alert" aria-live="polite" >
 						{error}
 					</p>
 				</div>
 			)}
 
-			{!is_inline && formButtons()}
+			{formButtons()}
 		</form>
 	);
 }
