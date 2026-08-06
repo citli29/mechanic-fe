@@ -19,6 +19,7 @@ import SchedulesNew from "./pages/Schedules/SchedulesNew";
 //import ServicesShow from "./pages/Services/ServicesShow";
 import ServicesNew from "./pages/Services/ServicesNew";
 import TestPage from "./components/TestPage";
+import ServiceShow2 from "./Pages/ServiceShow";
 
 function App() {
 
@@ -44,7 +45,7 @@ function App() {
 					<Route path="/services" element={<ServicesList />} />
 					<Route path="/services/new" element={<ServicesNew />} />
 					<Route path="/schedules/new" element={<SchedulesNew />} />
-
+					<Route path="/s/:id" element={<ServiceShow2/>} />
 
 					<Route path="/test" element={<TestPage/>} />
 

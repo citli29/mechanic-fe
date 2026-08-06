@@ -404,7 +404,7 @@ export default function UserTimesTable({
 					onClick={beginCreating}
 					disabled={creating}
 				>
-					Adicionar Tempo de Serviço
+					<i className="fa-solid fa-plus"></i>
 				</button>
 			</div>
 
@@ -482,7 +482,7 @@ export default function UserTimesTable({
 													onClick={saveUserTime}
 													disabled={saving}
 												>
-													{saving ? "A Guardar..." : "Guardar"}
+													<i className="fa-solid fa-floppy-disk"></i>
 												</button>
 
 												<button
@@ -490,7 +490,7 @@ export default function UserTimesTable({
 													onClick={cancelEditing}
 													disabled={saving}
 												>
-													X
+													<i className="fa-solid fa-xmark"></i>
 												</button>
 											</div>
 										</td>
@@ -510,7 +510,7 @@ export default function UserTimesTable({
 												type="button"
 												onClick={() => beginEditing(userTime)}
 											>
-												<i classNome="fa-solid fa-pen-to-square"></i>
+												<i className="fa-solid fa-pen-to-square"></i>
 											</button>
 
 											<button
@@ -571,7 +571,7 @@ export default function UserTimesTable({
 											onClick={createUserTime}
 											disabled={saving}
 										>
-											{saving ? "A Adicionar..." : "Adicionar"}
+											<i className="fa-solid fa-plus"></i>
 										</button>
 
 										<button
@@ -579,7 +579,7 @@ export default function UserTimesTable({
 											onClick={cancelCreating}
 											disabled={saving}
 										>
-											X
+											<i className="fa-solid fa-xmark"></i>
 										</button>
 									</div>
 								</td>
@@ -591,14 +591,13 @@ export default function UserTimesTable({
 
 			<div className="user-time-title">
 				<h2>Registos de Ponto</h2>
-				{!creatingPunch && (
-					<button
-						type="button"
-						onClick={beginCreatingPunch}
-					>
-						Adicionar Registo de Ponto
-					</button>
-				)}
+				<button
+					type="button"
+					onClick={beginCreatingPunch}
+					disabled={creatingPunch}
+				>
+					<i className="fa-solid fa-plus"></i>
+				</button>
 			</div>
 
 			<div className="table-wrapper ">
@@ -699,7 +698,7 @@ export default function UserTimesTable({
 														onClick={saveUserTimePunch}
 														disabled={punchSaving}
 													>
-														{punchSaving ? "A Guardar..." : "Guardar"}
+													<i className="fa-solid fa-floppy-disk"></i>
 													</button>
 
 													<button
@@ -707,7 +706,7 @@ export default function UserTimesTable({
 														onClick={cancelEditingPunch}
 														disabled={punchSaving}
 													>
-														X
+													<i class="fa-solid fa-xmark"></i>
 													</button>
 												</div>
 											</td>
@@ -731,7 +730,7 @@ export default function UserTimesTable({
 													}
 													disabled={isActionRunning}
 												>
-													{isStarting ? "A Iniciar..." : "Iniciar"}
+													<i className="fa-solid fa-circle-play"></i>
 												</button>
 											)}
 										</td>
@@ -749,7 +748,7 @@ export default function UserTimesTable({
 													}
 													disabled={ !hasStarted || isActionRunning }
 												>
-													{isStopping ? "A Terminar..." : "Terminar"}
+													<i className="fa-solid fa-circle-stop"></i>
 												</button>
 											)}
 										</td>
@@ -762,7 +761,7 @@ export default function UserTimesTable({
 													onClick={() => beginEditingPunch( userTimePunch)}
 													disabled={isActionRunning}
 												>
-													Editar
+													<i className="fa-solid fa-pen-to-square"></i>
 												</button>
 
 												<button
@@ -771,7 +770,7 @@ export default function UserTimesTable({
 													onClick={() => deleteUserTimePunch( userTimePunch) }
 													disabled={isActionRunning}
 												>
-													{isDeleting ? "A Apagar..." : "Apagar"}
+													<i className="fa-regular fa-trash-can"></i>
 												</button>
 											</div>
 										</td>
@@ -818,7 +817,7 @@ export default function UserTimesTable({
 											onClick={createUserTimePunch}
 											disabled={punchSaving}
 										>
-											{punchSaving ? "A Adicionar..." : "Adicionar"}
+											<i className="fa-solid fa-plus"></i>
 										</button>
 
 										<button
@@ -826,7 +825,7 @@ export default function UserTimesTable({
 											onClick={cancelCreatingPunch}
 											disabled={punchSaving}
 										>
-											X
+											<i className="fa-solid fa-xmark"></i>
 										</button>
 									</div>
 								</td>
