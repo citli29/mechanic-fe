@@ -116,18 +116,27 @@ export default function CarPicker() {
 	const [isEditingModel, setIsEditingModel] = useState(false);
 
 	// Input behaviour
-	const [isCarCampsEditable,setIsCarCampsEditable]=useState(false);
-	const [isMakeCampsEditable,setIsMakeCampsEditable]=useState(false);
-	const [isModelCampsEditable,setIsModelCampsEditable]=useState(false);
+	const isCarFormEditable =
+		isCreatingCar || isEditingCar;
 
-	useEffect(()=>{ setIsMakeCampsEditable(Boolean(isCarCampsEditable && (isCreatingMake || isEditingMake) && !isMakePickerSelected));
-	},[isCreatingMake, isEditingMake, isMakePickerSelected, isCarCampsEditable]);
+	const isMakePickerEnabled =
+		isCarFormEditable;
 
-	useEffect(()=>{ setIsModelCampsEditable(Boolean(isCarCampsEditable && selectedMake && (isCreatingModel || isEditingModel) && !isModelPickerSelected));
-	},[isCreatingModel, isEditingModel, isModelPickerSelected, isCarCampsEditable, selectedMake]);
+	const isMakeFormEditable =
+		isCarFormEditable &&
+			(isCreatingMake || isEditingMake);
 
-	useEffect(()=>{ setIsCarCampsEditable(Boolean((isCreatingCar || isEditingCar) && !isCarPickerSelected));
-	},[isCreatingCar, isEditingCar, isCarPickerSelected]);
+	const isModelPickerEnabled =
+		isCarFormEditable && Boolean(selectedMake);
+
+	const isModelFormEditable =
+		isCarFormEditable &&
+			Boolean(selectedMake) &&
+			(isCreatingModel || isEditingModel);
+
+	const carInput = useRef(null);
+	const makeInput = useRef(null);
+	const modelInput = useRef(null);
 
 	const carPicker = useRef(null);
 	const carAddFormInput = useRef(null);
@@ -215,6 +224,7 @@ export default function CarPicker() {
 			setSelectedMake(null);
 			setSelectedModel(null);
 			setPresentingCar(emptyCar);
+			setSelectedMake(null);
 			return;
 		}else{
 			setPresentingCar(selectedCar);
@@ -280,11 +290,13 @@ export default function CarPicker() {
 	}
 
 	function resetCar(){
-		setSelectedCar(null);
 		setIsCarPickerSelected(false);
 		setIsCreatingCar(false);
 		setIsEditingCar(false);
 		setPresentingCar(emptyCar);
+		setSelectedCar(null);
+		setSelectedMake(null);
+		setSelectedModel(null);
 	}
 
 	// Input text change
@@ -331,16 +343,23 @@ export default function CarPicker() {
 		setIsCreatingMake(true);
 		setIsMakePickerSelected(false);
 		setSelectedMake(null);
+		setMakeName(searchMakes);
+		setSearchMakes("");
 	}
 	function handleModelIsAddClick(){
 		setIsCreatingModel(true);
 		setIsModelPickerSelected(false);
 		setSelectedModel(null);
+		setModelName(searchModels);
+		setSearchModels("");
 	}
 	function handleCarIsAddClick(){
 		setIsCreatingCar(true);
 		setIsCarPickerSelected(false);
 		setSelectedCar(null);
+		handleCarFieldChange("plate", carInput.current.value)
+		setSearchCars("")
+
 	}
 
 	// Cancel creating a new element
@@ -401,7 +420,15 @@ export default function CarPicker() {
 
 		try {
 			const response = await api.post("/cars", {
-				name: makeName,
+				plate: presentingCar.plate,
+				make_id: selectedMake?.id??"",
+				model_id: selectedModel?.id??"",
+				chassi_nr: presentingCar.chassi_nr,
+				month: presentingCar.month,
+				year: presentingCar.year,
+				cc: presentingCar.cc,
+				engine_code: presentingCar.engine_code,
+				color_code: presentingCar.color_code,
 			});
 			const car = response.data?.car;
 			console.log(`${car.plate} - ${car.make_name}${car.model_id?" " + car.model_name:""} criado com sucesso.`);
@@ -428,6 +455,7 @@ export default function CarPicker() {
 			console.log(make.name + " criado com sucesso.");
 			setIsCreatingMake(false);
 			setSelectedMake(make)
+			setSearchMakes("");
 			loadMakes();
 		} catch (error) {
 			console.error(error.response.data.error);
@@ -455,6 +483,7 @@ export default function CarPicker() {
 			console.log(model.name + " criado com sucesso.");
 			setIsCreatingModel(false);
 			setSelectedModel(model);
+			setSearchModels("");
 			loadModels();
 		} catch (error) {
 			console.error(error.response.data.error);
@@ -481,8 +510,8 @@ export default function CarPicker() {
 		try {
 			const response = await api.put(`/cars/${selectedCar.id}`, {
 				plate: presentingCar.plate,
-				make_id: selectedMake.id,
-				model_id: selectedModel.id,
+				make_id: selectedMake?.id??"",
+				model_id: selectedModel?.id??"",
 				chassi_nr: presentingCar.chassi_nr,
 				month: presentingCar.month,
 				year: presentingCar.year,
@@ -565,12 +594,13 @@ export default function CarPicker() {
 			<div className="model-picker-container">
 				<div className="model-picker" ref={modelPicker}>
 					<input
+						ref={modelInput}
 						type="text"
 						value={searchModels}
 						onChange={(e) => handleModelInputChange(e.target.value)}
 						placeholder="Selecionar modelo"
 						onClick={() =>handleModelInputClick()}
-						disabled={!isModelCampsEditable}
+						disabled={!isModelPickerEnabled}
 					/>
 
 					{isModelPickerSelected && (<div className="dropdown-menu">
@@ -587,12 +617,12 @@ export default function CarPicker() {
 					{isCreatingModel && (
 						<>
 							<label htmlFor="model-name">Modelo: </label>
-							<input type="text" disabled={!isModelCampsEditable} id="model-name" ref={modelAddFormInput} value={modelName} onChange={(e)=>setModelName(e.target.value)}/>
+							<input type="text" disabled={!isModelFormEditable} id="model-name" ref={modelAddFormInput} value={modelName} onChange={(e)=>setModelName(e.target.value)}/>
 							<div className="buttons-card">
-								<button disabled={!isModelCampsEditable} className="confirm" type="submit">
+								<button className="confirm" onClick={(e)=>handleModelActionAdd(e)}>
 									<i className="fa-solid fa-check"/>
 								</button>
-								<button disabled={!isModelCampsEditable} className="cancel"type="button" onClick={(e)=>handleModelIsAddClickCancel(e)}>
+								<button className="cancel" onClick={(e)=>handleModelIsAddClickCancel(e)}>
 									<i className="fa-solid fa-xmark"/>
 								</button>
 							</div>
@@ -602,24 +632,24 @@ export default function CarPicker() {
 					{!isCreatingModel && (
 						<>
 							<label htmlFor="model-name">Modelo: </label>
-							<input type="text" id="model-name" ref={modelEditFormInput} value={modelName} onChange={(e)=>setModelName(e.target.value)} disabled={!isModelCampsEditable}/>
+							<input type="text" id="model-name" ref={modelEditFormInput} value={modelName} onChange={(e)=>setModelName(e.target.value)} disabled={!isModelFormEditable}/>
 							<div className="buttons-card">
 								{isEditingModel ? (
 									<>
-										<button className="confirm" id="model-edit-confirm"  disabled={!isModelCampsEditable} type="submit">
+										<button className="confirm" id="model-edit-confirm" onClick={(e)=>handleModelActionEdit(e)}>
 									<i className="fa-solid fa-check"/>
 										</button>
-										<button className="cancel" id="model-add-cancel" disabled={!isModelCampsEditable} type="button" onClick={(e)=>handleModelIsEditClickCancel(e)}>
+										<button className="cancel" id="model-add-cancel" onClick={(e)=>handleModelIsEditClickCancel(e)}>
 									<i className="fa-solid fa-xmark"/>
 										</button>
 
 									</>
 								):(
 										<>
-											<button className="options" id="model-edit-start" disabled={!isModelCampsEditable} type="button" onClick={(e)=>handleModelIsEditClick(e)}>
+											<button className="options" id="model-edit-start" disabled={!isModelPickerEnabled}  onClick={(e)=>handleModelIsEditClick(e)}>
 												<i className="fa-solid fa-pen-to-square"/>
 											</button>
-											<button className="cancel" id="model-select-cancel" disabled={!isModelCampsEditable} type="button" onClick={(e)=>handleModelSelectedClickCancel(e)}>
+											<button className="cancel" id="model-select-cancel" disabled={!isModelPickerEnabled}  onClick={(e)=>handleModelSelectedClickCancel(e)}>
 									<i className="fa-solid fa-xmark" />	
 											</button>
 										</>
@@ -637,12 +667,13 @@ export default function CarPicker() {
 			<div className="make-picker-container">
 				<div className="make-picker" ref={makePicker}>
 					<input
+						ref={makeInput}
 						type="text"
 						value={searchMakes}
 						onChange={(e) => handleMakeInputChange(e.target.value)}
 						placeholder="Selecionar marca"
 						onClick={() =>handleMakeInputClick()}
-						disabled={!isMakeCampsEditable}
+						disabled={!isMakePickerEnabled}
 					/>
 
 					{isMakePickerSelected && (<div className="dropdown-menu">
@@ -655,17 +686,16 @@ export default function CarPicker() {
 					</div>)}
 				</div>
 
-				// a meio de trocar quando os botoes ficam disabled
 				<div className="make-section">
 					{isCreatingMake && (
 						<>
 							<label htmlFor="make-name">Marca: </label>
 							<input type="text" id="make-name" ref={makeAddFormInput} value={makeName} onChange={(e)=>setMakeName(e.target.value)}/>
 							<div className="buttons-card">
-								<button disabled={!isMakeCampsEditable} className="confirm" type="button" onClick={(e)=>handleMakeActionAdd(e)}>
+								<button className="confirm"  onClick={(e)=>handleMakeActionAdd(e)}>
 									<i className="fa-solid fa-check"/>
 								</button>
-								<button disabled={!isMakeCampsEditable} className="cancel" type="button" onClick={(e)=>handleMakeIsAddClickCancel(e)}>
+								<button className="cancel"  onClick={(e)=>handleMakeIsAddClickCancel(e)}>
 									<i className="fa-solid fa-xmark"/>
 								</button>
 							</div>
@@ -675,24 +705,24 @@ export default function CarPicker() {
 					{!isCreatingMake && (
 						<>
 							<label htmlFor="make-name">Marca: </label>
-							<input type="text" id="make-name" ref={makeEditFormInput} value={makeName} onChange={(e)=>setMakeName(e.target.value)} disabled={!isMakeCampsEditable}/>
+							<input type="text" id="make-name" ref={makeEditFormInput} value={makeName} onChange={(e)=>setMakeName(e.target.value)} disabled={!isMakeFormEditable}/>
 							<div className="buttons-card">
 								{isEditingMake ? (
 									<>
-										<button className="confirm" id="make-edit-confirm" type="submit" disabled={!isMakeCampsEditable}>
+										<button className="confirm" id="make-edit-confirm" type="submit">
 											<i className="fa-solid fa-check"/>
 										</button>
-										<button className="cancel" id="make-add-cancel"type="button" onClick={(e)=>handleMakeIsEditClickCancel(e)} disabled={!isMakeCampsEditable} >
+										<button className="cancel" id="make-add-cancel" onClick={(e)=>handleMakeIsEditClickCancel(e)}>
 											<i className="fa-solid fa-xmark"/>
 										</button>
 
 									</>
 								):(
 										<>
-											<button className="options" disabled={!isMakeCampsEditable}  id="make-edit-start" type="button" onClick={(e)=>handleMakeIsEditClick(e)}>
+											<button className="options" disabled={!isMakePickerEnabled}  id="make-edit-start"  onClick={(e)=>handleMakeIsEditClick(e)}>
 												<i className="fa-solid fa-pen-to-square"/>
 											</button>
-											<button className="cancel" disabled={!isMakeCampsEditable} id="make-select-cancel" type="button" onClick={(e)=>handleMakeSelectedClickCancel(e)}>
+											<button className="cancel" disabled={!isMakePickerEnabled} id="make-select-cancel"  onClick={(e)=>handleMakeSelectedClickCancel(e)}>
 												<i className="fa-solid fa-xmark"/>
 											</button>
 										</>
@@ -717,12 +747,12 @@ export default function CarPicker() {
 			<div className="car-picker" ref={carPicker}>
 				<div className="car-input">
 					<input
+						ref={carInput}
 						type="text"
 						value={searchCars}
 						onChange={(e) => handleCarInputChange(e.target.value)}
 						placeholder="Selecionar Carro"
 						onClick={() =>handleCarInputClick()}
-						disabled={isCarCampsEditable}
 					/>
 
 					<div className="buttons-card">
@@ -731,7 +761,7 @@ export default function CarPicker() {
 								<button className="confirm" id="car-edit-confirm" onClick={(e)=>handleCarActionEdit(e)}>
 									<i className="fa-solid fa-check"/>
 								</button>
-								<button className="cancel"id="car-add-cancel" type="button" onClick={(e)=>handleCarIsEditClickCancel(e)}>
+								<button className="cancel"id="car-add-cancel"  onClick={(e)=>handleCarIsEditClickCancel(e)}>
 									<i className="fa-solid fa-xmark"/>
 								</button>
 
@@ -741,15 +771,15 @@ export default function CarPicker() {
 									<button className="confirm" id="car-edit-confirm" onClick={(e)=>handleCarActionAdd(e)}>
 										<i className="fa-solid fa-check"/>
 									</button>
-									<button className="cancel"id="car-add-cancel" type="button" onClick={(e)=>handleCarIsAddClickCancel(e)}>
+									<button className="cancel"id="car-add-cancel"  onClick={(e)=>handleCarIsAddClickCancel(e)}>
 										<i className="fa-solid fa-xmark"/>
 									</button>
 								</>):(<>
-									<button className="options"id="car-edit-start" disabled={!Boolean(selectedCar)} type="button"
+									<button className="options"id="car-edit-start" disabled={!Boolean(selectedCar)} 
 										onClick={(e)=>handleCarIsEditClick(e)}>
 												<i className="fa-solid fa-pen-to-square"/>
 									</button>
-									<button className="cancel"id="car-select-cancel" disabled={!Boolean(selectedCar)} type="button"
+									<button className="cancel" id="car-select-cancel" disabled={!Boolean(selectedCar)} 
 										onClick={(e)=>{handleCarSelectedClickCancel(e)}}
 									> 
 									<i className="fa-solid fa-xmark"/>
@@ -777,7 +807,7 @@ export default function CarPicker() {
 						type="text"
 						placeholder="S/Matrícula"
 						value={presentingCar.plate}
-						disabled={!isCarCampsEditable}
+						disabled={!isCarFormEditable}
 						onChange={(e) => handleCarFieldChange("plate", e.target.value)}
 					/>
 				</div>
@@ -793,7 +823,7 @@ export default function CarPicker() {
 						type="text"
 						placeholder="S/Nr. Chassi"
 						value={presentingCar.chassi_nr}
-						disabled={!isCarCampsEditable}
+						disabled={!isCarFormEditable}
 						onChange={(e) => handleCarFieldChange("chassi_nr", e.target.value)}
 					/>
 				</div>
@@ -803,7 +833,7 @@ export default function CarPicker() {
 						type="number"
 						placeholder="S/Mes"
 						value={presentingCar.month}
-						disabled={!isCarCampsEditable}
+						disabled={!isCarFormEditable}
 						onChange={(e) => handleCarFieldChange("month", e.target.value)}
 					/>
 				</div>
@@ -813,7 +843,7 @@ export default function CarPicker() {
 						type="number"
 						placeholder="S/Ano"
 						value={presentingCar.year}
-						disabled={!isCarCampsEditable}
+						disabled={!isCarFormEditable}
 						onChange={(e) => handleCarFieldChange("year", e.target.value)}
 					/>
 				</div>
@@ -823,7 +853,7 @@ export default function CarPicker() {
 						type="number"
 						placeholder="S/Cc"
 						value={presentingCar.cc}
-						disabled={!isCarCampsEditable}
+						disabled={!isCarFormEditable}
 						onChange={(e) => handleCarFieldChange("cc", e.target.value)}
 					/>
 				</div>
@@ -833,7 +863,7 @@ export default function CarPicker() {
 						type="text"
 						placeholder="S/Cod. Motor"
 						value={presentingCar.engine_code}
-						disabled={!isCarCampsEditable}
+						disabled={!isCarFormEditable}
 						onChange={(e) => handleCarFieldChange("engine_code", e.target.value)}
 					/>
 				</div>
@@ -843,7 +873,7 @@ export default function CarPicker() {
 						type="text"
 						placeholder="S/Cod. Cor"
 						value={presentingCar.color_code}
-						disabled={!isCarCampsEditable}
+						disabled={!isCarFormEditable}
 						onChange={(e) => handleCarFieldChange("color_code", e.target.value)}
 					/>
 				</div>
