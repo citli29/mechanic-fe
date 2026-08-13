@@ -1,81 +1,113 @@
 import { useEffect, useRef, useState } from "react";
 import api from "./../../api/axios";
-import "./style/CarPicker.css";
+
+const emptyCar = {
+	id: "",
+	plate: "",
+	make_id: "",
+	model_id: "",
+	chassi_nr: "",
+	year: "",
+	month: "",
+	cc: "",
+	engine_code: "",
+	color_code: "",
+};
+
+function useFocusWhen(active, ref) {
+	useEffect(() => {
+		if (active) ref.current?.focus();
+	}, [active, ref]);
+}
 
 export default function CarPicker() {
-
 	// Arrays
 	const [cars, setCars] = useState([]);
 	const [makes, setMakes] = useState([]);
 	const [models, setModels] = useState([]);
 
+	// Search inputs
+	const [searchCars, setSearchCars] = useState("");
 	const [searchMakes, setSearchMakes] = useState("");
 	const [searchModels, setSearchModels] = useState("");
-	const [searchCars, setSearchCars] = useState("");
 
-	// Inputs For POST/PUT requests
-	const emptyCar = {
-		id:"",
-		plate:"",
-		make_id:"",
-		model_id:"",
-		chassi_nr:"",
-		year:"",
-		month:"",
-		cc:"",
-		engine_code:"",
-		color_code:"",
-	}
+	// Selected objects
+	const [selectedCar, setSelectedCar] = useState(null);
+	const [selectedMake, setSelectedMake] = useState(null);
+	const [selectedModel, setSelectedModel] = useState(null);
 
-	const [presentingCar, _setPresentingCar] = useState(emptyCar);
-
-	function setPresentingCar(car) {
-		_setPresentingCar({
-			id: car?.id ?? "",
-			plate: car?.plate ?? "",
-			make_id: car?.make_id ?? "",
-			model_id: car?.model_id ?? "",
-			chassi_nr: car?.chassi_nr ?? "",
-			year: car?.year ?? "",
-			month: car?.month ?? "",
-			cc: car?.cc ?? "",
-			engine_code: car?.engine_code ?? "",
-			color_code: car?.color_code ?? "",
-		});
-	}
-
+	// Forms
+	const [presentingCar, setPresentingCar] = useState(emptyCar);
 	const [makeName, setMakeName] = useState("");
 	const [modelName, setModelName] = useState("");
 
-	// GET: populate arrays
-	async function loadMakes() {
+	// Modes: idle | creating | editing
+	const [carMode, setCarMode] = useState("idle");
+	const [makeMode, setMakeMode] = useState("idle");
+	const [modelMode, setModelMode] = useState("idle");
+
+	const isCreatingCar = carMode === "creating";
+	const isEditingCar = carMode === "editing";
+	const isCreatingMake = makeMode === "creating";
+	const isEditingMake = makeMode === "editing";
+	const isCreatingModel = modelMode === "creating";
+	const isEditingModel = modelMode === "editing";
+
+	const isCarFormEditable = carMode !== "idle";
+	const isMakePickerEnabled = isCarFormEditable;
+	const isMakeFormEditable = isCarFormEditable && makeMode !== "idle";
+	const isModelPickerEnabled = isCarFormEditable && Boolean(selectedMake);
+	const isModelFormEditable = isModelPickerEnabled && modelMode !== "idle";
+
+	// Dropdowns
+	const [isCarPickerSelected, setIsCarPickerSelected] = useState(false);
+	const [isMakePickerSelected, setIsMakePickerSelected] = useState(false);
+	const [isModelPickerSelected, setIsModelPickerSelected] = useState(false);
+
+	// Refs
+	const carInput = useRef(null);
+	const carPicker = useRef(null);
+	const makePicker = useRef(null);
+	const modelPicker = useRef(null);
+	const carAddFormInput = useRef(null);
+	const carEditFormInput = useRef(null);
+	const makeAddFormInput = useRef(null);
+	const makeEditFormInput = useRef(null);
+	const modelAddFormInput = useRef(null);
+	const modelEditFormInput = useRef(null);
+
+	useFocusWhen(isCreatingCar, carAddFormInput);
+	useFocusWhen(isEditingCar, carEditFormInput);
+	useFocusWhen(isCreatingMake, makeAddFormInput);
+	useFocusWhen(isEditingMake, makeEditFormInput);
+	useFocusWhen(isCreatingModel, modelAddFormInput);
+	useFocusWhen(isEditingModel, modelEditFormInput);
+
+	// GET requests
+	async function loadCars() {
 		try {
-			const response = await api.get("/makes", {
-				params: {
-					name: searchMakes,
-				},
+			const response = await api.get("/cars", {
+				params: { plate: searchCars },
 			});
-			setMakes(response.data?.make_list);
+			setCars(response.data?.car_list ?? []);
 		} catch (error) {
 			console.error(error);
 		}
 	}
 
-	async function loadCars() {
+	async function loadMakes() {
 		try {
-			const response = await api.get("/cars", {
-				params: {
-					plate: searchCars,
-				},
+			const response = await api.get("/makes", {
+				params: { name: searchMakes },
 			});
-			setCars(response.data?.car_list);
+			setMakes(response.data?.make_list ?? []);
 		} catch (error) {
 			console.error(error);
 		}
 	}
 
 	async function loadModels() {
-		if(!selectedMake) {
+		if (!selectedMake) {
 			setModels([]);
 			return;
 		}
@@ -84,393 +116,287 @@ export default function CarPicker() {
 			const response = await api.get("/models", {
 				params: {
 					name: searchModels,
-					make_id: selectedMake.id
+					make_id: selectedMake.id,
 				},
 			});
-			setModels(response.data?.model_list);
+			setModels(response.data?.model_list ?? []);
 		} catch (error) {
 			console.error(error);
 		}
 	}
 
-	useEffect(() => {loadCars(); }, [searchCars]);
-	useEffect(() => {loadMakes(); }, [searchMakes]);
-	useEffect(() => {loadModels(); }, [searchModels]);
-
-	// Selected Objects
-	const [selectedMake, setSelectedMake] = useState(null);
-	const [selectedModel, setSelectedModel] = useState(null);
-	const [selectedCar, setSelectedCar] = useState(null);
-
-	// Boolean States
-	const [isCarPickerSelected, setIsCarPickerSelected] = useState(false);
-	const [isMakePickerSelected, setIsMakePickerSelected] = useState(false);
-	const [isModelPickerSelected, setIsModelPickerSelected] = useState(false);
-
-	const [isCreatingCar, setIsCreatingCar] = useState(false);
-	const [isCreatingMake, setIsCreatingMake] = useState(false);
-	const [isCreatingModel, setIsCreatingModel] = useState(false);
-
-	const [isEditingCar, setIsEditingCar] = useState(false);
-	const [isEditingMake, setIsEditingMake] = useState(false);
-	const [isEditingModel, setIsEditingModel] = useState(false);
-
-	// Input behaviour
-	const isCarFormEditable =
-		isCreatingCar || isEditingCar;
-
-	const isMakePickerEnabled =
-		isCarFormEditable;
-
-	const isMakeFormEditable =
-		isCarFormEditable &&
-			(isCreatingMake || isEditingMake);
-
-	const isModelPickerEnabled =
-		isCarFormEditable && Boolean(selectedMake);
-
-	const isModelFormEditable =
-		isCarFormEditable &&
-			Boolean(selectedMake) &&
-			(isCreatingModel || isEditingModel);
-
-	const carInput = useRef(null);
-	const makeInput = useRef(null);
-	const modelInput = useRef(null);
-
-	const carPicker = useRef(null);
-	const carAddFormInput = useRef(null);
-	const carEditFormInput = useRef(null);
-	const makePicker = useRef(null);
-	const makeAddFormInput = useRef(null);
-	const makeEditFormInput = useRef(null);
-	const modelPicker = useRef(null);
-	const modelAddFormInput = useRef(null);
-	const modelEditFormInput = useRef(null);
-
-	useEffect(()=>{ if(isCreatingMake) makeAddFormInput.current?.focus(); },[isCreatingMake]);
-
-	useEffect(()=>{ if(isEditingMake) makeEditFormInput.current?.focus(); },[isEditingMake]);
-
-	useEffect(()=>{ if(isCreatingModel) modelAddFormInput.current?.focus(); },[isCreatingModel]);
-
-	useEffect(()=>{ if(isEditingModel) modelEditFormInput.current?.focus(); },[isEditingModel]);
-
-	useEffect(()=>{ if(isCreatingCar) carAddFormInput.current?.focus(); },[isCreatingCar]);
-
-	useEffect(()=>{ if(isEditingCar) carEditFormInput.current?.focus(); },[isEditingCar]);
+	useEffect(() => {
+		loadCars();
+	}, [searchCars]);
 
 	useEffect(() => {
+		loadMakes();
+	}, [searchMakes]);
+
+	useEffect(() => {
+		loadModels();
+	}, [selectedMake, searchModels]);
+
+	useEffect(() => {
+		setMakeName(selectedMake?.name ?? "");
+	}, [selectedMake]);
+
+	useEffect(() => {
+		setModelName(selectedModel?.name ?? "");
+	}, [selectedModel]);
+
+	// Close dropdowns when clicking outside
+	useEffect(() => {
 		function handleClickOutside(event) {
-			if (
-			carPicker.current &&
-					!carPicker.current.contains(event.target)
-			) {
+			if (carPicker.current && !carPicker.current.contains(event.target)) {
 				setIsCarPickerSelected(false);
 			}
-		}
-
-		document.addEventListener("click", handleClickOutside);
-
-		return () => {
-			document.removeEventListener("click", handleClickOutside);
-		};
-	}, []);
-
-	useEffect(() => {
-		function handleClickOutside(event) {
-			if (
-				makePicker.current &&
-					!makePicker.current.contains(event.target)
-			) {
+			if (makePicker.current && !makePicker.current.contains(event.target)) {
 				setIsMakePickerSelected(false);
 			}
-		}
-
-		document.addEventListener("click", handleClickOutside);
-
-		return () => {
-			document.removeEventListener("click", handleClickOutside);
-		};
-	}, []);
-
-	useEffect(() => {
-		function handleClickOutside(event) {
-			if (
-				modelPicker.current &&
-					!modelPicker.current.contains(event.target)
-			) {
+			if (modelPicker.current && !modelPicker.current.contains(event.target)) {
 				setIsModelPickerSelected(false);
 			}
 		}
 
 		document.addEventListener("click", handleClickOutside);
-
-		return () => {
-			document.removeEventListener("click", handleClickOutside);
-		};
+		return () => document.removeEventListener("click", handleClickOutside);
 	}, []);
 
-	//Sync Pickers
-	useEffect(()=>{ setModelName(selectedModel?.name??"") },[selectedModel])
-
-	useEffect(()=>{
-		setMakeName(selectedMake?.name??"")
-		loadModels();
-	},[selectedMake])
-
-	useEffect(() => {
-		if (!selectedCar) {
-			setSelectedMake(null);
-			setSelectedModel(null);
-			setPresentingCar(emptyCar);
-			setSelectedMake(null);
-			return;
-		}else{
-			setPresentingCar(selectedCar);
-		}
-
-		async function syncPickers() {
-			try {
-
-				const makesResponse = await api.get("/makes");
-
-				const loadedMakes = makesResponse.data?.make_list ?? [];
-				setMakes(loadedMakes);
-
-				const make = loadedMakes.find(
-					(item) => item.id === selectedCar.make_id
-				);
-
-				setSelectedMake(make ?? null);
-
-				if (!make) {
-					setModels([]);
-					setSelectedModel(null);
-					return;
-				}
-
-				const modelsResponse = await api.get("/models", {
-					params: {
-						name: "",
-						make_id: make.id,
-					},
-				});
-
-				const loadedModels = modelsResponse.data?.model_list ?? [];
-				setModels(loadedModels);
-
-				const model = loadedModels.find(
-					(item) => item.id === selectedCar.model_id
-				);
-
-				setSelectedModel(model ?? null);
-			} catch (error) {
-				console.error(error);
-			}
-		}
-
-		syncPickers();
-	}, [selectedCar]);
-
-	//Reset Camps
-	function resetMake(){
-		setSelectedMake(null);
-		setSelectedModel(null);
-		setIsMakePickerSelected(false);
-		setIsCreatingMake(false);
-		setIsEditingMake(false);
+	// Helpers
+	function handleCarFieldChange(field, value) {
+		setPresentingCar((prev) => ({
+			...prev,
+			[field]: value,
+		}));
 	}
 
-	function resetModel(){
+	function getCarPayload() {
+		return {
+			plate: presentingCar.plate,
+			make_id: selectedMake?.id ?? "",
+			model_id: selectedModel?.id ?? "",
+			chassi_nr: presentingCar.chassi_nr,
+			month: presentingCar.month,
+			year: presentingCar.year,
+			cc: presentingCar.cc,
+			engine_code: presentingCar.engine_code,
+			color_code: presentingCar.color_code,
+		};
+	}
+
+	function setCarRelations(car) {
+		setSelectedMake(
+			car?.make_id
+				? { id: car.make_id, name: car.make_name }
+				: null
+		);
+		setSelectedModel(
+			car?.model_id
+				? { id: car.model_id, name: car.model_name }
+				: null
+		);
+	}
+
+	function resetModel() {
 		setSelectedModel(null);
+		setModelName("");
+		setModelMode("idle");
 		setIsModelPickerSelected(false);
-		setIsCreatingModel(false);
-		setIsEditingModel(false);
 	}
 
-	function resetCar(){
-		setIsCarPickerSelected(false);
-		setIsCreatingCar(false);
-		setIsEditingCar(false);
-		setPresentingCar(emptyCar);
-		setSelectedCar(null);
+	function resetMake() {
 		setSelectedMake(null);
-		setSelectedModel(null);
+		setMakeName("");
+		setMakeMode("idle");
+		setIsMakePickerSelected(false);
+		resetModel();
 	}
 
-	// Input text change
-	function handleCarInputChange(value) { setSearchCars(value);}
-	function handleMakeInputChange(value) { setSearchMakes(value);}
-	function handleModelInputChange(value) { setSearchModels(value); }
-
-	// Opening the dropdown menu
-	function handleCarInputClick() { setIsCarPickerSelected(true);}
-	function handleMakeInputClick() { setIsMakePickerSelected(true);}
-	function handleModelInputClick() { setIsModelPickerSelected(true); }
-
-	// Selecting from the dropdown
-	function handleCarSelectedClick(car) {
+	function resetCar() {
+		setSelectedCar(null);
+		setPresentingCar(emptyCar);
+		setCarMode("idle");
 		setIsCarPickerSelected(false);
-		setSelectedCar(car);
+		resetMake();
 	}
+
+	// Selecting from dropdowns
+	function handleCarSelectedClick(car) {
+		setSelectedCar(car);
+		setPresentingCar(car);
+		setCarRelations(car);
+		setCarMode("idle");
+		setIsCarPickerSelected(false);
+	}
+
 	function handleMakeSelectedClick(make) {
 		setSelectedMake(make);
 		setSelectedModel(null);
+		setModelMode("idle");
 		setIsMakePickerSelected(false);
 	}
+
 	function handleModelSelectedClick(model) {
 		setSelectedModel(model);
 		setIsModelPickerSelected(false);
 	}
 
-	// Removing car selected
-	function handleCarSelectedClickCancel(e){
+	// Cancel selected
+	function handleCarSelectedClickCancel(e) {
 		e.preventDefault();
 		resetCar();
 	}
-	function handleMakeSelectedClickCancel(e){
+
+	function handleMakeSelectedClickCancel(e) {
 		e.preventDefault();
 		resetMake();
 	}
-	function handleModelSelectedClickCancel(e){
+
+	function handleModelSelectedClickCancel(e) {
 		e.preventDefault();
 		resetModel();
 	}
 
-	// Start creating a new element
-	function handleMakeIsAddClick(){
-		setIsCreatingMake(true);
-		setIsMakePickerSelected(false);
+	// Start creating
+	function handleCarIsAddClick() {
+		const plate = searchCars;
+		resetCar();
+		setPresentingCar({ ...emptyCar, plate });
+		setSearchCars("");
+		setCarMode("creating");
+	}
+
+	function handleMakeIsAddClick() {
+		const name = searchMakes;
 		setSelectedMake(null);
-		setMakeName(searchMakes);
+		resetModel();
+		setMakeName(name);
 		setSearchMakes("");
+		setMakeMode("creating");
+		setIsMakePickerSelected(false);
 	}
-	function handleModelIsAddClick(){
-		setIsCreatingModel(true);
-		setIsModelPickerSelected(false);
+
+	function handleModelIsAddClick() {
+		const name = searchModels;
 		setSelectedModel(null);
-		setModelName(searchModels);
+		setModelName(name);
 		setSearchModels("");
-	}
-	function handleCarIsAddClick(){
-		setIsCreatingCar(true);
-		setIsCarPickerSelected(false);
-		setSelectedCar(null);
-		handleCarFieldChange("plate", carInput.current.value)
-		setSearchCars("")
-
+		setModelMode("creating");
+		setIsModelPickerSelected(false);
 	}
 
-	// Cancel creating a new element
-	function handleCarIsAddClickCancel(e){
+	// Cancel creating
+	function handleCarIsAddClickCancel(e) {
 		e.preventDefault();
 		resetCar();
 	}
-	function handleMakeIsAddClickCancel(e){
+
+	function handleMakeIsAddClickCancel(e) {
 		e.preventDefault();
 		resetMake();
 	}
-	function handleModelIsAddClickCancel(e){
+
+	function handleModelIsAddClickCancel(e) {
 		e.preventDefault();
-		resetModel()
+		resetModel();
 	}
 
-	// Start editing an element
-	function handleCarIsEditClick(e){
+	// Start editing
+	function handleCarIsEditClick(e) {
 		e.preventDefault();
-		setIsEditingCar(true);
-	}
-	function handleMakeIsEditClick(e){
-		e.preventDefault();
-		setMakeName(selectedMake.name);
-		setIsEditingMake(true);
-	}
-	function handleModelIsEditClick(e){
-		e.preventDefault();
-		setModelName(selectedModel.name);
-		setIsEditingModel(true);
-	}
-
-	// Cancel editing an element
-	function handleCarIsEditClickCancel(e){
-		e.preventDefault();
-		setIsEditingCar(false);
+		if (!selectedCar) return;
 		setPresentingCar(selectedCar);
+		setCarMode("editing");
 	}
-	function handleMakeIsEditClickCancel(e){
+
+	function handleMakeIsEditClick(e) {
 		e.preventDefault();
+		if (!selectedMake) return;
 		setMakeName(selectedMake.name);
-		setIsEditingMake(false);
+		setMakeMode("editing");
 	}
-	function handleModelIsEditClickCancel(e){
+
+	function handleModelIsEditClick(e) {
 		e.preventDefault();
+		if (!selectedModel) return;
 		setModelName(selectedModel.name);
-		setIsEditingModel(false);
+		setModelMode("editing");
 	}
 
-	// POST requests:
-	async function handleCarActionAdd(e){
+	// Cancel editing
+	function handleCarIsEditClickCancel(e) {
+		e.preventDefault();
+		setPresentingCar(selectedCar ?? emptyCar);
+		setCarMode("idle");
+	}
+
+	function handleMakeIsEditClickCancel(e) {
+		e.preventDefault();
+		setMakeName(selectedMake?.name ?? "");
+		setMakeMode("idle");
+	}
+
+	function handleModelIsEditClickCancel(e) {
+		e.preventDefault();
+		setModelName(selectedModel?.name ?? "");
+		setModelMode("idle");
+	}
+
+	// POST requests
+	async function handleCarActionAdd(e) {
 		e.preventDefault();
 
-		if(!presentingCar.plate.trim()){
-			console.error("Preencha o campo: matrícula.")
+		if (!presentingCar.plate.trim()) {
+			console.error("Preencha o campo: matrícula.");
 			return;
 		}
 
 		try {
-			const response = await api.post("/cars", {
-				plate: presentingCar.plate,
-				make_id: selectedMake?.id??"",
-				model_id: selectedModel?.id??"",
-				chassi_nr: presentingCar.chassi_nr,
-				month: presentingCar.month,
-				year: presentingCar.year,
-				cc: presentingCar.cc,
-				engine_code: presentingCar.engine_code,
-				color_code: presentingCar.color_code,
-			});
+			const response = await api.post("/cars", getCarPayload());
 			const car = response.data?.car;
-			console.log(`${car.plate} - ${car.make_name}${car.model_id?" " + car.model_name:""} criado com sucesso.`);
-			setIsCreatingCar(false);
-			setSelectedCar(car)
+
+			setSelectedCar(car);
+			setPresentingCar(car);
+			setCarRelations(car);
+			setCarMode("idle");
 			loadCars();
 		} catch (error) {
-			console.error(error.response.data.error);
+			console.error(error);
 		}
 	}
-	async function handleMakeActionAdd(e){
+
+	async function handleMakeActionAdd(e) {
 		e.preventDefault();
 
-		if(!makeName.trim()){
-			console.error("Preencha o campo: nome.")
+		if (!makeName.trim()) {
+			console.error("Preencha o campo: nome.");
 			return;
 		}
 
 		try {
-			const response = await api.post("/makes", {
-				name: makeName,
-			});
+			const response = await api.post("/makes", { name: makeName });
 			const make = response.data?.make;
-			console.log(make.name + " criado com sucesso.");
-			setIsCreatingMake(false);
-			setSelectedMake(make)
+
+			setSelectedMake(make);
+			setMakeName(make.name);
+			setMakeMode("idle");
 			setSearchMakes("");
 			loadMakes();
 		} catch (error) {
-			console.error(error.response.data.error);
+			console.error(error);
 		}
 	}
-	async function handleModelActionAdd(e){
+
+	async function handleModelActionAdd(e) {
 		e.preventDefault();
 
-		if(!selectedMake){
-			console.error("Selecione a marca.")
+		if (!selectedMake) {
+			console.error("Selecione a marca.");
 			return;
 		}
-
-		if(!modelName.trim()){
-			console.error("Preencha o campo: nome.")
+		if (!modelName.trim()) {
+			console.error("Preencha o campo: nome.");
 			return;
 		}
 
@@ -479,65 +405,61 @@ export default function CarPicker() {
 				name: modelName,
 				make_id: selectedMake.id,
 			});
-			const model =response.data?.model;
-			console.log(model.name + " criado com sucesso.");
-			setIsCreatingModel(false);
+			const model = response.data?.model;
+
 			setSelectedModel(model);
+			setModelName(model.name);
+			setModelMode("idle");
 			setSearchModels("");
 			loadModels();
 		} catch (error) {
-			console.error(error.response.data.error);
+			console.error(error);
 		}
 	}
 
-	// PUT requests:
-	async function handleCarActionEdit(e){
+	// PUT requests
+	async function handleCarActionEdit(e) {
 		e.preventDefault();
 
-		if(!selectedCar){
-			console.error("Selecione o carro.")
-		}
-
-		if(!presentingCar.plate.trim()){
-			console.error("Preencha o campo: matricula.")
+		if (!selectedCar) {
+			console.error("Selecione o carro.");
 			return;
 		}
-		if(!selectedMake){
-			console.error("Selecione a marca.")
+		if (!presentingCar.plate.trim()) {
+			console.error("Preencha o campo: matrícula.");
+			return;
+		}
+		if (!selectedMake) {
+			console.error("Selecione a marca.");
 			return;
 		}
 
 		try {
-			const response = await api.put(`/cars/${selectedCar.id}`, {
-				plate: presentingCar.plate,
-				make_id: selectedMake?.id??"",
-				model_id: selectedModel?.id??"",
-				chassi_nr: presentingCar.chassi_nr,
-				month: presentingCar.month,
-				year: presentingCar.year,
-				cc: presentingCar.cc,
-				engine_code: presentingCar.engine_code,
-				color_code: presentingCar.color_code,
-				
-			});
+			const response = await api.put(
+				`/cars/${selectedCar.id}`,
+				getCarPayload()
+			);
 			const car = response.data?.car;
 
-			console.log(car.plate + " editado com sucesso.");
-			setSelectedCar(car)
-			setIsEditingCar(false);
+			setSelectedCar(car);
+			setPresentingCar(car);
+			setCarRelations(car);
+			setCarMode("idle");
 			loadCars();
 		} catch (error) {
-			console.error(error.response.data.error);
+			console.error(error);
 		}
 	}
-	async function handleMakeActionEdit(e){
+
+	async function handleMakeActionEdit(e) {
 		e.preventDefault();
 
-		if(!selectedMake){
-			console.error("Selecione a marca.")
+		if (!selectedMake) {
+			console.error("Selecione a marca.");
+			return;
 		}
-		if(!makeName.trim()){
-			console.error("Preencha o campo: nome.")
+		if (!makeName.trim()) {
+			console.error("Preencha o campo: nome.");
 			return;
 		}
 
@@ -547,27 +469,28 @@ export default function CarPicker() {
 			});
 			const make = response.data?.make;
 
-			console.log(make.name + " editado com sucesso.");
-			setMakeName(make.name);
 			setSelectedMake(make);
-			setIsEditingMake(false);
+			setMakeName(make.name);
+			setMakeMode("idle");
 			loadMakes();
 		} catch (error) {
-			console.error(error.response.data.error);
+			console.error(error);
 		}
 	}
-	async function handleModelActionEdit(e){
+
+	async function handleModelActionEdit(e) {
 		e.preventDefault();
 
-		if(!selectedModel){
-			console.error("Selecione a modelo.")
+		if (!selectedModel) {
+			console.error("Selecione o modelo.");
 			return;
 		}
-		if(!selectedMake){
-			console.error("Selecione a marca.")
+		if (!selectedMake) {
+			console.error("Selecione a marca.");
+			return;
 		}
-		if(!modelName.trim()){
-			console.error("Preencha o campo: nome.")
+		if (!modelName.trim()) {
+			console.error("Preencha o campo: nome.");
 			return;
 		}
 
@@ -578,169 +501,183 @@ export default function CarPicker() {
 			});
 			const model = response.data?.model;
 
-			console.log(model.name + " editado com sucesso.");
-			setModelName(model.name);
 			setSelectedModel(model);
-			setIsEditingModel(false);
+			setModelName(model.name);
+			setModelMode("idle");
 			loadModels();
 		} catch (error) {
-			console.error(error.response.data.error);
+			console.error(error);
 		}
 	}
 
-	// HTML components
-	function showModelPicker(){
-		return(
+	function showModelPicker() {
+		return (
 			<div className="model-picker-container">
 				<div className="model-picker" ref={modelPicker}>
 					<input
-						ref={modelInput}
 						type="text"
 						value={searchModels}
-						onChange={(e) => handleModelInputChange(e.target.value)}
+						onChange={(e) => setSearchModels(e.target.value)}
 						placeholder="Selecionar modelo"
-						onClick={() =>handleModelInputClick()}
+						onClick={() => setIsModelPickerSelected(true)}
 						disabled={!isModelPickerEnabled}
 					/>
 
-					{isModelPickerSelected && (<div className="dropdown-menu">
-						<ul>
-							<li key="addModel" onClick={()=>handleModelIsAddClick()}>Adicionar Modelo</li>
-							{models.map((model) =>(
-								<li key={model.id} onClick={()=>handleModelSelectedClick(model)}>{model.name}</li>
-							))}
-						</ul>
-					</div>)}
+					{isModelPickerSelected && (
+						<div className="dropdown-menu">
+							<ul>
+								<li onClick={handleModelIsAddClick}>Adicionar Modelo</li>
+								{models.map((model) => (
+									<li key={model.id} onClick={() => handleModelSelectedClick(model)}>
+										{model.name}
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
 				</div>
 
 				<div className="model-section">
-					{isCreatingModel && (
-						<>
-							<label htmlFor="model-name">Modelo: </label>
-							<input type="text" disabled={!isModelFormEditable} id="model-name" ref={modelAddFormInput} value={modelName} onChange={(e)=>setModelName(e.target.value)}/>
-							<div className="buttons-card">
-								<button className="confirm" onClick={(e)=>handleModelActionAdd(e)}>
-									<i className="fa-solid fa-check"/>
-								</button>
-								<button className="cancel" onClick={(e)=>handleModelIsAddClickCancel(e)}>
-									<i className="fa-solid fa-xmark"/>
-								</button>
-							</div>
-						</>
+					<label htmlFor="model-name">Modelo: </label>
+
+					{isCreatingModel ? (
+						<input
+							id="model-name"
+							type="text"
+							ref={modelAddFormInput}
+							value={modelName}
+							onChange={(e) => setModelName(e.target.value)}
+							disabled={!isModelFormEditable}
+						/>
+					) : (
+						<input
+							id="model-name"
+							type="text"
+							ref={modelEditFormInput}
+							value={modelName}
+							onChange={(e) => setModelName(e.target.value)}
+							disabled={!isModelFormEditable}
+						/>
 					)}
 
-					{!isCreatingModel && (
-						<>
-							<label htmlFor="model-name">Modelo: </label>
-							<input type="text" id="model-name" ref={modelEditFormInput} value={modelName} onChange={(e)=>setModelName(e.target.value)} disabled={!isModelFormEditable}/>
-							<div className="buttons-card">
-								{isEditingModel ? (
-									<>
-										<button className="confirm" id="model-edit-confirm" onClick={(e)=>handleModelActionEdit(e)}>
-									<i className="fa-solid fa-check"/>
-										</button>
-										<button className="cancel" id="model-add-cancel" onClick={(e)=>handleModelIsEditClickCancel(e)}>
-									<i className="fa-solid fa-xmark"/>
-										</button>
-
-									</>
-								):(
-										<>
-											<button className="options" id="model-edit-start" disabled={!isModelPickerEnabled}  onClick={(e)=>handleModelIsEditClick(e)}>
-												<i className="fa-solid fa-pen-to-square"/>
-											</button>
-											<button className="cancel" id="model-select-cancel" disabled={!isModelPickerEnabled}  onClick={(e)=>handleModelSelectedClickCancel(e)}>
-									<i className="fa-solid fa-xmark" />	
-											</button>
-										</>
-									)}
-							</div>
-						</>
-					)}
+					<div className="buttons-card">
+						{isCreatingModel ? (
+							<>
+								<button className="confirm" onClick={handleModelActionAdd}>
+									<i className="fa-solid fa-check" />
+								</button>
+								<button className="cancel" onClick={handleModelIsAddClickCancel}>
+									<i className="fa-solid fa-xmark" />
+								</button>
+							</>
+						) : isEditingModel ? (
+							<>
+								<button className="confirm" id="model-edit-confirm" onClick={handleModelActionEdit}>
+									<i className="fa-solid fa-check" />
+								</button>
+								<button className="cancel" id="model-add-cancel" onClick={handleModelIsEditClickCancel}>
+									<i className="fa-solid fa-xmark" />
+								</button>
+							</>
+						) : (
+							<>
+								<button className="options" id="model-edit-start" disabled={!selectedModel} onClick={handleModelIsEditClick}>
+									<i className="fa-solid fa-pen-to-square" />
+								</button>
+								<button className="cancel" id="model-select-cancel" disabled={!selectedModel} onClick={handleModelSelectedClickCancel}>
+									<i className="fa-solid fa-xmark" />
+								</button>
+							</>
+						)}
+					</div>
 				</div>
 			</div>
 		);
 	}
 
-	function showMakePicker(){
-		return(
+	function showMakePicker() {
+		return (
 			<div className="make-picker-container">
 				<div className="make-picker" ref={makePicker}>
 					<input
-						ref={makeInput}
 						type="text"
 						value={searchMakes}
-						onChange={(e) => handleMakeInputChange(e.target.value)}
+						onChange={(e) => setSearchMakes(e.target.value)}
 						placeholder="Selecionar marca"
-						onClick={() =>handleMakeInputClick()}
+						onClick={() => setIsMakePickerSelected(true)}
 						disabled={!isMakePickerEnabled}
 					/>
 
-					{isMakePickerSelected && (<div className="dropdown-menu">
-						<ul>
-							<li key="addMake" onClick={()=>handleMakeIsAddClick()}>Adicionar Marca</li>
-							{makes.map((make) =>(
-								<li key={make.id} onClick={()=>handleMakeSelectedClick(make)}>{make.name}</li>
-							))}
-						</ul>
-					</div>)}
+					{isMakePickerSelected && (
+						<div className="dropdown-menu">
+							<ul>
+								<li onClick={handleMakeIsAddClick}>Adicionar Marca</li>
+								{makes.map((make) => (
+									<li key={make.id} onClick={() => handleMakeSelectedClick(make)}>
+										{make.name}
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
 				</div>
 
 				<div className="make-section">
-					{isCreatingMake && (
-						<>
-							<label htmlFor="make-name">Marca: </label>
-							<input type="text" id="make-name" ref={makeAddFormInput} value={makeName} onChange={(e)=>setMakeName(e.target.value)}/>
-							<div className="buttons-card">
-								<button className="confirm"  onClick={(e)=>handleMakeActionAdd(e)}>
-									<i className="fa-solid fa-check"/>
-								</button>
-								<button className="cancel"  onClick={(e)=>handleMakeIsAddClickCancel(e)}>
-									<i className="fa-solid fa-xmark"/>
-								</button>
-							</div>
-						</>
+					<label htmlFor="make-name">Marca: </label>
+
+					{isCreatingMake ? (
+						<input
+							id="make-name"
+							type="text"
+							ref={makeAddFormInput}
+							value={makeName}
+							onChange={(e) => setMakeName(e.target.value)}
+						/>
+					) : (
+						<input
+							id="make-name"
+							type="text"
+							ref={makeEditFormInput}
+							value={makeName}
+							onChange={(e) => setMakeName(e.target.value)}
+							disabled={!isMakeFormEditable}
+						/>
 					)}
 
-					{!isCreatingMake && (
-						<>
-							<label htmlFor="make-name">Marca: </label>
-							<input type="text" id="make-name" ref={makeEditFormInput} value={makeName} onChange={(e)=>setMakeName(e.target.value)} disabled={!isMakeFormEditable}/>
-							<div className="buttons-card">
-								{isEditingMake ? (
-									<>
-										<button className="confirm" id="make-edit-confirm" type="submit">
-											<i className="fa-solid fa-check"/>
-										</button>
-										<button className="cancel" id="make-add-cancel" onClick={(e)=>handleMakeIsEditClickCancel(e)}>
-											<i className="fa-solid fa-xmark"/>
-										</button>
-
-									</>
-								):(
-										<>
-											<button className="options" disabled={!isMakePickerEnabled}  id="make-edit-start"  onClick={(e)=>handleMakeIsEditClick(e)}>
-												<i className="fa-solid fa-pen-to-square"/>
-											</button>
-											<button className="cancel" disabled={!isMakePickerEnabled} id="make-select-cancel"  onClick={(e)=>handleMakeSelectedClickCancel(e)}>
-												<i className="fa-solid fa-xmark"/>
-											</button>
-										</>
-									)}
-							</div>
-						</>
-					)}
+					<div className="buttons-card">
+						{isCreatingMake ? (
+							<>
+								<button className="confirm" onClick={handleMakeActionAdd}>
+									<i className="fa-solid fa-check" />
+								</button>
+								<button className="cancel" onClick={handleMakeIsAddClickCancel}>
+									<i className="fa-solid fa-xmark" />
+								</button>
+							</>
+						) : isEditingMake ? (
+							<>
+								<button className="confirm" id="make-edit-confirm" onClick={handleMakeActionEdit}>
+									<i className="fa-solid fa-check" />
+								</button>
+								<button className="cancel" id="make-add-cancel" onClick={handleMakeIsEditClickCancel}>
+									<i className="fa-solid fa-xmark" />
+								</button>
+							</>
+						) : (
+							<>
+								<button className="options" id="make-edit-start" disabled={!selectedMake} onClick={handleMakeIsEditClick}>
+									<i className="fa-solid fa-pen-to-square" />
+								</button>
+								<button className="cancel" id="make-select-cancel" disabled={!selectedMake} onClick={handleMakeSelectedClickCancel}>
+									<i className="fa-solid fa-xmark" />
+								</button>
+							</>
+						)}
+					</div>
 				</div>
 			</div>
 		);
 	}
-	//Unsupervised
-	function handleCarFieldChange(field, value) {
-		_setPresentingCar(prev => ({
-			...prev,
-			[field]: value,
-		}));
-}
 
 	return (
 		<div className="car-picker-container">
@@ -750,60 +687,65 @@ export default function CarPicker() {
 						ref={carInput}
 						type="text"
 						value={searchCars}
-						onChange={(e) => handleCarInputChange(e.target.value)}
+						onChange={(e) => setSearchCars(e.target.value)}
 						placeholder="Selecionar Carro"
-						onClick={() =>handleCarInputClick()}
+						onClick={() => setIsCarPickerSelected(true)}
 					/>
 
 					<div className="buttons-card">
 						{isEditingCar ? (
 							<>
-								<button className="confirm" id="car-edit-confirm" onClick={(e)=>handleCarActionEdit(e)}>
-									<i className="fa-solid fa-check"/>
+								<button className="confirm" id="car-edit-confirm" onClick={handleCarActionEdit}>
+									<i className="fa-solid fa-check" />
 								</button>
-								<button className="cancel"id="car-add-cancel"  onClick={(e)=>handleCarIsEditClickCancel(e)}>
-									<i className="fa-solid fa-xmark"/>
+								<button className="cancel" id="car-add-cancel" onClick={handleCarIsEditClickCancel}>
+									<i className="fa-solid fa-xmark" />
 								</button>
-
 							</>
-						):(isCreatingCar?(
-								<>
-									<button className="confirm" id="car-edit-confirm" onClick={(e)=>handleCarActionAdd(e)}>
-										<i className="fa-solid fa-check"/>
-									</button>
-									<button className="cancel"id="car-add-cancel"  onClick={(e)=>handleCarIsAddClickCancel(e)}>
-										<i className="fa-solid fa-xmark"/>
-									</button>
-								</>):(<>
-									<button className="options"id="car-edit-start" disabled={!Boolean(selectedCar)} 
-										onClick={(e)=>handleCarIsEditClick(e)}>
-												<i className="fa-solid fa-pen-to-square"/>
-									</button>
-									<button className="cancel" id="car-select-cancel" disabled={!Boolean(selectedCar)} 
-										onClick={(e)=>{handleCarSelectedClickCancel(e)}}
-									> 
-									<i className="fa-solid fa-xmark"/>
-									</button>
-								</>)
-							)}
+						) : isCreatingCar ? (
+							<>
+								<button className="confirm" id="car-add-confirm" onClick={handleCarActionAdd}>
+									<i className="fa-solid fa-check" />
+								</button>
+								<button className="cancel" id="car-add-cancel" onClick={handleCarIsAddClickCancel}>
+									<i className="fa-solid fa-xmark" />
+								</button>
+							</>
+						) : (
+							<>
+								<button className="options" id="car-edit-start" disabled={!selectedCar} onClick={handleCarIsEditClick}>
+									<i className="fa-solid fa-pen-to-square" />
+								</button>
+								<button className="cancel" id="car-select-cancel" disabled={!selectedCar} onClick={handleCarSelectedClickCancel}>
+									<i className="fa-solid fa-xmark" />
+								</button>
+							</>
+						)}
 					</div>
-
 				</div>
 
 				{isCarPickerSelected && (
-				<div className="dropdown-menu">
-					<ul>
-						<li key="addCar" onClick={()=>handleCarIsAddClick()}>Adicionar Carro</li>
-						{cars.map((car) =>(
-							<li key={car.id} onClick={()=>handleCarSelectedClick(car)}><span>{car.plate}</span><span>{car.make_name}</span><span>{car.model_name}</span></li>
-						))}
-					</ul>
-				</div>)}
+					<div className="dropdown-menu">
+						<ul>
+							<li onClick={handleCarIsAddClick}>Adicionar Carro</li>
+							{cars.map((car) => (
+								<li key={car.id} onClick={() => handleCarSelectedClick(car)}>
+									<span>{car.plate}</span>
+									<span>{car.make_name}</span>
+									<span>{car.model_name}</span>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
 			</div>
+
 			<div className="car-form">
 				<div className="form-field car-plate">
 					<label htmlFor="car-plate">Matrícula: </label>
-					<input 
+					<input
+						id="car-plate"
+						ref={isCreatingCar ? carAddFormInput : carEditFormInput}
 						type="text"
 						placeholder="S/Matrícula"
 						value={presentingCar.plate}
@@ -811,15 +753,14 @@ export default function CarPicker() {
 						onChange={(e) => handleCarFieldChange("plate", e.target.value)}
 					/>
 				</div>
-				<div className="make-picker-wrapper">
-					{showMakePicker()}
-				</div>
-				<div className="model-picker-wrapper">
-					{showModelPicker()}
-				</div>
-				<div className="form-field car-chassi" >
+
+				<div className="make-picker-wrapper">{showMakePicker()}</div>
+				<div className="model-picker-wrapper">{showModelPicker()}</div>
+
+				<div className="form-field car-chassi">
 					<label htmlFor="car-chassi-nr">Nr. Chassi: </label>
-					<input 
+					<input
+						id="car-chassi-nr"
 						type="text"
 						placeholder="S/Nr. Chassi"
 						value={presentingCar.chassi_nr}
@@ -827,9 +768,11 @@ export default function CarPicker() {
 						onChange={(e) => handleCarFieldChange("chassi_nr", e.target.value)}
 					/>
 				</div>
+
 				<div className="form-field car-month">
 					<label htmlFor="car-month">Mês: </label>
-					<input 
+					<input
+						id="car-month"
 						type="number"
 						placeholder="S/Mes"
 						value={presentingCar.month}
@@ -837,9 +780,11 @@ export default function CarPicker() {
 						onChange={(e) => handleCarFieldChange("month", e.target.value)}
 					/>
 				</div>
+
 				<div className="form-field car-year">
 					<label htmlFor="car-year">Ano: </label>
-					<input 
+					<input
+						id="car-year"
 						type="number"
 						placeholder="S/Ano"
 						value={presentingCar.year}
@@ -847,9 +792,11 @@ export default function CarPicker() {
 						onChange={(e) => handleCarFieldChange("year", e.target.value)}
 					/>
 				</div>
-				<div className="form-field car-cc" >
+
+				<div className="form-field car-cc">
 					<label htmlFor="car-cc">Cc: </label>
-					<input 
+					<input
+						id="car-cc"
 						type="number"
 						placeholder="S/Cc"
 						value={presentingCar.cc}
@@ -857,9 +804,11 @@ export default function CarPicker() {
 						onChange={(e) => handleCarFieldChange("cc", e.target.value)}
 					/>
 				</div>
+
 				<div className="form-field car-engine-code">
 					<label htmlFor="car-engine-code">Cod. Motor: </label>
-					<input 
+					<input
+						id="car-engine-code"
 						type="text"
 						placeholder="S/Cod. Motor"
 						value={presentingCar.engine_code}
@@ -867,9 +816,11 @@ export default function CarPicker() {
 						onChange={(e) => handleCarFieldChange("engine_code", e.target.value)}
 					/>
 				</div>
+
 				<div className="form-field car-color-code">
 					<label htmlFor="car-color-code">Cod. Cor: </label>
-					<input 
+					<input
+						id="car-color-code"
 						type="text"
 						placeholder="S/Cod. Cor"
 						value={presentingCar.color_code}

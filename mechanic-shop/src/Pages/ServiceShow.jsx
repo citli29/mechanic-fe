@@ -1,47 +1,54 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import api from "./../api/axios";
+
+import { ServiceHeader } from "./Service/ServiceHeader";
+import { MakePicker } from "../components/Pickers/MakePicker";
 
 export default function ServiceShow2() {
 	const { id } = useParams();
+	const defaultService = {
+		id: "",
+		service_type: "ServiceType",
+		service_sub_type: "ServiceSubType",
+		r_name: "",
+		r_phone: "",
+		checkin: "",
+		checkout_predict: "2030-01-01",
+		schedule_id: "",
+		office_check: false,
+		kms:"",
+		checkout: ""
+	}
+	const [service, setService] = useState(defaultService);
+
+	async function loadService() {
+		try {
+			const response = await api.get(`/services/${id}`);
+			setService({...defaultService, ...response.data.service});
+		}catch(error){console.error(error, error.response.data.error)}
+	}
+	useEffect(()=>{loadService()},[]);
+
+	const [make_id, setMake_id] = useState("");
+	useEffect(()=>{console.log("make_id: ", make_id)}, [make_id]);
 	return(
-		<div className="service-header">
-			<h1>Service Type</h1>
-			<h2>Service SubType</h2>
-			<div className="service-info">
-				<div className="service-info-field">
-					<label htmlFor="checkin">Entrada: </label>
-					<input id="checkin" type="date"/>
-				</div>
-				<div className="service-info-field">
-					<label htmlFor="checkout">Saída: </label>
-					<input id="checkout" type="date"/>
-				</div>
-				<div className="service-info-field">
-					<label htmlFor="s-phone">Tel.: </label>
-					<input id="s-phone" type="tel"/>
-				</div>
-				<div className="service-info-field">
-					<label htmlFor="s-phone-name">Nome Tel.: </label>
-					<input id="s-phone-name" type="text"/>
-				</div>
-				<div className="service-info-field">
-					<label htmlFor="schedule-select">Marcação: </label>
-					<select name="schedule" id="schedule-select">
-						<option value="">Selecione Marcação</option>
-						<option value="1">Marcação #1</option>
-						<option value="2">Marcação #2</option>
-					</select>
-				</div>
-				<div className="service-info-field">
-					<label htmlFor="office-checked">Validado: </label>
-					<input id="office-checked" type="checkbox"/>
-				</div>
-			</div>
-			<div className="client-car-info">
+		<div className="service-page">
+			<ServiceHeader
+				service={service}
+				onServiceChange={
+					(field, value) =>
+						setService(prev => ({
+							...prev,
+							[field]: value,
+						}))
+				}
+			/>
+			<MakePicker  
+				make_id=""
+				onMakeIdChange={(m_id)=>setMake_id(m_id)}
+			/>
+		</div>
 
-			</div>	
-			<div className="service-summary">
-
-			</div>
-		</div>	
 	);
 }

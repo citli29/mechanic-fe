@@ -1,0 +1,28 @@
+:root{
+	--small-padding: 0.25rem;
+	--line-height: 1.25rem;
+	--bg-dark: #333;
+	--bg-light: #eee;
+	--txt-dark: #333;
+	--txt-light: #eee;
+	--accent:#f59e0b;
+	--accent-dark: #111;
+	--accent-light: #fff;
+	--disabled-brightness: 0.85;
+	--confirm: green;
+	--cancel: red;
+	--options: blue;
+}
+
+.confirm{
+	color: var(--txt-light);
+	background: var(--confirm);
+}
+.cancel{
+	color: var(--txt-light);
+	background: var(--cancel);
+}
+.options{
+	color: var(--txt-light);
+	background: var(--options);
+}
