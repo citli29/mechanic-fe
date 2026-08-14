@@ -22,7 +22,6 @@ export const ModelPicker = ({
 	const [state, setState] = useState(-1);
 
 	useEffect(() => {
-		onModelIdChange(model?.id??"");
 		setModelName(model?.name??"");
 	},[model]);
 
@@ -84,24 +83,37 @@ export const ModelPicker = ({
 		}catch(error){console.error(error, error.response.data.error)}
 	}
 
-	useEffect(()=>{
-		if(!make_id){
-			setIsSearchSelected(false);
-			model_id = "";
-			onModelIdChange("");
-		}
-		async function f1(){
-			const m = await getModel(model_id); 
-			setModel(m);
-		}
-		async function f2(){
-			const m = await getModels(""); 
-			setModels(m);
-		}
 
-		if(model_id) { f1(); setState(SELECTED);
-		}else{ f2(); setState(SEARCHING); }
-	} ,[make_id,]);
+	
+	useEffect(()=>{
+		const load = async () =>{
+			if(!make_id){
+				setIsSearchSelected(false);
+				setModel(null);
+				setModelName("");
+				setModels([]);
+				setState(SEARCHING);
+
+				if(model_id){
+					onModelIdChange("")
+				}
+
+				return;
+			}
+			if(model_id){
+				const m = await getModel(model_id);
+				setModel(m);
+				setState(SELECTED);
+			}else{
+				const m = await getModels("");
+				setModels(m);
+				setModel(null);
+				setState(SEARCHING);
+			}
+
+		}
+		load();
+	} ,[make_id,model_id]);
 
 	useEffect(()=>{
 		const timer = setTimeout(()=>{
@@ -162,12 +174,14 @@ export const ModelPicker = ({
 	const handleClickSelect = (m) => {
 		setIsSearchSelected(false);
 		setModel(m);
+		onModelIdChange(m.id);
 		setState(SELECTED);
 	}
 
 	const handleClickSelectCancel = async (e) => {
 		e.preventDefault();
 		setModel(null);
+		onModelIdChange("");
 		setSearchModel("");
 		setModels(await getModels())
 		setIsSearchSelected(false);
@@ -202,6 +216,7 @@ export const ModelPicker = ({
 			setState(SELECTED);
 			setModel(m);
 			setModelName(m.name);
+			onModelIdChange(m.id);
 		}
 	}
 	const isDisabled = !Boolean(make_id) || disabled;

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import api from "./../../api/axios";
 import "./style/CPicker.css";
+import { MakePicker } from "./MakePicker";
+import { ModelPicker } from "./ModelPicker";
 
 const SEARCHING = 1;
 const SELECTED = 2;
@@ -105,18 +107,22 @@ export const CarPicker = ({
 	}
 
 	useEffect(()=>{
-		async function f1(){
-			const m = await getCar(car_id); 
-			setCar(m);
-		}
-		async function f2(){
-			const m = await getCars(""); 
-			setCars(m);
-		}
+		async function load() {
+			if (car_id) {
+				const c = await getCar(car_id);
 
-		if(car_id) { f1(); setState(SELECTED);
-		}else{ f2(); setState(SEARCHING); }
-	} ,[]);
+				if (c) {
+					setCar(c);
+					setState(SELECTED);
+				}
+			} else {
+				const list = await getCars("");
+				setCars(list);
+				setState(SEARCHING);
+			}
+		}
+		load();
+	} ,[car_id]);
 
 	useEffect(()=>{
 		const timer = setTimeout(()=>{
@@ -214,16 +220,22 @@ export const CarPicker = ({
 		}
 	}
 
+	const [isInfoShowing, setIsInfoShowing] = useState(false);
 	const renderSelectedButtons = () => {
 		switch(state){
 			case CREATING:
 				return (
 					<div className="card-buttons">
+						<button disabled className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
+						<button disabled className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-xmark"/></button>
 					</div>
 				);
 			case SELECTED:
 				return (
 					<div className="card-buttons">
+						<button className="options" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${!isInfoShowing?"up":"down"}`}/></button>
+						<button disabled className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pen-to-square"/></button>
+						<button disabled className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-xmark"/></button>
 					</div>
 
 				);
@@ -231,6 +243,8 @@ export const CarPicker = ({
 			case EDITING:
 				return(
 					<div className="card-buttons">
+						<button disabled className="confirm" onClick={(e)=>handleClickActionEdit(e)}><i className="fa-solid fa-check"/></button>
+						<button disabled className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-xmark"/></button>
 					</div>
 				);
 		}
@@ -268,13 +282,108 @@ export const CarPicker = ({
 
 	const renderNotSearching = () => {
 		return(
+			
 			<div className="c-selected"> 
-				<div className="car-input">
-					<span>{car.plate}</span>
-					<span>{car.make_name}</span>
-					<span>{car.model_name}</span>
+				<div className="car-header">
+					<div className="car-input">
+						<span>{car.plate}</span>
+						<span>{car.make_name}</span>
+						<span>{car.model_name}</span>
+					</div>
+					{renderSelectedButtons()}
 				</div>
-				{renderSelectedButtons()}
+				<div className={`car-info ${isInfoShowing?"hidden":""}`}>
+					<div className="car-field" id="car-plate">
+						<label htmlFor="car-plate">Matrícula</label>
+						<input 
+							value={car?.plate??""}
+							type="text"
+							disabled= {true}
+						/>
+					</div>
+					<div className="car-field" id="car-make">
+						<label htmlFor="car-make">Marca</label>
+						<div className="make-picker-container">
+							<MakePicker
+								make_id={car?.make_id??""}
+								onMakeIdChange={(id)=>{
+									setCar(prev => ({
+										...prev,
+										make_id: id,
+										model_id: ""
+									}));
+								} }
+								disabled= {true}
+							/>
+						</div>
+					</div>
+					<div className="car-field" id="car-model">
+						<label htmlFor="car-model">Modelo</label>
+						<div className="make-picker-container">
+							<ModelPicker
+								make_id={car?.make_id??""}
+								model_id={car?.model_id??""}
+								onModelIdChange={(id)=>{
+									setCar(prev => ({
+										...prev,
+										model_id: id
+									}));
+								} }
+								disabled= {true}
+							/>
+						</div>
+					</div>
+					<div className="car-field" id="car-chassi">
+						<label htmlFor="car-chassi">Nr. Chassi</label>
+						<input 
+							value={car?.chassi_nr??""}
+							type="text"
+							disabled= {true}
+						/>
+					</div>
+					<div className="car-field-date">
+						<div className="car-field" id="car-year">
+							<label htmlFor="car-year">Ano</label>
+							<input 
+								value={car?.year??""}
+								type="text"
+								disabled= {true}
+							/>
+						</div>
+						<div className="car-field" id="car-month">
+							<label htmlFor="car-month">Mês</label>
+							<input 
+								value={car?.month??""}
+								type="text"
+								disabled= {true}
+							/>
+						</div>
+					</div>
+					<div className="car-field" id="car-cc">
+						<label htmlFor="car-cc">CC</label>
+						<input 
+							value={car?.cc??""}
+							type="text"
+							disabled= {true}
+						/>
+					</div>
+					<div className="car-field" id="car-engine-code">
+						<label htmlFor="car-engine-code">Cod. Motor</label>
+						<input 
+							value={car?.engine_code??""}
+							type="text"
+							disabled= {true}
+						/>
+					</div>
+					<div className="car-field" id="car-color-code">
+						<label htmlFor="car-color-code">Cod. Cor</label>
+						<input 
+							value={car?.color_code??""}
+							type="text"
+							disabled= {true}
+						/>
+					</div>
+				</div>
 			</div>
 		);
 	}

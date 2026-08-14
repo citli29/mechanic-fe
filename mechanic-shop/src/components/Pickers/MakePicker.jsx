@@ -23,7 +23,6 @@ export const MakePicker = ({
 
 
 	useEffect(()=>{
-		onMakeIdChange(make?.id??"");
 		setMakeName(make?.name??"")
 	},[make])
 
@@ -89,7 +88,7 @@ export const MakePicker = ({
 
 		if(make_id) { f1(); setState(SELECTED);
 		}else{ f2(); setState(SEARCHING); }
-	} ,[]);
+	} ,[make_id,]);
 
 	useEffect(()=>{
 		const timer = setTimeout(()=>{
@@ -150,12 +149,15 @@ export const MakePicker = ({
 	const handleClickSelect = (m) => {
 		setIsSearchSelected(false);
 		setMake(m);
+		onMakeIdChange(m.id);
 		setState(SELECTED);
 	}
 
 	const handleClickSelectCancel = async (e) => {
 		e.preventDefault();
 		setMake(null);
+		onMakeIdChange("");
+
 		setSearchMake("");
 		setMakes(await getMakes())
 		setIsSearchSelected(false);
@@ -190,6 +192,8 @@ export const MakePicker = ({
 			setState(SELECTED);
 			setMake(m);
 			setMakeName(m.name);
+
+			onMakeIdChange(m.id);
 		}
 	}
 
@@ -307,7 +311,6 @@ export const MakePicker = ({
 		}
 		
 	}
-
 
 	return (
 		<div className="m-picker" id="make-picker">

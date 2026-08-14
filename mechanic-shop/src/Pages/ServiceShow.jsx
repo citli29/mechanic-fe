@@ -40,7 +40,6 @@ export default function ServiceShow2() {
 	const [car_id, setCar_id] = useState("");
 	return(
 		<div className="service-page">
-			<button onClick={(e)=>{e.preventDefault(); setDisableCamps(!disableCamps)}}>Bloquear</button>
 			<ServiceHeader
 				service={service}
 				onServiceChange={
@@ -51,17 +50,7 @@ export default function ServiceShow2() {
 						}))
 				}
 			/>
-			<MakePicker  
-				make_id={make_id}
-				onMakeIdChange={(m_id)=>setMake_id(m_id)}
-				disabled={disableCamps}
-			/>
-			<ModelPicker
-				make_id={make_id}
-				model_id={model_id}
-				onModelIdChange={(m_id)=>setModel_id(m_id)}
-				disabled={disableCamps}
-			/>
+
 			<CarPicker
 				car_id={car_id}
 				onCarIdChange={(c_id)=>setCar_id(c_id)}
