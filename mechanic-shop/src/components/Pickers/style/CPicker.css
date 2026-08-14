@@ -1,0 +1,27 @@
+.m-searching.c-searching .dropdown li:first-child button{
+	display:block;
+}
+
+.m-searching.c-searching .dropdown li button{
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+}
+
+.c-selected .car-input{
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	width: 100%;
+	background: var(--accent);
+	border: 1px solid var(--accent);
+	border-radius: 3px;
+	line-height: var(--line-height);
+	padding:var(--small-padding);
+}
+.c-selected .car-input *{
+	font-weight: bolder;
+	color: var(--txt-dark);
+}
+
+.c-selected .car-input span{
+	text-align: center;
+}

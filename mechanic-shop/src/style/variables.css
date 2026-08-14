@@ -10,19 +10,41 @@
 	--accent-light: #fff;
 	--disabled-brightness: 0.85;
 	--confirm: green;
+	--confirm-dark: darkgreen;
 	--cancel: red;
+	--cancel-dark: darkred;
 	--options: blue;
+	--options-dark: darkblue;
 }
+
+* {
+	font-family: "Roboto", sans-serif;
+	font-optical-sizing: auto;
+	font-style: normal;	
+ }
 
 .confirm{
 	color: var(--txt-light);
 	background: var(--confirm);
 }
+
+.confirm:hover{
+	color: var(--txt-light);
+	background: var(--confirm-dark);
+}
 .cancel{
 	color: var(--txt-light);
 	background: var(--cancel);
 }
+.cancel:hover{
+	color: var(--txt-light);
+	background: var(--cancel-dark);
+}
 .options{
 	color: var(--txt-light);
 	background: var(--options);
+}
+.options:hover{
+	color: var(--txt-light);
+	background: var(--options-dark);
 }

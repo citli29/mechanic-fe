@@ -6,50 +6,50 @@
 	--nr-rows: 8;
 }
 
-.make-picker {
+.m-picker {
 	position: relative;
 	width: 100%;
 	padding: 1rem;
 }
 
-.make-searching {
+.m-searching {
 	width: 100%;
 	position: relative;
 }
 
-.make-selected {
+.m-selected {
 	display: flex;
 	width: 100%;
 	gap: var(--small-padding);
 }
 
-.make-selected input {
+.m-selected input {
 	min-width: 0;
 	flex-grow:1;
 }
 
-.make-selected .card-buttons button {
+.m-selected .card-buttons button {
 	aspect-ratio:1;
 	height: calc(var(--line-height) + 2* var(--small-padding) + 2px);
 	align-items: center;
 }
-.make-selected .card-buttons {
+.m-selected .card-buttons {
 	display: flex;
 	gap:var(--small-padding);
 }
 
-.make-selected input:disabled{
+.m-selected input:disabled{
 	filter: none !important;
 	font-weight: bolder;
 	background: var(--accent);
 	color: var(--txt-dark);
 }
-.make-searching input {
+.m-searching input {
 	width: 100%;
 }
 
-.make-selected input,
-.make-searching input {
+.m-selected input,
+.m-searching input {
 	border: 1px solid var(--accent);
 	border-radius: 3px;
 	outline: none;
@@ -60,7 +60,7 @@
 	text-align: center;
 }
 
-.make-searching input:focus {
+.m-searching input:focus {
 	outline: 2px solid var(--accent);
 	outline-offset: 0;
 }
@@ -88,24 +88,36 @@
 }
 
 .dropdown li {
-	line-height: var(--line-height);
-	background: var(--bg-light);
-	padding: var(--small-padding);
-	text-align: center;
-
 	border-bottom: 1px dashed var(--accent);
 }
 
-.dropdown li:hover {
-	background: var(--accent);
-	color: var(--txt-light);
+.dropdown li button {
+	width: 100%;
+	border: none;
+	background: var(--bg-light);
+
+	line-height: var(--line-height);
+	padding: var(--small-padding);
+	text-align: center;
+
+	font: inherit;
+	color: inherit;
 	cursor: pointer;
 }
 
-.dropdown li:hover span {
+.dropdown li button:focus,
+.dropdown li button:hover {
+	background: var(--accent);
+	color: var(--txt-light);
+	cursor: pointer;
+	outline: none;
+}
+
+.dropdown li button:focus span ,
+.dropdown li button:hover span {
 	color: var(--txt-dark);
 }
 
-.dropdown li span {
+.dropdown li button span {
 	color: var(--accent);
 }

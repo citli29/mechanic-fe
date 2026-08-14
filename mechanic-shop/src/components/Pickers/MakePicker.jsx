@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import api from "./../../api/axios";
-import "./style/MakePicker.css"
+import "./style/MPicker.css"
 
 const SEARCHING = 1;
 const SELECTED = 2;
@@ -9,9 +9,9 @@ const EDITING = 4;
 
 // responsavel pela pesquisa, criacao, edicao e selecao de marcas
 export const MakePicker = ({
-		disabled,
-		make_id,
-		onMakeIdChange
+		disabled=false,
+		make_id="",
+		onMakeIdChange=()=>{},
 	})=> {
 
 	const [makes, setMakes] = useState([]);
@@ -27,7 +27,7 @@ export const MakePicker = ({
 		setMakeName(make?.name??"")
 	},[make])
 
-	const postMake = async (name, make) =>{
+	const postMake = async (name) =>{
 		try{
 			const response = await api.post(`makes`,{
 				 name: name ,
@@ -37,10 +37,9 @@ export const MakePicker = ({
 			}else{
 				return null;
 			}
-
 		}catch(error){console.error(error, error.response.data.error)}
-
 	}
+
 	const putMake = async (name, make) =>{
 		try{
 			const response = await api.put(`makes/${make.id}`,{
@@ -51,9 +50,7 @@ export const MakePicker = ({
 			}else{
 				return null;
 			}
-
 		}catch(error){console.error(error, error.response.data.error)}
-
 	}
 
 	const getMakes = async (searchName) => {
@@ -119,6 +116,13 @@ export const MakePicker = ({
 
 	//Interactivity
 	const refSearch = useRef(null);
+	const refNotSearchingInput= useRef(null);
+
+	useEffect(()=>{
+		if(state === CREATING || state === EDITING)
+			refNotSearchingInput.current?.focus();
+	},[state]);
+
 	const [isSearchSelected, setIsSearchSelected] = useState(false);
 
 	useEffect(() => {
@@ -163,26 +167,6 @@ export const MakePicker = ({
 		setState(EDITING);
 	}
 
-	const renderSearching = () => {
-		return(
-			<div className="make-searching" 
-					ref={refSearch}
-			> 
-				<input 
-					type="text"
-					placeholder={disabled?"S/Marca":"Pesquisar Marca..."}
-					disabled={disabled}
-					value={searchMake}
-					onChange={(e)=>{setSearchMake(e.target.value)}}
-				/>
-				{isSearchSelected && (<ul className="dropdown">
-					<li onClick={()=>handleClickStartAdd(searchMake)}>Adicionar Marca <span>{searchMake}</span></li>
-					{makes?.map(m => (<li onClick={()=>handleClickSelect(m)} key={m.id}>{m.name}</li>))}
-				</ul>)}
-			</div>
-		);
-	}
-
 	const handleClickActionEdit = async () =>{
 		const m = await putMake(makeName, make);
 		if(m){
@@ -191,6 +175,7 @@ export const MakePicker = ({
 			setMakeName(m.name);
 		}
 	}
+
 	const handleClickStartEditCancel = () =>{
 		setState(SELECTED);
 		setMakeName(make.name);
@@ -213,15 +198,15 @@ export const MakePicker = ({
 			case CREATING:
 				return (
 					<div className="card-buttons">
-						<button className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
-						<button className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button disabled={disabled} className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
+						<button disabled={disabled} className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-xmark"/></button>
 					</div>
 				);
 			case SELECTED:
 				return (
 					<div className="card-buttons">
-						<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pen-to-square"/></button>
-						<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button disabled={disabled} className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pen-to-square"/></button>
+						<button disabled={disabled} className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-xmark"/></button>
 					</div>
 
 				);
@@ -229,24 +214,80 @@ export const MakePicker = ({
 			case EDITING:
 				return(
 					<div className="card-buttons">
-						<button className="confirm" onClick={(e)=>handleClickActionEdit(e)}><i className="fa-solid fa-check"/></button>
-						<button className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button disabled={disabled} className="confirm" onClick={(e)=>handleClickActionEdit(e)}><i className="fa-solid fa-check"/></button>
+						<button disabled={disabled} className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-xmark"/></button>
 					</div>
 				);
 		}
 	}
 
+	const handleKeyDown = (e) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+
+			if (state === CREATING) {
+				handleClickActionAdd(e);
+			}
+
+			if (state === EDITING) {
+				handleClickActionEdit(e);
+			}
+
+		} else if (e.key === "Escape") {
+			e.preventDefault();
+
+			if (state === CREATING) {
+				handleClickStartAddCancel(e);
+			}
+
+			if (state === EDITING) {
+				handleClickStartEditCancel(e);
+			}
+		}
+	};
+
+	const renderSearching = () => {
+		return(
+			<div className="m-searching" 
+					ref={refSearch}
+			> 
+				<input 
+					onFocus={()=>setIsSearchSelected(true)}
+					type="text"
+					placeholder={disabled?"S/Marca":"Pesquisar Marca..."}
+					disabled={disabled}
+					value={searchMake}
+					onChange={(e)=>{setSearchMake(e.target.value)}}
+				/>
+				{isSearchSelected && (<ul className="dropdown">
+					<li >
+						<button onClick={()=>handleClickStartAdd(searchMake)}>
+							Adicionar Marca <span>{searchMake}</span>
+						</button>
+					</li>
+					{makes?.map(m => (<li  key={m.id}>
+						<button onClick={()=>handleClickSelect(m)}>
+							{m.name}
+						</button>
+					</li>))}
+				</ul>)}
+			</div>
+		);
+	}
+
 	const renderNotSearching = () => {
 		return(
-			<div className="make-selected"> 
+			<div className="m-selected"> 
 				<input 
+					onKeyDown={handleKeyDown}
+					ref={refNotSearchingInput}
 					type="text"
+					placeholder="Marca"
 					disabled={state===SELECTED}
 					value={makeName}
 					onChange={(e)=>setMakeName(e.target.value)}
 				/>
-				{renderSelectedButtons()}
-				
+				{!disabled && renderSelectedButtons()}
 			</div>
 		);
 	}
@@ -269,7 +310,7 @@ export const MakePicker = ({
 
 
 	return (
-		<div className="make-picker">
+		<div className="m-picker" id="make-picker">
 			{renderState()}
 		</div>
 	);
