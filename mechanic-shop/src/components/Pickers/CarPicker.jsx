@@ -38,6 +38,7 @@ export const CarPicker = ({
 	useEffect(() => {
 		onCarIdChange(car?.id??"");
 		setPresentingCar(car??emptyCar);
+		setIsPlateLocked(car?formatPlate(car.plate)===car.plate: true);
 	},[car]);
 	
 	const postCar = async (newCar) =>{
@@ -177,6 +178,7 @@ export const CarPicker = ({
 		setPresentingCar({...emptyCar,
 			plate : searchCar,
 		});
+		setIsPlateLocked(true);
 	}
 
 	const handleClickSelect = (c) => {
@@ -184,6 +186,7 @@ export const CarPicker = ({
 		setIsSearchSelected(false);
 		setCar(c);
 		setState(SELECTED);
+		setIsPlateLocked(isPlateFormatted(c.plate));
 	}
 
 	const handleClickSelectCancel = async (e) => {
@@ -286,6 +289,30 @@ export const CarPicker = ({
 		);
 	}
 	const isEditable = state === CREATING || state === EDITING
+	const [isPlateLocked, setIsPlateLocked ] = useState(true);
+
+	const isPlateFormatted = (plate) =>{
+		 const regex = /^(?:[A-Z]{2}-\d{2}-[A-Z]{2}|\d{2}-\d{2}-[A-Z]{2}|\d{2}-[A-Z]{2}-\d{2}|[A-Z]{2}-\d{2}-\d{2})$/;
+
+		return regex.test(plate.trim().toUpperCase())
+	}
+
+	const formatPlate = (value) => {
+		const clean = value
+		.replace(/[^a-zA-Z0-9]/g, "")
+		.toUpperCase()
+		.slice(0, 6);
+
+		return clean.match(/.{1,2}/g)?.join("-") ?? "";
+	};
+	const handleClickLockPlate = () =>{
+		if(isPlateLocked){ setIsPlateLocked(false);
+		}else{
+			const p = formatPlate(presentingCar.plate);
+			setPresentingCar((prev)=>({...prev, plate:p}));
+			setIsPlateLocked(true);
+		}
+	}
 
 	const renderNotSearching = () => {
 		return(
@@ -310,11 +337,11 @@ export const CarPicker = ({
 								onChange={(e) =>
 									setPresentingCar(prev => ({
 										...prev,
-										plate: e.target.value
+										plate: isPlateLocked?formatPlate(e.target.value):e.target.value.toUpperCase()
 									}))
 								}
 							/>
-						<button className="options-2"><i className={`fa-solid ${false?"fa-lock":"fa-unlock"}`}/></button>
+						<button disabled={!isEditable} className="options-2" onClick={(()=>handleClickLockPlate())}><i className={`fa-solid ${isPlateLocked?"fa-lock":"fa-unlock"}`}/></button>
 						</div>
 					</div>
 					<div className="car-field" id="car-make">
