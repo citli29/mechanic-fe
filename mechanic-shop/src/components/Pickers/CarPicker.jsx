@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import api from "./../../api/axios";
-import "./style/CPicker.css";
+import "./style/CarPicker.css";
 import { MakePicker } from "./MakePicker";
 import { ModelPicker } from "./ModelPicker";
 
@@ -110,7 +110,7 @@ export const CarPicker = ({
 	}
 
 	useEffect(()=>{
-		async function load() {
+		const load = async () => {
 			if (car_id) {
 				const c = await getCar(car_id);
 
@@ -137,7 +137,7 @@ export const CarPicker = ({
 	useEffect(()=>{
 		let isCurrent = true;
 
-		async function f(){
+		const f = async () =>{
 			const tempCars = await getCars(debouncedValue);
 			if(isCurrent) setCars(tempCars);
 		}
@@ -176,7 +176,7 @@ export const CarPicker = ({
 		setIsInfoShowing(true);
 		setState(CREATING);
 		setPresentingCar({...emptyCar,
-			plate : searchCar,
+			plate : formatPlate(searchCar),
 		});
 		setIsPlateLocked(true);
 	}
@@ -242,7 +242,7 @@ export const CarPicker = ({
 			case SELECTED:
 				return (
 					<div className="card-buttons">
-						<button className="options-2" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${isInfoShowing?"up":"down"}`}/></button>
+						<button className="car" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${isInfoShowing?"up":"down"}`}/></button>
 						<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pen-to-square"/></button>
 						<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-xmark"/></button>
 					</div>
@@ -341,7 +341,7 @@ export const CarPicker = ({
 									}))
 								}
 							/>
-						<button disabled={!isEditable} className="options-2" onClick={(()=>handleClickLockPlate())}><i className={`fa-solid ${isPlateLocked?"fa-lock":"fa-unlock"}`}/></button>
+						<button disabled={!isEditable} className="car" onClick={(()=>handleClickLockPlate())}><i className={`fa-solid ${isPlateLocked?"fa-lock":"fa-unlock"}`}/></button>
 						</div>
 					</div>
 					<div className="car-field" id="car-make">
@@ -391,12 +391,12 @@ export const CarPicker = ({
 						/>
 					</div>
 					<div className="car-field" id="car-date">
-						<label htmlFor="car-year">Mês / Ano</label>
+						<label htmlFor="car-date">Mês / Ano</label>
 						<div className="car-field-date">
 							<input 
 								placeholder="Mês"
 								value={presentingCar?.month??""}
-								type="text"
+								type="number"
 								disabled= {!isEditable}
 							onChange={(e) =>
 								setPresentingCar(prev => ({
@@ -409,7 +409,7 @@ export const CarPicker = ({
 							<input 
 								placeholder="Ano"
 								value={presentingCar?.year??""}
-								type="text"
+								type="number"
 								disabled= {!isEditable}
 							onChange={(e) =>
 								setPresentingCar(prev => ({
@@ -424,7 +424,7 @@ export const CarPicker = ({
 						<label htmlFor="car-cc">CC</label>
 						<input 
 							value={presentingCar?.cc??""}
-							type="text"
+							type="number"
 							disabled= {!isEditable}
 							onChange={(e) =>
 								setPresentingCar(prev => ({

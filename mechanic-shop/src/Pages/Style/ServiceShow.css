@@ -1,3 +1,15 @@
+.car-client-info{
+	display: flex;
+	gap: 1rem;
+	padding: 1rem;
+}
+
+.car-info-card{
+	width: 60%;
+}
+.client-info-card{
+	width: 40%;
+}
 @media (max-width: 500px){
 
 }

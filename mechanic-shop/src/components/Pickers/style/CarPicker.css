@@ -1,5 +1,4 @@
 .car-picker {
-	padding: 1rem;
 }
 
 .m-searching.c-searching .dropdown li:first-child button{
@@ -21,7 +20,7 @@
 	min-width: 0;
 	flex-grow:1;
 
-	background: var(--accent);
+	background: var(--bg-section-light);
 	border-radius: 3px;
 	display: flex;
 	justify-content: space-around;
@@ -51,7 +50,7 @@
 }
 
 .car-field input:disabled{
-	background: var(--accent);
+	background: var(--bg-section-dark);
 	filter: none !important;
 }
 
@@ -59,7 +58,7 @@
 	flex: 1;
 	line-height: var(--line-height);
 	padding: var(--small-padding);
-	border: 1px solid var(--accent);
+	border: 1px solid var(--bg-section-light);
 	border-radius: 3px;
 	font-weight:bolder;
 	text-align: center;
@@ -84,8 +83,8 @@
 	margin-top: var(--small-padding);
 	padding: var(--small-padding);
 	padding-top: calc(2*var(--small-padding));
-	border: 1px solid var(--accent);
-	border-top: 5px dashed var(--accent);
+	border: 1px solid var(--bg-section-dark);
+	border-top: 5px dashed var(--bg-section-dark);
 	padding-bottom: calc(2*var(--small-padding));
 	border-radius: 0 0 5px 5px;
 }
@@ -143,6 +142,7 @@
 #car-engine-code {grid-row:3;grid-column:2;}
 #car-chassi {grid-row:4;grid-column:1;}
 #car-color {grid-row:4;grid-column:2;}
+
 @media (max-width: 500px) {
 
 .car-info {

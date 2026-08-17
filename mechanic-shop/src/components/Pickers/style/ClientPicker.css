@@ -1,0 +1,112 @@
+
+.m-searching.c-searching .dropdown li:first-child button{
+	display:block;
+}
+.m-searching.c-searching input:focus,
+.m-searching.c-searching input{
+	border-color: var(--);
+}
+.m-searching.c-searching  .dropdown li{
+	border-color: var(--);
+}
+
+.m-searching.c-searching .dropdown li button{
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+}
+
+.client-header {
+	display: flex;
+	width: 100%;
+	gap: var(--small-padding);
+}
+
+.client-header .client-input {
+	min-width: 0;
+	flex-grow:1;
+
+	background: var(--bg-section-light);
+	border: 1px solid var(--bg-section-dark);
+	border-radius: 3px;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	font-weight: bolder;
+}
+
+.client-header .card-buttons button {
+	aspect-ratio:1;
+	height: calc(var(--line-height) + 2* var(--small-padding) + 2px);
+	align-items: center;
+}
+
+.client-header .card-buttons {
+	display: flex;
+	gap:var(--small-padding);
+}
+
+.client-field{
+	display: flex;
+	height: calc((var(--small-padding) * 2) +var(--line-height) + 2px);
+	align-items: center;
+}
+
+.client-field label{
+	width: 100px;
+	color: var(--txt-dark);
+	padding-left: var(--small-padding);
+}
+
+.client-field input:disabled{
+	background: var(--bg-section-ligher);
+	filter: none !important;
+}
+
+.client-field input{
+	flex: 1;
+	line-height: var(--line-height);
+	padding: var(--small-padding);
+	border: 1px solid var(--bg-section-dark);
+	border-radius: 3px;
+	font-weight:bolder;
+	text-align: center;
+}
+.client-info.hidden{
+	display: none;
+}
+
+.client-info {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--small-padding);
+	background: var(--bg-section-light);
+	margin-top: var(--small-padding);
+	padding: var(--small-padding);
+	padding-top: calc(2*var(--small-padding));
+	border: 1px solid var(--bg-section-dark);
+	border-top: 5px solid var(--bg-section-dark);
+	padding-bottom: calc(2*var(--small-padding));
+	border-radius: 0 0 5px 5px;
+}
+
+.client-field {
+	display: grid;
+	grid-template-columns: 100px minmax(0, 1fr);
+	align-items: center;
+	gap: var(--small-padding);
+	min-width: 0;
+}
+
+.client-field input{
+	width: 100%;
+	min-width: 0;
+	font-weight: bolder;
+	color: var(--txt-dark);
+}
+@media (max-width: 500px) {
+
+	.client-info {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+}

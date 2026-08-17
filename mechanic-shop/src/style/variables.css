@@ -9,14 +9,18 @@
 	--accent-dark: #111;
 	--accent-light: #fff;
 	--disabled-brightness: 0.85;
-	--confirm: green;
-	--confirm-dark: darkgreen;
-	--cancel: red;
-	--cancel-dark: darkred;
-	--options: blue;
-	--options-dark: darkblue;
+	--confirm: #30bf58;
+	--confirm-dark: #269144;
+	--cancel: #cc2525;
+	--cancel-dark: #9c1c1c;
+	--options: #4787d6;
+	--options-dark: #396dad;
 	--options-2: var(--accent);
 	--options-2-dark: #d98e0f;
+	--bg-section-light: #edd6c0;
+	--bg-section-dark: #4d4843;
+	--bg-section-lighter: #ede2d8;
+
 }
 
 * {
@@ -59,3 +63,4 @@
 	color: var(--txt-light);
 	background: var(--options-2-dark);
 }
+

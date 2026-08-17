@@ -40,7 +40,7 @@
 .m-selected input:disabled{
 	filter: none !important;
 	font-weight: bolder;
-	background: var(--accent);
+	background: var(--);
 	color: var(--txt-dark);
 }
 .m-searching input {
@@ -49,18 +49,18 @@
 
 .m-selected input,
 .m-searching input {
-	border: 1px solid var(--accent);
+	border: 1px solid var(--);
 	border-radius: 3px;
 	outline: none;
 
 	line-height: var(--line-height);
-	background: var(--bg-light);
+	background: var(--);
 	padding: var(--small-padding);
 	text-align: center;
 }
 
 .m-searching input:focus {
-	outline: 2px solid var(--accent);
+	outline: 2px solid var(--);
 	outline-offset: 0;
 }
 
@@ -73,7 +73,7 @@
 
 	margin-top: 1px;
 
-	background: var(--bg-light);
+	background: var(--);
 
 	max-height: calc(var(--nr-rows) * var(--line-height));
 	overflow-y: auto;
@@ -87,13 +87,13 @@
 }
 
 .dropdown li {
-	border-bottom: 1px dashed var(--accent);
+	border-bottom: 1px dashed var(--);
 }
 
 .dropdown li button {
 	width: 100%;
 	border: none;
-	background: var(--bg-light);
+	background: var(--);
 
 	line-height: var(--line-height);
 	padding: var(--small-padding);
@@ -106,17 +106,17 @@
 
 .dropdown li button:focus,
 .dropdown li button:hover {
-	background: var(--accent);
-	color: var(--txt-light);
+	background: var(--);
+	color: var(--);
 	cursor: pointer;
 	outline: none;
 }
 
 .dropdown li button:focus span ,
 .dropdown li button:hover span {
-	color: var(--txt-dark);
+	color: var(--);
 }
 
 .dropdown li button span {
-	color: var(--accent);
+	color: var(--);
 }

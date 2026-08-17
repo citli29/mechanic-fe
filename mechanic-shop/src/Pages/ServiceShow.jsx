@@ -6,6 +6,7 @@ import { ServiceHeader } from "./Service/ServiceHeader";
 import { CarPicker } from "../components/Pickers/CarPicker";
 
 import "./Style/ServiceShow.css";
+import { ClientPicker } from "../components/Pickers/ClientPicker";
 
 export default function ServiceShow2() {
 	const { id } = useParams();
@@ -38,6 +39,7 @@ export default function ServiceShow2() {
 	const [make_id, setMake_id] = useState(1);
 	const [model_id, setModel_id] = useState("");
 	const [car_id, setCar_id] = useState("");
+	const [client_id, setClient_id] = useState("");
 	return(
 		<div className="service-page">
 			<ServiceHeader
@@ -57,6 +59,12 @@ export default function ServiceShow2() {
 						car_id={car_id}
 						onCarIdChange={(c_id)=>setCar_id(c_id)}
 					/>
+				</div>
+				<div className="client-info-card">
+				<ClientPicker
+					client_id={client_id}
+					onClientIdChange={(c_id)=>setClient_id(c_id)}
+				/>
 				</div>
 			</div>
 		</div>
