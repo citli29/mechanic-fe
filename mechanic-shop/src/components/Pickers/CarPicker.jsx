@@ -30,12 +30,14 @@ export const CarPicker = ({
 	const [searchCar, setSearchCar] = useState("");
 	const [debouncedValue, setDebouncedValue] = useState("");
 	const [car,setCar] = useState(null);
-	const [carPlate, setCarPlate] = useState(car?.plate??"");
 	const [state, setState] = useState(-1);
+
+	const [isInfoShowing, setIsInfoShowing] = useState(false);
+	const [presentingCar, setPresentingCar] = useState(emptyCar);
 
 	useEffect(() => {
 		onCarIdChange(car?.id??"");
-		setCarPlate(car?.plate??"");
+		setPresentingCar(car??emptyCar);
 	},[car]);
 	
 	const postCar = async (newCar) =>{
@@ -170,11 +172,15 @@ export const CarPicker = ({
 
 	const handleClickStartAdd = (s) => {
 		setIsSearchSelected(false);
+		setIsInfoShowing(true);
 		setState(CREATING);
-		setCarPlate(s);
+		setPresentingCar({...emptyCar,
+			plate : searchCar,
+		});
 	}
 
 	const handleClickSelect = (c) => {
+		setIsInfoShowing(false);
 		setIsSearchSelected(false);
 		setCar(c);
 		setState(SELECTED);
@@ -182,60 +188,60 @@ export const CarPicker = ({
 
 	const handleClickSelectCancel = async (e) => {
 		e.preventDefault();
+		setSearchCar("")
 		setCar(null);
-		setCarPlate("");
 		setCars(await getCars())
 		setIsSearchSelected(false);
+		setIsInfoShowing(false);
 		setState(SEARCHING);
 	}
 
 	const handleClickStartEdit = (e) => {
 		e.preventDefault();
 		setState(EDITING);
+		setIsInfoShowing(true);
 	}
 
 	const handleClickActionEdit = async () =>{
-		const c = await putCar([], car);
+		const c = await putCar(presentingCar, car);
 		if(c){
 			setState(SELECTED);
 			setCar(c);
-			setCarPlate(c.plate);
 		}
 	}
 
-	const handleClickStartEditCancel = () =>{
+	const handleClickStartEditCancel = async () =>{
 		setState(SELECTED);
-		setCarPlate(car.plate);
+		const c = await getCar(car.id);
+		setCar(c);
 	}
 
 	const handleClickStartAddCancel = (e) =>{ handleClickSelectCancel(e); }
 
 	const handleClickActionAdd = async (e) =>{
 		e.preventDefault();
-		const c = await postCar([]);
+		const c = await postCar(presentingCar);
 		if(c){
 			setState(SELECTED);
 			setCar(c);
-			setCarPlate(c.plate);
 		}
 	}
 
-	const [isInfoShowing, setIsInfoShowing] = useState(false);
 	const renderSelectedButtons = () => {
 		switch(state){
 			case CREATING:
 				return (
 					<div className="card-buttons">
-						<button disabled className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
-						<button disabled className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button  className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
+						<button  className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-xmark"/></button>
 					</div>
 				);
 			case SELECTED:
 				return (
 					<div className="card-buttons">
-						<button className="options" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${!isInfoShowing?"up":"down"}`}/></button>
-						<button disabled className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pen-to-square"/></button>
-						<button disabled className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button className="options-2" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${isInfoShowing?"up":"down"}`}/></button>
+						<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pen-to-square"/></button>
+						<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-xmark"/></button>
 					</div>
 
 				);
@@ -243,8 +249,8 @@ export const CarPicker = ({
 			case EDITING:
 				return(
 					<div className="card-buttons">
-						<button disabled className="confirm" onClick={(e)=>handleClickActionEdit(e)}><i className="fa-solid fa-check"/></button>
-						<button disabled className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button className="confirm" onClick={(e)=>handleClickActionEdit(e)}><i className="fa-solid fa-check"/></button>
+						<button className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-xmark"/></button>
 					</div>
 				);
 		}
@@ -279,6 +285,7 @@ export const CarPicker = ({
 			</div>
 		);
 	}
+	const isEditable = state === CREATING || state === EDITING
 
 	const renderNotSearching = () => {
 		return(
@@ -286,34 +293,43 @@ export const CarPicker = ({
 			<div className="c-selected"> 
 				<div className="car-header">
 					<div className="car-input">
-						<span>{car.plate}</span>
-						<span>{car.make_name}</span>
-						<span>{car.model_name}</span>
+						<span>{car?.plate??""}</span>
+						<span>{car?.make_name??""}</span>
+						<span>{car?.model_name??""}</span>
 					</div>
 					{renderSelectedButtons()}
 				</div>
-				<div className={`car-info ${isInfoShowing?"hidden":""}`}>
+				<div className={`car-info ${!isInfoShowing?"hidden":""}`}>
 					<div className="car-field" id="car-plate">
 						<label htmlFor="car-plate">Matrícula</label>
-						<input 
-							value={car?.plate??""}
-							type="text"
-							disabled= {true}
-						/>
+						<div className="car-field-plate">
+							<input 
+								value={presentingCar?.plate??""}
+								type="text"
+								disabled= {!isEditable}
+								onChange={(e) =>
+									setPresentingCar(prev => ({
+										...prev,
+										plate: e.target.value
+									}))
+								}
+							/>
+						<button className="options-2"><i className={`fa-solid ${false?"fa-lock":"fa-unlock"}`}/></button>
+						</div>
 					</div>
 					<div className="car-field" id="car-make">
 						<label htmlFor="car-make">Marca</label>
 						<div className="make-picker-container">
 							<MakePicker
-								make_id={car?.make_id??""}
+								make_id={presentingCar?.make_id??""}
 								onMakeIdChange={(id)=>{
-									setCar(prev => ({
+									setPresentingCar(prev => ({
 										...prev,
 										make_id: id,
 										model_id: ""
 									}));
 								} }
-								disabled= {true}
+								disabled= {!isEditable}
 							/>
 						</div>
 					</div>
@@ -321,66 +337,102 @@ export const CarPicker = ({
 						<label htmlFor="car-model">Modelo</label>
 						<div className="make-picker-container">
 							<ModelPicker
-								make_id={car?.make_id??""}
-								model_id={car?.model_id??""}
+								make_id={presentingCar?.make_id??""}
+								model_id={presentingCar?.model_id??""}
 								onModelIdChange={(id)=>{
-									setCar(prev => ({
+									setPresentingCar(prev => ({
 										...prev,
 										model_id: id
 									}));
 								} }
-								disabled= {true}
+								disabled= {!isEditable}
 							/>
 						</div>
 					</div>
 					<div className="car-field" id="car-chassi">
 						<label htmlFor="car-chassi">Nr. Chassi</label>
 						<input 
-							value={car?.chassi_nr??""}
+							value={presentingCar?.chassi_nr??""}
 							type="text"
-							disabled= {true}
+							disabled= {!isEditable}
+							onChange={(e) =>
+								setPresentingCar(prev => ({
+									...prev,
+									chassi_nr: e.target.value
+								}))
+							}
 						/>
 					</div>
-					<div className="car-field-date">
-						<div className="car-field" id="car-year">
-							<label htmlFor="car-year">Ano</label>
+					<div className="car-field" id="car-date">
+						<label htmlFor="car-year">Mês / Ano</label>
+						<div className="car-field-date">
 							<input 
-								value={car?.year??""}
+								placeholder="Mês"
+								value={presentingCar?.month??""}
 								type="text"
-								disabled= {true}
+								disabled= {!isEditable}
+							onChange={(e) =>
+								setPresentingCar(prev => ({
+									...prev,
+									month: e.target.value
+								}))
+							}
 							/>
-						</div>
-						<div className="car-field" id="car-month">
-							<label htmlFor="car-month">Mês</label>
+							<span>/</span>
 							<input 
-								value={car?.month??""}
+								placeholder="Ano"
+								value={presentingCar?.year??""}
 								type="text"
-								disabled= {true}
+								disabled= {!isEditable}
+							onChange={(e) =>
+								setPresentingCar(prev => ({
+									...prev,
+									year: e.target.value
+								}))
+							}
 							/>
 						</div>
 					</div>
 					<div className="car-field" id="car-cc">
 						<label htmlFor="car-cc">CC</label>
 						<input 
-							value={car?.cc??""}
+							value={presentingCar?.cc??""}
 							type="text"
-							disabled= {true}
+							disabled= {!isEditable}
+							onChange={(e) =>
+								setPresentingCar(prev => ({
+									...prev,
+									cc: e.target.value
+								}))
+							}
 						/>
 					</div>
 					<div className="car-field" id="car-engine-code">
 						<label htmlFor="car-engine-code">Cod. Motor</label>
 						<input 
-							value={car?.engine_code??""}
+							value={presentingCar?.engine_code??""}
 							type="text"
-							disabled= {true}
+							disabled= {!isEditable}
+							onChange={(e) =>
+								setPresentingCar(prev => ({
+									...prev,
+									engine_code: e.target.value
+								}))
+							}
 						/>
 					</div>
 					<div className="car-field" id="car-color-code">
 						<label htmlFor="car-color-code">Cod. Cor</label>
 						<input 
-							value={car?.color_code??""}
+							value={presentingCar?.color_code??""}
 							type="text"
-							disabled= {true}
+							disabled= {!isEditable}
+							onChange={(e) =>
+								setPresentingCar(prev => ({
+									...prev,
+									color_code: e.target.value
+								}))
+							}
 						/>
 					</div>
 				</div>

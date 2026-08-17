@@ -72,6 +72,10 @@
 	text-align: center;
 }
 
+#car-month label{
+	width: 60px;
+	padding-left: 0;
+}
 .car-info {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -81,7 +85,7 @@
 	padding: var(--small-padding);
 	padding-top: calc(2*var(--small-padding));
 	border: 1px solid var(--accent);
-	border-top: 5px solid var(--accent);
+	border-top: 5px dashed var(--accent);
 	padding-bottom: calc(2*var(--small-padding));
 	border-radius: 0 0 5px 5px;
 }
@@ -99,25 +103,58 @@
 }
 
 .car-field-date {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: var(--small-padding);
-	min-width: 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.car-field-date input{
+	flex: 1;
+	justify-content: space-between;
 }
 
-.car-field-date .car-field {
-	grid-template-columns: max-content minmax(0, 1fr);
+.car-field-date  span{
+	font-weight: bolder;
+	color: var(--txt-light);
+	text-align: center;
+	width: 20px;
+}
+
+.car-field-plate {
+	display: flex;
+	gap: var(--small-padding);
+}
+.car-field-plate button{
+	aspect-ratio: 1;
+	width: 30px;
 }
 
 .car-field input,
 .make-picker-container {
 	width: 100%;
 	min-width: 0;
+	font-weight: bolder;
+	color: var(--txt-dark);
 }
-
-@media (max-width: 650px) {
+#car-plate {grid-row:1;grid-column:1;}
+#car-date {grid-row:1;grid-column:2;}
+#car-make {grid-row:2;grid-column:1;}
+#car-cc {grid-row:2;grid-column:2;}
+#car-model {grid-row:3;grid-column:1;}
+#car-engine-code {grid-row:3;grid-column:2;}
+#car-chassi {grid-row:4;grid-column:1;}
+#car-color {grid-row:4;grid-column:2;}
+@media (max-width: 500px) {
 
 .car-info {
 	grid-template-columns: minmax(0, 1fr);
 }
+
+#car-plate {grid-row:1;grid-column:1;}
+#car-make {grid-row:2;grid-column:1;}
+#car-model {grid-row:3;grid-column:1;}
+#car-chassi {grid-row:4;grid-column:1;}
+#car-date {grid-row:5;grid-column:1;}
+#car-cc {grid-row:6;grid-column:1;}
+#car-engine-code {grid-row:7;grid-column:1;}
+#car-color {grid-row:8;grid-column:1;}
 }

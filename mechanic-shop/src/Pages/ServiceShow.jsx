@@ -3,9 +3,9 @@ import { useParams } from "react-router-dom";
 import api from "./../api/axios";
 
 import { ServiceHeader } from "./Service/ServiceHeader";
-import { MakePicker } from "../components/Pickers/MakePicker";
-import { ModelPicker } from "../components/Pickers/ModelPicker";
 import { CarPicker } from "../components/Pickers/CarPicker";
+
+import "./Style/ServiceShow.css";
 
 export default function ServiceShow2() {
 	const { id } = useParams();
@@ -51,10 +51,14 @@ export default function ServiceShow2() {
 				}
 			/>
 
-			<CarPicker
-				car_id={car_id}
-				onCarIdChange={(c_id)=>setCar_id(c_id)}
-			/>
+			<div className="car-client-info">
+				<div className="car-info-card">
+					<CarPicker
+						car_id={car_id}
+						onCarIdChange={(c_id)=>setCar_id(c_id)}
+					/>
+				</div>
+			</div>
 		</div>
 
 	);
