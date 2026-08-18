@@ -236,15 +236,15 @@ export const CarPicker = ({
 				return (
 					<div className="card-buttons">
 						<button  className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
-						<button  className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button  className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 				);
 			case SELECTED:
 				return (
 					<div className="card-buttons">
 						<button className="car" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${isInfoShowing?"up":"down"}`}/></button>
-						<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pen-to-square"/></button>
-						<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
+						<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 
 				);
@@ -253,7 +253,7 @@ export const CarPicker = ({
 				return(
 					<div className="card-buttons">
 						<button className="confirm" onClick={(e)=>handleClickActionEdit(e)}><i className="fa-solid fa-check"/></button>
-						<button className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 				);
 		}
@@ -332,22 +332,20 @@ export const CarPicker = ({
 					{renderSelectedButtons()}
 				</div>
 				<div className={`item-info ${!isInfoShowing?"hidden":""}`}>
-					<div className="item-field" id="car-plate">
+					<div className="item-field car-field-plate" id="car-plate">
 						<label htmlFor="car-plate">Matrícula</label>
-						<div className="car-field-plate">
-							<input 
-								value={presentingCar?.plate??""}
-								type="text"
-								disabled= {!isEditable}
-								onChange={(e) =>
-									setPresentingCar(prev => ({
-										...prev,
-										plate: isPlateLocked?formatPlate(e.target.value):e.target.value.toUpperCase()
-									}))
-								}
-							/>
+						<input 
+							value={presentingCar?.plate??""}
+							type="text"
+							disabled= {!isEditable}
+							onChange={(e) =>
+								setPresentingCar(prev => ({
+									...prev,
+									plate: isPlateLocked?formatPlate(e.target.value):e.target.value.toUpperCase()
+								}))
+							}
+						/>
 						<button disabled={!isEditable} className="car" onClick={(()=>handleClickLockPlate())}><i className={`fa-solid ${isPlateLocked?"fa-lock":"fa-unlock"}`}/></button>
-						</div>
 					</div>
 					<div className="item-field" id="car-make">
 						<label htmlFor="car-make">Marca</label>
@@ -396,33 +394,37 @@ export const CarPicker = ({
 						/>
 					</div>
 					<div className="item-field" id="car-date">
-						<label htmlFor="car-date">Mês / Ano</label>
 						<div className="car-field-date">
-							<input 
-								placeholder="Mês"
-								value={presentingCar?.month??""}
-								type="number"
-								disabled= {!isEditable}
-							onChange={(e) =>
-								setPresentingCar(prev => ({
-									...prev,
-									month: e.target.value
-								}))
-							}
-							/>
-							<span>/</span>
-							<input 
-								placeholder="Ano"
-								value={presentingCar?.year??""}
-								type="number"
-								disabled= {!isEditable}
-							onChange={(e) =>
-								setPresentingCar(prev => ({
-									...prev,
-									year: e.target.value
-								}))
-							}
-							/>
+							<div className="item-field-date">
+								<label htmlFor="car-month">Mês</label>
+								<input 
+									placeholder="Mês"
+									value={presentingCar?.month??""}
+									type="number"
+									disabled= {!isEditable}
+									onChange={(e) =>
+										setPresentingCar(prev => ({
+											...prev,
+											month: e.target.value
+										}))
+									}
+								/>
+							</div>
+							<div className="item-field-date">
+								<label htmlFor="car-year">Ano</label>
+								<input 
+									placeholder="Ano"
+									value={presentingCar?.year??""}
+									type="number"
+									disabled= {!isEditable}
+									onChange={(e) =>
+										setPresentingCar(prev => ({
+											...prev,
+											year: e.target.value
+										}))
+									}
+								/>
+							</div>
 						</div>
 					</div>
 					<div className="item-field" id="car-cc">

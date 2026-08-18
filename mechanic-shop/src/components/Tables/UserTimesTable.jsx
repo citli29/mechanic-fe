@@ -490,7 +490,7 @@ export default function UserTimesTable({
 													onClick={cancelEditing}
 													disabled={saving}
 												>
-													<i className="fa-solid fa-xmark"></i>
+													<i className="fa-solid fa-x"></i>
 												</button>
 											</div>
 										</td>
@@ -510,7 +510,7 @@ export default function UserTimesTable({
 												type="button"
 												onClick={() => beginEditing(userTime)}
 											>
-												<i className="fa-solid fa-pen-to-square"></i>
+												<i className="fa-solid fa-pencil"></i>
 											</button>
 
 											<button
@@ -579,7 +579,7 @@ export default function UserTimesTable({
 											onClick={cancelCreating}
 											disabled={saving}
 										>
-											<i className="fa-solid fa-xmark"></i>
+											<i className="fa-solid fa-x"></i>
 										</button>
 									</div>
 								</td>
@@ -706,7 +706,7 @@ export default function UserTimesTable({
 														onClick={cancelEditingPunch}
 														disabled={punchSaving}
 													>
-													<i class="fa-solid fa-xmark"></i>
+													<i class="fa-solid fa-x"></i>
 													</button>
 												</div>
 											</td>
@@ -761,7 +761,7 @@ export default function UserTimesTable({
 													onClick={() => beginEditingPunch( userTimePunch)}
 													disabled={isActionRunning}
 												>
-													<i className="fa-solid fa-pen-to-square"></i>
+													<i className="fa-solid fa-pencil"></i>
 												</button>
 
 												<button
@@ -825,7 +825,7 @@ export default function UserTimesTable({
 											onClick={cancelCreatingPunch}
 											disabled={punchSaving}
 										>
-											<i className="fa-solid fa-xmark"></i>
+											<i className="fa-solid fa-x"></i>
 										</button>
 									</div>
 								</td>

@@ -161,10 +161,13 @@ export const ClientPicker = ({
 	},[])
 
 	const handleClickStartAdd = (c) => {
-		setIsInfoShowing(false);
 		setIsSearchSelected(false);
-		setClient(c);
-		setState(SELECTED);
+		setIsInfoShowing(true);
+		setState(CREATING);
+		setPresentingClient({
+			...emptyClient, 
+			name: searchClient,
+		});
 	}
 
 	const handleClickSelect = (c) => {
@@ -221,15 +224,15 @@ export const ClientPicker = ({
 				return (
 					<div className="card-buttons">
 						<button  className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
-						<button  className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button  className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 				);
 			case SELECTED:
 				return (
 					<div className="card-buttons">
 						<button className="client" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${isInfoShowing?"up":"down"}`}/></button>
-						<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pen-to-square"/></button>
-						<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
+						<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 
 				);
@@ -238,7 +241,7 @@ export const ClientPicker = ({
 				return(
 					<div className="card-buttons">
 						<button className="confirm" onClick={(e)=>handleClickActionEdit(e)}><i className="fa-solid fa-check"/></button>
-						<button className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 				);
 		}
@@ -266,8 +269,8 @@ export const ClientPicker = ({
 					{clients?.map(c => (<li  key={c.id}>
 						<button onClick={()=>handleClickSelect(c)}>
 							<span>{c.name}</span>
-							<span>{c.phone}</span>
-							<span>{c.tax_nr}</span>
+							<span>{c?.phone && <i className="fa-solid fa-phone" /> }{c.phone}</span>
+							<span>{c?.tax_nr && <i className="fa-solid fa-id-card" /> }{c.tax_nr}</span>
 						</button>
 					</li>))}
 				</ul>)}
@@ -281,16 +284,19 @@ export const ClientPicker = ({
 		return(
 			
 			<div className="selected-item"> 
-				<div className="client-header">
-					<div className="client-input">
-						<span>{client?.name??""}</span>
-						<span>{client?.phone??""}</span>
-						<span>{client?.tax_nr??""}</span>
+				<div className="item-header">
+					<div className="item-input">
+						<span><i className="fa-solid fa-person"/></span>
+						<span> {client?.name??""}</span>
+						<span>{state !== CREATING &&(<i className="fa-solid fa-phone"/>)}{client?.phone??(state!==CREATING?"S/ Tel.":"")}</span>
+						<span>{state !== CREATING &&(
+							<i className="fa-solid fa-id-card" />
+						)}{client?.tax_nr??(state!==CREATING?"S/ NIF":"")}</span>
 					</div>
 					{renderSelectedButtons()}
 				</div>
-				<div className={`client-info ${!isInfoShowing?"hidden":""}`}>
-					<div className="client-field" id="client-name">
+				<div className={`item-info ${!isInfoShowing?"hidden":""}`}>
+					<div className="item-field" id="client-name">
 						<label htmlFor="client-name">Nome</label>
 						<input 
 							value={presentingClient?.name??""}
@@ -304,7 +310,7 @@ export const ClientPicker = ({
 							}
 						/>
 					</div>
-					<div className="client-field" id="client-phone">
+					<div className="item-field" id="client-phone">
 						<label htmlFor="client-phone">Telemóvel</label>
 						<input 
 							value={presentingClient?.phone??""}
@@ -318,7 +324,7 @@ export const ClientPicker = ({
 							}
 						/>
 					</div>
-					<div className="client-field" id="client-email">
+					<div className="item-field" id="client-email">
 						<label htmlFor="client-email">Email</label>
 						<input 
 							value={presentingClient?.email??""}
@@ -332,7 +338,7 @@ export const ClientPicker = ({
 							}
 						/>
 					</div>
-					<div className="client-field" id="client-tax">
+					<div className="item-field" id="client-tax">
 						<label htmlFor="client-tax">NIF</label>
 						<input 
 							value={presentingClient?.tax_nr??""}
@@ -346,7 +352,7 @@ export const ClientPicker = ({
 							}
 						/>
 					</div>
-					<div className="client-field" id="client-address">
+					<div className="item-field" id="client-address">
 						<label htmlFor="client-address">Morada</label>
 						<input 
 							value={presentingClient?.address??""}
@@ -360,7 +366,7 @@ export const ClientPicker = ({
 							}
 						/>
 					</div>
-					<div className="client-field" id="client-zip">
+					<div className="item-field" id="client-zip">
 						<label htmlFor="client-zip">Cod. Postal</label>
 						<input 
 							value={presentingClient?.zip_code??""}

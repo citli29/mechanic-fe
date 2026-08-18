@@ -86,6 +86,7 @@ export const ModelPicker = ({
 	
 	useEffect(()=>{
 		const load = async () =>{
+			console.log("aqui", model_id);
 			if(!make_id){
 				setIsSearchSelected(false);
 				setModel(null);
@@ -93,9 +94,10 @@ export const ModelPicker = ({
 				setModels([]);
 				setState(SEARCHING);
 
-				if(model_id){
-					onModelIdChange("")
-				}
+				onModelIdChange("")
+
+				setSearchModel("");
+				setDebouncedValue("");
 
 				return;
 			}
@@ -226,14 +228,14 @@ export const ModelPicker = ({
 				return (
 					<div className="card-buttons">
 						<button disabled={isDisabled} className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
-						<button disabled={isDisabled} className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button disabled={isDisabled} className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 				);
 			case SELECTED:
 				return (
 					<div className="card-buttons">
-						<button disabled={isDisabled} className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pen-to-square"/></button>
-						<button disabled={isDisabled} className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button disabled={isDisabled} className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
+						<button disabled={isDisabled} className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 
 				);
@@ -242,7 +244,7 @@ export const ModelPicker = ({
 				return(
 					<div className="card-buttons">
 						<button disabled={isDisabled} className="confirm" onClick={(e)=>handleClickActionEdit(e)}><i className="fa-solid fa-check"/></button>
-						<button disabled={isDisabled} className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button disabled={isDisabled} className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 				);
 		}
@@ -289,7 +291,8 @@ export const ModelPicker = ({
 				{isSearchSelected && (<ul className="dropdown">
 					<li >
 						<button onClick={()=>handleClickStartAdd(searchModel)}>
-							Adicionar Modelo <span>{searchModel}</span>
+							<span><i className="fa-solid fa-plus"/>Adicionar Modelo </span>
+							<span>{searchModel}</span>
 						</button>
 					</li>
 					{models?.map(m => (<li  key={m.id}>

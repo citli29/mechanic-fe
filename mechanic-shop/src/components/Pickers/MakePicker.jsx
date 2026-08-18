@@ -10,7 +10,7 @@ const EDITING = 4;
 export const MakePicker = ({
 		disabled=false,
 		make_id="",
-		onMakeIdChange=()=>{},
+		onMakeIdChange,
 	})=> {
 
 	const [makes, setMakes] = useState([]);
@@ -202,14 +202,14 @@ export const MakePicker = ({
 				return (
 					<div className="card-buttons">
 						<button disabled={disabled} className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
-						<button disabled={disabled} className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button disabled={disabled} className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 				);
 			case SELECTED:
 				return (
 					<div className="card-buttons">
-						<button disabled={disabled} className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pen-to-square"/></button>
-						<button disabled={disabled} className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button disabled={disabled} className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
+						<button disabled={disabled} className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 
 				);
@@ -218,7 +218,7 @@ export const MakePicker = ({
 				return(
 					<div className="card-buttons">
 						<button disabled={disabled} className="confirm" onClick={(e)=>handleClickActionEdit(e)}><i className="fa-solid fa-check"/></button>
-						<button disabled={disabled} className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-xmark"/></button>
+						<button disabled={disabled} className="cancel" onClick={(e)=>{handleClickStartEditCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 				);
 		}
@@ -265,7 +265,8 @@ export const MakePicker = ({
 				{isSearchSelected && (<ul className="dropdown">
 					<li >
 						<button onClick={()=>handleClickStartAdd(searchMake)}>
-							Adicionar Marca <span>{searchMake}</span>
+							<span><i className="fa-solid fa-plus"/>Adicionar Marca </span>
+							<span>{searchMake}</span>
 						</button>
 					</li>
 					{makes?.map(m => (<li  key={m.id}>

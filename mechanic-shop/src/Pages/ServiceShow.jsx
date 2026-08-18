@@ -39,6 +39,7 @@ export default function ServiceShow2() {
 	const [make_id, setMake_id] = useState(1);
 	const [model_id, setModel_id] = useState("");
 	const [car_id, setCar_id] = useState("");
+	const [car_id2, setCar_id2] = useState("");
 	const [client_id, setClient_id] = useState("");
 	return(
 		<div className="service-page">
