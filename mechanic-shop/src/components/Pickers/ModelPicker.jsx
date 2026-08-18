@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import api from "./../../api/axios";
-import "./style/MPicker.css"
 
 const SEARCHING = 1;
 const SELECTED = 2;

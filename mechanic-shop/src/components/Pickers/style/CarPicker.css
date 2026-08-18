@@ -1,139 +1,144 @@
-.car-picker {
-}
-
-.m-searching.c-searching .dropdown li:first-child button{
-	display:block;
-}
-
-.m-searching.c-searching .dropdown li button{
-	display: grid;
-	grid-template-columns: 1fr 1fr 1fr;
-}
-
-.car-header {
+/* SEARCH BAR */
+.search-bar>span{
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: calc(var(--line-height) + var(--padding) * 2);
+	width: calc(var(--line-height) + var(--padding) * 2);
 	display: flex;
-	width: 100%;
-	gap: var(--small-padding);
-}
-
-.car-header .car-input {
-	min-width: 0;
-	flex-grow:1;
-
-	background: var(--bg-section-light);
-	border-radius: 3px;
-	display: flex;
-	justify-content: space-around;
-	align-items: center;
-	font-weight: bolder;
-}
-
-.car-header .card-buttons button {
-	aspect-ratio:1;
-	height: calc(var(--line-height) + 2* var(--small-padding) + 2px);
+	justify-content:center;
 	align-items: center;
 }
-
-.car-header .card-buttons {
-	display: flex;
-	gap:var(--small-padding);
-}
-
-.car-field{
-	display: flex;
-	height: calc((var(--small-padding) * 2) +var(--line-height) + 2px);
-	align-items: center;
-}
-
-.car-field label{
-	width: 100px;
-}
-
-.car-field input:disabled{
-	background: var(--bg-section-dark);
-	filter: none !important;
-}
-
-.car-field input{
-	flex: 1;
+.search-bar>input{
+	font-size: var(--font-size);
 	line-height: var(--line-height);
-	padding: var(--small-padding);
-	border: 1px solid var(--bg-section-light);
-	border-radius: 3px;
-	font-weight:bolder;
-	text-align: center;
+	border: 1px solid var(--border-focus);
+	border-radius: 5px;
+	padding: var(--padding);
+	padding-left: calc(var(--line-height) + var(--padding) * 2);
+	width:100%;
 }
-.car-info.hidden{
-	display: none;
+.search-bar input::placeholder{ color: var(--txt-muted);}
+.search-bar input:focus{ outline: 2px solid var(--border-focus);}
+.dropdown{
+	position: absolute;
+	top:100%;
+	left:0;
+	z-index: 1000;
+	background: var(--bg-card);
+	width: 100%;
+
+	border-radius: 5px;
+	border: 1px solid var(--border);
+
+	max-height: calc((var(--line-height) + var(--padding) * 2) * var(--nr-rows));
+	overflow-y: scroll;
+
+	button {
+		line-height: var(--line-height);
+		padding: var(--padding) var(--big-padding) ;
+		width: 100%;
+		border: none;
+		display: flex;
+
+		span{ text-align: left; }
+		span:not(:first-child){ font-weight:350; }
+		span:first-child{
+			font-weight: bold;
+			min-width: 150px;
+		}
+
+		gap: var(--small-padding);
+	}
+
+	li {
+		padding: 0;
+		border-bottom: 1px solid var(--border-light);
+	}
+}
+.dropdown li button.addEntry {
+	span {
+		color: var(--primary) ;
+		i {padding-right: var(--padding);}
+	}
 }
 
+/* SELECTED MENU */
+
+.selected-item {
+	border: 1px solid var(--border);
+	border-radius:5px;
+
+	.item-header {
+		background:var(--bg-page);
+		display: flex;
+		padding: var(--padding);
+		align-items: center;
+		justify-content: space-between;
+		border-bottom: 4px solid var(--primary);
+
+		.item-input{
+			display: flex;
+			padding: var(--padding) var(--big-padding);
+			align-items: center;
+			gap: var(--big-padding);
+
+
+			span:last-child,
+			span:first-child{
+				padding-right: 0;
+				border-right: none;
+			}
+			span:nth-child(2){
+				font-weight: 600;
+			}
+
+			span{
+				padding-right: var(--big-padding);
+				font-size: var(--font-size-big);
+				border-right: 2px solid var(--border);
+				i{
+					font-size: calc(1.5*var(--font-size-big));
+				}
+			}
+		}
+
+		.card-buttons{
+			align-self: right;
+			button{
+				height: 100%;
+			}
+		}
+	}
+	.item-info{
+		background: var(--bg-card);
+	}
+}
+
+/**/
+.picker-bar {
+	width: 100%;
+	position: relative;
+}
+.search-bar{
+	width: 100%;
+	position: relative;
+}
+.car-info.hidden{ display: none; }
 #car-month{
 	text-align: center;
+	label{
+		width: 60px;
+		padding-left: 0;
+	}
 }
-
-#car-month label{
-	width: 60px;
-	padding-left: 0;
-}
-.car-info {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: var(--small-padding);
-	background: var(--bg-dark);
-	margin-top: var(--small-padding);
-	padding: var(--small-padding);
-	padding-top: calc(2*var(--small-padding));
-	border: 1px solid var(--bg-section-dark);
-	border-top: 5px dashed var(--bg-section-dark);
-	padding-bottom: calc(2*var(--small-padding));
-	border-radius: 0 0 5px 5px;
-}
-.car-field label{
-	color: var(--txt-light);
-	padding-left: var(--small-padding);
-}
-
-.car-field {
-	display: grid;
-	grid-template-columns: 100px minmax(0, 1fr);
-	align-items: center;
-	gap: var(--small-padding);
-	min-width: 0;
-}
-
 .car-field-date {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 }
-.car-field-date input{
-	flex: 1;
-	justify-content: space-between;
-}
-
-.car-field-date  span{
-	font-weight: bolder;
-	color: var(--txt-light);
-	text-align: center;
-	width: 20px;
-}
-
-.car-field-plate {
-	display: flex;
-	gap: var(--small-padding);
-}
-.car-field-plate button{
-	aspect-ratio: 1;
-	width: 30px;
-}
-
-.car-field input,
-.make-picker-container {
-	width: 100%;
-	min-width: 0;
-	font-weight: bolder;
-	color: var(--txt-dark);
-}
+.car-field-date  span{ text-align: center; }
+.car-field-plate { display: flex;}
 #car-plate {grid-row:1;grid-column:1;}
 #car-date {grid-row:1;grid-column:2;}
 #car-make {grid-row:2;grid-column:1;}
@@ -142,19 +147,15 @@
 #car-engine-code {grid-row:3;grid-column:2;}
 #car-chassi {grid-row:4;grid-column:1;}
 #car-color {grid-row:4;grid-column:2;}
-
 @media (max-width: 500px) {
-
-.car-info {
-	grid-template-columns: minmax(0, 1fr);
+	.car-info { grid-template-columns: minmax(0, 1fr); }
+	#car-plate {grid-row:1;grid-column:1;}
+	#car-make {grid-row:2;grid-column:1;}
+	#car-model {grid-row:3;grid-column:1;}
+	#car-chassi {grid-row:4;grid-column:1;}
+	#car-date {grid-row:5;grid-column:1;}
+	#car-cc {grid-row:6;grid-column:1;}
+	#car-engine-code {grid-row:7;grid-column:1;}
+	#car-color {grid-row:8;grid-column:1;}
 }
 
-#car-plate {grid-row:1;grid-column:1;}
-#car-make {grid-row:2;grid-column:1;}
-#car-model {grid-row:3;grid-column:1;}
-#car-chassi {grid-row:4;grid-column:1;}
-#car-date {grid-row:5;grid-column:1;}
-#car-cc {grid-row:6;grid-column:1;}
-#car-engine-code {grid-row:7;grid-column:1;}
-#car-color {grid-row:8;grid-column:1;}
-}

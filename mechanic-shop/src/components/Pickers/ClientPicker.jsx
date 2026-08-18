@@ -246,9 +246,10 @@ export const ClientPicker = ({
 
 	const renderSearching = () => {
 		return(
-			<div className="m-searching c-searching" 
+			<div className="search-bar" 
 					ref={refSearch}
 			> 
+				<span><i className="fa-solid fa-magnifying-glass"/></span>
 				<input 
 					onFocus={()=>setIsSearchSelected(true)}
 					type="text"
@@ -279,7 +280,7 @@ export const ClientPicker = ({
 	const renderNotSearching = () => {
 		return(
 			
-			<div className="c-selected"> 
+			<div className="selected-item"> 
 				<div className="client-header">
 					<div className="client-input">
 						<span>{client?.name??""}</span>

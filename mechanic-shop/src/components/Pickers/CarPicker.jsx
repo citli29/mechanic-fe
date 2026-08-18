@@ -261,9 +261,10 @@ export const CarPicker = ({
 
 	const renderSearching = () => {
 		return(
-			<div className="m-searching c-searching" 
+			<div className="search-bar" 
 					ref={refSearch}
 			> 
+				<span><i className="fa-solid fa-magnifying-glass"/></span>
 				<input 
 					onFocus={()=>setIsSearchSelected(true)}
 					type="text"
@@ -273,8 +274,11 @@ export const CarPicker = ({
 				/>
 				{isSearchSelected && (<ul className="dropdown">
 					<li >
-						<button onClick={()=>handleClickStartAdd(searchCar)}>
-							Adicionar Viatura <span>{searchCar}</span>
+						<button className="addEntry" onClick={()=>handleClickStartAdd(searchCar)}>
+
+							<span><i className="fa-solid fa-plus"/>Adicionar Viatura </span>
+							<span>{searchCar}</span>
+							<span></span>
 						</button>
 					</li>
 					{cars?.map(c => (<li  key={c.id}>
@@ -317,17 +321,18 @@ export const CarPicker = ({
 	const renderNotSearching = () => {
 		return(
 			
-			<div className="c-selected"> 
-				<div className="car-header">
-					<div className="car-input">
+			<div className="selected-item"> 
+				<div className="item-header">
+					<div className="item-input">
+						<span><i className="fa-solid fa-car"/></span>
 						<span>{car?.plate??""}</span>
 						<span>{car?.make_name??""}</span>
 						<span>{car?.model_name??""}</span>
 					</div>
 					{renderSelectedButtons()}
 				</div>
-				<div className={`car-info ${!isInfoShowing?"hidden":""}`}>
-					<div className="car-field" id="car-plate">
+				<div className={`item-info ${!isInfoShowing?"hidden":""}`}>
+					<div className="item-field" id="car-plate">
 						<label htmlFor="car-plate">Matrícula</label>
 						<div className="car-field-plate">
 							<input 
@@ -344,7 +349,7 @@ export const CarPicker = ({
 						<button disabled={!isEditable} className="car" onClick={(()=>handleClickLockPlate())}><i className={`fa-solid ${isPlateLocked?"fa-lock":"fa-unlock"}`}/></button>
 						</div>
 					</div>
-					<div className="car-field" id="car-make">
+					<div className="item-field" id="car-make">
 						<label htmlFor="car-make">Marca</label>
 						<div className="make-picker-container">
 							<MakePicker
@@ -360,7 +365,7 @@ export const CarPicker = ({
 							/>
 						</div>
 					</div>
-					<div className="car-field" id="car-model">
+					<div className="item-field" id="car-model">
 						<label htmlFor="car-model">Modelo</label>
 						<div className="make-picker-container">
 							<ModelPicker
@@ -376,7 +381,7 @@ export const CarPicker = ({
 							/>
 						</div>
 					</div>
-					<div className="car-field" id="car-chassi">
+					<div className="item-field" id="car-chassi">
 						<label htmlFor="car-chassi">Nr. Chassi</label>
 						<input 
 							value={presentingCar?.chassi_nr??""}
@@ -390,7 +395,7 @@ export const CarPicker = ({
 							}
 						/>
 					</div>
-					<div className="car-field" id="car-date">
+					<div className="item-field" id="car-date">
 						<label htmlFor="car-date">Mês / Ano</label>
 						<div className="car-field-date">
 							<input 
@@ -420,7 +425,7 @@ export const CarPicker = ({
 							/>
 						</div>
 					</div>
-					<div className="car-field" id="car-cc">
+					<div className="item-field" id="car-cc">
 						<label htmlFor="car-cc">CC</label>
 						<input 
 							value={presentingCar?.cc??""}
@@ -434,7 +439,7 @@ export const CarPicker = ({
 							}
 						/>
 					</div>
-					<div className="car-field" id="car-engine-code">
+					<div className="item-field" id="car-engine-code">
 						<label htmlFor="car-engine-code">Cod. Motor</label>
 						<input 
 							value={presentingCar?.engine_code??""}
@@ -448,7 +453,7 @@ export const CarPicker = ({
 							}
 						/>
 					</div>
-					<div className="car-field" id="car-color-code">
+					<div className="item-field" id="car-color-code">
 						<label htmlFor="car-color-code">Cod. Cor</label>
 						<input 
 							value={presentingCar?.color_code??""}

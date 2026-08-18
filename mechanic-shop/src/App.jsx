@@ -1,9 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import Layout from "./components/Layout/Layout";
-
 import TestPage from "./components/TestPage";
 import ServiceShow2 from "./Pages/ServiceShow";
+
 import "./style/variables.css";
 
 function App() {

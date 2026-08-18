@@ -1,25 +1,48 @@
 :root{
-	--small-padding: 0.25rem;
-	--line-height: 1.25rem;
-	--bg-dark: #333;
-	--bg-light: #eee;
-	--txt-dark: #333;
-	--txt-light: #eee;
+
+
+	/* Main surfaces */
 	--accent:#f59e0b;
-	--accent-dark: #111;
-	--accent-light: #fff;
-	--disabled-brightness: 0.85;
-	--confirm: #30bf58;
-	--confirm-dark: #269144;
-	--cancel: #cc2525;
-	--cancel-dark: #9c1c1c;
-	--options: #4787d6;
-	--options-dark: #396dad;
-	--options-2: var(--accent);
-	--options-2-dark: #d98e0f;
-	--bg-section-light: #edd6c0;
-	--bg-section-dark: #4d4843;
-	--bg-section-lighter: #ede2d8;
+	--bg-dark: #333;
+	--bg-page: #f4f6f8;
+	--bg-card: #ffffff;
+	--bg-soft: #f8fafc;
+	--bg-disabled: #f1f5f9;
+
+	/* Borders */
+	--border: #cbd5e1;
+	--border-light: #e2e8f0;
+	--border-focus: #2563eb;
+
+	/* Text */
+	--txt-dark: #1e293b;
+	--txt-light: #475569;
+	--txt-muted: #94a3b8;
+
+	/* Primary */
+	--primary: #2563eb;
+	--primary-hover: #1d4ed8;
+	--primary-soft: #eff6ff;
+
+	/* Success */
+	--success: #16a34a;
+	--success-hover: #15803d;
+
+	/* Danger */
+	--danger: #dc2626;
+	--danger-hover: #b91c1c;
+	--danger-soft: #fef2f2;
+
+	/* Disabled */
+	--disabled-text: #94a3b8;
+
+	--small-padding: 0.25rem;
+	--padding: 0.5rem;
+	--big-padding: 1rem;
+	--line-height: 1.6rem;
+	--nr-rows: 8;
+	--font-size: 14px;
+	--font-size-big: 18px;
 
 }
 
@@ -27,40 +50,33 @@
 	font-family: "Roboto", sans-serif;
 	font-optical-sizing: auto;
 	font-style: normal;	
- }
+	font-size: var(--font-size);
 
-.confirm{
-	color: var(--txt-light);
-	background: var(--confirm);
-}
 
-.confirm:hover{
-	color: var(--txt-light);
-	background: var(--confirm-dark);
-}
-.cancel{
-	color: var(--txt-light);
-	background: var(--cancel);
-}
-.cancel:hover{
-	color: var(--txt-light);
-	background: var(--cancel-dark);
-}
-.options{
-	color: var(--txt-light);
-	background: var(--options);
-}
-.options:hover{
-	color: var(--txt-light);
-	background: var(--options-dark);
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+
+	text-decoration: none;
+	body{
+		color: var(--txt-light);
+		background: var(--bg-page);
+	}
+	li{
+		list-style: none;
+	}
 }
 
-.options-2{
-	color: var(--txt-light);
-	background: var(--options-2);
+button:hover{background:var(--primary-soft);}
+button{
+	border: 1px solid var(--border-light);
+	background:var(--bg-card);
 }
-.options-2:hover{
-	color: var(--txt-light);
-	background: var(--options-2-dark);
-}
+
+.confirm{ color: var(--success); }
+.confirm:hover{ color: var(--success-hover); }
+.cancel{ color: var(--danger); }
+.cancel:hover{ color: var(--danger-hover); }
+.options{ color: var(--primary); }
+.options:hover{ color: var(--primary-hover); }
 
