@@ -1,16 +1,8 @@
-.car-client-info{
+.service-page{
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
-	padding: 1rem;
-}
-
-.car-info-card{
-	width: 100%
-/*	width: 60%;*/
-}
-.client-info-card{
-	/*width: 40%;*/
+	gap: var(--big-padding);
+	padding: var(--big-padding);
 }
 @media (max-width: 500px){
 

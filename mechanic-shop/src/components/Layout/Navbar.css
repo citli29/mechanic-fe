@@ -374,7 +374,8 @@
 	}
 
 	.navbar-dropdown-menu {
-		position: static;
+		position: absolute;
+		top:100%;
 
 		width: 100%;
 		margin-top: 7px;
@@ -384,3 +385,13 @@
 
 }
 
+@media print{
+	.navbar-navigation{
+		display: none;
+	}
+	.navbar{
+		box-shadow: none;
+		backdrop-filter: none;
+		border-bottom: none;
+	}
+}

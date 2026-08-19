@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import api from "./../../api/axios";
-import "./style/CarPicker.css";
+import "./style/Picker.css";
 import { MakePicker } from "./MakePicker";
 import { ModelPicker } from "./ModelPicker";
 

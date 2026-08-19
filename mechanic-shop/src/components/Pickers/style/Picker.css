@@ -75,7 +75,7 @@
 	.item-header {
 		background:var(--bg-page);
 		display: flex;
-		padding: var(--padding);
+		padding: var(--big-padding);
 		align-items: center;
 		justify-content: space-between;
 		border-bottom: 4px solid var(--primary);
@@ -83,6 +83,7 @@
 		.item-input{
 			display: flex;
 			padding: var(--padding) var(--big-padding);
+			padding-left: 0;
 			align-items: center;
 			gap: var(--big-padding);
 
@@ -118,6 +119,7 @@
 				height: calc(4 * var(--padding) + var(--font-size-big));
 				i {font-size: var(--font-size-big);}
 				aspect-ratio: 1.1;
+				border-radius: 5px;
 			}
 		}
 	}
@@ -223,11 +225,14 @@
 #car-engine-code {grid-row:3;grid-column:2;}
 #car-chassi {grid-row:4;grid-column:1;}
 #car-color-code {grid-row:4;grid-column:2;}
+
+
 @media (max-width: 650px) {
 	.selected-item{
 		.item-header{
 			.item-input{
-				overflow-x: scroll;
+			width: 100%;
+				overflow-x: auto;
 				gap: 0;
 				span{
 					border: none;
@@ -289,5 +294,18 @@
 			padding-right: var(--padding);
 		}
 		color: var(--primary);
+	}
+}
+
+.client-picker .selected-item .item-header {
+	border-bottom: solid 4px #48b87c;
+}
+
+@media print{
+	.card-buttons{
+		display: none !important;
+	}
+	.item-info{
+		display: grid !important;
 	}
 }

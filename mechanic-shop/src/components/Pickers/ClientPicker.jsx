@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState } from "react";
 import api from "./../../api/axios";
-import "./style/ClientPicker.css";
+import "./style/Picker.css";
 
 const SEARCHING = 1;
 const SELECTED = 2;

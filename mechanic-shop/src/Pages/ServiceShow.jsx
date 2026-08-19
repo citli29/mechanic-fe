@@ -12,8 +12,8 @@ export default function ServiceShow2() {
 	const { id } = useParams();
 	const defaultService = {
 		id: "",
-		service_type: "ServiceType",
-		service_sub_type: "ServiceSubType",
+		service_type: "Tipo de Serviço",
+		service_sub_type: "Sub-tipo",
 		r_name: "",
 		r_phone: "",
 		checkin: "",
@@ -54,20 +54,14 @@ export default function ServiceShow2() {
 				}
 			/>
 
-			<div className="car-client-info">
-				<div className="car-info-card">
-					<CarPicker
-						car_id={car_id}
-						onCarIdChange={(c_id)=>setCar_id(c_id)}
-					/>
-				</div>
-				<div className="client-info-card">
-				<ClientPicker
-					client_id={client_id}
-					onClientIdChange={(c_id)=>setClient_id(c_id)}
-				/>
-				</div>
-			</div>
+			<CarPicker
+				car_id={car_id}
+				onCarIdChange={(c_id)=>setCar_id(c_id)}
+			/>
+			<ClientPicker
+				client_id={client_id}
+				onClientIdChange={(c_id)=>setClient_id(c_id)}
+			/>
 		</div>
 
 	);
