@@ -25,6 +25,7 @@ const emptyCar = {
 export const CarPicker = ({
 	car_id="",
 	onCarIdChange,
+	isAllowedEditing,
 }) => {
 	const [cars, setCars] = useState([]);
 	const [searchCar, setSearchCar] = useState("");
@@ -230,21 +231,41 @@ export const CarPicker = ({
 		}
 	}
 
+	useEffect(()=>{
+		if(!isAllowedEditing){
+			const f = async () =>{
+				const c = await getCar(car_id);
+				setCar(c);
+			}
+			if(car_id) {
+				f();
+				setState(SELECTED);
+			}else{
+				setState(SEARCHING);
+			}
+		}
+
+	},[isAllowedEditing]);
+
 	const renderSelectedButtons = () => {
 		switch(state){
 			case CREATING:
 				return (
 					<div className="card-buttons">
-						<button  className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
-						<button  className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-x"/></button>
+								<button  className="confirm" onClick={(e)=>handleClickActionAdd(e)}><i className="fa-solid fa-check"/></button>
+								<button  className="cancel" onClick={(e)=>{handleClickStartAddCancel(e)}}><i className="fa-solid fa-x"/></button>
 					</div>
 				);
 			case SELECTED:
 				return (
 					<div className="card-buttons">
-						<button className="car" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${isInfoShowing?"up":"down"}`}/></button>
-						<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
-						<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
+								<button className="car" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${isInfoShowing?"up":"down"}`}/></button>
+						{isAllowedEditing && (
+							<>
+								<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
+								<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
+							</>
+						)}
 					</div>
 
 				);
@@ -271,8 +292,9 @@ export const CarPicker = ({
 					placeholder={"Pesquisar Viatura..."}
 					value={searchCar}
 					onChange={(e)=>{setSearchCar(e.target.value)}}
+					disabled = {!isAllowedEditing} 
 				/>
-				{isSearchSelected && (<ul className="dropdown">
+				{isAllowedEditing && isSearchSelected && (<ul className="dropdown">
 					<li >
 						<button className="addEntry" onClick={()=>handleClickStartAdd(searchCar)}>
 

@@ -8,7 +8,7 @@ export default function Layout() {
 
 	return (
 
-		<div className="app-layout">
+		<div style={{ minHeight: "100vh", position:"relative", }} className="app-layout">
 
 			<Navbar />
 

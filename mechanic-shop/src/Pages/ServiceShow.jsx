@@ -32,15 +32,15 @@ export default function ServiceShow2() {
 		}catch(error){console.error(error, error.response.data.error)}
 	}
 	useEffect(()=>{loadService()},[]);
+	useEffect(()=>{console.log("Servico: ",service);},[service]);
+	useEffect(()=>{console.log("Carro: ",service.car_id);},[service.car_id]);
+	useEffect(()=>{console.log("Cliente: ",service.client_id);},[service.client_id]);
 
 	//For debug
-	const [disableCamps, setDisableCamps] = useState(false);
+	const [isAllowedEditing, setIsAllowedEditing] = useState(false);
+	useEffect(()=>{console.log("AllowedEditing: ",isAllowedEditing);},[isAllowedEditing]);
 	
-	const [make_id, setMake_id] = useState(1);
-	const [model_id, setModel_id] = useState("");
-	const [car_id, setCar_id] = useState("");
-	const [car_id2, setCar_id2] = useState("");
-	const [client_id, setClient_id] = useState("");
+	
 	return(
 		<div className="service-page">
 			<ServiceHeader
@@ -52,15 +52,19 @@ export default function ServiceShow2() {
 							[field]: value,
 						}))
 				}
+				lock={!isAllowedEditing}
+				onLockChange={()=>{setIsAllowedEditing(!isAllowedEditing)}}
 			/>
 
 			<CarPicker
-				car_id={car_id}
-				onCarIdChange={(c_id)=>setCar_id(c_id)}
+				car_id={service.car_id}
+				onCarIdChange={(value)=>setService(prev => ({...prev, car_id: value,}))}
+				isAllowedEditing={isAllowedEditing}
 			/>
 			<ClientPicker
-				client_id={client_id}
-				onClientIdChange={(c_id)=>setClient_id(c_id)}
+				client_id={service.client_id}
+				onClientIdChange={(value)=>setService(prev => ({...prev, client_id: value,}))}
+				isAllowedEditing={isAllowedEditing}
 			/>
 		</div>
 

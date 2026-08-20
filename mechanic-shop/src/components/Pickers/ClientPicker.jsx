@@ -20,6 +20,7 @@ const emptyClient = {
 export const ClientPicker = ({
 	client_id ="",
 	onClientIdChange,
+	isAllowedEditing,
 }) =>{
 	const [clients, setClients] = useState([]);
 	const [searchClient, setSearchClient] = useState("");
@@ -218,6 +219,22 @@ export const ClientPicker = ({
 		}
 	}
 
+	useEffect(()=>{
+		if(!isAllowedEditing){
+			const f = async () =>{
+				const c = await getClient(client_id);
+				setClient(c);
+			}
+			if(client_id) {
+				f();
+				setState(SELECTED);
+			}else{
+				setState(SEARCHING);
+			}
+		}
+
+	},[isAllowedEditing]);
+
 	const renderSelectedButtons = () => {
 		switch(state) {
 			case CREATING:
@@ -231,8 +248,11 @@ export const ClientPicker = ({
 				return (
 					<div className="card-buttons">
 						<button className="client" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${isInfoShowing?"up":"down"}`}/></button>
-						<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
-						<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
+						{isAllowedEditing && (<>
+							<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
+							<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
+						</>
+						)}
 					</div>
 
 				);
@@ -259,8 +279,9 @@ export const ClientPicker = ({
 					placeholder={"Pesquisar Cliente..."}
 					value={searchClient}
 					onChange={(e)=>{setSearchClient(e.target.value)}}
+					disabled={!isAllowedEditing}
 				/>
-				{isSearchSelected && (<ul className="dropdown">
+				{isAllowedEditing && isSearchSelected && (<ul className="dropdown">
 					<li >
 						<button onClick={()=>handleClickStartAdd(searchClient)}>
 							Adicionar Cliente <span>{searchClient}</span>

@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import "./Style/ServiceHeader.css";
 import api from "./../../api/axios";
 
-export const ServiceHeader = ({ service, onServiceChange }) => {
+export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) => {
 
 	const [schedules, setSchedules] = useState([]);
 	const [showDetails, setShowDetails] = useState(false);
-	const [lockStartCamps, setLockStartCamps] = useState(true);
 
 	
 	const [isMobile, setIsMobile] = useState(
@@ -36,13 +35,30 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 			}
 		}catch(error){console.error(error, error.response.data.error)}
 	}
+	const getServiceSchedule = async () => {
+		if(!service.schedule_id) return [];
+		try{
+			const response = await api.get(`schedules/${service.schedule_id}`)
+			if(typeof response.data.schedule!== "undefined"){
+				return response.data.schedule;
+			}else{
+				return [];
+			}
+		}catch(error){console.error(error, error.response.data.error)}
+	}
 
 	useEffect(() => {
 		const f = async () =>{
-			setSchedules(await getFreeSchedules());
+			const l = await getFreeSchedules()
+			if(service.schedule_id){
+				const s = await getServiceSchedule();
+				l.push(s);
+				l.sort((a,b) => a.id - b.id);	
+			}
+			setSchedules(l);
 		}
 		f();
-	},[]);
+	},[service]);
 
 	useEffect(()=>{
 		console.log(schedules);
@@ -80,11 +96,11 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 					<label htmlFor="service-r-name">Nome</label>
 					<input
 						type="text"
-						placeholder={lockStartCamps?"S/ Nome":"Nome"}
+						placeholder={lock?"S/ Nome":"Nome"}
 						id="service-r-name"
 						value={service.r_name}
 						onChange={(e) => onServiceChange("r_name", e.target.value) }
-						disabled={lockStartCamps}
+						disabled={lock}
 					/>
 				</div>
 
@@ -92,11 +108,11 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 					<label htmlFor="service-r-name">Telemóvel</label>
 					<input
 						type="text"
-						placeholder={lockStartCamps?"S/ Telemóvel":"Telemóvel"}
+						placeholder={lock?"S/ Telemóvel":"Telemóvel"}
 						id="service-r-phone"
 						value={service.r_phone}
 						onChange={(e) => onServiceChange("r_phone", e.target.value) }
-						disabled={lockStartCamps}
+						disabled={lock}
 					/>
 				</div>
 
@@ -107,7 +123,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 						id="service-checkin"
 						value={service.checkin}
 						onChange={(e) => onServiceChange("checkin", e.target.value) }
-						disabled={lockStartCamps}
+						disabled={lock}
 					/>
 				</div>
 
@@ -118,7 +134,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 						id="service-checkout-predict"
 						value={service.checkout_predict}
 						onChange={(e) => onServiceChange( "checkout_predict", e.target.value) }
-						disabled={lockStartCamps}
+						disabled={lock}
 					/>
 				</div>
 				
@@ -129,7 +145,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 						id="service-kms"
 						value={service.kms}
 						onChange={(e) => onServiceChange("kms", e.target.value) }
-						disabled={lockStartCamps}
+						disabled={lock}
 					/>
 				</div>
 
@@ -161,7 +177,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 						onChange={(e) => onServiceChange( "schedule_id", e.target.value) }
 						name="service-schedule"
 						id="service-schedule"
-						disabled={lockStartCamps}
+						disabled={lock}
 					>
 						<option value=""> S/Marcação </option>
 						{schedules.map((schedule) => (
@@ -183,7 +199,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 						id="service-checkout"
 						value={service.checkout}
 						onChange={(e) => onServiceChange( "checkout", e.target.value) }
-						disabled={lockStartCamps}
+						disabled={lock}
 					/>
 				</div>
 				<div className="o-check no-border" id="o-check">
@@ -204,7 +220,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 
 				<div className="lock-start no-border" id="lock-start">
 					<label htmlFor="lock-start"></label>
-					<button className="accent" onClick={(e)=>{setLockStartCamps(!lockStartCamps);}}><i className={`fa-solid ${lockStartCamps?"fa-lock":"fa-unlock"}`} /></button>
+					<button className="accent" onClick={(e)=>{onLockChange()}}><i className={`fa-solid ${lock?"fa-lock":"fa-unlock"}`} /></button>
 				</div>
 		</>
 		);
@@ -246,11 +262,11 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 						<label htmlFor="service-r-name">Nome</label>
 						<input
 							type="text"
-							placeholder={lockStartCamps?"S/ Nome":"Nome"}
+							placeholder={lock?"S/ Nome":"Nome"}
 							id="service-r-name"
 							value={service.r_name}
 							onChange={(e) => onServiceChange("r_name", e.target.value) }
-							disabled={lockStartCamps}
+							disabled={lock}
 						/>
 					</div>
 
@@ -258,11 +274,11 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 						<label htmlFor="service-r-name">Telemóvel</label>
 						<input
 							type="text"
-							placeholder={lockStartCamps?"S/ Telemóvel":"Telemóvel"}
+							placeholder={lock?"S/ Telemóvel":"Telemóvel"}
 							id="service-r-phone"
 							value={service.r_phone}
 							onChange={(e) => onServiceChange("r_phone", e.target.value) }
-							disabled={lockStartCamps}
+							disabled={lock}
 						/>
 					</div>
 
@@ -273,7 +289,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 							id="service-checkin"
 							value={service.checkin}
 							onChange={(e) => onServiceChange("checkin", e.target.value) }
-							disabled={lockStartCamps}
+							disabled={lock}
 						/>
 					</div>
 
@@ -284,7 +300,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 							id="service-checkout-predict"
 							value={service.checkout_predict}
 							onChange={(e) => onServiceChange( "checkout_predict", e.target.value) }
-							disabled={lockStartCamps}
+							disabled={lock}
 						/>
 					</div>
 
@@ -295,7 +311,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 							id="service-kms"
 							value={service.kms}
 							onChange={(e) => onServiceChange("kms", e.target.value) }
-							disabled={lockStartCamps}
+							disabled={lock}
 						/>
 					</div>
 
@@ -309,9 +325,18 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 							onChange={(e) => onServiceChange( "schedule_id", e.target.value) }
 							name="service-schedule"
 							id="service-schedule"
-						disabled={lockStartCamps}
+							disabled={lock}
 						>
 							<option value=""> S/Marcação </option>
+							{service?.schedule_id && (
+								<option 
+									key={service.schedule_id}
+									value={service.schedule_id.id}
+								>
+									# {service.schedule_id}
+								</option>
+						
+							)}
 							{schedules?.map((schedule) => (
 								<option
 									key={schedule.id}
@@ -331,7 +356,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 							id="service-checkout"
 							value={service.checkout}
 							onChange={(e) => onServiceChange( "checkout", e.target.value) }
-							disabled={lockStartCamps}
+							disabled={lock}
 						/>
 					</div>
 					<div className="buttons">
@@ -353,7 +378,7 @@ export const ServiceHeader = ({ service, onServiceChange }) => {
 
 						<div className="lock-start no-border" id="lock-start">
 							<label htmlFor="lock-start"></label>
-							<button className="accent" onClick={(e)=>{setLockStartCamps(!lockStartCamps);}}><i className={`fa-solid ${lockStartCamps?"fa-lock":"fa-unlock"}`} /></button>
+							<button className="accent" onClick={(e)=>{onLockChange();}}><i className={`fa-solid ${lock?"fa-lock":"fa-unlock"}`} /></button>
 						</div>
 					</div>
 				</div>
