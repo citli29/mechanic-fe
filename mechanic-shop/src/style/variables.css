@@ -135,15 +135,37 @@ button{
 	border:2px solid var(--state-delivered-dark) !important;
 	color: #fff !important;
 }
+.note-red{
+	background: #de1f42;
+	color:white;
+}
+.note-red.tag-symbol{
+	color: #de1f42;
+}
+.note-yellow{
+	background: #d18f02;
+	color:white;
+}
+.note-yellow.tag-symbol{
+	color: #d18f02;
+}
+.note-green{
+	background: #03ad31;
+	color:white;
+}
+.note-green.tag-symbol{
+	color: #03ad31;
+}
 .spinning {
-  display: inline-block;
-  animation: my-spin 1s linear infinite;
+	display: inline-block;
+	animation: my-spin 1s linear infinite;
 }
 @keyframes my-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
+

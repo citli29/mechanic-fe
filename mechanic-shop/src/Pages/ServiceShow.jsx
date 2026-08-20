@@ -7,6 +7,7 @@ import { CarPicker } from "../components/Pickers/CarPicker";
 
 import "./Style/ServiceShow.css";
 import { ClientPicker } from "../components/Pickers/ClientPicker";
+import { RichTextarea, createRegexRenderer } from "rich-textarea";
 
 export default function ServiceShow2() {
 	const { id } = useParams();
@@ -95,6 +96,48 @@ export default function ServiceShow2() {
 		return () => clearTimeout(timer);
 	}, [service]);
 
+	const renderer = (text) => {
+		const regex = /(\[\[|\(\(|\{\{)(.*?)(\]\]|\)\)|\}\})/g;
+
+		const result = [];
+		let lastIndex = 0;
+		let match;
+
+		const types = {
+			"[[": "note-red",
+			"((": "note-green",
+			"{{": "note-yellow",
+		};
+
+		while ((match = regex.exec(text)) !== null) {
+			result.push(text.slice(lastIndex, match.index));
+
+			const [full, open, content, close] = match;
+			const type = types[open];
+
+			result.push(
+				<span className={`tag-symbol ${type}`} key={`${match.index}-open`}>
+					{open}
+				</span>,
+
+				<span className={`tag-content ${type}`} key={`${match.index}-content`}>
+					{content}
+				</span>,
+
+				<span className={`tag-symbol ${type}`} key={`${match.index}-close`}>
+					{close}
+				</span>
+			);
+
+			lastIndex = regex.lastIndex;
+		}
+
+		result.push(text.slice(lastIndex));
+
+		return result;
+	};
+
+
 	return(
 		<div className="service-page">
 			<ServiceHeader
@@ -164,19 +207,23 @@ export default function ServiceShow2() {
 			<div className="service-done-info-card">
 				<div className="header">
 					<i className="fa-solid fa-wrench"></i>
-					<h1>Serviço Acordado</h1>
+					<h1>Serviço Realizado</h1>
 				</div>	
 				<div className="body">
 					<div className="text-entry">
 						<label htmlFor=""disabled={!isAllowedEditing}>Notas/Observações</label>
-						<textarea 
+						<RichTextarea
+							style={{width:"100%"}}
+							className="rich-textarea"
 							type="text" 
 							value={service.note} 
 							onChange={(e)=>setService(prev => ({
 								...prev,
 								note:e.target.value
 							}))}
-						/>
+						>
+						{renderer}
+						</RichTextarea>
 					</div>
 					<div className="text-entry">
 						<label htmlFor="malfunction">Serviço Realizado</label>
