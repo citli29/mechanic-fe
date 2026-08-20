@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "./../api/axios";
 
@@ -21,15 +21,31 @@ export default function ServiceShow2() {
 		schedule_id: "",
 		office_check: false,
 		kms:"",
-		checkout: ""
+		checkout: "",
+		car_id:"",
+		client_id:"",
+		note:"",
+		signed_service:"Serviço a realizar",
+		service:"",
+		malfunction:"",
 	}
 	const [service, setService] = useState(defaultService);
+
+	const hasLoaded = useRef(false);
 
 	async function loadService() {
 		try {
 			const response = await api.get(`/services/${id}`);
-			setService({...defaultService, ...response.data.service});
-		}catch(error){console.error(error, error.response.data.error)}
+
+			setService({
+				...defaultService,
+				...response.data.service
+			});
+
+			hasLoaded.current = true;
+		} catch (error) {
+			console.error(error);
+		}
 	}
 	useEffect(()=>{loadService()},[]);
 	useEffect(()=>{console.log("Servico: ",service);},[service]);
@@ -41,6 +57,44 @@ export default function ServiceShow2() {
 	useEffect(()=>{console.log("AllowedEditing: ",isAllowedEditing);},[isAllowedEditing]);
 	
 	
+	const putService = async (service) =>{
+		try{
+			if(service?.id){
+				const response = await api.put(`services/${service.id}`,service)
+				if(typeof response.data.service !== "undefined"){
+					return response.data.service;
+				}else{
+					return null;
+				}
+			}
+			return defaultService;
+		}catch(error){console.error(error, error.response.data.error)}
+	}
+	
+	const [debouncedValue, setDebouncedValue] = useState(defaultService);
+
+	
+	const skipSave = useRef(true);
+
+	useEffect(() => {
+		loadService();
+	}, []);
+
+	useEffect(() => {
+		if (!service?.id) return;
+
+		if (skipSave.current) {
+			skipSave.current = false;
+			return;
+		}
+
+		const timer = setTimeout(() => {
+			putService(service);
+		}, 300);
+
+		return () => clearTimeout(timer);
+	}, [service]);
+
 	return(
 		<div className="service-page">
 			<ServiceHeader
@@ -55,17 +109,90 @@ export default function ServiceShow2() {
 				lock={!isAllowedEditing}
 				onLockChange={()=>{setIsAllowedEditing(!isAllowedEditing)}}
 			/>
-
 			<CarPicker
 				car_id={service.car_id}
-				onCarIdChange={(value)=>setService(prev => ({...prev, car_id: value,}))}
+				onCarIdChange={(value)=>setService(prev => (
+					prev.car_id === value
+					? prev :
+					{...prev, car_id: value,}
+				))}
 				isAllowedEditing={isAllowedEditing}
 			/>
 			<ClientPicker
 				client_id={service.client_id}
-				onClientIdChange={(value)=>setService(prev => ({...prev, client_id: value,}))}
+				onClientIdChange={(value)=>setService(prev => (
+					prev.car_id === value
+						? prev :
+						{...prev, car_id: value,}
+				))}
 				isAllowedEditing={isAllowedEditing}
 			/>
+			<div className="service-signed-info-card">
+				<div className="header">
+					<i className="fa-solid fa-pen-fancy"/> 
+					<h1>Serviço Acordado</h1>
+				</div>
+				<div className="body">
+					<div className="text-entry">
+						<label htmlFor=""disabled={!isAllowedEditing}>Descrição de Avaria</label>
+						<textarea 
+							type="text" 
+							value={service.malfunction} 
+							onChange={(e)=>setService(prev => ({
+								...prev,
+								malfunction:e.target.value
+							}))}
+							disabled={!isAllowedEditing}/>
+					</div>
+					<div className="text-entry">
+						<label htmlFor="malfunction">Serviço a Realizar</label>
+						<textarea 
+							type="text" 
+							value={service.signed_service} 
+							onChange={(e)=>setService(prev => ({
+								...prev,
+								signed_service:e.target.value
+							}))}
+							disabled={!isAllowedEditing}/>
+					</div>
+				</div>
+				<div className="text-entry" id="signing">
+					<p>Eu, <span>{service?.r_name??"".trim()?service?.r_name:"______________________________"}</span> , tomei conhecimento e autorizo a realização do serviço acima indicado e contacto através do nrº <span>{service?.r_phone??"".trim()?service?.r_phone:"______________________________"}</span>.</p>
+					<p>Assinatura: ________________________________</p>
+				</div>
+			</div>
+			<div className="service-done-info-card">
+				<div className="header">
+					<i className="fa-solid fa-wrench"></i>
+					<h1>Serviço Acordado</h1>
+				</div>	
+				<div className="body">
+					<div className="text-entry">
+						<label htmlFor=""disabled={!isAllowedEditing}>Notas/Observações</label>
+						<textarea 
+							type="text" 
+							value={service.note} 
+							onChange={(e)=>setService(prev => ({
+								...prev,
+								note:e.target.value
+							}))}
+						/>
+					</div>
+					<div className="text-entry">
+						<label htmlFor="malfunction">Serviço Realizado</label>
+						<textarea 
+							type="text" 
+							value={service.service} 
+							onChange={(e)=>setService(prev => ({
+								...prev,
+								service:e.target.value
+							}))}
+							/>
+					</div>
+				</div>
+			</div>
+				<i className="fa-solid fa-store"></i>
+				<i className="fa-solid fa-hourglass-half"></i>
 		</div>
 
 	);

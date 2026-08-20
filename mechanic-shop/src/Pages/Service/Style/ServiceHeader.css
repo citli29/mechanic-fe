@@ -162,18 +162,3 @@
 	}
 }
 
-@media print{
-	#state,
-	#checkout,
-	#o-check,
-	#lock-start,
-	#schedule,
-	.divider{
-		display: none;
-	}
-
-	.service-header-card{
-		display:flex;
-		flex-direction: column;
-	}
-}

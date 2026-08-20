@@ -301,11 +301,3 @@
 	border-bottom: solid 4px #48b87c;
 }
 
-@media print{
-	.card-buttons{
-		display: none !important;
-	}
-	.item-info{
-		display: grid !important;
-	}
-}

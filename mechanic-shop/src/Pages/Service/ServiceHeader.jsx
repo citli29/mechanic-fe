@@ -48,17 +48,28 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 	}
 
 	useEffect(() => {
-		const f = async () =>{
-			const l = await getFreeSchedules()
-			if(service.schedule_id){
-				const s = await getServiceSchedule();
-				l.push(s);
-				l.sort((a,b) => a.id - b.id);	
+		const f = async () => {
+			let l = await getFreeSchedules();
+
+			if (service?.schedule_id) {
+				const current = await getServiceSchedule();
+
+				if (current) {
+					l.push(current);
+				}
 			}
+
+			l = [
+				...new Map(l.map(s => [s.id, s])).values()
+			];
+
+			l.sort((a, b) => a.id - b.id);
+
 			setSchedules(l);
-		}
+		};
+
 		f();
-	},[service]);
+	}, [service.schedule_id]);
 
 	useEffect(()=>{
 		console.log(schedules);

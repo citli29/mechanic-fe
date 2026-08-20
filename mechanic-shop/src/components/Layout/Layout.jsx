@@ -8,11 +8,11 @@ export default function Layout() {
 
 	return (
 
-		<div style={{ minHeight: "100vh", position:"relative", }} className="app-layout">
+		<div style={{ minHeight: "100vh", display: "flex",alignItems:"center", flexDirection: "column"}} className="app-layout">
 
 			<Navbar />
 
-			<main className="app-main">
+			<main style={{ flex: 1, width:"100%"}} className="app-main">
 				<div className="app-content">
 					<Outlet />
 				</div>

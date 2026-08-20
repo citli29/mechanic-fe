@@ -385,13 +385,3 @@
 
 }
 
-@media print{
-	.navbar-navigation{
-		display: none;
-	}
-	.navbar{
-		box-shadow: none;
-		backdrop-filter: none;
-		border-bottom: none;
-	}
-}

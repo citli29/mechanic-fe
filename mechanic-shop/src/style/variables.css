@@ -42,9 +42,9 @@
 	--big-padding: 1rem;
 	--line-height: 1.6rem;
 	--nr-rows: 8;
-	--font-size-small: 12px;
-	--font-size: 14px;
-	--font-size-big: 18px;
+	--font-size-small: 14px;
+	--font-size: 16px;
+	--font-size-big: 20px;
 
 	--state-not-finished: #ffb63b;
 	--state-not-finished-dark: #ffc96e;
@@ -72,6 +72,15 @@
 	body{
 		color: var(--txt-light);
 		background: var(--bg-page);
+
+		label{
+			font-weight:600;
+		}
+		input,
+		textarea{
+			font-weight:400;
+			font-size: var(--font-size);
+		}
 	}
 	li{
 		list-style: none;
@@ -125,4 +134,16 @@ button{
 	background: var(--state-delivered) !important;
 	border:2px solid var(--state-delivered-dark) !important;
 	color: #fff !important;
+}
+.spinning {
+  display: inline-block;
+  animation: my-spin 1s linear infinite;
+}
+@keyframes my-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

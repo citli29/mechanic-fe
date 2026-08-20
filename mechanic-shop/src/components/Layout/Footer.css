@@ -2,8 +2,8 @@
 	background: rgba(17, 24, 39, 0.97);
 	border-top: 1px solid rgba(255, 255, 255, 0.08);
 	color: #d1d5db;
-	bottom: 0;
 	width: 100%;
+	justify-self: end;
 }
 
 .footer-container {
@@ -11,7 +11,7 @@
 
 	margin: 0 auto;
 
-	padding: 1.5rem 0;
+	padding: 1.5rem;
 
 	box-sizing: border-box;
 
@@ -71,9 +71,4 @@
 		justify-content: center;
 	}
 
-}
-@media print{
-	.footer-links{
-		display: none !important;
-	}
 }

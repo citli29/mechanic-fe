@@ -4,6 +4,82 @@
 	gap: var(--big-padding);
 	padding: var(--big-padding);
 }
-@media (max-width: 500px){
 
+.service-done-info-card,
+.service-signed-info-card{
+	border: 1px solid var(--border);
+	border-radius: 0 0 10px 10px;
+
+	.header {
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+
+		i{
+			font-size: calc(1.5 * var(--font-size-big));
+		}
+		h1{
+			font-size: var(--font-size-big);
+		}
+		padding:calc(var(--big-padding) + var(--padding) + 2.5px ) var(--big-padding) ;
+		background: var(--bg-page);
+	}
+	.body{
+		padding: var(--big-padding);
+		display: flex;
+		flex-direction: column;
+		gap: var(--big-padding);
+		width: 100%;
+		background: var(--bg-card);
+		border-radius: 0 0 10px 10px;
+
+		.text-entry{
+			width: 100%;
+			position: relative;
+
+			label{
+				position:absolute;
+				padding: var(--padding);
+				top: 2px;
+				left: 2px;
+				font-size: var(--font-size-small);
+				background: var(--bg-card);
+				border-radius: 10px 10px 0 0;				
+			}
+			textarea{
+				resize: none;
+				padding: var(--padding);
+				padding-top: calc( 4 * var(--padding));
+				border: solid 1px var(--border);
+				width: 100%;
+				color: var(--txt-light);
+				font-size: var(--font-size);
+				height: 12rem;
+			}
+
+			&:last-child textarea{ border-radius: 0 0 5px 5px; }
+			textarea:disabled,
+			&:has(textarea:disabled) label {
+				background: var(--bg-disabled);
+			}
+		}
+	};
+}
+
+.service-signed-info-card{
+	.header{
+		border-bottom: 4px solid #ba2323;
+	}
+}
+
+.service-done-info-card{
+	.header{
+		border-bottom: 4px solid #e8aa2e;
+	}
+}
+#signing {
+	display: none;
+}
+@media print{
+	#signing{display: block;}
 }
