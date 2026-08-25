@@ -127,7 +127,7 @@ export const MarkedTextarea =forwardRef(({
 	};
 
 
-	const [currentMarkers, setCurrentMarkers] = useState([{from: 3 , to: 4}]);
+	const [currentMarkers, setCurrentMarkers] = useState([{from: 3 , to: 5}]);
 
 	const moveMarkerSkinny = (index, pos ,delta) =>{
 		let newMarkerPos = currentMarkers[index];
@@ -169,7 +169,7 @@ export const MarkedTextarea =forwardRef(({
 		const p = e.inputType.startsWith("insert")?1:-1;
 
 		if(end===start){
-			moveMarkerSkinny(0, start, p*(e.data?e.data.length:1));
+			moveMarkerSkinny(0, start, p *(e.data?e.data.length:1));
 		}else{
 			const dSelected = end - start;
 			if(p<0){
@@ -186,6 +186,16 @@ export const MarkedTextarea =forwardRef(({
 		}
 	};
 
+	useEffect(() => {
+		const textarea = textareaRef.current;
+		if (!textarea) return;
+
+		textarea.addEventListener("beforeinput", handleBeforeInput);
+
+		return () => {
+			textarea.removeEventListener("beforeinput", handleBeforeInput);
+		};
+	}, []);
 
 	return (
 		<>
@@ -193,7 +203,6 @@ export const MarkedTextarea =forwardRef(({
 				ref={textareaRef}
 				style={{width:"100%"}}
 				value={textPresenting}
-				onBeforeInput={handleBeforeInput}
 				onChange={(e)=>setTextPresenting(e.target.value)}
 			>
 				{renderer}
