@@ -139,26 +139,20 @@ button{
 	background: #de1f42;
 	color:white;
 }
-.note-red.tag-symbol{
-	color: #de1f42;
-}
 .note-yellow{
 	background: #d18f02;
 	color:white;
 }
-.note-yellow.tag-symbol{
-	color: #d18f02;
-}
 .note-green{
-	background: #03ad31;
+	background: #22c55e;
 	color:white;
-}
-.note-green.tag-symbol{
-	color: #03ad31;
 }
 .spinning {
 	display: inline-block;
 	animation: my-spin 1s linear infinite;
+}
+textarea.white-caret {
+	caret-color: white !important;
 }
 @keyframes my-spin {
 	from {

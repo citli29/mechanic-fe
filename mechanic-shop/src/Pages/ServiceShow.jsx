@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "./../api/axios";
 
@@ -7,7 +7,7 @@ import { CarPicker } from "../components/Pickers/CarPicker";
 
 import "./Style/ServiceShow.css";
 import { ClientPicker } from "../components/Pickers/ClientPicker";
-import { RichTextarea, createRegexRenderer } from "rich-textarea";
+import { MarkedTextarea } from "./MarkedTextarea";
 
 export default function ServiceShow2() {
 	const { id } = useParams();
@@ -25,14 +25,28 @@ export default function ServiceShow2() {
 		checkout: "",
 		car_id:"",
 		client_id:"",
-		note:"",
+		note:"asdfjasjkfhsadf",
 		signed_service:"Serviço a realizar",
 		service:"",
 		malfunction:"",
 	}
+	const markedTextarea = useRef();
 	const [service, setService] = useState(defaultService);
 
 	const hasLoaded = useRef(false);
+	const [showInfo, setShowInfo]= useState(false);
+
+	useEffect(()=>{
+		document.querySelectorAll(".info").forEach((element) => {
+			element.addEventListener("mouseenter", () => {
+				element.classList.add("show");
+			});
+
+			element.addEventListener("mouseleave", () => {
+				element.classList.remove("show");
+			});
+		});
+	},[])
 
 	async function loadService() {
 		try {
@@ -56,8 +70,8 @@ export default function ServiceShow2() {
 	//For debug
 	const [isAllowedEditing, setIsAllowedEditing] = useState(false);
 	useEffect(()=>{console.log("AllowedEditing: ",isAllowedEditing);},[isAllowedEditing]);
-	
-	
+
+
 	const putService = async (service) =>{
 		try{
 			if(service?.id){
@@ -71,10 +85,7 @@ export default function ServiceShow2() {
 			return defaultService;
 		}catch(error){console.error(error, error.response.data.error)}
 	}
-	
-	const [debouncedValue, setDebouncedValue] = useState(defaultService);
 
-	
 	const skipSave = useRef(true);
 
 	useEffect(() => {
@@ -96,47 +107,20 @@ export default function ServiceShow2() {
 		return () => clearTimeout(timer);
 	}, [service]);
 
-	const renderer = (text) => {
-		const regex = /(\[\[|\(\(|\{\{)(.*?)(\]\]|\)\)|\}\})/g;
-
-		const result = [];
-		let lastIndex = 0;
-		let match;
-
-		const types = {
-			"[[": "note-red",
-			"((": "note-green",
-			"{{": "note-yellow",
-		};
-
-		while ((match = regex.exec(text)) !== null) {
-			result.push(text.slice(lastIndex, match.index));
-
-			const [full, open, content, close] = match;
-			const type = types[open];
-
-			result.push(
-				<span className={`tag-symbol ${type}`} key={`${match.index}-open`}>
-					{open}
-				</span>,
-
-				<span className={`tag-content ${type}`} key={`${match.index}-content`}>
-					{content}
-				</span>,
-
-				<span className={`tag-symbol ${type}`} key={`${match.index}-close`}>
-					{close}
-				</span>
-			);
-
-			lastIndex = regex.lastIndex;
-		}
-
-		result.push(text.slice(lastIndex));
-
-		return result;
+	const MARKERS = {
+		red: {
+			char: "\uE000",
+			className: "note-red",
+		},
+		green: {
+			char: "\uE001",
+			className: "note-green",
+		},
+		yellow: {
+			char: "\uE002",
+			className: "note-yellow",
+		},
 	};
-
 
 	return(
 		<div className="service-page">
@@ -156,8 +140,8 @@ export default function ServiceShow2() {
 				car_id={service.car_id}
 				onCarIdChange={(value)=>setService(prev => (
 					prev.car_id === value
-					? prev :
-					{...prev, car_id: value,}
+						? prev :
+						{...prev, car_id: value,}
 				))}
 				isAllowedEditing={isAllowedEditing}
 			/>
@@ -210,20 +194,51 @@ export default function ServiceShow2() {
 					<h1>Serviço Realizado</h1>
 				</div>	
 				<div className="body">
+					<div className="note-info">
+						<div 
+							onClick={()=>setShowInfo(!showInfo)}
+							className={showInfo?"info show":"info"}>
+							<i className="fa-solid fa-circle-question"/>
+							<p>Uso:
+								<br/>&nbsp;&nbsp;&nbsp;&nbsp;&#8227;&nbsp; 
+								<span style={{
+									color:"#de1f42",
+								}}>[[ vermelho ]]&#32;
+								</span> 
+								<br/>&nbsp;&nbsp;&nbsp;&nbsp;&#8227;&nbsp;
+								<span style={{
+									color:"#22c55e",
+								}}>(( verde ))&#32;
+								</span> 
+								<br/>&nbsp;&nbsp;&nbsp;&nbsp;&#8227;&nbsp;
+								<span style={{
+									color:"#d18f02",
+								}} >&#123;&#123; amarelo &#125;&#125;
+								</span>
+							</p>
+						</div>		
+						<button
+							onClick={()=>{
+								markedTextarea.current.markSelection();
+
+							}}
+						>Clica</button>
+					</div>
+
 					<div className="text-entry">
 						<label htmlFor=""disabled={!isAllowedEditing}>Notas/Observações</label>
-						<RichTextarea
-							style={{width:"100%"}}
-							className="rich-textarea"
-							type="text" 
-							value={service.note} 
-							onChange={(e)=>setService(prev => ({
-								...prev,
-								note:e.target.value
-							}))}
-						>
-						{renderer}
-						</RichTextarea>
+
+						<MarkedTextarea
+							ref={markedTextarea}
+							value={service.note}
+							onChange={(newValue) => {
+								setService(prev => ({
+									...prev,
+									note: newValue,
+								}));
+							}}
+						/>
+
 					</div>
 					<div className="text-entry">
 						<label htmlFor="malfunction">Serviço Realizado</label>
@@ -234,12 +249,12 @@ export default function ServiceShow2() {
 								...prev,
 								service:e.target.value
 							}))}
-							/>
+						/>
 					</div>
 				</div>
 			</div>
-				<i className="fa-solid fa-store"></i>
-				<i className="fa-solid fa-hourglass-half"></i>
+			<i className="fa-solid fa-store"></i>
+			<i className="fa-solid fa-hourglass-half"></i>
 		</div>
 
 	);

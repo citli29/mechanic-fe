@@ -77,6 +77,33 @@
 		border-bottom: 4px solid #e8aa2e;
 	}
 }
+
+.info {
+	position: relative;
+	display: inline-block;
+
+	p {
+		display: none;
+		position: absolute;
+
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+
+		z-index: 500;
+		white-space: nowrap;
+		padding: var(--small-padding) var(--padding);
+		border-radius: 2px;
+		top: var(--small-padding);
+		left: var(--small-padding);
+	}
+
+	&.show{
+		p{
+			display: block;
+		}
+	}
+}
+
 #signing {
 	display: none;
 }
