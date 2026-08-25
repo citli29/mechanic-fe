@@ -238,8 +238,8 @@ export default function ServiceShow2() {
 								}));
 							}}
 						/>
-
 					</div>
+
 					<div className="text-entry">
 						<label htmlFor="malfunction">Serviço Realizado</label>
 						<textarea 
