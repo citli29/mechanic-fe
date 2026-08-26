@@ -139,13 +139,25 @@ button{
 	background: #de1f42;
 	color:white;
 }
+.white-caret {
+	caret-color: white
+}
+.note-red-button{
+	color: #de1f42;
+}
 .note-yellow{
-	background: #d18f02;
+	background:#d18f02;
 	color:white;
+}
+.note-yellow-button{
+	color: #d18f02;
 }
 .note-green{
 	background: #22c55e;
 	color:white;
+}
+.note-green-button{
+	color: #22c55e;
 }
 .spinning {
 	display: inline-block;

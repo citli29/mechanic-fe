@@ -194,39 +194,28 @@ export default function ServiceShow2() {
 					<h1>Serviço Realizado</h1>
 				</div>	
 				<div className="body">
-					<div className="note-info">
-						<div 
-							onClick={()=>setShowInfo(!showInfo)}
-							className={showInfo?"info show":"info"}>
-							<i className="fa-solid fa-circle-question"/>
-							<p>Uso:
-								<br/>&nbsp;&nbsp;&nbsp;&nbsp;&#8227;&nbsp; 
-								<span style={{
-									color:"#de1f42",
-								}}>[[ vermelho ]]&#32;
-								</span> 
-								<br/>&nbsp;&nbsp;&nbsp;&nbsp;&#8227;&nbsp;
-								<span style={{
-									color:"#22c55e",
-								}}>(( verde ))&#32;
-								</span> 
-								<br/>&nbsp;&nbsp;&nbsp;&nbsp;&#8227;&nbsp;
-								<span style={{
-									color:"#d18f02",
-								}} >&#123;&#123; amarelo &#125;&#125;
-								</span>
-							</p>
-						</div>		
+					<div className="coloring-buttons">
 						<button
 							onClick={()=>{
 								markedTextarea.current.markSelection("note-red");
 							}}
-						>Vermelho</button>
+						><i className="fa-solid fa-square-pen note-red-button"/></button>
+						<button
+							onClick={()=>{
+								markedTextarea.current.markSelection("note-yellow");
+							}}
+						><i className="fa-solid fa-square-pen note-yellow-button"/></button>
 						<button
 							onClick={()=>{
 								markedTextarea.current.markSelection("note-green");
 							}}
-						>Verde</button>
+						><i className="fa-solid fa-square-pen note-green-button"/></button>
+						<button
+							onClick={()=>{
+								markedTextarea.current.unmarkSelection();
+							}}
+						><i className="fa-regular fa-square f"/></button>
+
 					</div>
 
 					<div className="text-entry">

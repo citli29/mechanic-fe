@@ -11,6 +11,10 @@ export const MarkedTextarea =forwardRef(({
 		const [currentMarkers, setCurrentMarkers] = useState([
 			{className:"note-red", from: 10, to: 20 } ]);
 
+		const unmarkSelection = () => {
+			markSelection("remove");
+			setCurrentMarkers(prevMarkers => prevMarkers.filter(marker => marker.className !="remove"));
+		}
 		const markSelection = (clName) => {
 			const s = textareaRef.current.selectionStart;
 			const f = textareaRef.current.selectionEnd;
@@ -83,9 +87,11 @@ export const MarkedTextarea =forwardRef(({
 
 				return res;
 			});
+			textareaRef.current.setSelectionRange(s, s);
+			textareaRef.current.focus();
 		};
 
-		useImperativeHandle(ref, () =>({markSelection}));
+		useImperativeHandle(ref, () =>({markSelection,unmarkSelection}));
 
 		const markers = [{
 			red :{
@@ -173,40 +179,58 @@ export const MarkedTextarea =forwardRef(({
 			}
 
 			if (isInsert) {
-				// insertion logic
-
+				setCurrentMarkers(prevMarkers => updateMarkersInsert(prevMarkers,start,end,insertedText))
 			} else if (isDelete) {
-					updateMarkersDelete(start,end);
+				setCurrentMarkers(prevMarkers => updateMarkersDelete(prevMarkers,start,end))
 			}
 
 
 		};
-		const updateMarkersDelete = (start,end) => {
+		const updateMarkersInsert = (markers,start,end,insertedText) => {
+			let delL = end - start;
+			const i = insertedText.length;
+			if(delL === 0){
+				return markers.map(marker => {
+					let { from, to ,className} = marker;
+					
+					if(start <= from ) return {from: from+i, to:to+i,className}; 
+					if(start < to ) return {from: from, to: to+i,className};
+					return marker;
+				});
+			}else{
+				return markers.map(marker =>{
+					let { from, to ,className} = marker;
+
+					if(start > to) return marker; // delete after marker i
+					if(end < from) return {from:from - delL, to:to-delL, className}; //delete before marker
+					if(start < from && end< to) return{from:start+i, to:  (start + i + (to-end)),className};//delete before start into marker
+					if(from < start && end < to) return{from:from, to:  to - (end - start) + i,className}; //delete in the middle
+					if(from < start && to <= end) return{from:from, to: start + i,className};//delete after start into after marker
+					return{from:from, to: to,className:className};
+				});
+			}
+		}
+
+		const updateMarkersDelete = (markers,start,end) => {
 			let delL = end - start;
 			if(delL === 0){
-				setCurrentMarkers(prevMarkers =>
-					prevMarkers.map(marker => {
-						let { from, to ,className} = marker;
-						
-						if(start <= from ) return {from: from-1, to:to-1,className}; 
-						if(start <= to ) return {from: from, to: to-1,className};
-						return marker;
-					}).filter(marker => marker.from !== marker.to)
-				);
+				return markers.map(marker => {
+					let { from, to ,className} = marker;
+					
+					if(start <= from ) return {from: from-1, to:to-1,className}; 
+					if(start <= to ) return {from: from, to: to-1,className};
+					return marker;
+				}).filter(marker => marker.from !== marker.to);
 			}else{
-				setCurrentMarkers(prevMarkers =>
-					prevMarkers.map(marker => {
-						let { from, to ,className} = marker;
-						if(start > to) return marker; // delete after marker
-						if(end < from) return {from:from - delL, to:to - delL, className}; //delete before marker
-						if(start < from && end< to) return{from:start, to:  start + (to - end),className};//delete before start into marker
-						if(from < start && end< to) return{from:from, to:  start + (to - end),className};//delete before start into marker
-						if(start < from && end< to) return{from:start, to:  start + (to - end),className};//delete after start into after marker
-						if(from < start && to< end) return{from:from, to:  start,className};//delete after start into after marker
-						return{from:from, to:  start,className:className};
+				return markers.map(marker => {
+					let { from, to ,className} = marker;
+					if(start > to) return marker; // delete after marker if(end < from) return {from:from - delL, to:to-delL, className}; //delete before marker
+					if(start < from && end< to) return{from:start, to:  start + (to - end),className};//delete before start into marker
+					if(from < start && end< to) return{from:from, to:  start + (to - end),className};//delete before start into marker
+					if(from < start && to< end) return{from:from, to:  start,className};//delete after start into after marker
+					return{from:from, to:  start,className:className};
 
-					}).filter(marker => marker.from !== marker.to)
-				);
+				}).filter(marker => marker.from !== marker.to);
 			}
 
 		}
@@ -247,6 +271,29 @@ export const MarkedTextarea =forwardRef(({
 				textarea.removeEventListener("beforeinput", handleBeforeInput);
 			};
 		}, []);
+
+		useEffect(() => {
+			const textarea = textareaRef.current;
+			if (!textarea) return;
+
+			const updateCaret = () => {
+				const cursorPosition = textarea.selectionStart;
+				const insideMarker = currentMarkers.some(marker =>
+					cursorPosition >= marker.from && cursorPosition < marker.to);
+				textarea.classList.toggle("white-caret", insideMarker);
+				console.log(textarea.classList)
+			};
+
+			textarea.addEventListener("select", updateCaret);
+			textarea.addEventListener("keyup", updateCaret);
+			textarea.addEventListener("click", updateCaret);
+
+			return () => {
+				textarea.removeEventListener("select", updateCaret);
+				textarea.removeEventListener("keyup", updateCaret);
+				textarea.removeEventListener("click", updateCaret);
+			};
+		}, [currentMarkers]);
 
 		return (
 			<>

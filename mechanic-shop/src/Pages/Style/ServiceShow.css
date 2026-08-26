@@ -78,35 +78,27 @@
 	}
 }
 
-.info {
-	position: relative;
-	display: inline-block;
-
-	p {
-		display: none;
-		position: absolute;
-
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-
-		z-index: 500;
-		white-space: nowrap;
-		padding: var(--small-padding) var(--padding);
-		border-radius: 2px;
-		top: var(--small-padding);
-		left: var(--small-padding);
-	}
-
-	&.show{
-		p{
-			display: block;
-		}
-	}
-}
-
 #signing {
 	display: none;
 }
+
+.coloring-buttons{
+	display: flex;
+	gap: var(--padding);
+
+	button{
+		aspect-ratio: 1;
+		height: var(--line-height);
+		border-radius: 5px;
+		border: none;
+		color: var(--txt-dark);
+		i{
+		font-size: calc(1.5 * var(--font-size-big));
+		}
+	}
+
+}
+
 @media print{
 	#signing{display: block;}
 }
