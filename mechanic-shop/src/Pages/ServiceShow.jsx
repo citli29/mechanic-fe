@@ -24,8 +24,9 @@ export default function ServiceShow2() {
 		kms:"",
 		checkout: "",
 		car_id:"",
+
 		client_id:"",
-		note:"asdfjasjkfhsadf asd fhajksdh fhasd fhasdhf laksjhjhd fjash fdjklahs dfjklhajh hh",
+		note:"{note-yellow,0,15}asdfjasjkfhsadf asd fhajksdh fhasd fhasdhf laksjhjhd fjash fdjklahs dfjklhajh hh",
 		signed_service:"Serviço a realizar",
 		service:"",
 		malfunction:"",

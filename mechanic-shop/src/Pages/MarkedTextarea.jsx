@@ -1,6 +1,8 @@
 import { RichTextarea, createRegexRenderer } from "rich-textarea";
 import React, { forwardRef, useEffect, useImperativeHandle, useRef,useState } from "react"
 
+const SEPARATOR = "\u001E";
+
 export const MarkedTextarea =forwardRef(({
 	value,
 	onChange,
@@ -70,7 +72,6 @@ export const MarkedTextarea =forwardRef(({
 								})
 								return acc;
 							}else{
-								console.log("no Match");
 								return acc;
 							}
 						}
@@ -113,18 +114,51 @@ export const MarkedTextarea =forwardRef(({
 
 		useEffect(()=>{
 			setTextRaw(value);
-			const v = skipChars(value,markers);
-			setTextPresenting(v);
+			const v = parseMarkedString(value);
+			setTextPresenting(v.presentingText);
+			setCurrentMarkers(v.markers);
 		},[]);
+		useEffect(() => {
+			const s = createMarkedString(currentMarkers, textPresenting);
+			onChange(s);
+		},[textPresenting,currentMarkers])
 
-		const skipChars = (txt, mks ) => {
-			const result = [...txt]
-			.filter(char => !mks.some(mk => mk.char === char))
-			.join("");
+		const createMarkedString = (currentMarkers,presentingText) => {
+			return currentMarkers
+				.map(marker => `{${marker.className},${marker.from},${marker.to}}`)
+				.join(",") + SEPARATOR + presentingText;
+		};
 
-			console.log("SkipChars " , result);
-			return result;
-		}
+		const parseMarkedString = (str) => {
+			if(!str.includes(SEPARATOR))return {
+				markers: [],
+				presentingText: str 
+			};
+
+			const [markersString,presentingText] = str.split(SEPARATOR);
+
+			if(!markersString){
+				return 			}
+
+			const markers = markersString
+			.match(/\{[^}]+\}/g)
+			.map(marker => {
+				const [className,from,to] = marker
+				.slice(1,-1)
+				.split(",");
+
+				return {
+					className: className,
+					from: Number(from),
+					to: Number(to)
+				};
+			});
+
+			return {
+				markers: markers,
+				presentingText: presentingText ?? ""
+			};
+		};
 
 		const renderer = (text) => (
 			<>
@@ -150,7 +184,6 @@ export const MarkedTextarea =forwardRef(({
 
 
 
-		useEffect(()=>{ console.log(currentMarkers) },[currentMarkers]);
 		const handleBeforeInput = (e) => {
 			const textarea = textareaRef.current;
 			if (!textarea) return;
@@ -281,7 +314,6 @@ export const MarkedTextarea =forwardRef(({
 				const insideMarker = currentMarkers.some(marker =>
 					cursorPosition >= marker.from && cursorPosition < marker.to);
 				textarea.classList.toggle("white-caret", insideMarker);
-				console.log(textarea.classList)
 			};
 
 			textarea.addEventListener("select", updateCaret);
