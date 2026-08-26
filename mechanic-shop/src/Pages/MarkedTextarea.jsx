@@ -6,132 +6,112 @@ export const MarkedTextarea =forwardRef(({
 	onChange,
 },ref) => {
 
-	const textareaRef = useRef(null);
+		const textareaRef = useRef(null);
 
-	const [currentMarkers, setCurrentMarkers] = useState([
-		{ from: 3, to: 5 } ]);
+		const [currentMarkers, setCurrentMarkers] = useState([
+			{className:"note-red", from: 10, to: 20 } ]);
 
-	const markSelection = () => {
-		const s = textareaRef.current.selectionStart;
-		const f = textareaRef.current.selectionEnd;
+		const markSelection = (clName) => {
+			const s = textareaRef.current.selectionStart;
+			const f = textareaRef.current.selectionEnd;
 
-		const newMarker = { from: s, to: f };
+			const newMarker = {className: clName, from: s, to: f };
 
-		setCurrentMarkers(prevMarkers => {
-			let mergedMarker = newMarker;
+			setCurrentMarkers(prevMarkers => {
+				let mergedMarker = newMarker;
 
-			const newMarkers = prevMarkers.filter(marker => {
-				const overlaps =
-					mergedMarker.from <= marker.to &&
-						mergedMarker.to >= marker.from;
+				const newMarkers = prevMarkers.reduce((acc, marker) => {
+					const overlaps =
+						mergedMarker.from <= marker.to &&
+							mergedMarker.to >= marker.from;
 
-				if (overlaps) {
-					mergedMarker = {
-						from: Math.min(mergedMarker.from, marker.from),
-						to: Math.max(mergedMarker.to, marker.to),
-					};
+					if (overlaps) {
+						if (mergedMarker.className === marker.className) {
+							mergedMarker = {
+								className: marker.className,
+								from: Math.min(mergedMarker.from, marker.from),
+								to: Math.max(mergedMarker.to, marker.to),
+							};
 
-					return false; // remove the overlapping marker
-				}
+							return acc;
+						}else{
+							if(mergedMarker.from <= marker.from && mergedMarker.to >= marker.to ){
+								return acc;
+							}else if ( marker.from < mergedMarker.from && marker.to > mergedMarker.to) {
+								acc.push({
+									className: marker.className,
+									from: marker.from,
+									to: mergedMarker.from,
+								});
 
-				return true;
+								acc.push({
+									className: marker.className,
+									from: mergedMarker.to,
+									to: marker.to,
+								});
+
+								return acc;
+							}else if(mergedMarker.from < marker.from && mergedMarker.to < marker.to){
+								acc.push({
+									className: marker.className,
+									from: mergedMarker.to,
+									to: marker.to,
+								});
+								return acc;
+							}else if (mergedMarker.from > marker.from && mergedMarker.to > marker.to){
+								acc.push({
+									className: marker.className,
+									from: marker.from,
+									to: mergedMarker.from,
+								})
+								return acc;
+							}else{
+								console.log("no Match");
+								return acc;
+							}
+						}
+
+					}
+
+					acc.push(marker);
+
+					return acc;
+				}, []).filter(marker=>marker.from!==marker.to);
+
+				const res = [...newMarkers, mergedMarker]
+				.sort((a, b) => a.from - b.from);
+
+				return res;
 			});
-
-			return [...newMarkers, mergedMarker].sort((a, b) => a.from - b.from);;
-		});
-	};
-
-	useImperativeHandle(ref, () =>({markSelection}));
-
-	const markers = [{
-			red :{
-			className:"note-red",
-			char:"|",
-		},
-		yellow :{
-			className:"note-yellow",
-			char:"!",
-		},
-	}];
-
-	const markerChars = markers.flatMap(group =>
-		Object.values(group).map(marker => marker.char)
-	);
-	
-	const getStringDifference = (oldStr, newStr) => {
-		// No change
-		if (oldStr === newStr) {
-			return {
-				op: null,
-				i: -1,
-				str: "",
-			};
-		}
-
-		// Find where they first differ
-		let start = 0;
-
-		while (
-			start < oldStr.length &&
-				start < newStr.length &&
-				oldStr[start] === newStr[start]
-		) {
-			start++;
-		}
-
-		// Find matching characters from the end
-		let oldEnd = oldStr.length - 1;
-		let newEnd = newStr.length - 1;
-
-		while (
-			oldEnd >= start &&
-				newEnd >= start &&
-				oldStr[oldEnd] === newStr[newEnd]
-		) {
-			oldEnd--;
-			newEnd--;
-		}
-
-		const removed = oldStr.slice(start, oldEnd + 1);
-		const added = newStr.slice(start, newEnd + 1);
-
-		// Delete
-		if (removed && !added) {
-			return {
-				op: "del",
-				i: start,
-				str: removed,
-			};
-		}
-
-		// Add
-		if (!removed && added) {
-			return {
-				op: "add",
-				i: start,
-				str: added,
-			};
-		}
-
-		// Replacement
-		return {
-			op: "replace",
-			i: start,
-			removed,
-			added,
 		};
-	};
 
-	const [textRaw, setTextRaw] = useState("");
-	const [textPresenting, setTextPresenting] = useState("");
+		useImperativeHandle(ref, () =>({markSelection}));
 
-	useEffect(()=>{
-		setTextRaw(value);
-		const v = skipChars(value,markers);
-		setTextPresenting(v);
-	},[]);
+		const markers = [{
+			red :{
+				className:"note-red",
+				char:"|",
+			},
+			yellow :{
+				className:"note-yellow",
+				char:"!",
+			},
+		}];
 
-	const skipChars = (txt, mks ) => {
+		const markerChars = markers.flatMap(group =>
+			Object.values(group).map(marker => marker.char)
+		);
+
+		const [textRaw, setTextRaw] = useState("");
+		const [textPresenting, setTextPresenting] = useState("");
+
+		useEffect(()=>{
+			setTextRaw(value);
+			const v = skipChars(value,markers);
+			setTextPresenting(v);
+		},[]);
+
+		const skipChars = (txt, mks ) => {
 			const result = [...txt]
 			.filter(char => !mks.some(mk => mk.char === char))
 			.join("");
@@ -139,52 +119,32 @@ export const MarkedTextarea =forwardRef(({
 			console.log("SkipChars " , result);
 			return result;
 		}
-	
-	const renderer = (text) => (
+
+		const renderer = (text) => (
 			<>
 				{currentMarkers.map((marker, i) => {
 					const previousTo = i === 0 ? 0 : currentMarkers[i - 1].to;
-
-					return (
+					const a = (
 						<React.Fragment key={i}>
 							{text.slice(previousTo, marker.from)}
 
-							<span className="note-red">
+							<span className={marker.className}>
 								{text.slice(marker.from, marker.to)}
 							</span>
 						</React.Fragment>
-					);
+					)
+
+					return (a);
 				})}
 
-				{/* remaining text after the last marker */}
 				{text.slice(currentMarkers.at(-1)?.to ?? 0)}
 			</>
 		);
 
 
-	const moveMarkerSkinny = (index, pos ,delta) =>{
-		let newMarkerPos = currentMarkers[index];
-
-		if( pos <= newMarkerPos.from ){
-			newMarkerPos.from += delta
-			newMarkerPos.to += delta
-		}else if(pos <= newMarkerPos.to ){
-			newMarkerPos.to += delta
-		}
-
-		console.log(newMarkerPos);
-		setCurrentMarkers(prev => prev.with(index, newMarkerPos));
-	};
-
-	const moveMarkerSelected = (index, start, end, nData)=>{
-		for(let i = end ; i >= start; i--){
-			moveMarkerSkinny(index,i,-1);
-		}
-
-		moveMarkerSkinny(index,start, nData);
-	}
 
 
+		useEffect(()=>{ console.log(currentMarkers) },[currentMarkers]);
 		const handleBeforeInput = (e) => {
 			const textarea = textareaRef.current;
 			if (!textarea) return;
@@ -212,13 +172,37 @@ export const MarkedTextarea =forwardRef(({
 				return;
 			}
 
+			if (isInsert) {
+				// insertion logic
 
-			updateMarkersForEdit(
-				start,
-				end,
-				isInsert ? insertedText : ""
-			);
+			} else if (isDelete) {
+				//if(start !== end)
+					updateMarkersDelete(start,end);
+				//updateMarkersDeleteSkinny(start,end);
+				// deletion logic
+			}
+
+
 		};
+		const updateMarkersDelete = (start,end) => {
+			let delL = end - start;
+			if(delL === 0) delL=1;
+
+			setCurrentMarkers(prevMarkers =>
+				prevMarkers.map(marker => {
+					let { from, to ,className} = marker;
+					if(start < from && end > to) return {from:0, to:0,className:""}; //delete around marker
+					if(from < start && end < to) return {from: from, to: to-delL,className};//delete inside marker
+					if(start > to) return marker; // delete after marker
+					if(end < from) return {from:from - delL, to:to - delL, className}; //delete before marker
+					if(start < from && end< to) return{from:start, to:  start + (to - end),className};//delete before start into marker
+					if(start < from && end< to) return{from:start, to:  start + (to - end),className};//delete after start into after marker
+					if(from < start && to< end) return{from:from, to:  start,className};//delete after start into after marker
+					return{from:from, to:  start,className:className};
+					
+				}).filter(marker => marker.from !== marker.to)
+			);
+		}
 
 		const updateMarkersForEdit = (start, end, insertedText) => {
 			const deletedLength = end - start;
@@ -227,69 +211,47 @@ export const MarkedTextarea =forwardRef(({
 
 			setCurrentMarkers(prevMarkers =>
 				prevMarkers.map(marker => {
-					let { from, to } = marker;
-
+					let { from, to ,className} = marker;
 					if (end <= from) {
 						return {
+							className: className,
 							from: from + delta,
 							to: to + delta
 						};
 					}
 
-					// Edit happens completely after marker
 					if (start >= to) { return marker; }
-
 					if (start <= from) { from = start; }
 
 					to += delta;
-
 					if (to < from) { to = from; }
-
-					return { from, to };
+					return { from, to ,className};
 				})
 			);
 		};
 
-	useEffect(() => {
-		const textarea = textareaRef.current;
-		if (!textarea) return;
+		useEffect(() => {
+			const textarea = textareaRef.current;
+			if (!textarea) return;
 
-		textarea.addEventListener("beforeinput", handleBeforeInput);
+			textarea.addEventListener("beforeinput", handleBeforeInput);
 
-		return () => {
-			textarea.removeEventListener("beforeinput", handleBeforeInput);
-		};
-	}, []);
+			return () => {
+				textarea.removeEventListener("beforeinput", handleBeforeInput);
+			};
+		}, []);
 
-	return (
-		<>
-			<RichTextarea
-				ref={textareaRef}
-				style={{width:"100%"}}
-				value={textPresenting}
-				onChange={(e)=>{e.preventDefault();setTextPresenting(e.target.value)}}
-			>
-				{renderer}
-			</RichTextarea>
-
-			<div className="note-toolbar">
-				<button
-					type="button"
-					onMouseDown={(e) => {
-						e.preventDefault();
-						addRedMarker();
-					}}
+		return (
+			<>
+				<RichTextarea
+					ref={textareaRef}
+					style={{width:"100%"}}
+					value={textPresenting}
+					onChange={(e)=>{e.preventDefault();setTextPresenting(e.target.value)}}
 				>
-					Red
-				</button>
+					{renderer}
+				</RichTextarea>
 
-				<button
-					type="button"
-					onClick={()=>removeSelectionFormatting()}
-				>
-					Remove
-				</button>
-			</div>
-		</>
-)
-});
+			</>
+		)
+	});

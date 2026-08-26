@@ -25,7 +25,7 @@ export default function ServiceShow2() {
 		checkout: "",
 		car_id:"",
 		client_id:"",
-		note:"asdfjasjkfhsadf",
+		note:"asdfjasjkfhsadf asd fhajksdh fhasd fhasdhf laksjhjhd fjash fdjklahs dfjklhajh hh",
 		signed_service:"Serviço a realizar",
 		service:"",
 		malfunction:"",
@@ -219,10 +219,14 @@ export default function ServiceShow2() {
 						</div>		
 						<button
 							onClick={()=>{
-								markedTextarea.current.markSelection();
-
+								markedTextarea.current.markSelection("note-red");
 							}}
-						>Clica</button>
+						>Vermelho</button>
+						<button
+							onClick={()=>{
+								markedTextarea.current.markSelection("note-green");
+							}}
+						>Verde</button>
 					</div>
 
 					<div className="text-entry">
