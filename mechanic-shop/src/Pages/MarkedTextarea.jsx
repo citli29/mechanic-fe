@@ -176,32 +176,39 @@ export const MarkedTextarea =forwardRef(({
 				// insertion logic
 
 			} else if (isDelete) {
-				//if(start !== end)
 					updateMarkersDelete(start,end);
-				//updateMarkersDeleteSkinny(start,end);
-				// deletion logic
 			}
 
 
 		};
 		const updateMarkersDelete = (start,end) => {
 			let delL = end - start;
-			if(delL === 0) delL=1;
+			if(delL === 0){
+				setCurrentMarkers(prevMarkers =>
+					prevMarkers.map(marker => {
+						let { from, to ,className} = marker;
+						
+						if(start <= from ) return {from: from-1, to:to-1,className}; 
+						if(start <= to ) return {from: from, to: to-1,className};
+						return marker;
+					}).filter(marker => marker.from !== marker.to)
+				);
+			}else{
+				setCurrentMarkers(prevMarkers =>
+					prevMarkers.map(marker => {
+						let { from, to ,className} = marker;
+						if(start > to) return marker; // delete after marker
+						if(end < from) return {from:from - delL, to:to - delL, className}; //delete before marker
+						if(start < from && end< to) return{from:start, to:  start + (to - end),className};//delete before start into marker
+						if(from < start && end< to) return{from:from, to:  start + (to - end),className};//delete before start into marker
+						if(start < from && end< to) return{from:start, to:  start + (to - end),className};//delete after start into after marker
+						if(from < start && to< end) return{from:from, to:  start,className};//delete after start into after marker
+						return{from:from, to:  start,className:className};
 
-			setCurrentMarkers(prevMarkers =>
-				prevMarkers.map(marker => {
-					let { from, to ,className} = marker;
-					if(start < from && end > to) return {from:0, to:0,className:""}; //delete around marker
-					if(from < start && end < to) return {from: from, to: to-delL,className};//delete inside marker
-					if(start > to) return marker; // delete after marker
-					if(end < from) return {from:from - delL, to:to - delL, className}; //delete before marker
-					if(start < from && end< to) return{from:start, to:  start + (to - end),className};//delete before start into marker
-					if(start < from && end< to) return{from:start, to:  start + (to - end),className};//delete after start into after marker
-					if(from < start && to< end) return{from:from, to:  start,className};//delete after start into after marker
-					return{from:from, to:  start,className:className};
-					
-				}).filter(marker => marker.from !== marker.to)
-			);
+					}).filter(marker => marker.from !== marker.to)
+				);
+			}
+
 		}
 
 		const updateMarkersForEdit = (start, end, insertedText) => {
