@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
 
 export const AppliedProducts = ({
@@ -65,10 +65,30 @@ export const AppliedProducts = ({
 	});
 	const [isAddingProduct, setIsAddingProduct] = useState(false);
 	const [isAddingAP, setIsAddingAP] = useState(false);
+
+	const refSearch = useRef(null);
+
+	const [isSearchSelected, setIsSearchSelected] = useState(false);
+
+	useEffect(() => {
+		function handleClickOutside(e) {
+			if ( refSearch.current && !refSearch.current.contains(e.target)) {
+				setIsSearchSelected(false);
+			}else{
+				setIsSearchSelected(true);
+			}
+		}
+
+		document.addEventListener("mousedown", handleClickOutside);
+
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, []);
+
+
 	return(
 		<>
-			<button onClick={(e)=>setIsAddingProduct(!isAddingProduct)}>P</button>
-			<button onClick={(e)=>setIsAddingAP(!isAddingAP)}>AP</button>
 
 			<table>
 				<tr>
@@ -82,7 +102,7 @@ export const AppliedProducts = ({
 				{appliedProducts.map((ap,index) =>(
 					<tr key={ap.sap_id}>
 						<td>
-							<input type="text" value={ap?.product_name??""} onChange={(e)=>
+							<input disabled type="text" value={ap?.product_name??""} onChange={(e)=>
 								setAppliedProducts(prev =>
 									prev.map((product, i) =>
 										i === index
@@ -93,7 +113,7 @@ export const AppliedProducts = ({
 							}/>
 						</td>
 						<td>
-							<input type="text" placeholder="S/Referencia" value={ap?.reference??""} onChange={(e)=>
+							<input disabled type="text" placeholder="S/Referencia" value={ap?.reference??""} onChange={(e)=>
 								setAppliedProducts(prev =>
 									prev.map((product, i) =>
 										i === index
@@ -104,7 +124,7 @@ export const AppliedProducts = ({
 							}/>
 						</td>
 						<td> 
-							<select name="productType" id="productType" onChange={(e)=>
+							<select disabled name="productType" id="productType" onChange={(e)=>
 								setAppliedProducts(prev =>
 									prev.map((product, i) =>
 										i === index
@@ -141,7 +161,7 @@ export const AppliedProducts = ({
 							}/>
 						</td>
 						<td>
-							<button>X</button>
+							<button className="cancel"><i className="fa-solid fa-x"/></button>
 						</td>
 					</tr>
 
@@ -149,11 +169,11 @@ export const AppliedProducts = ({
 				{!isAddingAP && 
 				<tr className="button-row">
 					<td colSpan={6}>
-						<button onClick={(e)=>setIsAddingAP(true)}>+</button>
+						<button onClick={(e)=>{e.preventDefault();setIsAddingAP(true);setIsSearchSelected(false)}}><i className="fa-solid fa-plus"/></button>
 					</td>
 				</tr>}
 				{isAddingAP && 
-				<tr className="add-ap">
+					<tr className="add-ap">
 						{isAddingProduct && (
 						<>
 							<td>
@@ -171,42 +191,86 @@ export const AppliedProducts = ({
 							</td>
 						</>
 						)}
-						{!isAddingProduct && ( 
-						<>
-							<td>
-								<input type="text" value={newAP?.product_name??""}/>
-							</td>
-							<td>
-								<input type="text" placeholder="S/Referencia" value={newProduct?.reference??""}/>
-							</td>
-							<td> 
-								<select name="productType" id="productType" value={newProduct?.product_type_id}>
-									{productTypes.map(pt =>(
-										<option value={pt.id}>{pt.name}</option>
-									))}
-								</select>
-							</td>
-						</>
-					)}
-					<td>
-						<input type="number" value={newAP?.quantity} onChange={(e)=>(setNewProduct(prev=>({...prev, product_type_id:e.target.value})))}/>
-					</td>
-					<td>
-						<input type="checkbox" checked={Boolean(newAP?.is_applied)} onChange={(e)=>(setNewProduct(prev=>({...prev, product_type_id:e.target.value})))}/>
-					</td>
-					<td>
-						<button onClick={(e)=>setIsAddingAP(false)}>X</button>
-					</td>
-					<td>
+						{!isAddingProduct && (
+							newAP.product_id ? (
+								<>
+									<td>
+										<input
+											disabled
+											type="text"
+											value={newAP?.product_name ?? ""}
+										/>
+									</td>
 
+									<td>
+										<input
+											disabled
+											type="text"
+											placeholder="S/Referencia"
+											value={newProduct?.reference ?? ""}
+										/>
+									</td>
+
+									<td>
+										<select
+											disabled
+											name="productType"
+											id="productType"
+											value={newProduct?.product_type_id ?? ""}
+										>
+											{productTypes.map(pt => (
+												<option key={pt.id} value={pt.id}>
+													{pt.name}
+												</option>
+											))}
+										</select>
+									</td>
+								</>
+							) : (
+									<td className="product-input">
+										<div className="search-bar" ref={refSearch}>
+											<span> <i className="fa-solid fa-magnifying-glass" /> </span>
+											<input type="text"
+												onFocus={()=>setIsSearchSelected(true)}
+											/>
+											{isSearchSelected && (<ul className="dropdown">
+												<li>
+													<button className="addEntry" >
+
+														<span><i className="fa-solid fa-plus"/>Adicionar Produto </span>
+														<span>{"Mudar aqui"}</span>
+														<span></span>
+													</button>
+												</li>
+												{products?.map(p => (<li  key={p.id}>
+													<button onClick={()=>handleClickSelect(c)}>
+														<span>{p.name}</span>
+														<span>{p.reference}</span>
+														<span>{p.product_type_name}</span>
+													</button>
+												</li>))}
+											</ul>)}
+										</div>
+									</td>
+								)
+						)}
+					<td>
+						{isAddingProduct &&(<input type="number" value={newAP?.quantity} onChange={(e)=>(setNewProduct(prev=>({...prev, product_type_id:e.target.value})))}/>)}
+					</td>
+					<td>
+						{isAddingProduct &&(<input type="checkbox" checked={Boolean(newAP?.is_applied)} onChange={(e)=>(setNewProduct(prev=>({...prev, product_type_id:e.target.value})))}/>)}
+					</td>
+					<td>
+						<button className="cancel" onClick={(e)=>setIsAddingAP(false)}><i className="fa-solid fa-x"/></button>
 					</td>
 				</tr>}
-				<div className="searchProducts">
-					{/*ir buscar os m-pickers*/}
-					{/*aparecer as opcoes para adicionar os produtos*/}
-			{/*criar a entry the appliedProducts*/}
-			</div>
 			</table>
+			<div className="search-products">
+				{/*ir buscar os m-pickers*/}
+				{/*aparecer as opcoes para adicionar os produtos*/}
+				{/*criar a entry the appliedProducts*/}
+			</div>
+			<button onClick={(e)=>setIsAddingProduct(!isAddingProduct)}>P</button>
 		</>
 	);
 
