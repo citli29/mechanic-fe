@@ -77,6 +77,37 @@
 		border-bottom: 4px solid #e8aa2e;
 	}
 }
+.service-applied-products-card{
+	.header{
+		border-bottom: 4px solid #ff8fff;
+	}
+}
+.service-user-times-card{
+	.header{
+		border-bottom: 4px solid #a3540a;
+	}
+}
+.service-user-times-card,
+.service-applied-products-card{
+	border: 1px solid var(--border);
+	border-radius: 0 0 10px 10px;
+
+	.header {
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+
+		i{
+			font-size: calc(1.5 * var(--font-size-big));
+		}
+		h1{
+			font-size: var(--font-size-big);
+		}
+		padding:calc(var(--big-padding) + var(--padding) + 2.5px ) var(--big-padding) ;
+		background: var(--bg-page);
+
+	}
+}
 
 #signing {
 	display: none;

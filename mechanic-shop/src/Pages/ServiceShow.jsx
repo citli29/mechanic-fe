@@ -8,6 +8,7 @@ import { CarPicker } from "../components/Pickers/CarPicker";
 import "./Style/ServiceShow.css";
 import { ClientPicker } from "../components/Pickers/ClientPicker";
 import { MarkedTextarea } from "./MarkedTextarea";
+import { AppliedProducts } from "./AppliedProducts";
 
 export default function ServiceShow2() {
 	const { id } = useParams();
@@ -35,7 +36,6 @@ export default function ServiceShow2() {
 	const [service, setService] = useState(defaultService);
 
 	const hasLoaded = useRef(false);
-	const [showInfo, setShowInfo]= useState(false);
 
 	useEffect(()=>{
 		document.querySelectorAll(".info").forEach((element) => {
@@ -63,7 +63,7 @@ export default function ServiceShow2() {
 			console.error(error);
 		}
 	}
-	useEffect(()=>{loadService()},[]);
+
 	useEffect(()=>{console.log("Servico: ",service);},[service]);
 	useEffect(()=>{console.log("Carro: ",service.car_id);},[service.car_id]);
 	useEffect(()=>{console.log("Cliente: ",service.client_id);},[service.client_id]);
@@ -71,7 +71,6 @@ export default function ServiceShow2() {
 	//For debug
 	const [isAllowedEditing, setIsAllowedEditing] = useState(false);
 	useEffect(()=>{console.log("AllowedEditing: ",isAllowedEditing);},[isAllowedEditing]);
-
 
 	const putService = async (service) =>{
 		try{
@@ -89,9 +88,7 @@ export default function ServiceShow2() {
 
 	const skipSave = useRef(true);
 
-	useEffect(() => {
-		loadService();
-	}, []);
+	useEffect(() => { loadService(); }, []);
 
 	useEffect(() => {
 		if (!service?.id) return;
@@ -149,9 +146,9 @@ export default function ServiceShow2() {
 			<ClientPicker
 				client_id={service.client_id}
 				onClientIdChange={(value)=>setService(prev => (
-					prev.car_id === value
+					prev.client_id === value
 						? prev :
-						{...prev, car_id: value,}
+						{...prev, client_id: value,}
 				))}
 				isAllowedEditing={isAllowedEditing}
 			/>
@@ -247,8 +244,23 @@ export default function ServiceShow2() {
 					</div>
 				</div>
 			</div>
-			<i className="fa-solid fa-store"></i>
-			<i className="fa-solid fa-hourglass-half"></i>
+			<div className="service-applied-products-card">
+				<div className="header">
+					<i className="fa-solid fa-store"></i>
+					<h1>Produtos Aplicados</h1>
+				</div>	
+				<div className="body">
+					<AppliedProducts id={id}/>
+				</div>
+			</div>
+			<div className="service-user-times-card">
+				<div className="header">
+					<i className="fa-solid fa-hourglass-half"></i>
+					<h1>Tempos de Serviço</h1>
+				</div>	
+				<div className="body">
+				</div>
+			</div>
 		</div>
 
 	);
