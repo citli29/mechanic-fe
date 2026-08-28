@@ -146,6 +146,12 @@
 
 }
 .item-info.hidden{ display: none; }
+.uppercase::placeholder {
+	text-transform:none ;
+}
+.uppercase {
+	text-transform:uppercase ;
+}
 
 .item-field {
 	position: relative;
@@ -157,7 +163,7 @@
 		z-index: 500;
 
 	}
-	input{
+	input, select{
 		padding: var(--padding);
 		padding-top: calc(var(--padding) + var(--small-padding) + var(--font-size-small)); 
 		width: 100%;
@@ -165,8 +171,10 @@
 		border-radius: 5px;
 		border: 1px solid var(--border);
 		color: var(--txt-light);
+		
 	}
-	input:disabled{
+
+	input:disabled, select:disabled{
 		background: var(--bg-disabled);}
 }
 

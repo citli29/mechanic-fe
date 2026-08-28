@@ -407,6 +407,7 @@ export const CarPicker = ({
 							value={presentingCar?.chassi_nr??""}
 							type="text"
 							disabled= {!isEditable}
+							className="uppercase"
 							onChange={(e) =>
 								setPresentingCar(prev => ({
 									...prev,
@@ -455,6 +456,7 @@ export const CarPicker = ({
 							value={presentingCar?.cc??""}
 							type="number"
 							disabled= {!isEditable}
+							className="uppercase"
 							onChange={(e) =>
 								setPresentingCar(prev => ({
 									...prev,
@@ -469,6 +471,7 @@ export const CarPicker = ({
 							value={presentingCar?.engine_code??""}
 							type="text"
 							disabled= {!isEditable}
+							className="uppercase"
 							onChange={(e) =>
 								setPresentingCar(prev => ({
 									...prev,
@@ -483,6 +486,7 @@ export const CarPicker = ({
 							value={presentingCar?.color_code??""}
 							type="text"
 							disabled= {!isEditable}
+							className="uppercase"
 							onChange={(e) =>
 								setPresentingCar(prev => ({
 									...prev,

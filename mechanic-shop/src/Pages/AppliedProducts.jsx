@@ -69,6 +69,7 @@ export const AppliedProducts = ({
 	const refSearch = useRef(null);
 
 	const [isSearchSelected, setIsSearchSelected] = useState(false);
+	const [searchProduct, setSearchProduct] = useState("");
 
 	useEffect(() => {
 		function handleClickOutside(e) {
@@ -89,25 +90,67 @@ export const AppliedProducts = ({
 
 	return(
 		<>
-			<div className="search-bar">
+			<div ref={refSearch}className="search-bar search-products">
 				<span><i className="fa-solid fa-magnifying-glass"/></span>
-				<input type="text"/>
-			</div>
+				<input 
+					type="text"
+					onFocus={()=>setIsSearchSelected(true)}
+					placeholder={"Pesquisar Produto..."}
+					value={searchProduct}
+					onChange={(e)=>{setSearchProduct(e.target.value)}}
+				/>
 
-			<div className="item-info add-product">
-				<div className="item-field">
-					<label htmlFor="product-name">Nome: </label>
-					<input type="text" placeholder="S/Nome"/>
-				</div>
-				<div className="item-field">
-					<label htmlFor="product-reference">Referencia: </label>
-					<input type="text" placeholder="S/Referencia"/>
-				</div>
-				<div className="item-field">
-					<label htmlFor="product-">Referencia: </label>
-					<input type="text" placeholder="S/Referencia"/>
-				</div>
+				{isSearchSelected && (<ul className="dropdown">
+					<li >
+						<button className="addEntry" onClick={()=>handleClickStartAdd()}>
+
+							<span><i className="fa-solid fa-plus"/>Adicionar Produto </span>
+							<span>{searchProduct}</span>
+							<span></span>
+						</button>
+					</li>
+					{products?.map(p => (<li  key={p.id}>
+						<button onClick={()=>handleClickSelect(p)}>
+							<span>{p.name}</span>
+							<span>{p.reference}</span>
+							<span>{p.product_type_name}</span>
+						</button>
+					</li>))}
+				</ul>)}
+
 			</div>
+{isAddingProduct && (
+			<div className="add-product-card">
+				<div className="header">
+					<div className="card-title">
+						<i className="fa-solid fa-cart-flatbed"/>
+						<h1>Adicionar Produto</h1>
+					</div>
+
+					<div className="card-buttons">
+						<button className="confirm"><i className="fa-solid fa-check"/></button>
+						<button className="cancel"><i className="fa-solid fa-x"/></button>
+					</div>
+				</div>
+				<div className="item-info add-product">
+					<div className="item-field">
+						<label htmlFor="product-name">Nome: </label>
+						<input type="text" placeholder="S/Nome"/>
+					</div>
+					<div className="item-field ">
+						<label htmlFor="product-reference">Referencia: </label>
+						<input className="uppercase" type="text" placeholder="S/Referencia"/>
+					</div>
+					<div className="item-field">
+						<label htmlFor="product-type">Tipo de Produto: </label>
+						<select  name="productType" id="productType" onChange={(e)=>(setNewAP(prev => ({...prev, product_type_id: e.target.value})))}>
+							{productTypes.map(pt =>(
+								<option value={pt.id}>{pt.name}</option>
+							))}
+						</select>
+					</div>
+				</div>
+			</div>)}
 
 			<table>
 				<tr>
@@ -201,12 +244,6 @@ export const AppliedProducts = ({
 
 				))}
 			</table>
-			<div className="search-products">
-				{/*ir buscar os m-pickers*/}
-				{/*aparecer as opcoes para adicionar os produtos*/}
-				{/*criar a entry the appliedProducts*/}
-			</div>
-			<button onClick={(e)=>setIsAddingProduct(!isAddingProduct)}>P</button>
 		</>
 	);
 
