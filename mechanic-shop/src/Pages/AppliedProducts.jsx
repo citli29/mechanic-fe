@@ -89,6 +89,25 @@ export const AppliedProducts = ({
 
 	return(
 		<>
+			<div className="search-bar">
+				<span><i className="fa-solid fa-magnifying-glass"/></span>
+				<input type="text"/>
+			</div>
+
+			<div className="item-info add-product">
+				<div className="item-field">
+					<label htmlFor="product-name">Nome: </label>
+					<input type="text" placeholder="S/Nome"/>
+				</div>
+				<div className="item-field">
+					<label htmlFor="product-reference">Referencia: </label>
+					<input type="text" placeholder="S/Referencia"/>
+				</div>
+				<div className="item-field">
+					<label htmlFor="product-">Referencia: </label>
+					<input type="text" placeholder="S/Referencia"/>
+				</div>
+			</div>
 
 			<table>
 				<tr>
@@ -101,8 +120,9 @@ export const AppliedProducts = ({
 				</tr>
 				{appliedProducts.map((ap,index) =>(
 					<tr key={ap.sap_id}>
-						<td>
-							<input disabled type="text" value={ap?.product_name??""} onChange={(e)=>
+						<td className="p-name">
+							<label htmlFor="product-name" className="magic-label">Nome:</label>
+							<input disabled type="text" value={ap?.product_name??""} />{/*onChange={(e)=>
 								setAppliedProducts(prev =>
 									prev.map((product, i) =>
 										i === index
@@ -110,20 +130,30 @@ export const AppliedProducts = ({
 											: product
 									)
 								) 
-							}/>
+							}/>*/}
 						</td>
-						<td>
-							<input disabled type="text" placeholder="S/Referencia" value={ap?.reference??""} onChange={(e)=>
+						<td className="p-reference">
+							<label htmlFor="product-reference" className="magic-label">Referencia:</label>
+							<input disabled type="text" placeholder="S/Referencia" value={ap?.reference??""} />{/*onChange={(e)=>
 								setAppliedProducts(prev =>
 									prev.map((product, i) =>
 										i === index
 											? { ...product, reference: e.target.value }
 											: product
 									)
-								) 
-							}/>
+								) */}
 						</td>
-						<td> 
+						<td className="p-p-type"> 
+							<label htmlFor="product-product-type" className="magic-label">T. Produto:</label>
+							<input disabled type="text" placeholder="S/Referencia" value={ap?.product_type_name??""} />{/*onChange={(e)=>
+								setAppliedProducts(prev =>
+									prev.map((product, i) =>
+										i === index
+											? { ...product, reference: e.target.value }
+											: product
+									)
+								) */}
+							{/*
 							<select disabled name="productType" id="productType" onChange={(e)=>
 								setAppliedProducts(prev =>
 									prev.map((product, i) =>
@@ -136,9 +166,10 @@ export const AppliedProducts = ({
 								{productTypes.map(pt =>(
 									<option value={pt.id}>{pt.name}</option>
 								))}
-							</select>
+							</select>*/}
 						</td>
-						<td>
+						<td className="p-quantity">
+							<label htmlFor="product-quantity" className="magic-label">Quantidade:</label>
 							<input type="number" value={ap?.quantity} onChange={(e)=>
 								setAppliedProducts(prev =>
 									prev.map((product, i) =>
@@ -149,121 +180,26 @@ export const AppliedProducts = ({
 								)
 							}/>
 						</td>
-						<td>
-							<input type="checkbox" checked={Boolean(ap?.is_applied)} onChange={(e)=>
-								setAppliedProducts(prev =>
-									prev.map((product, i) =>
-										i === index
-											? { ...product, is_applied: Boolean(e.target.value)?"1":"0"}
-											: product
+						<td className="td-label-label p-applied">
+							<label htmlFor="product-applied" className="magic-label">Aplicado:</label>
+							<label >
+								<input type="checkbox" checked={Boolean(ap?.is_applied)} onChange={(e)=>
+									setAppliedProducts(prev =>
+										prev.map((product, i) =>
+											i === index
+												? { ...product, is_applied: Boolean(e.target.value)?"1":"0"}
+												: product
+										)
 									)
-								)
-							}/>
+								}/>
+							</label>
 						</td>
-						<td>
+						<td className="p-cancel">
 							<button className="cancel"><i className="fa-solid fa-x"/></button>
 						</td>
 					</tr>
 
 				))}
-				{!isAddingAP && 
-				<tr className="button-row">
-					<td colSpan={6}>
-						<button onClick={(e)=>{e.preventDefault();setIsAddingAP(true);setIsSearchSelected(false)}}><i className="fa-solid fa-plus"/></button>
-					</td>
-				</tr>}
-				{isAddingAP && 
-					<tr className="add-ap">
-						{isAddingProduct && (
-						<>
-							<td>
-								<input type="text" value={newProduct?.product_name??""} onChange={(e)=>(setNewProduct(prev=>({...prev, name:e.target.value}))) }/>
-							</td>
-							<td>
-								<input type="text" placeholder="S/Referencia" value={newProduct?.reference??""} onChange={(e)=>(setNewProduct(prev=>({...prev, reference:e.target.value})))}/>
-							</td>
-							<td> 
-								<select name="productType" id="productType" value={newProduct?.product_type_id} onChange={(e)=>(setNewProduct(prev=>({...prev, product_type_id:e.target.value})))}>
-									{productTypes.map(pt =>(
-										<option value={pt.id}>{pt.name}</option>
-									))}
-								</select>
-							</td>
-						</>
-						)}
-						{!isAddingProduct && (
-							newAP.product_id ? (
-								<>
-									<td>
-										<input
-											disabled
-											type="text"
-											value={newAP?.product_name ?? ""}
-										/>
-									</td>
-
-									<td>
-										<input
-											disabled
-											type="text"
-											placeholder="S/Referencia"
-											value={newProduct?.reference ?? ""}
-										/>
-									</td>
-
-									<td>
-										<select
-											disabled
-											name="productType"
-											id="productType"
-											value={newProduct?.product_type_id ?? ""}
-										>
-											{productTypes.map(pt => (
-												<option key={pt.id} value={pt.id}>
-													{pt.name}
-												</option>
-											))}
-										</select>
-									</td>
-								</>
-							) : (
-									<td className="product-input">
-										<div className="search-bar" ref={refSearch}>
-											<span> <i className="fa-solid fa-magnifying-glass" /> </span>
-											<input type="text"
-												onFocus={()=>setIsSearchSelected(true)}
-											/>
-											{isSearchSelected && (<ul className="dropdown">
-												<li>
-													<button className="addEntry" >
-
-														<span><i className="fa-solid fa-plus"/>Adicionar Produto </span>
-														<span>{"Mudar aqui"}</span>
-														<span></span>
-													</button>
-												</li>
-												{products?.map(p => (<li  key={p.id}>
-													<button onClick={()=>handleClickSelect(c)}>
-														<span>{p.name}</span>
-														<span>{p.reference}</span>
-														<span>{p.product_type_name}</span>
-													</button>
-												</li>))}
-											</ul>)}
-										</div>
-									</td>
-								)
-						)}
-					<td>
-						{isAddingProduct &&(<input type="number" value={newAP?.quantity} onChange={(e)=>(setNewProduct(prev=>({...prev, product_type_id:e.target.value})))}/>)}
-					</td>
-					<td>
-						{isAddingProduct &&(<input type="checkbox" checked={Boolean(newAP?.is_applied)} onChange={(e)=>(setNewProduct(prev=>({...prev, product_type_id:e.target.value})))}/>)}
-					</td>
-					<td>
-						<button className="cancel" onClick={(e)=>setIsAddingAP(false)}><i className="fa-solid fa-x"/></button>
-					</td>
-				</tr>}
 			</table>
 			<div className="search-products">
 				{/*ir buscar os m-pickers*/}
