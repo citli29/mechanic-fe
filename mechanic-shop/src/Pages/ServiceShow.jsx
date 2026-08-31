@@ -9,6 +9,7 @@ import "./Style/ServiceShow.css";
 import { ClientPicker } from "../components/Pickers/ClientPicker";
 import { MarkedTextarea } from "./MarkedTextarea";
 import { AppliedProducts } from "./AppliedProducts";
+import { UserTimes } from "./UserTimes";
 
 export default function ServiceShow2() {
 	const { id } = useParams();
@@ -259,6 +260,7 @@ export default function ServiceShow2() {
 					<h1>Tempos de Serviço</h1>
 				</div>	
 				<div className="body">
+					<UserTimes id={id}/>
 				</div>
 			</div>
 		</div>

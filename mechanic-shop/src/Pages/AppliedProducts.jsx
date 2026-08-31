@@ -291,7 +291,7 @@ export const AppliedProducts = ({
 					</tr>
 				</thead>
 				<tbody>
-					{appliedProducts.map((ap,index) =>(
+					{appliedProducts.map((ap) =>(
 						<tr key={ap.sap_id}>
 							<td className="p-name">
 								<label htmlFor="product-name" className="magic-label">Nome:</label>
@@ -308,45 +308,31 @@ export const AppliedProducts = ({
 							<td className="p-quantity">
 								<label htmlFor="product-quantity" className="magic-label">Quantidade:</label>
 								<input type="number" value={ap?.quantity??""} onChange={async (e) => {
-									const quantity = Number(e.target.value);
-
-									setAppliedProducts(prev =>
-										prev.map((product, i) =>
-											i === index
-												? { ...product, quantity }
-												: product
-										)
-									);
-
-									await updateAP({
-										...ap,
-										quantity
-									});
-								}}/>
+									const quantity = e.target.value.trim()!==""?Number(e.target.value):"";
+									setAppliedProducts(prev => prev.map((_ap) => ap.sap_id === _ap.sap_id ?
+										{ ..._ap, quantity }:
+										_ap
+									));
+									if(quantity!==""){
+										await updateAP({...ap,quantity});
+									}}
+								}/>
 							</td>
 							<td className="td-label-label p-applied">
 								<label htmlFor="product-applied" className="magic-label">Aplicado:</label>
 								<label>
 									<input
 										type="checkbox"
-										checked={ap?.is_applied === "1"}
+										checked={ap?.is_applied == "1"}
 										onChange={async (e) => {
 											const is_applied = e.target.checked ? "1" : "0";
-
-											setAppliedProducts(prev =>
-												prev.map((product, i) =>
-													i === index
-														? { ...product, is_applied }
-														: product
-												)
-											);
-
-											await updateAP({
-												...ap,
-												is_applied
-											});
-										}}
-									/>
+											setAppliedProducts(prev => prev.map((_ap) => ap.sap_id === _ap.sap_id ? 
+												{ ..._ap, is_applied }: 
+												_ap
+											));
+											await updateAP({ ...ap, is_applied});
+										}
+									}/>
 								</label>
 							</td>
 							<td className="p-cancel">
