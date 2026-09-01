@@ -170,8 +170,11 @@ export const UserTimes = ({
 	}
 	const handleActionAddUT = async () =>{
 		const ut = await postUserTimes(newUserTime.user_id, newUserTime.minutes, newUserTime.date);
-		if(ut)
+		if(ut){
 			loadUserTimes();
+			setIsAddingUT(false);
+
+		}
 	}
 	const handleActionAddUTP = async () =>{
 		const utp = await postUserTimePunches(newUserTimePunch.user_id, newUserTimePunch.date);
@@ -201,6 +204,9 @@ export const UserTimes = ({
 		return `${year}-${month}-${day}`;
 	};
 
+	const [isEditing, setIsEditing] = useState(false);
+	const [isAdding, setIsAdding] = useState(false);
+
 	return(
 		<>
 			<table>
@@ -217,10 +223,10 @@ export const UserTimes = ({
 					{userTimes.map((ut) =>(
 						<tr key={ut.sut_id}>
 							<td className="ut-name">
-								<label htmlFor="ut-user" className="magic-label">Funcionario:</label>
 								<select 
 									name="ut-user" 
 									id="ut-user" 
+									disabled={!isEditing}
 									value={ut.user_id}
 									onChange={
 										async (e) => {
@@ -242,27 +248,28 @@ export const UserTimes = ({
 								</select>
 							</td>
 							<td className="ut-minutes">
-								<label htmlFor="ut-minutes" className="magic-label">Tempo (mins):</label>
-								<input 
-									type="number" 
-									value={ut?.minutes??""} 
-									onChange={async (e) => {
-										const mins = e.target.value.trim()!==""?Number(e.target.value):"";
-										setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id ? 
-											{ ..._ut, minutes:mins }
-											: _ut
-										));
-										if(mins!==""){
-											await putUserTimes(ut.sut_id, ut.user_id, mins, ut.date);
-										}
-								}}
-								/>
+									<span>Tempo</span>
+									<input 
+										type="number" 
+										value={ut?.minutes??""} 
+										disabled={!isEditing}
+										onChange={async (e) => {
+											const mins = e.target.value.trim()!==""?Number(e.target.value):"";
+											setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id ? 
+												{ ..._ut, minutes:mins }
+												: _ut
+											));
+											if(mins!==""){
+												await putUserTimes(ut.sut_id, ut.user_id, mins, ut.date);
+											}
+										}}
+									/>
 							</td>
-							<td className="ut-date"> 
-								<label htmlFor="ut-date" className="magic-label">Data:</label>
+							<td className={`ut-date ${isEditing?"is-editing":""}`}> 
 								<input 
 									type="date"
 									value={ut?.date??""} 
+									disabled={!isEditing}
 									onChange={async (e) => {
 										const date = formatDate(e.target.value);
 										setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id? 
@@ -273,12 +280,93 @@ export const UserTimes = ({
 											await putUserTimes(ut.sut_id, ut.user_id, ut.minutes, date);
 										}
 									}}/>
+								<button><i className="fa-solid fa-circle-h"/></button>
 							</td>
-							<td className="p-cancel">
-								<button className="cancel" onClick={()=>handleActionDeleteAP(ap.sap_id)}><i className="fa-solid fa-x"/></button>
-							</td>
+							{!isEditing &&(
+								<>
+									<td className="p-edit">
+										<button className="options" onClick={()=>setIsEditing(true)}><i className="fa-solid fa-pencil"/></button>
+									</td>
+									<td className="p-cancel">
+										<button className="cancel" onClick={()=>handleActionDeleteUT(ut.sut_id)}><i className="fa-solid fa-trash"/></button>
+									</td>
+								</>
+							)}
+							{isEditing &&(
+								<>
+									<td className="p-edit-confirm">
+										<button className="confirm" onClick={()=>handleActionEditUT(true)}><i className="fa-solid fa-check"/></button>
+									</td>
+									<td className="p-cancel">
+										<button className="cancel" onClick={()=>setIsEditing(false)}><i className="fa-solid fa-x"/></button>
+									</td>
+								</>
+							)}
 						</tr>
 					))}
+					{!isAddingUT &&(
+						<tr className="add-row">
+							<td><button onClick={(e) => handleClickStartAddUT()}><i className="fa-solid fa-plus"/></button></td>	
+						</tr>
+					)}
+					{isAddingUT &&(
+						<tr>
+							<td className="ut-name">
+								<select 
+									name="ut-user" 
+									id="ut-user" 
+									value={newUserTime?.user_id}
+									onChange={
+										async (e) => {
+											const u = e.target.value;
+											setNewUserTime((ut) => ({ ...ut, user_id:u}));
+											if(u!==""){
+												//await putUserTimes(ut.sut_id, u, ut.minutes, ut.date);
+											}
+										}
+
+									}
+								>
+									<option value="" disabled>
+										Funcionario
+									</option>
+									{users?.map( user => (
+										<option value={user.id}>{user.name}</option>
+									))}
+								</select>
+							</td>
+							<td className="ut-minutes">
+								<span>Tempo</span>
+								<input 
+									type="number" 
+									value={newUserTime?.minutes??""} 
+									onChange={async (e) => {
+										const mins = e.target.value.trim()!==""?Number(e.target.value):"";
+										setNewUserTime((ut) =>({ ...ut, minutes:mins }));
+									}}
+								/>
+							</td>
+							<td className="ut-date is-editing"> 
+								<input 
+									type="date"
+									value={newUserTime?.date??""} 
+									onChange={async (e) => {
+										const date = formatDate(e.target.value);
+										setNewUserTime(ut => ({ ...ut, date:date }));
+										if(date!==""){
+											//await putUserTimes(ut.sut_id, ut.user_id, ut.minutes, date);
+										}
+									}}/>
+								<button><i className="fa-solid fa-circle-h"/></button>
+							</td>
+							<td className="p-confirm">
+								<button className="confirm" onClick={()=>handleActionAddUT()}><i className="fa-solid fa-check"/></button>
+							</td>
+							<td className="p-cancel">
+								<button className="cancel" onClick={()=>handleClickStartAddUTCancel()}><i className="fa-solid fa-x"/></button>
+							</td>
+						</tr>
+					)}
 				</tbody>
 			</table>
 		</>

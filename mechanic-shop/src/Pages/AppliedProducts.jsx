@@ -306,7 +306,7 @@ export const AppliedProducts = ({
 								<input disabled type="text" placeholder="-" value={ap?.product_type_name??""}/>
 							</td>
 							<td className="p-quantity">
-								<label htmlFor="product-quantity" className="magic-label">Quantidade:</label>
+								<label htmlFor="product-quantity" className="magic-label">Qt:</label>
 								<input type="number" value={ap?.quantity??""} onChange={async (e) => {
 									const quantity = e.target.value.trim()!==""?Number(e.target.value):"";
 									setAppliedProducts(prev => prev.map((_ap) => ap.sap_id === _ap.sap_id ?
@@ -319,7 +319,6 @@ export const AppliedProducts = ({
 								}/>
 							</td>
 							<td className="td-label-label p-applied">
-								<label htmlFor="product-applied" className="magic-label">Aplicado:</label>
 								<label>
 									<input
 										type="checkbox"
@@ -336,7 +335,7 @@ export const AppliedProducts = ({
 								</label>
 							</td>
 							<td className="p-cancel">
-								<button className="cancel" onClick={()=>handleActionDeleteAP(ap.sap_id)}><i className="fa-solid fa-x"/></button>
+								<button className="cancel" onClick={()=>handleActionDeleteAP(ap.sap_id)}><i className="fa-solid fa-trash"/></button>
 							</td>
 						</tr>
 					))}

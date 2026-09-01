@@ -129,6 +129,7 @@
 	}
 
 }
+.service-user-times-card,
 .service-applied-products-card{
 	background: var(--bg-card);
 	.body{
@@ -297,11 +298,12 @@
 
 }
 
-@media(max-width:750px){
 
+
+@media(max-width:750px){
 	.service-applied-products-card .body table tr{
 		display: grid;
-		grid-template-columns: repeat(2, 1fr);
+		grid-template-columns: 3fr 1fr;
 		grid-template-rows: repeat(3, 1fr);
 		th{
 			display: none;
@@ -319,21 +321,159 @@
 				left: var(--small-padding);
 				display:unset;
 				font-size: var(--font-size-small);
+				background: transparent;
 			}
 
-			border: 0.2px solid var(--border);
+			border: none;
+			&.p-quantity,
+			&.p-applied{
+				border-bottom: 1px dashed var(--border);
+			}
+			&.p-cancel,
+			&.p-quantity,
+			&.p-applied{
+				border-left: 1px dashed var(--border);
+			}
+		}
+		td.p-quantity{
+			display: flex;
+			justify-content: center;
+			padding: var(--padding);
+			.magic-label{
+				position: relative;
+				justify-content: center;
+
+			}
 		}
 
+		
 
 		.p-name{grid-row: 1; grid-column: 1; }
 		.p-reference{grid-row: 2; grid-column: 1; }
 		.p-p-type{grid-row: 3; grid-column: 1; }
 		.p-quantity{grid-row: 1; grid-column: 2;}
-		.p-applied{grid-row: 2; grid-column: 2;}
-		.p-cancel{grid-row: 3; grid-column: 2;}
+
+		.td-label-label.p-applied{
+			grid-row: 2; 
+			grid-column: 2;
+			display: flex;
+			align-items: center;
+			justify-items: center;
+
+			>label{
+				display: block;
+				position:relative;
+				top:0;
+				left:0;
+				height: 100%;
+				text-align: center;
+			}
+		}
+		.p-cancel{
+			grid-row: 3; grid-column: 2;
+		}
+	}
+}
+
+.service-user-times-card {
+
+	.body table thead tr,
+	.body table tbody tr{
+		grid-template-columns: repeat(3, 1fr)  minmax(0px,42.59px) minmax(0px,42.59px);
+		&.add-row{
+			grid-template-columns: 1fr;
+
+			td{
+				padding: 0;
+			}
+		}
+		 .ut-minutes span{ display: none;}
+
+	}
+	.ut-date button{
+		display: none;
+	}
+	.ut-date.is-editing{
+		display: grid;
+		grid-template-columns: auto 1fr;
+		grid-template-rows: 1fr;
+		input{
+			grid-row:1;grid-column:2;
+		}
+		button{
+			display: unset;
+			grid-row:1;grid-column:1;
+		}
 	}
 
 }
+@media(max-width: 500px){
+	.service-user-times-card {
+		.body table thead tr{
+			display:none;
+		}
+		.body table tbody tr{
+			grid-template-columns: repeat(4, 1fr);
+			grid-template-rows: repeat(2, 1fr);
+
+			.ut-name{
+				grid-column: 1 / span 2;
+				grid-row:1; 
+			}
+			.ut-minutes{
+				border-left: 1px dashed var(--border);
+				border-right: 1px dashed var(--border);
+				grid-column: 3 ;
+				grid-row: 1 / span 2; 
+				height: auto;
+				display: flex;
+				flex-direction: column;
+
+				span {
+					display:block;
+					padding: var(--padding);
+					font-size: var(--font-size-small);
+					font-weight: 600;
+					border-bottom: 1px dashed var(--border) !important;
+					color: var(--txt-light);
+				}
+			}
+			.ut-date{
+				grid-column: 1/ span 2;
+				grid-row:2; 
+				input{
+					width: unset;
+					min-width: 0;
+					padding-left:0;
+					padding-right:0;
+				}
+				input[type="date"]::-webkit-calendar-picker-indicator {
+
+					color: transparent;
+				}
+			}
+
+			.p-edit,
+			.p-edit-confirm{
+				grid-column: 4;
+				grid-row: 1;
+			}
+			.p-cancel {
+				grid-column: 4;
+				grid-row: 2;
+			}
+			
+			&.add-row{
+				grid-template-rows: 1fr;
+				grid-template-columns: 1fr;
+
+			}
+
+		}
+
+	}
+}
+
 
 @media(max-width: 500px){
 	.item-info.add-product {
