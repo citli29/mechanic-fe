@@ -218,6 +218,14 @@ export const UserTimes = ({
 			await loadUserTimes();
 		}
 	}
+	const goToday = (sut_id) => {
+
+		setUserTimes(prev => prev.map((_ut) => sut_id === _ut.sut_id? 
+			{ ..._ut, date:formatDate(new Date())}
+			: _ut
+		));
+
+	}
 
 	const [isEditing, setIsEditing] = useState(null);
 	const [isAdding, setIsAdding] = useState(false);
@@ -278,7 +286,7 @@ export const UserTimes = ({
 								<input 
 									type="date"
 									value={ut?.date??""} 
-									disabled={isEditing!==ut.sut_id}
+									readOnly={isEditing!==ut.sut_id}
 									onChange={async (e) => {
 										const date = formatDate(e.target.value);
 										setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id? 
@@ -286,7 +294,7 @@ export const UserTimes = ({
 											: _ut
 										));
 									}}/>
-								<button><i className="fa-solid fa-circle-h"/></button>
+								<button className="go-today" onClick={() => goToday(ut.sut_id)}><i className="fa-solid fa-circle-h"/></button>
 							</td>
 							{isEditing!==ut.sut_id &&(
 								<>
@@ -363,7 +371,10 @@ export const UserTimes = ({
 											//await putUserTimes(ut.sut_id, ut.user_id, ut.minutes, date);
 										}
 									}}/>
-								<button><i className="fa-solid fa-circle-h"/></button>
+								<button className="go-today"><i className="fa-solid fa-circle-h"/></button>
+								<button className="go-today" onClick={() => {
+	setNewUserTime(prev => ({...prev, date: formatDate(new Date())}))
+								}}><i className="fa-solid fa-circle-h"/></button>
 							</td>
 							<td className="p-confirm">
 								<button className="confirm" onClick={()=>handleActionAddUT()}><i className="fa-solid fa-check"/></button>

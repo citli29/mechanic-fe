@@ -198,7 +198,7 @@
 					}
 					
 					&:has(input:not(:disabled)):hover,
-					&:has(button):hover{
+					&:has(button:not(.go-today)):hover{
 						background: var(--bg-page-dark);
 						*{
 							background: var(--bg-page-dark);
@@ -416,6 +416,16 @@
 			grid-template-columns: repeat(4, 1fr);
 			grid-template-rows: repeat(2, 1fr);
 
+			*:disabled{
+				filter: none;
+				color: var(--txt-dark);
+				font-weight: 600;
+			}
+			input, select{
+				color: var(--txt-dark);
+
+			}
+
 			.ut-name{
 				grid-column: 1 / span 2;
 				grid-row:1; 
@@ -446,10 +456,6 @@
 					min-width: 0;
 					padding-left:0;
 					padding-right:0;
-				}
-				input[type="date"]::-webkit-calendar-picker-indicator {
-
-					color: transparent;
 				}
 			}
 
