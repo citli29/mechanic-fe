@@ -203,8 +203,23 @@ export const UserTimes = ({
 
 		return `${year}-${month}-${day}`;
 	};
+	const handleClickStartEditing = async (sut_id) => {
+		setIsEditing(sut_id);
+		await loadUserTimes();
+	}
+	const handleClickStartEditingCancel = async () => {
+		setIsEditing(null);
+		await loadUserTimes();
+	}
+	const handleActionEditUT = async (ut) =>{
+		const u = await putUserTimes(ut.sut_id, ut.user_id, ut.minutes, ut.date);
+		if(u){
+			setIsEditing(null);
+			await loadUserTimes();
+		}
+	}
 
-	const [isEditing, setIsEditing] = useState(false);
+	const [isEditing, setIsEditing] = useState(null);
 	const [isAdding, setIsAdding] = useState(false);
 
 	return(
@@ -226,7 +241,7 @@ export const UserTimes = ({
 								<select 
 									name="ut-user" 
 									id="ut-user" 
-									disabled={!isEditing}
+									disabled={isEditing!==ut.sut_id}
 									value={ut.user_id}
 									onChange={
 										async (e) => {
@@ -235,9 +250,6 @@ export const UserTimes = ({
 												{ ..._ut, user_id:u}
 												: _ut
 											));
-											if(u!==""){
-												await putUserTimes(ut.sut_id, u, ut.minutes, ut.date);
-											}
 										}
 
 									}
@@ -252,53 +264,47 @@ export const UserTimes = ({
 									<input 
 										type="number" 
 										value={ut?.minutes??""} 
-										disabled={!isEditing}
+										disabled={isEditing!==ut.sut_id}
 										onChange={async (e) => {
 											const mins = e.target.value.trim()!==""?Number(e.target.value):"";
 											setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id ? 
 												{ ..._ut, minutes:mins }
 												: _ut
 											));
-											if(mins!==""){
-												await putUserTimes(ut.sut_id, ut.user_id, mins, ut.date);
-											}
 										}}
 									/>
 							</td>
-							<td className={`ut-date ${isEditing?"is-editing":""}`}> 
+							<td className={`ut-date ${isEditing===ut.sut_id?"is-editing":""}`}> 
 								<input 
 									type="date"
 									value={ut?.date??""} 
-									disabled={!isEditing}
+									disabled={isEditing!==ut.sut_id}
 									onChange={async (e) => {
 										const date = formatDate(e.target.value);
 										setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id? 
 											{ ..._ut, date:date }
 											: _ut
 										));
-										if(date!==""){
-											await putUserTimes(ut.sut_id, ut.user_id, ut.minutes, date);
-										}
 									}}/>
 								<button><i className="fa-solid fa-circle-h"/></button>
 							</td>
-							{!isEditing &&(
+							{isEditing!==ut.sut_id &&(
 								<>
 									<td className="p-edit">
-										<button className="options" onClick={()=>setIsEditing(true)}><i className="fa-solid fa-pencil"/></button>
+										<button className="options" onClick={()=>handleClickStartEditing(ut.sut_id)}><i className="fa-solid fa-pencil"/></button>
 									</td>
 									<td className="p-cancel">
 										<button className="cancel" onClick={()=>handleActionDeleteUT(ut.sut_id)}><i className="fa-solid fa-trash"/></button>
 									</td>
 								</>
 							)}
-							{isEditing &&(
+							{isEditing===ut.sut_id &&(
 								<>
 									<td className="p-edit-confirm">
-										<button className="confirm" onClick={()=>handleActionEditUT(true)}><i className="fa-solid fa-check"/></button>
+										<button className="confirm" onClick={()=>handleActionEditUT(ut)}><i className="fa-solid fa-check"/></button>
 									</td>
 									<td className="p-cancel">
-										<button className="cancel" onClick={()=>setIsEditing(false)}><i className="fa-solid fa-x"/></button>
+										<button className="cancel" onClick={()=>handleClickStartEditingCancel()}><i className="fa-solid fa-x"/></button>
 									</td>
 								</>
 							)}
@@ -331,7 +337,7 @@ export const UserTimes = ({
 										Funcionario
 									</option>
 									{users?.map( user => (
-										<option value={user.id}>{user.name}</option>
+										<option key={user.id} value={user.id}>{user.name}</option>
 									))}
 								</select>
 							</td>

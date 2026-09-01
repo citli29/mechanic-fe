@@ -226,7 +226,7 @@
 						padding: var(--padding);
 						background: var(--bg-card);
 						width: 100%;
-						height: 100%;
+						height: calc(100% - 2px);
 						background: var(--bg-page);
 					}
 					input{
