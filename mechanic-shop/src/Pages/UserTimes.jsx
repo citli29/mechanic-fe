@@ -2,7 +2,8 @@ import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
 
 export const UserTimes = ({
-	id
+	id,
+	copy_uts
 }) =>{
 
 	const emptyUT = {
@@ -16,6 +17,7 @@ export const UserTimes = ({
 	const [newUserTime, setNewUserTime] = useState(emptyUT);
 	const [isAddingUT, setIsAddingUT] = useState(false);
 	const [isEditing, setIsEditing] = useState(null);
+	useEffect(()=>{ copy_uts(userTimes); },[userTimes]);
 
 	useEffect(()=>{console.log("Users : ", users)},[users]);
 	useEffect(()=>{console.log("User Times: ", userTimes)},[userTimes]);

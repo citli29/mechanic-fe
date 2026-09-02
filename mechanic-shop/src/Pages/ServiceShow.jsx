@@ -33,6 +33,7 @@ export default function ServiceShow2() {
 		signed_service:"Serviço a realizar",
 		service:"",
 		malfunction:"",
+		is_finished: false,
 	}
 	const markedTextarea = useRef();
 	const [service, setService] = useState(defaultService);
@@ -121,6 +122,26 @@ export default function ServiceShow2() {
 			className: "note-yellow",
 		},
 	};
+
+	const[uts,setUts] = useState([]);
+	const[utps,setUtps] = useState([]);
+	const[timeSummary,setTimeSummary] = useState([]);
+	useEffect(()=>{
+		setTimeSummary(sumUserMinutes(uts,utps));
+	},[uts,utps]);
+
+	useEffect(()=>{console.log("UAAAAU " , timeSummary)},[timeSummary]);
+	const  sumUserMinutes = (arr1, arr2) => { 
+		const users = {};
+		[...arr1, ...arr2].forEach(({ user_id, user_name, minutes }) => { 
+			if (!users[user_id]) { 
+				users[user_id] = { user_id, user_name, minutes: 0, }; 
+			} 
+			users[user_id].minutes += minutes??0; 
+		}); 
+		return Object.values(users); 
+	}
+
 
 	return(
 		<div className="service-page">
@@ -261,9 +282,45 @@ export default function ServiceShow2() {
 					<h1>Tempos de Serviço</h1>
 				</div>	
 				<div className="body">
-					<UserTimes id={id}/>
-					<UserTimePunches id={id}/>
+					<table className="times-summary">
+						<thead>
+							<tr>
+								<th>Funcionário</th>
+								<th>Tempo</th>
+							</tr>
+						</thead>
+						<tbody>
+							{timeSummary.map(ts=>(
+								<tr>
+									<td>{ts.user_name}</td>
+									<td>{ts.minutes}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+					<UserTimes id={id} copy_uts={setUts}/>
+					<UserTimePunches id={id} copy_uts={setUtps}/>
 				</div>
+			</div>
+			<div className="service-is-finished-card">
+				<label htmlFor="is-finished">
+					<div className="header">
+
+						<i className="fa-solid fa-flag-checkered"></i>
+						<h1>Finalizado</h1>
+						<input
+							id="is-finished"
+							type="checkbox"
+							checked={service.is_finished}
+							onChange={(e) =>
+								setService(prev => ({
+									...prev,
+									is_finished: e.target.checked,
+								}))
+							}
+						/>
+					</div>	
+				</label>
 			</div>
 		</div>
 

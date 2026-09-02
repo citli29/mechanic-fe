@@ -365,7 +365,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						<input
 							type="date"
 							id="service-checkout"
-							value={service.checkout}
+							value={service?.checkout??""}
 							onChange={(e) => onServiceChange( "checkout", e.target.value) }
 							disabled={lock}
 						/>

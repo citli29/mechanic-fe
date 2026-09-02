@@ -2,7 +2,8 @@ import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
 
 export const UserTimePunches = ({
-	id
+	id,
+	copy_uts
 }) =>{
 
 	const emptyUTP = {
@@ -15,6 +16,8 @@ export const UserTimePunches = ({
 	const [newUserTimePunch, setNewUserTimePunch] = useState(emptyUTP);
 	const [isEditing, setIsEditing] = useState(null);
 	const [isAddingUTP, setIsAddingUTP] = useState(false);
+
+	useEffect(()=>{ copy_uts(userTimePunches); },[userTimePunches]);
 
 	useEffect(()=>{console.log("Users : ", users)},[users]);
 	useEffect(()=>{console.log("User Time Punches:" ,userTimePunches)},[userTimePunches]);
@@ -100,9 +103,8 @@ export const UserTimePunches = ({
 	const handleActionAddUTP = async () =>{
 		const utp = await postUserTimePunches(newUserTimePunch.user_id, newUserTimePunch.date);
 		if(utp){
-			loadUserTimePunches();
 			setIsAddingUTP(false);
-
+			loadUserTimePunches();
 		}
 	}
 
@@ -135,19 +137,48 @@ export const UserTimePunches = ({
 	}
 
 	const handleActionEditUTP = async (ut) =>{
-		const u = await putUserTimePunches(ut.sut_id, ut.user_id, ut.date);
+		const u = await putUserTimePunches(ut.sutp_id, ut.user_id, ut.date);
 		if(u){
 			setIsEditing(null);
 			await loadUserTimePunches();
 		}
 	}
 
-	const goToday = (sut_id) => {
-		setUserTimePunches(prev => prev.map((_ut) => sut_id === _ut.sut_id? 
+	const handleActionStartTime = async (sutp_id) =>{
+		try{
+			const response = await api.post(`/services/${id}/user_time_punches/${sutp_id}/start`)
+
+			console.log(response.data);
+			if(typeof response.data.sutp === "undefined"){
+				return null;
+			}
+			if(response.data.sutp){
+				await loadUserTimePunches();
+			}
+		}catch(error){console.error(error, error.response.data.error)}
+	}
+	const handleActionStopTime = async (sutp_id) =>{
+		try{
+			const response = await api.post(`/services/${id}/user_time_punches/${sutp_id}/stop`)
+
+			console.log(response.data);
+			if(typeof response.data.sutp === "undefined"){
+				return null;
+			}
+			if(response.data.sutp){
+				await loadUserTimePunches();
+			}
+		}catch(error){console.error(error, error.response.data.error)}
+	}
+
+	const goToday = (sutp_id) => {
+		setUserTimePunches(prev => prev.map((_ut) => sutp_id === _ut.sutp_id? 
 			{ ..._ut, date:formatDate(new Date())}
 			: _ut
 		));
 	}
+
+
 
 
 	return(
@@ -166,12 +197,12 @@ export const UserTimePunches = ({
 				</thead>
 				<tbody>
 					{userTimePunches.map((utp) =>(
-						<tr key={utp.sut_id}>
+						<tr key={utp.sutp_id}>
 							<td className="utp-name">
 								<select 
 									name="ut-user" 
 									id="ut-user" 
-									disabled={isEditing!==utp.sut_id}
+									disabled={isEditing!==utp.sutp_id}
 									value={utp.user_id}
 									onChange={
 										async (e) => {
@@ -185,15 +216,15 @@ export const UserTimePunches = ({
 									}
 								>
 									{users?.map( user => (
-										<option value={user.id}>{user.name}</option>
+										<option key={user.id} value={user.id}>{user.name}</option>
 									))}
 								</select>
 							</td>
-							<td className={`utp-date ${isEditing===utp.sut_id?"is-editing":""}`}> 
+							<td className={`utp-date ${isEditing===utp.sutp_id?"is-editing":""}`}> 
 								<input 
 									type="date"
 									value={utp?.date??""} 
-									disabled={isEditing!==utp.sut_id}
+									disabled={isEditing!==utp.sutp_id}
 									onChange={async (e) => {
 										const date = formatDate(e.target.value);
 										setUserTimePunches(prev => prev.map((_utp) => utp.sut_id === _utp.sut_id? 
@@ -201,26 +232,33 @@ export const UserTimePunches = ({
 											: _utp
 										));
 									}}/>
-								<button className="go-today" onClick={() => goToday(ut.sut_id)}><i className="fa-solid fa-circle-h"/></button>
+								<button className="go-today" onClick={() => goToday(utp.sutp_id)}><i className="fa-solid fa-circle-h"/></button>
 							</td>
 							{(utp.hours_s!==null && utp.minutes_s!==null)?(
 								<td className="utp-time-start just-text"><span>{`${("0" + utp.hours_s).slice(-2)}:${("0" + utp.minutes_s).slice(-2)}`}</span></td>
 							):(
-								<td className="utp-time-start"><button><i className="fa-solid fa-hourglass-start"/></button></td>
+								<td className="utp-time-start">
+										<button
+											onClick={(e)=>handleActionStartTime(utp.sutp_id)}
+										><i className="fa-solid fa-hourglass-start"/></button></td>
 							)}
 							{(utp.hours_f!==null && utp.minutes_f!==null)?(
 								<td className="utp-time-end just-text"><span>{`${("0" + utp.hours_f).slice(-2)}:${("0" + utp.minutes_f).slice(-2)}`}</span></td>
 							):(
-								<td className="utp-time-end"><button disabled={utp.hours_s===null && utp.minutes_s===null}><i className="fa-solid fa-hourglass-end"/></button></td>
+								<td className="utp-time-end">
+										<button 
+											disabled={utp.hours_s===null && utp.minutes_s===null}
+											onClick={(e)=>handleActionStopTime(utp.sutp_id)}
+									><i className="fa-solid fa-hourglass-end"/></button></td>
 							)}
-							<td className="utp-minutes just-text"><span>{utp?.minutes ?utp?.minutes + "m" :"-"}</span></td>
+							<td className="utp-minutes just-text"><span>{utp?.minutes!==null ?utp?.minutes + "m" :"-"}</span></td>
 							{isEditing!==utp.sutp_id &&(
 								<>
 									<td className="utp-edit">
-										<button className="options" onClick={()=>handleClickStartEditing(ut.sutp_id)}><i className="fa-solid fa-pencil"/></button>
+										<button className="options" onClick={()=>handleClickStartEditing(utp.sutp_id)}><i className="fa-solid fa-pencil"/></button>
 									</td>
 									<td className="utp-cancel">
-										<button className="cancel" onClick={()=>handleActionDeleteUTP(ut.sutp_id)}><i className="fa-solid fa-trash"/></button>
+										<button className="cancel" onClick={(e)=>handleActionDeleteUTP(utp.sutp_id)}><i className="fa-solid fa-trash"/></button>
 									</td>
 								</>
 							)}
