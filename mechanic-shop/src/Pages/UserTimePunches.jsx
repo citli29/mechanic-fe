@@ -1,7 +1,7 @@
 import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
 
-export const UserTimes = ({
+export const UserTimePunches = ({
 	id
 }) =>{
 
@@ -10,18 +10,30 @@ export const UserTimes = ({
 		minutes: "0",
 		date: "" 
 	}
+	const emptyUTP = {
+		user_id:"",
+		minutes: "0",
+		date: "" 
+	}
 
 	const [users,setUsers] = useState([]);
+
 	const [userTimes,setUserTimes] = useState([]);
+	const [userTimePunches,setUserTimePunches] = useState([]);
+
+	const [newUserTimePunch, setNewUserTimePunche] = useState(emptyUTP);
 	const [newUserTime, setNewUserTime] = useState(emptyUT);
+
 	const [isAddingUT, setIsAddingUT] = useState(false);
-	const [isEditing, setIsEditing] = useState(null);
+	const [isAddingUTP, setIsAddingUTP] = useState(false);
 
 	useEffect(()=>{console.log("Users : ", users)},[users]);
 	useEffect(()=>{console.log("User Times: ", userTimes)},[userTimes]);
+	useEffect(()=>{console.log("User Time Punches:" ,userTimePunches)},[userTimePunches]);
 	useEffect(()=>{
 		loadUsers();
 		loadUserTimes();
+		loadUserTimePunches();
 	},[]); 
 
 	const loadUserTimes = async () => {
@@ -37,6 +49,19 @@ export const UserTimes = ({
 		}
 	}
 
+	const loadUserTimePunches = async () => {
+		try{
+			const response = await api.get(`/services/${id}/user_time_punches`);
+			if(typeof response.data.sutp_list === "undefined") {
+				setUserTimePunches([]);
+			}else{
+				setUserTimePunches(response.data.sutp_list);
+			}
+		}catch(error){
+			console.error(error);
+		}
+	}
+	
 	const loadUsers = async () => {
 		try{
 			const response = await api.get(`/users`);
@@ -65,11 +90,36 @@ export const UserTimes = ({
 		}catch(error){console.error(error, error.response.data.error)}
 	}
 
+	const postUserTimePunches = async (user_id,  date) =>{
+		try{
+			const response = await api.post(`/services/${id}/user_time_punches`,{
+				 user_id: user_id ,
+				 date: date ,
+			})
+			if(typeof response.data.sutp !== "undefined"){
+				return response.data.sutp;
+			}else{
+				return null;
+			}
+		}catch(error){console.error(error, error.response.data.error)}
+	}
+
 	const deleteUserTimes = async (sut_id) =>{
 		try{
 			const response = await api.delete(`/services/${id}/user_times/${sut_id}`);
 			if(typeof response.data.sut !== "undefined"){
 				return response.data.sut;
+			}else{
+				return null;
+			}
+		}catch(error){console.error(error, error.response.data.error)}
+	}
+
+	const deleteUserTimePunches = async (sutp_id) =>{
+		try{
+			const response = await api.delete(`/services/${id}/user_time_punches/${sutp_id}`);
+			if(typeof response.data.sutp !== "undefined"){
+				return response.data.sutp;
 			}else{
 				return null;
 			}
@@ -91,12 +141,32 @@ export const UserTimes = ({
 		}catch(error){console.error(error, error.response.data.error)}
 	}
 
+	const putUserTimePunches = async (sutp_id, user_id,  date) =>{
+		try{
+			const response = await api.put(`/services/${id}/user_time_punches/${sutp_id}`,{
+				 user_id: user_id ,
+				 date: date ,
+			})
+			if(typeof response.data.sutp !== "undefined"){
+				return response.data.sutp;
+			}else{
+				return null;
+			}
+		}catch(error){console.error(error, error.response.data.error)}
+	}
 	const handleClickStartAddUT = () => {
 		setNewUserTime(emptyUT);
 		setIsAddingUT(true);
 	}
+	const handleClickStartAddUTP = () => {
+		setNewUserTime(emptyUTP);
+		setIsAddingUTP(true);
+	}
 	const handleClickStartAddUTCancel = () => {
 		setIsAddingUT(false);
+	}
+	const handleClickStartAddUTPCancel = () => {
+		setIsAddingUTP(false);
 	}
 	const handleActionAddUT = async () =>{
 		const ut = await postUserTimes(newUserTime.user_id, newUserTime.minutes, newUserTime.date);
@@ -106,10 +176,20 @@ export const UserTimes = ({
 
 		}
 	}
+	const handleActionAddUTP = async () =>{
+		const utp = await postUserTimePunches(newUserTimePunch.user_id, newUserTimePunch.date);
+		if(utp)
+			loadUserTimePunches();
+	}
 	const handleActionDeleteUT = async (id) => {
 		const ut = await deleteUserTimes(id);
 		if(ut)
 			loadUserTimes();
+	}
+	const handleActionDeleteUTP = async (id) => {
+		const utp = await deleteUserTimePunches(id);
+		if(utp)
+			loadUserTimePunches();
 	}
 
 	const formatDate = (date) => {
@@ -123,17 +203,14 @@ export const UserTimes = ({
 
 		return `${year}-${month}-${day}`;
 	};
-
 	const handleClickStartEditing = async (sut_id) => {
 		setIsEditing(sut_id);
 		await loadUserTimes();
 	}
-
 	const handleClickStartEditingCancel = async () => {
 		setIsEditing(null);
 		await loadUserTimes();
 	}
-
 	const handleActionEditUT = async (ut) =>{
 		const u = await putUserTimes(ut.sut_id, ut.user_id, ut.minutes, ut.date);
 		if(u){
@@ -141,7 +218,6 @@ export const UserTimes = ({
 			await loadUserTimes();
 		}
 	}
-
 	const goToday = (sut_id) => {
 
 		setUserTimes(prev => prev.map((_ut) => sut_id === _ut.sut_id? 
@@ -151,6 +227,8 @@ export const UserTimes = ({
 
 	}
 
+	const [isEditing, setIsEditing] = useState(null);
+	const [isAdding, setIsAdding] = useState(false);
 
 	return(
 		<>

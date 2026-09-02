@@ -407,7 +407,7 @@
 	}
 
 }
-@media(max-width: 500px){
+@media(max-width: 600px){
 	.service-user-times-card {
 		.body table thead tr{
 			display:none;
