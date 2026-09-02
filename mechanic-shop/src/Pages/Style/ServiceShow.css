@@ -204,6 +204,12 @@
 							background: var(--bg-page-dark);
 						}
 					}
+					&.utp-time-end:has(button:disabled):hover{
+						background: var(--bg-page);
+						*{
+							background: var(--bg-page);
+						}
+					}
 
 					&:not(:nth-last-child(2)):not(:last-child) * {
 						border: none;
@@ -403,11 +409,10 @@
 		}
 
 		td{
-			input, select, button {
+			input, select {
 				&:disabled{
 					color: var(--txt-dark);
 					opacity:0.9 !important;
-					background-image: none;
 				}
 			}
 		}
@@ -423,7 +428,7 @@
 				padding: 0;
 			}
 		}
-		 .ut-minutes span{ display: none;}
+		.ut-minutes span{ display: none;}
 		td.just-text {
 			display: flex;
 			justify-content: center;
@@ -431,22 +436,23 @@
 		}
 
 	}
+	.utp-date button,
 	.ut-date button{
 		display: none;
 	}
+	.utp-date.is-editing,
 	.ut-date.is-editing{
 		display: grid;
-		grid-template-columns: auto 1fr;
+		grid-template-columns:1fr auto ;
 		grid-template-rows: 1fr;
 		input{
-			grid-row:1;grid-column:2;
+			grid-row:1;grid-column:1;
 		}
 		button{
 			display: unset;
-			grid-row:1;grid-column:1;
+			grid-row:1;grid-column:2;
 		}
 	}
-
 }
 @media(max-width: 600px){
 	.service-user-times-card {
@@ -515,6 +521,10 @@
 				grid-template-columns: 1fr;
 
 			}
+			.utp-time-end button:disabled{
+				opacity: 0.8;
+				background: var(--bg-card);
+			}
 
 		}
 
@@ -532,3 +542,68 @@
 	#signing{display: block;}
 }
 
+@media(max-width: 600px){
+	.service-user-times-card {
+		.body .utp thead tr{
+			display:none;
+		}
+		.body .utp tbody tr{
+			grid-template-columns:repeat(8,1fr);
+			grid-template-rows:repeat(2,1fr);
+			.utp-name{
+				grid-column:1 / span 4;
+				grid-row:1;
+			}
+			.utp-date{
+				grid-column:5 / span 4;
+				grid-row:1;
+				border-left: 1px dashed var(--border);
+			}
+			.utp-time-start{
+				grid-column:1 / span 2;
+				grid-row:2;
+				border-top: 1px dashed var(--border);
+				border-right: 1px dashed var(--border);
+			}
+			.utp-time-end{
+				grid-column:3 / span 2;
+				grid-row:2;
+				border-top: 1px dashed var(--border);
+				border-right: 1px dashed var(--border);
+			}
+			.utp-minutes{
+				grid-column:5 / span 2;
+				grid-row:2;
+				border-top: 1px dashed var(--border);
+				border-right: 1px dashed var(--border);
+			}
+			.utp-edit,
+			.utp-edit-confirm{
+				grid-column:7;
+				grid-row:2;
+				border-top: 1px dashed var(--border);
+				border-right: 1px dashed var(--border);
+			}
+			.utp-cancel{
+				grid-column: 8;
+				grid-row: 2;
+				border-top: 1px dashed var(--border);
+			}
+
+			&.add-row{
+				grid-template-columns: 1fr;
+				grid-template-rows: 1fr;
+			}
+			&.add-camps-row {
+				.utp-minutes, .utp-time-end, .utp-time-start{
+					border-right: none;
+				}
+				.p-confirm, .p-cancel{
+					border-left: 1px dashed var(--border);
+					border-top: 1px dashed var(--border);
+				}
+			}
+		}
+
+	}
+}

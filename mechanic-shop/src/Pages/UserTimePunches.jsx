@@ -12,7 +12,7 @@ export const UserTimePunches = ({
 
 	const [users,setUsers] = useState([]);
 	const [userTimePunches,setUserTimePunches] = useState([]);
-	const [newUserTimePunch, setNewUserTimePunche] = useState(emptyUTP);
+	const [newUserTimePunch, setNewUserTimePunch] = useState(emptyUTP);
 	const [isEditing, setIsEditing] = useState(null);
 	const [isAddingUTP, setIsAddingUTP] = useState(false);
 
@@ -89,7 +89,7 @@ export const UserTimePunches = ({
 	}
 
 	const handleClickStartAddUTP = () => {
-		setNewUserTime(emptyUTP);
+		setNewUserTimePunch(emptyUTP);
 		setIsAddingUTP(true);
 	}
 
@@ -167,7 +167,7 @@ export const UserTimePunches = ({
 				<tbody>
 					{userTimePunches.map((utp) =>(
 						<tr key={utp.sut_id}>
-							<td className="ut-name">
+							<td className="utp-name">
 								<select 
 									name="ut-user" 
 									id="ut-user" 
@@ -189,7 +189,7 @@ export const UserTimePunches = ({
 									))}
 								</select>
 							</td>
-							<td className={`ut-date ${isEditing===utp.sut_id?"is-editing":""}`}> 
+							<td className={`utp-date ${isEditing===utp.sut_id?"is-editing":""}`}> 
 								<input 
 									type="date"
 									value={utp?.date??""} 
@@ -203,25 +203,33 @@ export const UserTimePunches = ({
 									}}/>
 								<button className="go-today" onClick={() => goToday(ut.sut_id)}><i className="fa-solid fa-circle-h"/></button>
 							</td>
-							<td><button><i className="fa-solid fa-hourglass-start"/></button></td>
-							<td><button><i className="fa-solid fa-hourglass-end"/></button></td>
-							<td className="just-text"><span>{utp?.minutes ??"Time till now"}</span></td>
-							{isEditing!==utp.sut_id &&(
+							{(utp.hours_s!==null && utp.minutes_s!==null)?(
+								<td className="utp-time-start just-text"><span>{`${("0" + utp.hours_s).slice(-2)}:${("0" + utp.minutes_s).slice(-2)}`}</span></td>
+							):(
+								<td className="utp-time-start"><button><i className="fa-solid fa-hourglass-start"/></button></td>
+							)}
+							{(utp.hours_f!==null && utp.minutes_f!==null)?(
+								<td className="utp-time-end just-text"><span>{`${("0" + utp.hours_f).slice(-2)}:${("0" + utp.minutes_f).slice(-2)}`}</span></td>
+							):(
+								<td className="utp-time-end"><button disabled={utp.hours_s===null && utp.minutes_s===null}><i className="fa-solid fa-hourglass-end"/></button></td>
+							)}
+							<td className="utp-minutes just-text"><span>{utp?.minutes ?utp?.minutes + "m" :"-"}</span></td>
+							{isEditing!==utp.sutp_id &&(
 								<>
-									<td className="p-edit">
-										<button className="options" onClick={()=>handleClickStartEditing(ut.sut_id)}><i className="fa-solid fa-pencil"/></button>
+									<td className="utp-edit">
+										<button className="options" onClick={()=>handleClickStartEditing(ut.sutp_id)}><i className="fa-solid fa-pencil"/></button>
 									</td>
-									<td className="p-cancel">
-										<button className="cancel" onClick={()=>handleActionDeleteUT(ut.sut_id)}><i className="fa-solid fa-trash"/></button>
+									<td className="utp-cancel">
+										<button className="cancel" onClick={()=>handleActionDeleteUTP(ut.sutp_id)}><i className="fa-solid fa-trash"/></button>
 									</td>
 								</>
 							)}
-							{isEditing===utp.sut_id &&(
+							{isEditing===utp.sutp_id &&(
 								<>
-									<td className="p-edit-confirm">
-										<button className="confirm" onClick={()=>handleActionEditUT(ut)}><i className="fa-solid fa-check"/></button>
+									<td className="utp-edit-confirm">
+										<button className="confirm" onClick={()=>handleActionEditUTP(utp)}><i className="fa-solid fa-check"/></button>
 									</td>
-									<td className="p-cancel">
+									<td className="utp-cancel">
 										<button className="cancel" onClick={()=>handleClickStartEditingCancel()}><i className="fa-solid fa-x"/></button>
 									</td>
 								</>
@@ -230,20 +238,20 @@ export const UserTimePunches = ({
 					))}
 					{!isAddingUTP &&(
 						<tr className="add-row">
-							<td><button onClick={(e) => handleClickStartAddUT()}><i className="fa-solid fa-plus"/></button></td>	
+							<td><button onClick={(e) => handleClickStartAddUTP()}><i className="fa-solid fa-plus"/></button></td>	
 						</tr>
 					)}
 					{isAddingUTP &&(
-						<tr>
-							<td className="ut-name">
+						<tr className="add-camps-row">
+							<td className="utp-name">
 								<select 
 									name="ut-user" 
 									id="ut-user" 
-									value={newUserTime?.user_id}
+									value={newUserTimePunch?.user_id}
 									onChange={
 										(e) => {
 											const u = e.target.value;
-											setNewUserTime((ut) => ({ ...ut, user_id:u}));
+											setNewUserTimePunch((ut) => ({ ...ut, user_id:u}));
 											}
 										}
 								>
@@ -255,24 +263,26 @@ export const UserTimePunches = ({
 									))}
 								</select>
 							</td>
-							<td className="ut-date is-editing"> 
+							<td className="utp-date is-editing"> 
 								<input 
 									type="date"
 									value={newUserTimePunch?.date??""} 
 									onChange={(e) => {
 										const date = formatDate(e.target.value);
-										setNewUserTimePunche(utp => ({ ...utp, date:date }));
+										setNewUserTimePunch(utp => ({ ...utp, date:date }));
 									}}/>
-								<button className="go-today"><i className="fa-solid fa-circle-h"/></button>
 								<button className="go-today" onClick={() => {
-	setNewUserTime(prev => ({...prev, date: formatDate(new Date())}))
+	setNewUserTimePunch(prev => ({...prev, date: formatDate(new Date())}))
 								}}><i className="fa-solid fa-circle-h"/></button>
 							</td>
+							<td className="utp-time-start"/>
+							<td className="utp-time-end"/>
+							<td className="utp-minutes"/>
 							<td className="p-confirm">
-								<button className="confirm" onClick={()=>handleActionAddUT()}><i className="fa-solid fa-check"/></button>
+								<button className="confirm" onClick={()=>handleActionAddUTP()}><i className="fa-solid fa-check"/></button>
 							</td>
 							<td className="p-cancel">
-								<button className="cancel" onClick={()=>handleClickStartAddUTCancel()}><i className="fa-solid fa-x"/></button>
+								<button className="cancel" onClick={()=>handleClickStartAddUTPCancel()}><i className="fa-solid fa-x"/></button>
 							</td>
 						</tr>
 					)}
