@@ -377,8 +377,8 @@
 
 .service-user-times-card {
 
-	.body table thead tr,
-	.body table tbody tr{
+	.body .ut thead tr,
+	.body .ut tbody tr{
 		grid-template-columns: repeat(3, 1fr)  minmax(0px,42.59px) minmax(0px,42.59px);
 		&.add-row{
 			grid-template-columns: 1fr;
@@ -389,6 +389,13 @@
 		}
 		 .ut-minutes span{ display: none;}
 
+	}
+	.body .utp tbody tr,
+	.body .ut tbody tr{
+		select:not(:disabled):hover{
+			background: var(--bg-page-dark);
+			height: 100%;
+		}
 	}
 	.ut-date button{
 		display: none;
@@ -409,10 +416,10 @@
 }
 @media(max-width: 600px){
 	.service-user-times-card {
-		.body table thead tr{
+		.body .ut thead tr{
 			display:none;
 		}
-		.body table tbody tr{
+		.body .ut tbody tr{
 			grid-template-columns: repeat(4, 1fr);
 			grid-template-rows: repeat(2, 1fr);
 

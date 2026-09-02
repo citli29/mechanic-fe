@@ -10,6 +10,7 @@ import { ClientPicker } from "../components/Pickers/ClientPicker";
 import { MarkedTextarea } from "./MarkedTextarea";
 import { AppliedProducts } from "./AppliedProducts";
 import { UserTimes } from "./UserTimes";
+import { UserTimePunches } from "./UserTimePunches";
 
 export default function ServiceShow2() {
 	const { id } = useParams();
@@ -261,6 +262,7 @@ export default function ServiceShow2() {
 				</div>	
 				<div className="body">
 					<UserTimes id={id}/>
+					<UserTimePunches id={id}/>
 				</div>
 			</div>
 		</div>

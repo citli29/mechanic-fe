@@ -154,14 +154,14 @@ export const UserTimes = ({
 
 	return(
 		<>
-			<table>
+			<table className="ut">
 				<thead>
 					<tr>
 						<th>Funcionário</th>
 						<th>Tempo (min)</th>
 						<th>Data</th>
-						<th></th>
-						<th></th>
+						<th/>
+						<th/>
 					</tr>
 				</thead>
 				<tbody>
@@ -174,7 +174,7 @@ export const UserTimes = ({
 									disabled={isEditing!==ut.sut_id}
 									value={ut.user_id}
 									onChange={
-										async (e) => {
+										(e) => {
 											const u = e.target.value;
 											setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id ? 
 												{ ..._ut, user_id:u}
@@ -185,7 +185,7 @@ export const UserTimes = ({
 									}
 								>
 									{users?.map( user => (
-										<option value={user.id}>{user.name}</option>
+										<option key={user.id} value={user.id}>{user.name}</option>
 									))}
 								</select>
 							</td>
@@ -195,7 +195,7 @@ export const UserTimes = ({
 										type="number" 
 										value={ut?.minutes??""} 
 										disabled={isEditing!==ut.sut_id}
-										onChange={async (e) => {
+										onChange={(e) => {
 											const mins = e.target.value.trim()!==""?Number(e.target.value):"";
 											setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id ? 
 												{ ..._ut, minutes:mins }
@@ -209,7 +209,7 @@ export const UserTimes = ({
 									type="date"
 									value={ut?.date??""} 
 									disabled={isEditing!==ut.sut_id}
-									onChange={async (e) => {
+									onChange={(e) => {
 										const date = formatDate(e.target.value);
 										setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id? 
 											{ ..._ut, date:date }
@@ -256,9 +256,6 @@ export const UserTimes = ({
 										async (e) => {
 											const u = e.target.value;
 											setNewUserTime((ut) => ({ ...ut, user_id:u}));
-											if(u!==""){
-												//await putUserTimes(ut.sut_id, u, ut.minutes, ut.date);
-											}
 										}
 
 									}
@@ -276,7 +273,7 @@ export const UserTimes = ({
 								<input 
 									type="number" 
 									value={newUserTime?.minutes??""} 
-									onChange={async (e) => {
+									onChange={(e) => {
 										const mins = e.target.value.trim()!==""?Number(e.target.value):"";
 										setNewUserTime((ut) =>({ ...ut, minutes:mins }));
 									}}
@@ -286,12 +283,9 @@ export const UserTimes = ({
 								<input 
 									type="date"
 									value={newUserTime?.date??""} 
-									onChange={async (e) => {
+									onChange={(e) => {
 										const date = formatDate(e.target.value);
 										setNewUserTime(ut => ({ ...ut, date:date }));
-										if(date!==""){
-											//await putUserTimes(ut.sut_id, ut.user_id, ut.minutes, date);
-										}
 									}}/>
 								<button className="go-today"><i className="fa-solid fa-circle-h"/></button>
 								<button className="go-today" onClick={() => {
