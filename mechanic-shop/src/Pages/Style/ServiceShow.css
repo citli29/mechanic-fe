@@ -224,7 +224,6 @@
 					select,
 					button{						
 						padding: var(--padding);
-						background: var(--bg-card);
 						width: 100%;
 						height: calc(100% - 2px);
 						background: var(--bg-page);
@@ -396,6 +395,41 @@
 			background: var(--bg-page-dark);
 			height: 100%;
 		}
+
+		select:disabled{
+			appearance: none;
+			-webkit-appearance: none;
+			-moz-appearance: none;
+		}
+
+		td{
+			input, select, button {
+				&:disabled{
+					color: var(--txt-dark);
+					opacity:0.9 !important;
+					background-image: none;
+				}
+			}
+		}
+	}
+
+	.body .utp thead tr,
+	.body .utp tbody tr{
+		grid-template-columns: repeat(2, 2fr) repeat(3, 1fr)  minmax(0px,42.59px) minmax(0px,42.59px);
+		&.add-row{
+			grid-template-columns: 1fr;
+
+			td{
+				padding: 0;
+			}
+		}
+		 .ut-minutes span{ display: none;}
+		td.just-text {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
 	}
 	.ut-date button{
 		display: none;

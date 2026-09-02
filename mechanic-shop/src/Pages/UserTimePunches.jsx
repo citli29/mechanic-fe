@@ -203,9 +203,9 @@ export const UserTimePunches = ({
 									}}/>
 								<button className="go-today" onClick={() => goToday(ut.sut_id)}><i className="fa-solid fa-circle-h"/></button>
 							</td>
-							<td/>
-							<td/>
-							<td/>
+							<td><button><i className="fa-solid fa-hourglass-start"/></button></td>
+							<td><button><i className="fa-solid fa-hourglass-end"/></button></td>
+							<td className="just-text"><span>{utp?.minutes ??"Time till now"}</span></td>
 							{isEditing!==utp.sut_id &&(
 								<>
 									<td className="p-edit">
