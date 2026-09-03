@@ -6,9 +6,21 @@ export const UserTimePunches = ({
 	copy_uts
 }) =>{
 
+	const formatDate = (date) => {
+		if (!date) return "";
+
+		const d = new Date(date);
+
+		const year = d.getFullYear();
+		const month = String(d.getMonth() + 1).padStart(2, "0");
+		const day = String(d.getDate()).padStart(2, "0");
+
+		return `${year}-${month}-${day}`;
+	};
+
 	const emptyUTP = {
 		user_id:"",
-		date: "" 
+		date: formatDate(new Date),
 	}
 
 	const [users,setUsers] = useState([]);
@@ -104,6 +116,7 @@ export const UserTimePunches = ({
 		const utp = await postUserTimePunches(newUserTimePunch.user_id, newUserTimePunch.date);
 		if(utp){
 			setIsAddingUTP(false);
+			await handleActionStartTime(utp.sutp_id);
 			loadUserTimePunches();
 		}
 	}
@@ -114,17 +127,6 @@ export const UserTimePunches = ({
 			loadUserTimePunches();
 	}
 
-	const formatDate = (date) => {
-		if (!date) return "";
-
-		const d = new Date(date);
-
-		const year = d.getFullYear();
-		const month = String(d.getMonth() + 1).padStart(2, "0");
-		const day = String(d.getDate()).padStart(2, "0");
-
-		return `${year}-${month}-${day}`;
-	};
 
 	const handleClickStartEditing = async (sut_id) => {
 		setIsEditing(sut_id);
