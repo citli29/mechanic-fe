@@ -1,8 +1,14 @@
 .service-page{
+	padding: 0 var(--big-padding);
+	color:var(--txt-dark);
+}
+.content{
 	display: flex;
 	flex-direction: column;
 	gap: var(--big-padding);
-	padding: var(--big-padding);
+	padding:  var(--big-padding) 0;
+	max-width: 1400px;
+	margin: 0 auto ;
 }
 
 .service-done-info-card,
@@ -577,9 +583,6 @@
 	}
 
 }
-@media print{
-	#signing{display: block;}
-}
 
 @media(max-width: 600px){
 	.service-user-times-card {
@@ -651,3 +654,210 @@
 		grid-template-columns: 1fr 1fr;
 	}
 }
+
+.print-title{
+	display: none;
+}
+
+@media print {
+
+	* {	
+		all: revert !important ;
+	}
+
+	@page {
+		size: A4 !important;
+		margin: 12mm 14mm !important;
+	}
+
+	.navbar,
+	#state,
+	#schedule,
+	#checkout,
+	#o-check,
+	#lock-start,
+	.service-done-info-card,
+	.service-applied-products-card,
+	.service-user-times-card,
+	.service-is-finished-card,
+	button,
+	.footer {
+		display: none !important;
+	}
+
+	* {
+		box-sizing: border-box !important;
+	}
+
+	html,
+	body {
+		margin: 0 !important;
+		padding: 12pt !important;
+		background: white !important;
+		color: #111 !important;
+		font-family: Arial, Helvetica, sans-serif !important;
+		font-size: 11pt !important;
+	}
+	*::placeholder{
+		color:transparent !important;
+	}
+	.service-signed-info-card .body{
+		display: flex !important;
+		flex-direction: column !important;
+		gap: 5pt !important;
+		padding: 4pt !important;
+		border: 0.5px solid black !important;
+		.text-entry{
+			display: flex !important;
+			flex-direction: column !important;
+			gap: 5pt !important;
+		}
+	}
+
+	textarea {
+		display: block !important;
+		width: 100% !important;
+		height: 100pt !important;
+		resize: none !important;
+		background-color: white !important;
+		padding: 5pt !important;
+		border: solid 0.5px black  !important;
+		font-size: 9pt !important;
+		font-weight: 400;
+	}
+	input{ 
+		background-color: white !important;
+		border:none !important;
+		border-bottom: 0.5px solid black !important;
+	}
+	#signing{
+		display: flex !important;
+		flex-direction: column !important;
+		padding: 8pt !important;
+		gap: 8pt !important;
+		p{
+			margin:0 !important;
+		}
+	}
+
+	.car-picker ,
+	.client-picker{
+		.item-header{
+			display: none !important;
+		}
+	} 
+	h1{
+		display: block !important;
+		margin: 0 !important;
+		padding: 4pt !important;
+		border: solid 0.5px black !important;
+		background-color: #ccc !important;
+		border-bottom: 0 !important;
+		margin-top: 5pt !important;
+		font-size: 15pt !important;
+	}
+	h2{
+		margin: 0 !important;
+		font-size: 13pt !important;
+	}
+	h3{
+		margin: 0 !important;
+		font-size: 11pt !important;
+	}
+
+	.service-header-card{
+		display: grid !important;
+		grid-template-columns: 1fr 1fr !important;
+		border: 0.5px solid black !important;
+		gap: 3pt !important;	
+		h1{
+			margin: 0 !important;
+			border: none !important;
+		}
+		h2{
+			padding: 3pt !important;
+			padding-left: 4pt !important;
+			border-top: 0.5px solid black !important;
+			border-bottom: 0.5px solid black !important;
+		}
+		h3{
+			padding: 2pt !important;
+			padding-left: 4pt !important;
+		}
+
+		.item-field{
+			display:grid !important;
+			grid-template-columns: 70pt auto !important;
+		}
+		#r-name,
+		.service-info{
+			grid-column: 1 / span 2 !important;
+		}
+		.service-info{
+			background-color: #ccc !important;
+			border-bottom: 0.5px solid black !important;
+		}
+		#r-name{
+			padding:  1pt 4pt 0 4pt !important;
+		}
+		#checkout-predict,
+		#r-phone{
+			padding-left: 4pt !important;
+		}
+		#kms,
+		#checkin{
+			padding-right: 4pt !important;
+		}
+	}
+
+	.car-picker, .client-picker{
+		.item-info{
+			display: grid !important;
+			grid-template-columns: 1fr 1fr !important;
+			gap: 3pt !important;
+			padding: 4pt !important;
+			border: solid 0.5px black !important;
+		}
+
+		.item-field{
+			display: grid !important;
+			grid-template-columns: 70pt auto !important;
+		}
+		.car-field-date{
+			display:grid !important;
+			grid-template-columns: 1fr 1fr !important;
+			gap: 3pt !important;
+
+			.item-field-date{
+				display:grid !important;
+				grid-template-columns: 70pt auto !important;
+				gap: 3pt !important;
+				&:last-child{
+					label{
+						text-align: center !important;
+					}
+				}
+			}
+			input{
+				width: 100% !important;
+			}
+
+
+		}
+		.make-picker-container{
+			width: 100% !important;
+			input{
+				width:100% !important;
+			}
+		}
+		.car-field-date{
+			grid-column: 1 / span 2 !important;
+			display: grid !important;
+			grid-template-columns: 1fr 1fr !important;
+			gap: 3pt !important;
+		}
+	}
+}
+
+
+

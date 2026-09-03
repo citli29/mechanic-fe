@@ -119,26 +119,21 @@ button{
 .state-not-finished{
 	background: var(--state-not-finished) !important;
 	border:2px solid var(--state-not-finished-dark) !important;
-	color: #fff !important;
 }
 .state-finished{
 	background: var(--state-finished) !important;
 	border:2px solid var(--state-finished-dark) !important;
-	color: #fff !important;
 }
 .state-validated{
 	background: var(--state-validated) !important;
 	border:2px solid var(--state-validated-dark) !important;
-	color: #fff !important;
 }
 .state-delivered{
 	background: var(--state-delivered) !important;
 	border:2px solid var(--state-delivered-dark) !important;
-	color: #fff !important;
 }
 .note-red{
 	background: #de1f42;
-	color:white;
 }
 .white-caret {
 	caret-color: white

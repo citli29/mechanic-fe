@@ -70,7 +70,9 @@
 
 .selected-item {
 	border: 1px solid var(--border);
-	border-radius:5px;
+	overflow: hidden;
+	border-bottom: none;
+	border-radius: 0 0 5px 5px;
 
 	.item-header {
 		background:var(--bg-page);

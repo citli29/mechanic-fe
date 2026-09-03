@@ -7,9 +7,13 @@
 	grid-template-columns: 3fr 6fr auto 6fr 1fr;
 	grid-template-rows: 1fr 1fr 1fr;
 	gap: var(--padding);
+	background: var(--bg-page);
 
 	#state button{
 		display: none;
+	}
+	#state {
+		color: white;
 	}
 
 	.item-field input{

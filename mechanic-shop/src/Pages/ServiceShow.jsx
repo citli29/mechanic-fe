@@ -143,184 +143,208 @@ export default function ServiceShow2() {
 	}
 
 
+	const getServiceStatus = () => {
+		if(service?.checkout) return {index: 3, desc:"Entregue"};
+		if(service?.office_check) return {index: 2, desc:"Validado"};
+		if(service?.is_finished) return {index: 1, desc:"Terminado"};
+		return {index: 0, desc:"Por Terminar"}; 
+	}
+	const getStateClass = () => {
+		switch(getServiceStatus().index){
+			case 0: return "state-not-finished";
+			case 1: return "state-finished";
+			case 2: return "state-validated";
+			case 3: return "state-delivered";
+			default: return "";
+		}
+	}
 	return(
-		<div className="service-page">
-			<ServiceHeader
-				service={service}
-				onServiceChange={
-					(field, value) =>
-						setService(prev => ({
-							...prev,
-							[field]: value,
-						}))
-				}
-				lock={!isAllowedEditing}
-				onLockChange={()=>{setIsAllowedEditing(!isAllowedEditing)}}
-			/>
-			<CarPicker
-				car_id={service.car_id}
-				onCarIdChange={(value)=>setService(prev => (
-					prev.car_id === value
-						? prev :
-						{...prev, car_id: value,}
-				))}
-				isAllowedEditing={isAllowedEditing}
-			/>
-			<ClientPicker
-				client_id={service.client_id}
-				onClientIdChange={(value)=>setService(prev => (
-					prev.client_id === value
-						? prev :
-						{...prev, client_id: value,}
-				))}
-				isAllowedEditing={isAllowedEditing}
-			/>
-			<div className="service-signed-info-card">
-				<div className="header">
-					<i className="fa-solid fa-pen-fancy"/> 
-					<h1>Serviço Acordado</h1>
-				</div>
-				<div className="body">
-					<div className="text-entry">
-						<label htmlFor=""disabled={!isAllowedEditing}>Descrição de Avaria</label>
-						<textarea 
-							type="text" 
-							value={service.malfunction} 
-							onChange={(e)=>setService(prev => ({
+		<div className={`service-page ${getStateClass()}`}>
+			<div className="content">
+
+				<ServiceHeader
+					service={service}
+					onServiceChange={
+						(field, value) =>
+							setService(prev => ({
 								...prev,
-								malfunction:e.target.value
-							}))}
-							disabled={!isAllowedEditing}/>
-					</div>
-					<div className="text-entry">
-						<label htmlFor="malfunction">Serviço a Realizar</label>
-						<textarea 
-							type="text" 
-							value={service.signed_service} 
-							onChange={(e)=>setService(prev => ({
-								...prev,
-								signed_service:e.target.value
-							}))}
-							disabled={!isAllowedEditing}/>
-					</div>
-				</div>
-				<div className="text-entry" id="signing">
-					<p>Eu, <span>{service?.r_name??"".trim()?service?.r_name:"______________________________"}</span> , tomei conhecimento e autorizo a realização do serviço acima indicado e contacto através do nrº <span>{service?.r_phone??"".trim()?service?.r_phone:"______________________________"}</span>.</p>
-					<p>Assinatura: ________________________________</p>
-				</div>
-			</div>
-			<div className="service-done-info-card">
-				<div className="header">
-					<i className="fa-solid fa-wrench"></i>
-					<h1>Serviço Realizado</h1>
-				</div>	
-				<div className="body">
-					<div className="coloring-buttons">
-						<button
-							onClick={()=>{
-								markedTextarea.current.markSelection("note-red");
-							}}
-						><i className="fa-solid fa-square-pen note-red-button"/></button>
-						<button
-							onClick={()=>{
-								markedTextarea.current.markSelection("note-yellow");
-							}}
-						><i className="fa-solid fa-square-pen note-yellow-button"/></button>
-						<button
-							onClick={()=>{
-								markedTextarea.current.markSelection("note-green");
-							}}
-						><i className="fa-solid fa-square-pen note-green-button"/></button>
-						<button
-							onClick={()=>{
-								markedTextarea.current.unmarkSelection();
-							}}
-						><i className="fa-regular fa-square f"/></button>
-
-					</div>
-
-					<div className="text-entry">
-						<label htmlFor=""disabled={!isAllowedEditing}>Notas/Observações</label>
-
-						<MarkedTextarea
-							ref={markedTextarea}
-							value={service.note}
-							onChange={(newValue) => {
-								setService(prev => ({
-									...prev,
-									note: newValue,
-								}));
-							}}
-						/>
-					</div>
-
-					<div className="text-entry">
-						<label htmlFor="malfunction">Serviço Realizado</label>
-						<textarea 
-							type="text" 
-							value={service.service} 
-							onChange={(e)=>setService(prev => ({
-								...prev,
-								service:e.target.value
-							}))}
-						/>
-					</div>
-				</div>
-			</div>
-			<div className="service-applied-products-card">
-				<div className="header">
-					<i className="fa-solid fa-store"></i>
-					<h1>Produtos Aplicados</h1>
-				</div>	
-				<div className="body">
-					<AppliedProducts id={id}/>
-				</div>
-			</div>
-			<div className="service-user-times-card">
-				<div className="header">
-					<i className="fa-solid fa-hourglass-half"></i>
-					<h1>Tempos de Serviço</h1>
-				</div>	
-				<div className="body">
-					<table className="times-summary">
-						<thead>
-							<tr>
-								<th>Funcionário</th>
-								<th>Tempo</th>
-							</tr>
-						</thead>
-						<tbody>
-							{timeSummary.map(ts=>(
-								<tr>
-									<td>{ts.user_name}</td>
-									<td>{ts.minutes}</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
-					<UserTimes id={id} copy_uts={setUts}/>
-					<UserTimePunches id={id} copy_uts={setUtps}/>
-				</div>
-			</div>
-			<div className="service-is-finished-card">
-				<label htmlFor="is-finished">
+								[field]: value,
+							}))
+					}
+					lock={!isAllowedEditing}
+					onLockChange={()=>{setIsAllowedEditing(!isAllowedEditing)}}
+				/>
+				<h1 className="print-title">
+					Informação da viatura
+				</h1>
+				<CarPicker
+					car_id={service.car_id}
+					onCarIdChange={(value)=>setService(prev => (
+						prev.car_id === value
+							? prev :
+							{...prev, car_id: value,}
+					))}
+					isAllowedEditing={isAllowedEditing}
+				/>
+				<h1 className="print-title">
+					Informação do cliente
+				</h1>
+				<ClientPicker
+					client_id={service.client_id}
+					onClientIdChange={(value)=>setService(prev => (
+						prev.client_id === value
+							? prev :
+							{...prev, client_id: value,}
+					))}
+					isAllowedEditing={isAllowedEditing}
+				/>
+				<div className="service-signed-info-card">
 					<div className="header">
-
-						<i className="fa-solid fa-flag-checkered"></i>
-						<h1>Finalizado</h1>
-						<input
-							id="is-finished"
-							type="checkbox"
-							checked={service.is_finished}
-							onChange={(e) =>
-								setService(prev => ({
+						<i className="fa-solid fa-pen-fancy"/> 
+						<h1>Serviço Acordado</h1>
+					</div>
+					<div className="body">
+						<div className="text-entry">
+							<label htmlFor=""disabled={!isAllowedEditing}>Descrição de Avaria</label>
+							<textarea 
+								type="text" 
+								value={service.malfunction} 
+								onChange={(e)=>setService(prev => ({
 									...prev,
-									is_finished: e.target.checked,
-								}))
-							}
-						/>
+									malfunction:e.target.value
+								}))}
+								disabled={!isAllowedEditing}/>
+						</div>
+						<div className="text-entry">
+							<label htmlFor="malfunction">Serviço a Realizar</label>
+							<textarea 
+								type="text" 
+								value={service.signed_service} 
+								onChange={(e)=>setService(prev => ({
+									...prev,
+									signed_service:e.target.value
+								}))}
+								disabled={!isAllowedEditing}/>
+						</div>
+					</div>
+					<div className="text-entry" id="signing">
+						<p>Eu, <span>{service?.r_name??"".trim()?service?.r_name:"______________________________"}</span> , tomei conhecimento e autorizo a realização do serviço acima indicado e contacto através do nrº <span>{service?.r_phone??"".trim()?service?.r_phone:"______________________________"}</span>.</p>
+						<p>Assinatura: ________________________________</p>
+					</div>
+				</div>
+				<div className="service-done-info-card">
+					<div className="header">
+						<i className="fa-solid fa-wrench"></i>
+						<h1>Serviço Realizado</h1>
 					</div>	
-				</label>
+					<div className="body">
+						<div className="coloring-buttons">
+							<button
+								onClick={()=>{
+									markedTextarea.current.markSelection("note-red");
+								}}
+							><i className="fa-solid fa-square-pen note-red-button"/></button>
+							<button
+								onClick={()=>{
+									markedTextarea.current.markSelection("note-yellow");
+								}}
+							><i className="fa-solid fa-square-pen note-yellow-button"/></button>
+							<button
+								onClick={()=>{
+									markedTextarea.current.markSelection("note-green");
+								}}
+							><i className="fa-solid fa-square-pen note-green-button"/></button>
+							<button
+								onClick={()=>{
+									markedTextarea.current.unmarkSelection();
+								}}
+							><i className="fa-regular fa-square f"/></button>
+
+						</div>
+
+						<div className="text-entry">
+							<label htmlFor=""disabled={!isAllowedEditing}>Notas/Observações</label>
+
+							<MarkedTextarea
+								ref={markedTextarea}
+								value={service.note}
+								onChange={(newValue) => {
+									setService(prev => ({
+										...prev,
+										note: newValue,
+									}));
+								}}
+							/>
+						</div>
+
+						<div className="text-entry">
+							<label htmlFor="malfunction">Serviço Realizado</label>
+							<textarea 
+								type="text" 
+								value={service.service} 
+								onChange={(e)=>setService(prev => ({
+									...prev,
+									service:e.target.value
+								}))}
+							/>
+						</div>
+					</div>
+				</div>
+				<div className="service-applied-products-card">
+					<div className="header">
+						<i className="fa-solid fa-store"></i>
+						<h1>Produtos Aplicados</h1>
+					</div>	
+					<div className="body">
+						<AppliedProducts id={id}/>
+					</div>
+				</div>
+				<div className="service-user-times-card">
+					<div className="header">
+						<i className="fa-solid fa-hourglass-half"></i>
+						<h1>Tempos de Serviço</h1>
+					</div>	
+					<div className="body">
+						<table className="times-summary">
+							<thead>
+								<tr>
+									<th>Funcionário</th>
+									<th>Tempo</th>
+								</tr>
+							</thead>
+							<tbody>
+								{timeSummary.map(ts=>(
+									<tr>
+										<td>{ts.user_name}</td>
+										<td>{ts.minutes}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+						<UserTimes id={id} copy_uts={setUts}/>
+						<UserTimePunches id={id} copy_uts={setUtps}/>
+					</div>
+				</div>
+				<div className="service-is-finished-card">
+					<label htmlFor="is-finished">
+						<div className="header">
+
+							<i className="fa-solid fa-flag-checkered"></i>
+							<h1>Finalizado</h1>
+							<input
+								id="is-finished"
+								type="checkbox"
+								checked={service.is_finished}
+								onChange={(e) =>
+									setService(prev => ({
+										...prev,
+										is_finished: e.target.checked,
+									}))
+								}
+							/>
+						</div>	
+					</label>
+				</div>
 			</div>
 		</div>
 
