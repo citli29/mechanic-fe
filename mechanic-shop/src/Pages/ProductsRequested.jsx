@@ -318,7 +318,7 @@ export const ProductsRequested = ({
 						<th>Tipo de Produto</th>
 						<th>Quantidade</th>
 						<th>Pedido</th>
-						<th>Entregue</th>
+						<th>Recebido</th>
 						<th/>
 						<th/>
 					</tr>
@@ -328,7 +328,7 @@ export const ProductsRequested = ({
 						<tr key={pr.spr_id}>
 							<td id="pr-p-name">{pr.product_name}</td>
 							<td id="pr-p-ref">{pr.product_reference}</td>
-							<td id="pr-p-ref">{pr.product_type_name}</td>
+							<td id="pr-p-p-t">{pr.product_type_name}</td>
 							<td id="pr-quant">
 								<label htmlFor="product-quantity" className="magic-label">Qt:</label>
 								<input type="number" value={pr.quantity} 
@@ -337,7 +337,7 @@ export const ProductsRequested = ({
 							<td id="pr-ord"><label htmlFor="is-ordered"><input type="checkbox" checked={pr.is_ordered==1} onChange={(e)=>{handleInputChangeBlur({...pr, is_ordered:e.target.checked?1:0});}}/></label></td>
 							<td id="pr-del"><label htmlFor="is-delivered"><input id="is-delivered"type="checkbox" checked={pr.is_delivered==1} onChange={(e)=>{handleInputChangeBlur({...pr, is_delivered:e.target.checked?1:0});}}/></label></td>
 							<td id="pr-for"><button className="confirm"><i className="fa-solid fa-forward" onClick={(e)=>handleActionForwardPR(pr)}/></button></td>
-							<td id="pr-del"><button className="cancel"><i className="fa-solid fa-trash" onClick={(e)=>handleActionDeletePR(pr.spr_id)}/></button></td>
+							<td id="pr-delete"><button className="cancel"><i className="fa-solid fa-trash" onClick={(e)=>handleActionDeletePR(pr.spr_id)}/></button></td>
 						</tr>
 					))}
 				</tbody>

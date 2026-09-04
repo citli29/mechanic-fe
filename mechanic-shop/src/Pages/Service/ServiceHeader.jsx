@@ -240,8 +240,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						<div className="logo"><i className="fa-regular fa-file-lines"/></div>
 						<div className="not-logo">
 							<h1>Serviço #{service.id}</h1>
-							<h2>{service.service_type}</h2>
-							<h3>{service.service_sub_type} </h3>
+							<h2>{service.service_type_name}</h2>
 						</div>
 					</div>
 
@@ -250,7 +249,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						<input
 							type="text"
 							id="service-state"
-							value={getServiceStatus().desc}
+							value={getServiceStatus().desc??""}
 							disabled
 							className={getStateClass()}
 						/>
@@ -270,7 +269,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							type="text"
 							placeholder={lock?"S/ Nome":"Nome"}
 							id="service-r-name"
-							value={service.r_name}
+							value={service.r_name??""}
 							onChange={(e) => onServiceChange("r_name", e.target.value) }
 							disabled={lock}
 						/>
@@ -282,7 +281,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							type="text"
 							placeholder={lock?"S/ Telemóvel":"Telemóvel"}
 							id="service-r-phone"
-							value={service.r_phone}
+							value={service.r_phone??""}
 							onChange={(e) => onServiceChange("r_phone", e.target.value) }
 							disabled={lock}
 						/>
@@ -293,7 +292,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						<input
 							type="date"
 							id="service-checkin"
-							value={service.checkin}
+							value={service.checkin??""}
 							onChange={(e) => onServiceChange("checkin", e.target.value) }
 							disabled={lock}
 						/>
@@ -304,7 +303,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						<input
 							type="date"
 							id="service-checkout-predict"
-							value={service.checkout_predict}
+							value={service.checkout_predict??""}
 							onChange={(e) => onServiceChange( "checkout_predict", e.target.value) }
 							disabled={lock}
 						/>
@@ -315,7 +314,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						<input
 							type="number"
 							id="service-kms"
-							value={service.kms}
+							value={service.kms??""}
 							onChange={(e) => onServiceChange("kms", e.target.value) }
 							disabled={lock}
 						/>
@@ -327,7 +326,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						<label htmlFor="service-schedule"> Marcação</label>
 
 						<select
-							value={service.schedule_id}
+							value={service.schedule_id??""}
 							onChange={(e) => onServiceChange( "schedule_id", e.target.value) }
 							name="service-schedule"
 							id="service-schedule"
@@ -346,7 +345,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							{schedules?.map((schedule) => (
 								<option
 									key={schedule.id}
-									value={schedule.id}
+									value={schedule.id??""}
 								>
 									# {schedule.id}
 								</option>
@@ -360,7 +359,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						<input
 							type="date"
 							id="service-checkout"
-							value={service.checkout}
+							value={service.checkout??""}
 							onChange={(e) => onServiceChange( "checkout", e.target.value) }
 							disabled={lock}
 						/>
