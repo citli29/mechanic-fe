@@ -11,6 +11,7 @@ import { MarkedTextarea } from "./MarkedTextarea";
 import { AppliedProducts } from "./AppliedProducts";
 import { UserTimes } from "./UserTimes";
 import { UserTimePunches } from "./UserTimePunches";
+import { ProductsRequested } from "./ProductsRequested";
 
 export default function ServiceShow2() {
 	const { id } = useParams();
@@ -35,10 +36,15 @@ export default function ServiceShow2() {
 		malfunction:"",
 		is_finished: false,
 	}
-	const markedTextarea = useRef();
-	const [service, setService] = useState(defaultService);
 
+	const markedTextarea = useRef();
 	const hasLoaded = useRef(false);
+	const [service, setService] = useState(defaultService);
+	const [isAllowedEditing, setIsAllowedEditing] = useState(false);
+	const skipSave = useRef(true);
+
+	useEffect(() => { loadService(); }, []);
+	useEffect(()=>{console.log("Servico: ",service);},[service]);
 
 	useEffect(()=>{
 		document.querySelectorAll(".info").forEach((element) => {
@@ -67,14 +73,6 @@ export default function ServiceShow2() {
 		}
 	}
 
-	useEffect(()=>{console.log("Servico: ",service);},[service]);
-	useEffect(()=>{console.log("Carro: ",service.car_id);},[service.car_id]);
-	useEffect(()=>{console.log("Cliente: ",service.client_id);},[service.client_id]);
-
-	//For debug
-	const [isAllowedEditing, setIsAllowedEditing] = useState(false);
-	useEffect(()=>{console.log("AllowedEditing: ",isAllowedEditing);},[isAllowedEditing]);
-
 	const putService = async (service) =>{
 		try{
 			if(service?.id){
@@ -89,11 +87,15 @@ export default function ServiceShow2() {
 		}catch(error){console.error(error, error.response.data.error)}
 	}
 
-	const skipSave = useRef(true);
-
-	useEffect(() => { loadService(); }, []);
 
 	useEffect(() => {
+		const f = async () =>{
+			const s = await putService(service); 
+			if(!s) {
+				loadService();
+			}
+		}
+
 		if (!service?.id) return;
 
 		if (skipSave.current) {
@@ -102,35 +104,18 @@ export default function ServiceShow2() {
 		}
 
 		const timer = setTimeout(() => {
-			putService(service);
+			f();
 		}, 300);
 
 		return () => clearTimeout(timer);
 	}, [service]);
 
-	const MARKERS = {
-		red: {
-			char: "\uE000",
-			className: "note-red",
-		},
-		green: {
-			char: "\uE001",
-			className: "note-green",
-		},
-		yellow: {
-			char: "\uE002",
-			className: "note-yellow",
-		},
-	};
-
+	/* USER TIME */
 	const[uts,setUts] = useState([]);
 	const[utps,setUtps] = useState([]);
 	const[timeSummary,setTimeSummary] = useState([]);
-	useEffect(()=>{
-		setTimeSummary(sumUserMinutes(uts,utps));
-	},[uts,utps]);
+	useEffect(()=>{ setTimeSummary(sumUserMinutes(uts,utps)); },[uts,utps]);
 
-	useEffect(()=>{console.log("UAAAAU " , timeSummary)},[timeSummary]);
 	const  sumUserMinutes = (arr1, arr2) => { 
 		const users = {};
 		[...arr1, ...arr2].forEach(({ user_id, user_name, minutes }) => { 
@@ -142,7 +127,6 @@ export default function ServiceShow2() {
 		return Object.values(users); 
 	}
 
-
 	const getServiceStatus = () => {
 		if(service?.checkout) return {index: 3, desc:"Entregue"};
 		if(service?.office_check) return {index: 2, desc:"Validado"};
@@ -151,17 +135,21 @@ export default function ServiceShow2() {
 	}
 	const getStateClass = () => {
 		switch(getServiceStatus().index){
-			case 0: return "state-not-finished";
-			case 1: return "state-finished";
-			case 2: return "state-validated";
-			case 3: return "state-delivered";
+			case 0: return "state-not-finished-bg";
+			case 1: return "state-finished-bg";
+			case 2: return "state-validated-bg";
+			case 3: return "state-delivered-bg";
 			default: return "";
 		}
 	}
+	const handleClickCheckIsFinished =async (checked) => {
+		const s = await putService({...service,is_finished: checked});
+		if(s) setService(s);
+	}
+
 	return(
 		<div className={`service-page ${getStateClass()}`}>
 			<div className="content">
-
 				<ServiceHeader
 					service={service}
 					onServiceChange={
@@ -290,6 +278,15 @@ export default function ServiceShow2() {
 						</div>
 					</div>
 				</div>
+				<div className="service-products-requested-card">
+					<div className="header">
+						<i className="fa-solid fa-cart-arrow-down"/>
+						<h1>Pedido de Produtos</h1>
+					</div>	
+					<div className="body">
+						<ProductsRequested id={id}/>
+					</div>
+				</div>
 				<div className="service-applied-products-card">
 					<div className="header">
 						<i className="fa-solid fa-store"></i>
@@ -314,7 +311,7 @@ export default function ServiceShow2() {
 							</thead>
 							<tbody>
 								{timeSummary.map(ts=>(
-									<tr>
+									<tr key={ts.user_id}>
 										<td>{ts.user_name}</td>
 										<td>{ts.minutes}</td>
 									</tr>
@@ -328,19 +325,13 @@ export default function ServiceShow2() {
 				<div className="service-is-finished-card">
 					<label htmlFor="is-finished">
 						<div className="header">
-
 							<i className="fa-solid fa-flag-checkered"></i>
 							<h1>Finalizado</h1>
 							<input
 								id="is-finished"
 								type="checkbox"
 								checked={service.is_finished}
-								onChange={(e) =>
-									setService(prev => ({
-										...prev,
-										is_finished: e.target.checked,
-									}))
-								}
+								onChange={(e) => {handleClickCheckIsFinished(e.target.checked); }}
 							/>
 						</div>	
 					</label>

@@ -49,12 +49,16 @@
 
 	--state-not-finished: #ffb63b;
 	--state-not-finished-dark: #ffc96e;
+	--state-not-finished-muted: #ffe2b0;
 	--state-finished:#22c55e;
 	--state-finished-dark:#11b44d;
+	--state-finished-muted:#59b37a;
 	--state-validated:#e823d1;
 	--state-validated-dark:#f745e3;
+	--state-validated-muted:#f792ec;
 	--state-delivered:#52b0eb;
 	--state-delivered-dark:#2a71e5;
+	--state-delivered-muted:#86aae3;
 
 }
 
@@ -131,6 +135,18 @@ button{
 .state-delivered{
 	background: var(--state-delivered) !important;
 	border:2px solid var(--state-delivered-dark) !important;
+}
+.state-not-finished-bg{
+	background: var(--state-not-finished-muted) !important;
+}
+.state-finished-bg{
+	background: var(--state-finished-muted) !important;
+}
+.state-validated-bg{
+	background: var(--state-validated-muted) !important;
+}
+.state-delivered-bg{
+	background: var(--state-delivered-muted) !important;
 }
 .note-red{
 	background: #de1f42;

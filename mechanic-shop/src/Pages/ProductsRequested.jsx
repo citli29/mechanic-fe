@@ -1,22 +1,14 @@
 import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
 
-export const AppliedProducts = ({
+export const ProductsRequested = ({
 	id
 }) =>{
 
-	const emptyAP = {
-		product_id:"",
-		quantity: 1,
-		is_applied: "0",
-		product_type_id: "" 
-	}
-
-	const [appliedProducts,setAppliedProducts] = useState([]);
+	const [productsRequested,setProductsRequested] = useState([]);
 	const [products,setProducts] = useState([]);
 	const [productTypes,setProductTypes] = useState([]);
 
-	const [newAP, setNewAP] = useState(emptyAP);
 	const [newProduct, setNewProduct] = useState({
 		name: "",
 		reference: "",
@@ -29,14 +21,13 @@ export const AppliedProducts = ({
 	const refSearch = useRef(null);
 	const [debouncedValue, setDebouncedValue] = useState("");
 
-	useEffect(()=>{console.log(appliedProducts)},[appliedProducts]);
 	useEffect(()=>{
-		loadAPs();
+		loadPRs();
 		loadProducts();
 		loadProductTypes();
 	},[]); 
 
-	useEffect(()=>{console.log("APs:",appliedProducts) },[appliedProducts]);
+	useEffect(()=>{console.log("PRs:",productsRequested) },[productsRequested]);
 	useEffect(()=>{console.log("Products:",products) },[products]);
 	useEffect(()=>{console.log("ProductTypes:",productTypes) },[productTypes]);
 
@@ -58,10 +49,10 @@ export const AppliedProducts = ({
 		}
 	}
 	
-	const loadAPs = async () => {
+	const loadPRs = async () => {
 		try{
-			const response = await api.get(`/services/${id}/applied_products`);
-			setAppliedProducts(response.data.sap_list);
+			const response = await api.get(`/services/${id}/products_requested`);
+			setProductsRequested(response.data.spr_list);
 		}catch(error){
 			console.error(error);
 		}
@@ -97,43 +88,42 @@ export const AppliedProducts = ({
 		}catch(error){console.error(error, error.response.data.error)}
 	}
 
-	const postAP = async (p_id) =>{
+	const postPR = async (p_id) =>{
 		try{
-			const response = await api.post(`services/${id}/applied_products`,{
-				...emptyAP,
+			const response = await api.post(`services/${id}/products_requested`,{
 				 product_id: p_id ,
 				 
 			})
-			if(typeof response.data.sap !== "undefined"){
-				return response.data.sap;
+			if(typeof response.data.spr !== "undefined"){
+				return response.data.spr;
 			}else{
 				return null;
 			}
 		}catch(error){console.error(error, error.response.data.error)}
 	}
 
-	const deleteAP = async (ap_id) =>{
+	const deletePR = async (spr_id) =>{
 		try{
-			const response = await api.delete(`services/${id}/applied_products/${ap_id}`);
-			if(typeof response.data.sap !== "undefined"){
-				return response.data.sap;
+			const response = await api.delete(`services/${id}/products_requested/${spr_id}`);
+			if(typeof response.data.spr !== "undefined"){
+				return response.data.spr;
 			}else{
 				return null;
 			}
 		}catch(error){console.error(error, error.response.data.error)}
 	}
-	const updateAP = async (ap) => {
+	const updatePR = async (pr) => {
 		try {
 			const response = await api.put(
-				`services/${id}/applied_products/${ap.sap_id}`,
+				`services/${id}/products_requested/${pr.spr_id}`,
 				{
-					product_id: ap.product_id,
-					quantity: ap.quantity,
-					is_applied: ap.is_applied
+					product_id: pr.product_id,
+					is_ordered: pr.is_ordered,
+					is_delivered: pr.is_delivered
 				}
 			);
 
-			return response.data.sap;
+			return response.data.spr;
 		} catch (error) {
 			console.error(error);
 			return null;
@@ -192,23 +182,23 @@ export const AppliedProducts = ({
 
 	const handleClickSelect  = async (p) =>{
 		setIsSearchSelected(false);
-		const ap = await postAP(p.id);
-		loadAPs();
+		const pr = await postPR(p.id);
+		loadPRs();
 	}
 
 	const handleActionAddProduct = async () =>{
 		const p = await postProduct(newProduct.name, newProduct.reference, newProduct.product_type_id);
 		if(p){
-			const ap = await postAP(p.id);
-			loadAPs();
+			const ap = await postPR(p.id);
+			loadPRs();
 			setIsAddingProduct(false);
 			setSearchProduct("");
 		}
 	}
 
-	const handleActionDeleteAP = async (id) => {
-		const ap = await deleteAP(id);
-		loadAPs();
+	const handleActionDeletePR = async (id) => {
+		const pr = await deletePR(id);
+		loadPRs();
 	}
 
 	return(
@@ -285,58 +275,22 @@ export const AppliedProducts = ({
 						<th>Nome</th>
 						<th>Referencia</th>
 						<th>Tipo de Produto</th>
-						<th>Quantidade</th>
-						<th>Aplicado</th>
-						<th></th>
+						<th>Pedido</th>
+						<th>Entregue</th>
+						<th/>
+						<th/>
 					</tr>
 				</thead>
 				<tbody>
-					{appliedProducts.map((ap) =>(
-						<tr key={ap.sap_id}>
-							<td className="p-name">
-								<label htmlFor="product-name" className="magic-label">Nome:</label>
-								<input disabled type="text" value={ap?.product_name??""}/>
-							</td>
-							<td className="p-reference">
-								<label htmlFor="product-reference" className="magic-label">Referencia:</label>
-								<input disabled type="text" placeholder="-" value={ap?.product_reference??""}/>
-							</td>
-							<td className="p-p-type"> 
-								<label htmlFor="product-product-type" className="magic-label">T. Produto:</label>
-								<input disabled type="text" placeholder="-" value={ap?.product_type_name??""}/>
-							</td>
-							<td className="p-quantity">
-								<label htmlFor="product-quantity" className="magic-label">Qt:</label>
-								<input type="number" value={ap?.quantity??""} onChange={async (e) => {
-									const quantity = e.target.value.trim()!==""?Number(e.target.value):"";
-									setAppliedProducts(prev => prev.map((_ap) => ap.sap_id === _ap.sap_id ?
-										{ ..._ap, quantity }:
-										_ap
-									));
-									if(quantity!==""){
-										await updateAP({...ap,quantity});
-									}}
-								}/>
-							</td>
-							<td className="td-label-label p-applied">
-								<label>
-									<input
-										type="checkbox"
-										checked={ap?.is_applied == "1"}
-										onChange={async (e) => {
-											const is_applied = e.target.checked ? "1" : "0";
-											setAppliedProducts(prev => prev.map((_ap) => ap.sap_id === _ap.sap_id ? 
-												{ ..._ap, is_applied }: 
-												_ap
-											));
-											await updateAP({ ...ap, is_applied});
-										}
-									}/>
-								</label>
-							</td>
-							<td className="p-cancel">
-								<button className="cancel" onClick={()=>handleActionDeleteAP(ap.sap_id)}><i className="fa-solid fa-trash"/></button>
-							</td>
+					{productsRequested.map((pr) =>(
+						<tr key={pr.spr_id}>
+							<td>{pr.product_name}</td>
+							<td>{pr.product_reference}</td>
+							<td>{pr.product_type_name}</td>
+							<td><label htmlFor="is-ordered"><input type="checkbox" checked={pr.is_ordered==1}/></label></td>
+							<td><label htmlFor="is-delivered"><input id="is-delivered"type="checkbox" checked={pr.is_delivered==1}/></label></td>
+							<td><button className="confirm"><i className="fa-solid fa-forward"/></button></td>
+							<td><button className="cancel"><i className="fa-solid fa-trash"/></button></td>
 						</tr>
 					))}
 				</tbody>

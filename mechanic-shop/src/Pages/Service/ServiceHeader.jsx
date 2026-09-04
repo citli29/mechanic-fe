@@ -25,6 +25,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 			media.removeEventListener("change", handleChange);
 		};
 	}, []);
+
 	const getFreeSchedules = async () => {
 		try{
 			const response = await api.get("schedules/free")
@@ -91,7 +92,6 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 		}
 		
 	}
-
 	const renderInfoBig = () => {
 		return (
 				<>
@@ -208,7 +208,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 					<input
 						type="date"
 						id="service-checkout"
-						value={service.checkout}
+						value={service.checkout??""}
 						onChange={(e) => onServiceChange( "checkout", e.target.value) }
 						disabled={lock}
 					/>
@@ -365,7 +365,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						<input
 							type="date"
 							id="service-checkout"
-							value={service?.checkout??""}
+							value={service.checkout}
 							onChange={(e) => onServiceChange( "checkout", e.target.value) }
 							disabled={lock}
 						/>

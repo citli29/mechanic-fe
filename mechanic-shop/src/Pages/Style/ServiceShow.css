@@ -1,6 +1,7 @@
 .service-page{
 	padding: 0 var(--big-padding);
 	color:var(--txt-dark);
+	filter: staturate(0.5);
 }
 .content{
 	display: flex;
@@ -127,6 +128,13 @@
 		border-bottom: 4px solid #a3540a;
 	}
 }
+
+.service-products-requested-card{
+	.header{
+		border-bottom: 4px solid #ff1111;
+	}
+}
+.service-products-requested-card,
 .service-user-times-card,
 .service-applied-products-card{
 	border: 1px solid var(--border);
@@ -169,6 +177,7 @@
 	}
 
 }
+.service-products-requested-card,
 .service-user-times-card,
 .service-applied-products-card{
 	background: var(--bg-card);
@@ -680,6 +689,7 @@
 	.service-applied-products-card,
 	.service-user-times-card,
 	.service-is-finished-card,
+	.service-products-requested-card,
 	button,
 	.footer {
 		display: none !important;
@@ -859,5 +869,19 @@
 	}
 }
 
+.service-products-requested-card{
+	table{
+		tr{
+			display: grid;
+			grid-template-columns: repeat(3, 3fr) repeat(2, 2fr) repeat(2,42.59px)!important;
+			td{
+				padding: var(--padding);
+			}
+			td:has(button){
+				padding: 0 !important;
+			}
+		}
 
+	}
+}
 
