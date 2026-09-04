@@ -72,10 +72,6 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 		f();
 	}, [service.schedule_id]);
 
-	useEffect(()=>{
-		console.log(schedules);
-	},[schedules]);
-
 	const getServiceStatus = () => {
 		if(service?.checkout) return {index: 3, desc:"Entregue"};
 		if(service?.office_check) return {index: 2, desc:"Validado"};

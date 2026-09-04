@@ -873,7 +873,7 @@
 	table{
 		tr{
 			display: grid;
-			grid-template-columns: repeat(3, 3fr) repeat(2, 2fr) repeat(2,42.59px)!important;
+			grid-template-columns: repeat(3, 3fr) repeat(2, 2fr) 1fr repeat(2,42.59px)!important;
 			td{
 				padding: var(--padding);
 			}

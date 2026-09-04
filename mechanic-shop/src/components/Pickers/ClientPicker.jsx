@@ -135,11 +135,6 @@ export const ClientPicker = ({
 		return () => (isCurrent=false);
 	},[debouncedValue]);
 
-	//For Debug
-	useEffect(()=>{console.log("Clients: ", clients)}, [clients]);
-	useEffect(()=>{console.log("Client: ", client)}, [client]);
-	useEffect(()=>{console.log("State: ", state)},[state]);
-
 	//Interactivity
 	const refSearch = useRef(null);
 
@@ -417,7 +412,7 @@ export const ClientPicker = ({
 			case EDITING:
 				return renderNotSearching();
 			default:
-				console.error("Erro no estado: ", state);
+				return;
 		}
 		
 	}

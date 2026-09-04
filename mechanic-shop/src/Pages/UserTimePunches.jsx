@@ -31,8 +31,6 @@ export const UserTimePunches = ({
 
 	useEffect(()=>{ copy_uts(userTimePunches); },[userTimePunches]);
 
-	useEffect(()=>{console.log("Users : ", users)},[users]);
-	useEffect(()=>{console.log("User Time Punches:" ,userTimePunches)},[userTimePunches]);
 	useEffect(()=>{
 		loadUsers();
 		loadUserTimePunches();
@@ -150,7 +148,6 @@ export const UserTimePunches = ({
 		try{
 			const response = await api.post(`/services/${id}/user_time_punches/${sutp_id}/start`)
 
-			console.log(response.data);
 			if(typeof response.data.sutp === "undefined"){
 				return null;
 			}
@@ -162,8 +159,6 @@ export const UserTimePunches = ({
 	const handleActionStopTime = async (sutp_id) =>{
 		try{
 			const response = await api.post(`/services/${id}/user_time_punches/${sutp_id}/stop`)
-
-			console.log(response.data);
 			if(typeof response.data.sutp === "undefined"){
 				return null;
 			}

@@ -2,14 +2,15 @@ import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
 
 export const AppliedProducts = ({
-	id
+	id,
+	apReload,
+	onApReloaded
 }) =>{
 
 	const emptyAP = {
 		product_id:"",
 		quantity: 1,
 		is_applied: "0",
-		product_type_id: "" 
 	}
 
 	const [appliedProducts,setAppliedProducts] = useState([]);
@@ -29,16 +30,20 @@ export const AppliedProducts = ({
 	const refSearch = useRef(null);
 	const [debouncedValue, setDebouncedValue] = useState("");
 
-	useEffect(()=>{console.log(appliedProducts)},[appliedProducts]);
 	useEffect(()=>{
 		loadAPs();
 		loadProducts();
 		loadProductTypes();
 	},[]); 
 
-	useEffect(()=>{console.log("APs:",appliedProducts) },[appliedProducts]);
-	useEffect(()=>{console.log("Products:",products) },[products]);
-	useEffect(()=>{console.log("ProductTypes:",productTypes) },[productTypes]);
+	useEffect(()=>{
+		if(apReload){
+			loadAPs();
+			onApReloaded();
+		}
+	},[apReload])
+
+
 
 	const loadProductTypes = async () => {
 		try{

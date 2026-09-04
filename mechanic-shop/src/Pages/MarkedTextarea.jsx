@@ -131,19 +131,6 @@ export const MarkedTextarea =forwardRef(({
 			const s = createMarkedString(currentMarkers, textPresenting);
 			onChange(s);
 		}, [textPresenting, currentMarkers]);
-		/*
-			console.log(value);
-		useEffect(()=>{
-			setTextRaw(value);
-			const v = parseMarkedString(value);
-			setTextPresenting(v.presentingText);
-			setCurrentMarkers(v.markers);
-		},[]);
-		useEffect(() => {
-			const s = createMarkedString(currentMarkers, textPresenting);
-			onChange(s);
-		},[textPresenting,currentMarkers])
-		*/
 
 		const createMarkedString = (currentMarkers,presentingText) => {
 			return currentMarkers

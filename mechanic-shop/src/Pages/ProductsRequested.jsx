@@ -2,7 +2,8 @@ import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
 
 export const ProductsRequested = ({
-	id
+	id,
+	onProductForwarded
 }) =>{
 
 	const [productsRequested,setProductsRequested] = useState([]);
@@ -26,10 +27,6 @@ export const ProductsRequested = ({
 		loadProducts();
 		loadProductTypes();
 	},[]); 
-
-	useEffect(()=>{console.log("PRs:",productsRequested) },[productsRequested]);
-	useEffect(()=>{console.log("Products:",products) },[products]);
-	useEffect(()=>{console.log("ProductTypes:",productTypes) },[productTypes]);
 
 	const loadProductTypes = async () => {
 		try{
@@ -91,11 +88,22 @@ export const ProductsRequested = ({
 	const postPR = async (p_id) =>{
 		try{
 			const response = await api.post(`services/${id}/products_requested`,{
-				 product_id: p_id ,
-				 
+				product_id: p_id ,
+				quantity: 1,
 			})
 			if(typeof response.data.spr !== "undefined"){
 				return response.data.spr;
+			}else{
+				return null;
+			}
+		}catch(error){console.error(error, error.response.data.error)}
+	}
+
+	const postAP = async (ap) =>{
+		try{
+			const response = await api.post(`services/${id}/applied_products`, ap)
+			if(typeof response.data.sap !== "undefined"){
+				return response.data.sap;
 			}else{
 				return null;
 			}
@@ -118,6 +126,7 @@ export const ProductsRequested = ({
 				`services/${id}/products_requested/${pr.spr_id}`,
 				{
 					product_id: pr.product_id,
+					quantity: pr.quantity,
 					is_ordered: pr.is_ordered,
 					is_delivered: pr.is_delivered
 				}
@@ -201,6 +210,22 @@ export const ProductsRequested = ({
 		loadPRs();
 	}
 
+	const handleActionForwardPR = async (pr) => {
+		const newAp = {
+			product_id: pr.product_id, 
+			quantity: pr.quanitity,
+			is_applied: "0",
+		}
+		console.log(newAp);
+		const ap = await postAP(newAp);
+		if(ap) {
+			onProductForwarded();
+			await deletePR(pr.spr_id);
+		}
+
+		loadPRs();
+	}
+
 	return(
 		<>
 			<div ref={refSearch}className="search-bar search-products">
@@ -275,6 +300,7 @@ export const ProductsRequested = ({
 						<th>Nome</th>
 						<th>Referencia</th>
 						<th>Tipo de Produto</th>
+						<th>Quantidade</th>
 						<th>Pedido</th>
 						<th>Entregue</th>
 						<th/>
@@ -287,10 +313,11 @@ export const ProductsRequested = ({
 							<td>{pr.product_name}</td>
 							<td>{pr.product_reference}</td>
 							<td>{pr.product_type_name}</td>
-							<td><label htmlFor="is-ordered"><input type="checkbox" checked={pr.is_ordered==1}/></label></td>
-							<td><label htmlFor="is-delivered"><input id="is-delivered"type="checkbox" checked={pr.is_delivered==1}/></label></td>
-							<td><button className="confirm"><i className="fa-solid fa-forward"/></button></td>
-							<td><button className="cancel"><i className="fa-solid fa-trash"/></button></td>
+							<td><input type="number" value={pr.quantity} onChange={(e)=>{handleInputChange({...pr, quantity:e.target.value});}}/></td>
+							<td><label htmlFor="is-ordered"><input type="checkbox" checked={pr.is_ordered==1} onChange={(e)=>{handleInputChange({...pr, quantity:e.target.value});}}/></label></td>
+							<td><label htmlFor="is-delivered"><input id="is-delivered"type="checkbox" checked={pr.is_delivered==1} onChange={(e)=>{handleInputChange({...pr, quantity:e.target.value});}}/></label></td>
+							<td><button className="confirm"><i className="fa-solid fa-forward" onClick={(e)=>handleActionForwardPR(pr)}/></button></td>
+							<td><button className="cancel"><i className="fa-solid fa-trash" onClick={(e)=>handleActionDeletePR(pr.spr_id)}/></button></td>
 						</tr>
 					))}
 				</tbody>

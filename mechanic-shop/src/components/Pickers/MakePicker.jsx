@@ -107,11 +107,6 @@ export const MakePicker = ({
 		return ()=>{isCurrent=false};
 	},[debouncedValue]);
 
-	//For Debug
-	useEffect(()=>{console.log("Makes: ", makes)},[makes]);
-	useEffect(()=>{console.log("Make: ", make)},[make]);
-	useEffect(()=>{console.log("State: ", state)},[state]);
-
 	//Interactivity
 	const refSearch = useRef(null);
 	const refNotSearchingInput= useRef(null);
@@ -307,7 +302,7 @@ export const MakePicker = ({
 			case EDITING:
 				return renderNotSearching();
 			default:
-				console.error("Erro no estado: ", state);
+				return;
 		}
 		
 	}

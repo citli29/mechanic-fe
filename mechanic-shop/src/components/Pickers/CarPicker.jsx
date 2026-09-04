@@ -146,11 +146,6 @@ export const CarPicker = ({
 		return ()=>{isCurrent=false};
 	},[debouncedValue]);
 
-	//For Debug
-	useEffect(()=>{console.log("Cars: ", cars)},[cars]);
-	useEffect(()=>{console.log("Car: ", car)},[car]);
-	useEffect(()=>{console.log("State: ", state)},[state]);
-
 	//Interactivity
 	const refSearch = useRef(null);
 
@@ -511,7 +506,7 @@ export const CarPicker = ({
 			case EDITING:
 				return renderNotSearching();
 			default:
-				console.error("Erro no estado: ", state);
+				return;
 		}
 		
 	}

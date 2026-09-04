@@ -19,8 +19,6 @@ export const UserTimes = ({
 	const [isEditing, setIsEditing] = useState(null);
 	useEffect(()=>{ copy_uts(userTimes); },[userTimes]);
 
-	useEffect(()=>{console.log("Users : ", users)},[users]);
-	useEffect(()=>{console.log("User Times: ", userTimes)},[userTimes]);
 	useEffect(()=>{
 		loadUsers();
 		loadUserTimes();

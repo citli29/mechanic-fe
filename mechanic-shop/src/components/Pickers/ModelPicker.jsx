@@ -86,7 +86,6 @@ export const ModelPicker = ({
 	
 	useEffect(()=>{
 		const load = async () =>{
-			console.log("aqui", model_id);
 			if(!make_id){
 				setIsSearchSelected(false);
 				setModel(null);
@@ -134,11 +133,6 @@ export const ModelPicker = ({
 		return ()=>{isCurrent=false};
 	},[debouncedValue]);
 
-	//For Debug
-	useEffect(()=>{console.log("Models: ", models)},[models]);
-	useEffect(()=>{console.log("Model: ", model)},[model]);
-	useEffect(()=>{console.log("State: ", state)},[state]);
-	
 	//Interactivity
 	const refSearch = useRef(null);
 	const refNotSearchingInput= useRef(null);
@@ -333,7 +327,7 @@ export const ModelPicker = ({
 			case EDITING:
 				return renderNotSearching();
 			default:
-				console.error("Erro no estado: ", state);
+				return;
 		}
 		
 	}

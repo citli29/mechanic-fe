@@ -44,7 +44,6 @@ export default function ServiceShow2() {
 	const skipSave = useRef(true);
 
 	useEffect(() => { loadService(); }, []);
-	useEffect(()=>{console.log("Servico: ",service);},[service]);
 
 	useEffect(()=>{
 		document.querySelectorAll(".info").forEach((element) => {
@@ -146,6 +145,7 @@ export default function ServiceShow2() {
 		const s = await putService({...service,is_finished: checked});
 		if(s) setService(s);
 	}
+	const [apReload, setApReload] = useState(false);
 
 	return(
 		<div className={`service-page ${getStateClass()}`}>
@@ -285,7 +285,7 @@ export default function ServiceShow2() {
 						<h1>Pedido de Produtos</h1>
 					</div>	
 					<div className="body">
-						<ProductsRequested id={id}/>
+						<ProductsRequested id={id} onProductForwarded={()=>setApReload(true)}/>
 					</div>
 				</div>
 				<div className="service-applied-products-card">
@@ -294,7 +294,7 @@ export default function ServiceShow2() {
 						<h1>Produtos Aplicados</h1>
 					</div>	
 					<div className="body">
-						<AppliedProducts id={id}/>
+						<AppliedProducts id={id} apReload={apReload} onApReloaded={()=>setApReload(false)}/>
 					</div>
 				</div>
 				<div className="service-user-times-card">
