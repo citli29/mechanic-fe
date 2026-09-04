@@ -112,6 +112,27 @@ export const MarkedTextarea =forwardRef(({
 		const [textRaw, setTextRaw] = useState("");
 		const [textPresenting, setTextPresenting] = useState("");
 
+		const isSyncingFromProps = useRef(false);
+		useEffect(() => {
+			isSyncingFromProps.current = true;
+
+			const v = parseMarkedString(value);
+
+			setTextPresenting(v.presentingText);
+			setCurrentMarkers(v.markers);
+		}, [value]);
+
+		useEffect(() => {
+			if (isSyncingFromProps.current) {
+				isSyncingFromProps.current = false;
+				return;
+			}
+
+			const s = createMarkedString(currentMarkers, textPresenting);
+			onChange(s);
+		}, [textPresenting, currentMarkers]);
+		/*
+			console.log(value);
 		useEffect(()=>{
 			setTextRaw(value);
 			const v = parseMarkedString(value);
@@ -122,6 +143,7 @@ export const MarkedTextarea =forwardRef(({
 			const s = createMarkedString(currentMarkers, textPresenting);
 			onChange(s);
 		},[textPresenting,currentMarkers])
+		*/
 
 		const createMarkedString = (currentMarkers,presentingText) => {
 			return currentMarkers
@@ -138,7 +160,10 @@ export const MarkedTextarea =forwardRef(({
 			const [markersString,presentingText] = str.split(SEPARATOR);
 
 			if(!markersString){
-				return 			}
+				return 		{	
+				markers: [],
+				presentingText: str }
+			}
 
 			const markers = markersString
 			.match(/\{[^}]+\}/g)

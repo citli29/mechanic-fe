@@ -17,24 +17,24 @@ export default function ServiceShow2() {
 	const { id } = useParams();
 	const defaultService = {
 		id: "",
+		client_id:"",
+		kms:"",
+		checkin: "",
+		checkout: "",
+		malfunction:"",
+		service:"",
+		car_id:"",
+		schedule_id: "",
+		note:"asd fa sd h fjashd fjhas",
+		is_finished: false,
+		
 		service_type: "Tipo de Serviço",
-		service_sub_type: "Sub-tipo",
+		signed_service:"Serviço a realizar",
+		checkout_predict: "2030-01-01",
 		r_name: "",
 		r_phone: "",
-		checkin: "",
-		checkout_predict: "2030-01-01",
-		schedule_id: "",
-		office_check: false,
-		kms:"",
-		checkout: "",
-		car_id:"",
 
-		client_id:"",
-		note:"{note-yellow,0,15}asdfjasjkfhsadf asd fhajksdh fhasd fhasdhf laksjhjhd fjash fdjklahs dfjklhajh hh",
-		signed_service:"Serviço a realizar",
-		service:"",
-		malfunction:"",
-		is_finished: false,
+		office_check: false,
 	}
 
 	const markedTextarea = useRef();
@@ -226,6 +226,19 @@ export default function ServiceShow2() {
 						<h1>Serviço Realizado</h1>
 					</div>	
 					<div className="body">
+
+						<div className="text-entry">
+							<label htmlFor="malfunction">Serviço Realizado</label>
+							<textarea 
+								type="text" 
+								value={service.service} 
+								onChange={(e)=>setService(prev => ({
+									...prev,
+									service:e.target.value
+								}))}
+							/>
+						</div>
+
 						<div className="coloring-buttons">
 							<button
 								onClick={()=>{
@@ -251,7 +264,7 @@ export default function ServiceShow2() {
 						</div>
 
 						<div className="text-entry">
-							<label htmlFor=""disabled={!isAllowedEditing}>Notas/Observações</label>
+							<label htmlFor="">Notas/Observações</label>
 
 							<MarkedTextarea
 								ref={markedTextarea}
@@ -262,18 +275,6 @@ export default function ServiceShow2() {
 										note: newValue,
 									}));
 								}}
-							/>
-						</div>
-
-						<div className="text-entry">
-							<label htmlFor="malfunction">Serviço Realizado</label>
-							<textarea 
-								type="text" 
-								value={service.service} 
-								onChange={(e)=>setService(prev => ({
-									...prev,
-									service:e.target.value
-								}))}
 							/>
 						</div>
 					</div>

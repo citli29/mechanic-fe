@@ -100,7 +100,6 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 					<div className="not-logo">
 						<h1>Serviço #{service.id}</h1>
 						<h2>{service.service_type}</h2>
-						<h3>{service.service_sub_type} </h3>
 					</div>
 				</div>
 				<div className="item-field" id="r-name">
