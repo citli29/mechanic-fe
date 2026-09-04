@@ -32,9 +32,11 @@ export const ClientPicker = ({
 	const [presentingClient, setPresentingClient] = useState(emptyClient);
 
 	useEffect(() => {
-		onClientIdChange(client?.id??"");
-		setPresentingClient(client??emptyClient);
-	},[client]);
+		if (!client) return;
+
+		onClientIdChange(client.id);
+		setPresentingClient(client);
+	}, [client]);
 
 	const postClient = async (newClient) =>{
 		try{
@@ -99,22 +101,33 @@ export const ClientPicker = ({
 	}
 
 	useEffect(() => {
-		const load = async () => {
-			if (client_id) {
-				const c = await getClient(client_id);
+		let cancelled = false;
 
-				if (c) {
-					setClient(c);
-					setState(SELECTED);
-				}
-			}else{
-				const list = await getClients("");
-				setClients(list);
+		const load = async () => {
+			if (!client_id) {
+				setClient(null);
+				setState(SEARCHING);
+				return;
+			}
+
+			const c = await getClient(client_id);
+
+			if (cancelled) return;
+
+			if (c) {
+				setClient(c);
+				setState(SELECTED);
+			} else {
+				setClient(null);
 				setState(SEARCHING);
 			}
 		};
 
 		load();
+
+		return () => {
+			cancelled = true;
+		};
 	}, [client_id]);
 
 	useEffect(()=>{
@@ -213,22 +226,6 @@ export const ClientPicker = ({
 			setClient(c);
 		}
 	}
-
-	useEffect(()=>{
-		if(!isAllowedEditing){
-			const f = async () =>{
-				const c = await getClient(client_id);
-				setClient(c);
-			}
-			if(client_id) {
-				f();
-				setState(SELECTED);
-			}else{
-				setState(SEARCHING);
-			}
-		}
-
-	},[isAllowedEditing]);
 
 	const renderSelectedButtons = () => {
 		switch(state) {

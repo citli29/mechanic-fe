@@ -28,7 +28,8 @@ export default function ServiceShow2() {
 		note:"asd fa sd h fjashd fjhas",
 		is_finished: false,
 		
-		service_type: "Tipo de Serviço",
+		service_type_id: "",
+		service_type_name: "",
 		signed_service:"Serviço a realizar",
 		checkout_predict: "2030-01-01",
 		r_name: "",
@@ -196,7 +197,7 @@ export default function ServiceShow2() {
 							<label htmlFor=""disabled={!isAllowedEditing}>Descrição de Avaria</label>
 							<textarea 
 								type="text" 
-								value={service.malfunction} 
+								value={service.malfunction??""} 
 								onChange={(e)=>setService(prev => ({
 									...prev,
 									malfunction:e.target.value
@@ -207,7 +208,7 @@ export default function ServiceShow2() {
 							<label htmlFor="malfunction">Serviço a Realizar</label>
 							<textarea 
 								type="text" 
-								value={service.signed_service} 
+								value={service.signed_service??""} 
 								onChange={(e)=>setService(prev => ({
 									...prev,
 									signed_service:e.target.value
@@ -231,7 +232,7 @@ export default function ServiceShow2() {
 							<label htmlFor="malfunction">Serviço Realizado</label>
 							<textarea 
 								type="text" 
-								value={service.service} 
+								value={service.service??""} 
 								onChange={(e)=>setService(prev => ({
 									...prev,
 									service:e.target.value
@@ -268,7 +269,7 @@ export default function ServiceShow2() {
 
 							<MarkedTextarea
 								ref={markedTextarea}
-								value={service.note}
+								value={service.note??""}
 								onChange={(newValue) => {
 									setService(prev => ({
 										...prev,

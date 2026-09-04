@@ -112,23 +112,37 @@ export const CarPicker = ({
 		}catch(error){console.error(error, error.response.data.error)}
 	}
 
-	useEffect(()=>{
-		const load = async () => {
-			if (car_id) {
-				const c = await getCar(car_id);
+	useEffect(() => {
+		let cancelled = false;
 
-				if (c) {
-					setCar(c);
-					setState(SELECTED);
+		const load = async () => {
+			if (!car_id) {
+				if (!cancelled) {
+					setCar(null);
+					setState(SEARCHING);
 				}
+				return;
+			}
+
+			const c = await getCar(car_id);
+
+			if (cancelled) return;
+
+			if (c) {
+				setCar(c);
+				setState(SELECTED);
 			} else {
-				const list = await getCars("");
-				setCars(list);
+				setCar(null);
 				setState(SEARCHING);
 			}
-		}
+		};
+
 		load();
-	} ,[car_id]);
+
+		return () => {
+			cancelled = true;
+		};
+	}, [car_id]);
 
 	useEffect(()=>{
 		const timer = setTimeout(()=>{
@@ -227,22 +241,6 @@ export const CarPicker = ({
 			setCar(c);
 		}
 	}
-
-	useEffect(()=>{
-		if(!isAllowedEditing){
-			const f = async () =>{
-				const c = await getCar(car_id);
-				setCar(c);
-			}
-			if(car_id) {
-				f();
-				setState(SELECTED);
-			}else{
-				setState(SEARCHING);
-			}
-		}
-
-	},[isAllowedEditing]);
 
 	const renderSelectedButtons = () => {
 		switch(state){
