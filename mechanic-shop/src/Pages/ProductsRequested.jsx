@@ -204,6 +204,22 @@ export const ProductsRequested = ({
 			setSearchProduct("");
 		}
 	}
+	const handleInputChangeBlur = async (pr) => {
+		const newPr = await updatePR(pr);
+		if(newPr){
+			loadPRs();
+		}
+	}
+
+	const handleInputChange = (pr) => {
+		setProductsRequested(prev =>
+			prev.map(item =>
+				item.spr_id === pr.spr_id
+					? pr
+					: item
+			)
+		);
+	};
 
 	const handleActionDeletePR = async (id) => {
 		const pr = await deletePR(id);
@@ -313,9 +329,11 @@ export const ProductsRequested = ({
 							<td>{pr.product_name}</td>
 							<td>{pr.product_reference}</td>
 							<td>{pr.product_type_name}</td>
-							<td><input type="number" value={pr.quantity} onChange={(e)=>{handleInputChange({...pr, quantity:e.target.value});}}/></td>
-							<td><label htmlFor="is-ordered"><input type="checkbox" checked={pr.is_ordered==1} onChange={(e)=>{handleInputChange({...pr, quantity:e.target.value});}}/></label></td>
-							<td><label htmlFor="is-delivered"><input id="is-delivered"type="checkbox" checked={pr.is_delivered==1} onChange={(e)=>{handleInputChange({...pr, quantity:e.target.value});}}/></label></td>
+							<td><input type="number" value={pr.quantity} 
+								onChange={(e)=>{handleInputChange({...pr, quantity:e.target.value})}}
+								onBlur={(e)=>{handleInputChangeBlur({...pr, quantity:e.target.value});}}/></td>
+							<td><label htmlFor="is-ordered"><input type="checkbox" checked={pr.is_ordered==1} onChange={(e)=>{handleInputChangeBlur({...pr, is_ordered:e.target.checked?1:0});}}/></label></td>
+							<td><label htmlFor="is-delivered"><input id="is-delivered"type="checkbox" checked={pr.is_delivered==1} onChange={(e)=>{handleInputChangeBlur({...pr, is_delivered:e.target.checked?1:0});}}/></label></td>
 							<td><button className="confirm"><i className="fa-solid fa-forward" onClick={(e)=>handleActionForwardPR(pr)}/></button></td>
 							<td><button className="cancel"><i className="fa-solid fa-trash" onClick={(e)=>handleActionDeletePR(pr.spr_id)}/></button></td>
 						</tr>
