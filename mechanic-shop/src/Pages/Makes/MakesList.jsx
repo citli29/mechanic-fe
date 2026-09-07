@@ -5,6 +5,8 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/MakesList.css";
 
+const PER_PAGE = 10;
+
 export default function MakesList() {
 
 	const [makes, setMakes] = useState([]);
@@ -12,6 +14,10 @@ export default function MakesList() {
 	const [filters, setFilters] = useState({
 		name: "",
 	});
+
+	const [page, setPage] = useState(1);
+	const [totalPages, setTotalPages] = useState(1);
+	const [total, setTotal] = useState(0);
 
 	const [editing, setEditing] = useState(null);
 	const [creating, setCreating] = useState(false);
@@ -44,10 +50,17 @@ export default function MakesList() {
 	}
 
 
-	useEffect(() => { loadMakes(); }, []);
+	useEffect(() => { loadMakes(); }, [page]);
 
 	useEffect(() => {
-		const timer = setTimeout(() => { loadMakes(); }, 400);
+		const timer = setTimeout(() => {
+			if (page !== 1) {
+				setPage(1);
+			} else {
+				loadMakes();
+			}
+		}, 400);
+
 		return () => clearTimeout(timer);
 	}, [filters]);
 
@@ -57,8 +70,15 @@ export default function MakesList() {
 			const params = Object.fromEntries(
 				Object.entries(filters).filter(([_, value]) => value !== "")
 			);
+
+			params.p = page;
+			params.u = PER_PAGE;
+
 			const res = await api.get("/makes", { params });
+
 			setMakes(res.data.make_list || []);
+			setTotalPages(res.data.pagination?.total_pages || 1);
+			setTotal(res.data.pagination?.total ?? (res.data.make_list || []).length);
 		} catch (err) {
 			console.error(err);
 			setMakes([]);
@@ -252,6 +272,26 @@ export default function MakesList() {
 								))}
 							</tbody>
 						</table>
+
+						<div className="pagination">
+							<button
+								className="options"
+								disabled={page <= 1}
+								onClick={() => setPage((p) => Math.max(1, p - 1))}
+							>
+								<i className="fa-solid fa-chevron-left" />
+							</button>
+
+							<span>Página {page} de {totalPages} ({total} marcas)</span>
+
+							<button
+								className="options"
+								disabled={page >= totalPages}
+								onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+							>
+								<i className="fa-solid fa-chevron-right" />
+							</button>
+						</div>
 
 					</div>
 				</div>

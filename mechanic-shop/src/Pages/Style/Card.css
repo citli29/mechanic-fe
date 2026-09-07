@@ -50,6 +50,35 @@
 	}
 }
 
+.card .pagination{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--big-padding);
+
+	button{
+		aspect-ratio: 1;
+		height: var(--line-height);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border);
+		border-radius: 5px;
+
+		&:disabled{
+			opacity: 0.4;
+			cursor: not-allowed;
+		}
+	}
+
+	span{
+		font-weight: 600;
+		color: var(--txt-light);
+		white-space: nowrap;
+		font-size: var(--font-size-small);
+	}
+}
+
 .card table{
 	width: 100%;
 	background: var(--bg-page);
