@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
 export default function CarsList() {
-	const navigate = useNavigate();
 
 	const [cars, setCars] = useState([]);
 	const [makes, setMakes] = useState([]);
@@ -922,7 +920,6 @@ export default function CarsList() {
 
 								<tr
 									key={car.id}
-									onClick={() => navigate(`/cars/${car.id}`)}
 								>
 
 									<td>{car.plate}</td>

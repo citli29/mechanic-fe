@@ -30,14 +30,15 @@
 	align-items: center;
 	gap: var(--padding);
 
-	input{
+	input, select{
 		flex: 1;
 		min-width: 150px;
 	}
 
-	input, button{
+	input, select, button{
 		line-height: var(--line-height);
 		padding: var(--padding);
+		background: var(--bg-card);
 		border: 1px solid var(--border);
 		border-radius: 5px;
 	}
@@ -143,6 +144,33 @@
 		background: var(--bg-page-dark);
 
 		*{ background: var(--bg-page-dark); }
+	}
+}
+
+.card .inline-create{
+	display: flex;
+	gap: var(--padding);
+	align-items: center;
+	width: 100%;
+
+	input{
+		flex: 1;
+		min-width: 0;
+	}
+
+	.create-buttons{
+		display: flex;
+		gap: var(--padding);
+
+		button{
+			aspect-ratio: 1;
+			height: var(--line-height);
+			border-radius: 5px;
+			background: transparent;
+			border: none;
+
+			&:hover{ background: var(--border); }
+		}
 	}
 }
 
