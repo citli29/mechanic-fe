@@ -1,0 +1,83 @@
+.services-page table tr{
+	grid-template-columns: repeat(7, 1fr) 0.7fr 1fr;
+}
+
+.services-page .filters .date-field{
+	flex: none;
+	width: 70px;
+	min-width: 0;
+	text-align: center;
+}
+
+.services-page .unfinished-filter{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	line-height: var(--line-height);
+	padding: var(--padding);
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	font-weight: 600;
+	white-space: nowrap;
+	cursor: pointer;
+
+	input{
+		width: 17px;
+		height: 17px;
+		margin: 0;
+		accent-color: var(--accent);
+		cursor: pointer;
+	}
+}
+
+.services-page table tbody tr{
+	cursor: pointer;
+}
+
+.services-page table tbody tr:hover td{
+	background: var(--bg-page-dark);
+}
+
+.services-page table tr.service-finished-row td{
+	background: #dcfce7;
+}
+
+.services-page table tr.service-finished-row:hover td{
+	background: #bbf7d0;
+}
+
+.services-page table tr.service-delivered-row td{
+	background: #bfdbfe;
+}
+
+.services-page table tr.service-delivered-row:hover td{
+	background: #93c5fd;
+}
+
+.services-page .service-status{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 90px;
+	padding: var(--small-padding) var(--padding);
+	border-radius: 999px;
+	font-size: var(--font-size-small);
+	font-weight: 800;
+	white-space: nowrap;
+}
+
+.services-page .service-status-finished{
+	background: var(--success);
+	color: #fff;
+}
+
+.services-page .service-status-pending{
+	background: #fef3c7;
+	color: #92400e;
+}
+
+.services-page .service-status-delivered{
+	background: var(--primary);
+	color: #fff;
+}

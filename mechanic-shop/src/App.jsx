@@ -11,6 +11,8 @@ import CarsList from "./Pages/Cars/CarsList";
 import SchedulesCalendar from "./Pages/Schedules/SchedulesCalendar";
 import SchedulesNew from "./pages/Schedules/SchedulesNew";
 import SchedulesShow from "./pages/Schedules/SchedulesShow";
+import ServicesList from "./Pages/Services/ServicesList";
+import ServicesNew from "./pages/Services/ServicesNew";
 
 import "./style/variables.css";
 import { useEffect } from "react";
@@ -43,6 +45,8 @@ function App() {
 					<Route path="/schedules_calendar" element={<SchedulesCalendar/>} />
 					<Route path="/schedules/new" element={<SchedulesNew/>} />
 					<Route path="/schedules/:id" element={<SchedulesShow/>} />
+					<Route path="/services" element={<ServicesList/>} />
+					<Route path="/services/new" element={<ServicesNew/>} />
 					<Route path="/test" element={<TestPage/>} />
 
 				</Route>
