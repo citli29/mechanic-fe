@@ -37,12 +37,23 @@ export const CarPicker = ({
 	const [presentingCar, setPresentingCar] = useState(emptyCar);
 
 	useEffect(() => {
+		onCarIdChange(car?.id ?? "");
+
+		setPresentingCar(car ?? emptyCar);
+
+		setIsPlateLocked(
+			car ? formatPlate(car.plate) === car.plate : true
+		);
+	}, [car]);
+	/*
+	useEffect(() => {
 		if (!car) return;
 
 		onCarIdChange(car?.id??"");
 		setPresentingCar(car??emptyCar);
 		setIsPlateLocked(car?formatPlate(car.plate)===car.plate: true);
 	},[car]);
+	*/
 	
 	const postCar = async (newCar) =>{
 		try{

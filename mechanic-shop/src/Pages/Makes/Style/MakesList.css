@@ -1,0 +1,3 @@
+.makes-page table tr{
+	grid-template-columns: 1fr 110px;
+}
