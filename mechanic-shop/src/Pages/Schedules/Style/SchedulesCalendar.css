@@ -1,0 +1,212 @@
+.schedules-calendar-page .month-navigation{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--big-padding);
+
+	button{
+		aspect-ratio: 1;
+		height: calc(1.8 * var(--line-height));
+		border-radius: 5px;
+		font-size: var(--font-size-big);
+	}
+
+	h2{
+		min-width: 220px;
+		text-align: center;
+		font-size: var(--font-size-big);
+		color: var(--txt-dark);
+	}
+}
+
+.schedules-calendar-page .calendar-wrapper{
+	width: 100%;
+	overflow-x: auto;
+	padding-bottom: var(--small-padding);
+}
+
+.schedules-calendar-page .calendar{
+	display: grid;
+	grid-template-columns: repeat(7, minmax(130px, 1fr));
+	gap: 1px;
+	min-width: 910px;
+
+	background: var(--border);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+.schedules-calendar-page .calendar-header{
+	padding: var(--padding);
+	background: var(--bg-page);
+	color: var(--txt-dark);
+	font-size: var(--font-size-small);
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	text-align: center;
+	text-transform: uppercase;
+	border-bottom: 3px solid var(--border);
+}
+
+.schedules-calendar-page .calendar-day{
+	display: flex;
+	flex-direction: column;
+	min-height: 145px;
+	padding: var(--padding);
+	background: var(--bg-card);
+}
+
+.schedules-calendar-page .calendar-day.empty{
+	background: var(--bg-page);
+}
+
+.schedules-calendar-page .day-number{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	margin-bottom: var(--padding);
+	border-radius: 50%;
+	color: var(--txt-light);
+	font-size: var(--font-size-small);
+	font-weight: 800;
+}
+
+.schedules-calendar-page .appointments{
+	display: flex;
+	flex-direction: column;
+	gap: var(--small-padding);
+	min-width: 0;
+}
+
+.schedules-calendar-page .appointment{
+	padding: var(--small-padding) var(--padding);
+	border: 1px solid transparent;
+	border-left: 4px solid transparent;
+	border-radius: 5px;
+	font-size: var(--font-size-small);
+	line-height: 1.35;
+	cursor: pointer;
+
+	&:hover{ filter: brightness(0.95); }
+}
+
+.schedules-calendar-page .appointment-plate{
+	display: block;
+	overflow: hidden;
+	font-weight: 800;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.schedules-calendar-page .appointment-client{
+	display: block;
+	margin-top: 2px;
+	overflow: hidden;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.schedules-calendar-page .appointment-description{
+	display: -webkit-box;
+	margin-top: var(--small-padding);
+	overflow: hidden;
+	word-break: break-word;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+.schedules-calendar-page .appointment-without-service{
+	background: var(--bg-page);
+	border-color: var(--border);
+	border-left-color: var(--txt-muted);
+	color: var(--txt-light);
+}
+
+.schedules-calendar-page .appointment-with-service{
+	background: var(--state-not-finished-muted);
+	border-color: var(--state-not-finished);
+	border-left-color: var(--state-not-finished-dark);
+	color: var(--txt-dark);
+}
+
+.schedules-calendar-page .appointment-finished{
+	background: var(--state-finished);
+	border-color: var(--state-finished-dark);
+	border-left-color: var(--state-finished-dark);
+	color: #fff;
+}
+
+.schedules-calendar-page .appointment-delivered{
+	background: var(--state-delivered);
+	border-color: var(--state-delivered-dark);
+	border-left-color: var(--state-delivered-dark);
+	color: #fff;
+}
+
+.schedules-calendar-page .week-navigation{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--big-padding);
+	margin-bottom: var(--padding);
+
+	button{
+		aspect-ratio: 1;
+		height: calc(1.6 * var(--line-height));
+		border-radius: 5px;
+	}
+
+	span{
+		font-weight: 600;
+		color: var(--txt-light);
+		font-size: var(--font-size-small);
+		white-space: nowrap;
+	}
+}
+
+.schedules-calendar-page .calendar-vertical{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+
+	min-width: 0;
+	background: none;
+	border: none;
+	border-radius: 0;
+}
+
+.schedules-calendar-page .calendar-vertical .calendar-day{
+	min-height: 0;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+}
+
+.schedules-calendar-page .day-label{
+	display: flex;
+	align-items: baseline;
+	gap: var(--padding);
+	margin-bottom: var(--padding);
+
+	.weekday-name{
+		font-size: var(--font-size-small);
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--txt-muted);
+	}
+
+	.day-number{
+		width: auto;
+		height: auto;
+		margin: 0;
+		border-radius: 0;
+		background: none;
+		font-size: var(--font-size-big);
+		color: var(--txt-dark);
+	}
+}
+
