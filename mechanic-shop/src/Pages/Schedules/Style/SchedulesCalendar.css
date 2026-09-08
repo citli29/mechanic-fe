@@ -74,6 +74,40 @@
 	font-weight: 800;
 }
 
+.schedules-calendar-page .day-halves{
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	gap: var(--small-padding);
+	min-height: 0;
+}
+
+.schedules-calendar-page .day-half{
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	padding-left: var(--small-padding);
+	border-left: 3px solid transparent;
+}
+
+.schedules-calendar-page .day-half-top{
+	flex: 0 0 auto;
+}
+
+.schedules-calendar-page .day-half-bottom{
+	flex: 1 1 auto;
+}
+
+.schedules-calendar-page .day-half-label{
+	margin-bottom: 2px;
+	font-size: 9px;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--txt-muted);
+	opacity: 0.75;
+}
+
 .schedules-calendar-page .appointments{
 	display: flex;
 	flex-direction: column;

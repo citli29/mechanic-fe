@@ -15,17 +15,29 @@ function formatDate(date) {
 
 const WEEKDAY_NAMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
 
+const SERVICE_TYPE_COLORS = ["#2563eb", "#e8aa2e", "#ba2323", "#22c55e", "#a3540a", "#e823d1"];
+
+function getServiceTypeAccent(serviceTypeId) {
+	if (!serviceTypeId) return "#cbd5e1";
+	return SERVICE_TYPE_COLORS[serviceTypeId % SERVICE_TYPE_COLORS.length];
+}
+
+const LAB_ACCENT = getServiceTypeAccent(2);
+const MECHANIC_ACCENT = getServiceTypeAccent(1);
+
 export default function SchedulesCalendar() {
 
 	const navigate = useNavigate();
 
 	const [schedules, setSchedules] = useState([]);
 
+	const [serviceTypes, setServiceTypes] = useState([]);
+
 	const [filters, setFilters] = useState({
 		car_plate: "",
-		car_make: "",
-		car_model: "",
 		client_name: "",
+		service_type_id: "",
+		status: "all",
 	});
 
 	const now = new Date();
@@ -87,7 +99,9 @@ export default function SchedulesCalendar() {
 	async function loadSchedules() {
 		try {
 			const params = Object.fromEntries(
-				Object.entries(filters).filter(([_, value]) => value !== "")
+				Object.entries(filters).filter(
+					([key, value]) => value !== "" && !(key === "status" && value === "all")
+				)
 			);
 
 			params.start_date = formatDate(new Date(year, month, 1));
@@ -101,6 +115,18 @@ export default function SchedulesCalendar() {
 		}
 	}
 
+
+	async function loadServiceTypes() {
+		try {
+			const res = await api.get("/service_types");
+			setServiceTypes(res.data.service_type_list || []);
+		} catch (err) {
+			handleApiError(err);
+		}
+	}
+
+
+	useEffect(() => { loadServiceTypes(); }, []);
 
 	useEffect(() => { loadSchedules(); }, [year, month]);
 
@@ -116,7 +142,7 @@ export default function SchedulesCalendar() {
 
 
 	function clearFilters() {
-		setFilters({ car_plate: "", car_make: "", car_model: "", client_name: "" });
+		setFilters({ car_plate: "", client_name: "", service_type_id: "", status: "all" });
 	}
 
 
@@ -168,6 +194,36 @@ export default function SchedulesCalendar() {
 				<div className="appointment-description">
 					{schedule.description}
 				</div>
+			</div>
+		);
+	}
+
+
+	function renderDayHalves(daySchedules) {
+		const labSchedules = daySchedules.filter((s) => s.service_type_id === 2);
+		const mechanicSchedules = daySchedules.filter((s) => s.service_type_id !== 2);
+
+		return (
+			<div className="day-halves">
+				{labSchedules.length > 0 && (
+					<div className="day-half day-half-top" style={{ borderLeftColor: LAB_ACCENT }}>
+						<div className="day-half-label">Laboratório</div>
+
+						<div className="appointments">
+							{labSchedules.map((schedule) => renderAppointment(schedule))}
+						</div>
+					</div>
+				)}
+
+				{mechanicSchedules.length > 0 && (
+					<div className="day-half day-half-bottom" style={{ borderLeftColor: MECHANIC_ACCENT }}>
+						<div className="day-half-label">Mecânica</div>
+
+						<div className="appointments">
+							{mechanicSchedules.map((schedule) => renderAppointment(schedule))}
+						</div>
+					</div>
+				)}
 			</div>
 		);
 	}
@@ -250,9 +306,7 @@ export default function SchedulesCalendar() {
 							<>
 								<div className="day-number">{day.day}</div>
 
-								<div className="appointments">
-									{day.schedules.map((schedule) => renderAppointment(schedule))}
-								</div>
+								{renderDayHalves(day.schedules)}
 							</>
 						)}
 					</div>
@@ -292,9 +346,7 @@ export default function SchedulesCalendar() {
 								<span className="day-number">{day.day}</span>
 							</div>
 
-							<div className="appointments">
-								{day.schedules.map((schedule) => renderAppointment(schedule))}
-							</div>
+							{renderDayHalves(day.schedules)}
 						</div>
 					))}
 				</div>
@@ -341,25 +393,36 @@ export default function SchedulesCalendar() {
 							/>
 
 							<input
-								name="car_make"
-								placeholder="Marca"
-								value={filters.car_make}
-								onChange={updateFilter}
-							/>
-
-							<input
-								name="car_model"
-								placeholder="Modelo"
-								value={filters.car_model}
-								onChange={updateFilter}
-							/>
-
-							<input
 								name="client_name"
 								placeholder="Cliente"
 								value={filters.client_name}
 								onChange={updateFilter}
 							/>
+
+							<select
+								name="service_type_id"
+								value={filters.service_type_id}
+								onChange={updateFilter}
+							>
+								<option value="">Tipo de Serviço</option>
+								{serviceTypes.map((type) => (
+									<option key={type.id} value={type.id}>
+										{type.name}
+									</option>
+								))}
+							</select>
+
+							<select
+								name="status"
+								value={filters.status}
+								onChange={updateFilter}
+							>
+								<option value="all">Todos os Estados</option>
+								<option value="without_service">Sem Serviço</option>
+								<option value="with_service">Com Serviço</option>
+								<option value="finished">Terminado</option>
+								<option value="delivered">Entregue</option>
+							</select>
 
 							<button className="options" onClick={clearFilters}>
 								<i className="fa-solid fa-broom" /> Limpar

@@ -8,11 +8,27 @@ import "./Style/ServicesList.css";
 
 const PER_PAGE = 10;
 
+const SERVICE_TYPE_COLORS = ["#2563eb", "#e8aa2e", "#ba2323", "#22c55e", "#a3540a", "#e823d1"];
+
+function getServiceTypeAccent(serviceTypeId) {
+	if (!serviceTypeId) return "#cbd5e1";
+	return SERVICE_TYPE_COLORS[serviceTypeId % SERVICE_TYPE_COLORS.length];
+}
+
+const SORTABLE_COLUMNS = [
+	{ column: "checkin", label: "Entrada" },
+	{ column: "checkout", label: "Saída" },
+	{ column: "client_name", label: "Cliente" },
+	{ column: "car_plate", label: "Matrícula" },
+	{ column: "kms", label: "Kms" },
+];
+
 export default function ServicesList() {
 
 	const navigate = useNavigate();
 
 	const [services, setServices] = useState([]);
+	const [serviceTypes, setServiceTypes] = useState([]);
 
 	const [filters, setFilters] = useState({
 		day: "",
@@ -22,19 +38,40 @@ export default function ServicesList() {
 		car_plate: "",
 		car_make: "",
 		car_model: "",
-		only_unfinished: true,
+		service_type_id: "",
+		status: "unfinished",
 	});
 
 	const [page, setPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
+	const [sortColumn, setSortColumn] = useState(null);
+	const [sortDirection, setSortDirection] = useState("asc");
+
 	const [loading, setLoading] = useState(true);
+
+	const [expandedIds, setExpandedIds] = useState(new Set());
+
+	const [isMobile, setIsMobile] = useState(
+		window.matchMedia("(max-width: 650px)").matches
+	);
 
 	const [message, setMessage] = useState({
 		type: "",
 		text: "",
 	});
+
+
+	useEffect(() => {
+		const media = window.matchMedia("(max-width: 650px)");
+
+		const handleChange = (e) => setIsMobile(e.matches);
+
+		media.addEventListener("change", handleChange);
+
+		return () => media.removeEventListener("change", handleChange);
+	}, []);
 
 
 	function showMessage(type, text) {
@@ -69,6 +106,17 @@ export default function ServicesList() {
 	}
 
 
+	async function loadServiceTypes() {
+		try {
+			const res = await api.get("/service_types");
+			setServiceTypes(res.data.service_type_list || []);
+		} catch (err) {
+			console.error(err);
+			setServiceTypes([]);
+		}
+	}
+
+
 	async function loadServices() {
 		try {
 			setLoading(true);
@@ -82,7 +130,15 @@ export default function ServicesList() {
 			if (filters.car_plate) params.car_plate = filters.car_plate;
 			if (filters.car_make) params.car_make = filters.car_make;
 			if (filters.car_model) params.car_model = filters.car_model;
-			if (filters.only_unfinished) params.is_finished = false;
+			if (filters.service_type_id) params.service_type_id = filters.service_type_id;
+
+			if (filters.status === "unfinished") params.is_finished = false;
+			if (filters.status === "finished") params.is_finished = true;
+
+			if (sortColumn) {
+				params.sort = sortColumn;
+				params.dir = sortDirection;
+			}
 
 			params.p = page;
 			params.u = PER_PAGE;
@@ -100,7 +156,18 @@ export default function ServicesList() {
 	}
 
 
+	useEffect(() => { loadServiceTypes(); }, []);
+
+
 	useEffect(() => { loadServices(); }, [page]);
+
+	useEffect(() => {
+		if (page !== 1) {
+			setPage(1);
+		} else {
+			loadServices();
+		}
+	}, [sortColumn, sortDirection]);
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
@@ -113,6 +180,16 @@ export default function ServicesList() {
 
 		return () => clearTimeout(timer);
 	}, [filters]);
+
+
+	function handleSort(column) {
+		if (sortColumn === column) {
+			setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+		} else {
+			setSortColumn(column);
+			setSortDirection("asc");
+		}
+	}
 
 
 	function updateFilter(e) {
@@ -160,6 +237,51 @@ export default function ServicesList() {
 	}
 
 
+	function getStatusInfo(service) {
+		const isFinished = Boolean(service.is_finished);
+		const isDelivered = Boolean(service.checkout);
+
+		if (isDelivered) {
+			return { rowClass: "service-delivered-row", badgeClass: "service-status-delivered", label: "Entregue" };
+		}
+
+		if (isFinished) {
+			return { rowClass: "service-finished-row", badgeClass: "service-status-finished", label: "Terminado" };
+		}
+
+		return { rowClass: "", badgeClass: "service-status-pending", label: "Por terminar" };
+	}
+
+
+	function toggleExpanded(id) {
+		setExpandedIds((prev) => {
+			const next = new Set(prev);
+
+			if (next.has(id)) {
+				next.delete(id);
+			} else {
+				next.add(id);
+			}
+
+			return next;
+		});
+	}
+
+
+	function renderSortableHeader(column, label) {
+		const isActive = sortColumn === column;
+
+		return (
+			<th className="sortable" onClick={() => handleSort(column)}>
+				{label}
+				<i
+					className={`fa-solid ${isActive && sortDirection === "desc" ? "fa-sort-down" : isActive ? "fa-sort-up" : "fa-sort"}`}
+				/>
+			</th>
+		);
+	}
+
+
 	function clearFilters() {
 		setFilters({
 			day: "",
@@ -169,8 +291,203 @@ export default function ServicesList() {
 			car_plate: "",
 			car_make: "",
 			car_model: "",
-			only_unfinished: true,
+			service_type_id: "",
+			status: "unfinished",
 		});
+	}
+
+
+	function renderDesktopTable() {
+		return (
+			<table>
+				<thead>
+					<tr>
+						{renderSortableHeader("checkin", "Entrada")}
+						{renderSortableHeader("checkout", "Saída")}
+						{renderSortableHeader("client_name", "Cliente")}
+						<th>Telemóvel</th>
+						{renderSortableHeader("car_plate", "Matrícula")}
+						<th>Marca</th>
+						<th>Modelo</th>
+						<th>Tipo de Serviço</th>
+						{renderSortableHeader("kms", "Kms")}
+						<th>Estado</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					{loading && services.length === 0 ? (
+						<tr>
+							<td data-label="" style={{ gridColumn: "1 / -1" }}>A Carregar...</td>
+						</tr>
+					) : !loading && services.length === 0 ? (
+						<tr>
+							<td data-label="" style={{ gridColumn: "1 / -1" }}>Sem Serviços.</td>
+						</tr>
+					) : (
+						services.map((service) => {
+							const status = getStatusInfo(service);
+
+							return (
+								<tr
+									key={service.id}
+									className={status.rowClass}
+									onClick={() => navigate(`/s/${service.id}`)}
+								>
+									<td data-label="Entrada">{service.checkin || "-"}</td>
+									<td data-label="Saída">{service.checkout || "-"}</td>
+									<td data-label="Cliente">{service.client_name || "-"}</td>
+									<td data-label="Telemóvel">{service.client_phone || "-"}</td>
+									<td data-label="Matrícula">{service.car_plate || "-"}</td>
+									<td data-label="Marca">{service.car_make_name || "-"}</td>
+									<td data-label="Modelo">{service.car_model_name || "-"}</td>
+									<td data-label="Tipo de Serviço">{service.service_type_name || "-"}</td>
+									<td data-label="Kms">{service.kms ?? "-"}</td>
+
+									<td data-label="Estado">
+										<span className={`service-status ${status.badgeClass}`}>
+											{status.label}
+										</span>
+									</td>
+								</tr>
+							);
+						})
+					)}
+				</tbody>
+			</table>
+		);
+	}
+
+
+	function renderMobileSortBar() {
+		return (
+			<div className="mobile-sort-bar">
+				<select
+					value={sortColumn || ""}
+					onChange={(e) => setSortColumn(e.target.value || null)}
+				>
+					<option value="">Ordenar por...</option>
+					{SORTABLE_COLUMNS.map(({ column, label }) => (
+						<option key={column} value={column}>{label}</option>
+					))}
+				</select>
+
+				<button
+					className="options"
+					disabled={!sortColumn}
+					onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
+				>
+					<i className={`fa-solid fa-arrow-${sortDirection === "asc" ? "up" : "down"}-wide-short`} />
+				</button>
+			</div>
+		);
+	}
+
+
+	function renderMobileList() {
+		if (loading && services.length === 0) {
+			return (
+				<>
+					{renderMobileSortBar()}
+					<p className="services-empty">A Carregar...</p>
+				</>
+			);
+		}
+
+		if (!loading && services.length === 0) {
+			return (
+				<>
+					{renderMobileSortBar()}
+					<p className="services-empty">Sem Serviços.</p>
+				</>
+			);
+		}
+
+		return (
+			<>
+			{renderMobileSortBar()}
+			<div className="services-list-mobile">
+				{services.map((service) => {
+					const status = getStatusInfo(service);
+					const isExpanded = expandedIds.has(service.id);
+					const typeAccent = getServiceTypeAccent(service.service_type_id);
+
+					return (
+						<div
+							key={service.id}
+							className={`service-card ${status.rowClass}`}
+							style={{ borderTop: `3px solid ${typeAccent}` }}
+						>
+							<div className="service-card-type-label">
+								{service.service_type_name || "Sem Tipo"}
+							</div>
+
+							<div className="service-card-summary" onClick={() => navigate(`/s/${service.id}`)}>
+								<div className="service-card-field f-matricula">
+									<span className="field-label">Matrícula</span>
+									<span>{service.car_plate || "-"}</span>
+								</div>
+
+								<div className="service-card-field f-estado">
+									<span className="field-label">Estado</span>
+									<span className={`service-status ${status.badgeClass}`}>{status.label}</span>
+								</div>
+
+								<div className="service-card-field f-marca">
+									<span className="field-label">Marca</span>
+									<span>{service.car_make_name || "-"}</span>
+								</div>
+
+								<div className="service-card-field f-modelo">
+									<span className="field-label">Modelo</span>
+									<span>{service.car_model_name || "-"}</span>
+								</div>
+
+								<div className="service-card-field f-cliente">
+									<span className="field-label">Cliente</span>
+									<span>{service.client_name || "-"}</span>
+								</div>
+
+								<div className="service-card-field f-entrada">
+									<span className="field-label">Entrada</span>
+									<span>{service.checkin || "-"}</span>
+								</div>
+
+								<button
+									className="expand-toggle"
+									onClick={(e) => {
+										e.stopPropagation();
+										toggleExpanded(service.id);
+									}}
+								>
+									<i className={`fa-solid fa-chevron-${isExpanded ? "up" : "down"}`} />
+								</button>
+							</div>
+
+							{isExpanded && (
+								<div className="service-card-details" onClick={() => navigate(`/s/${service.id}`)}>
+									<div className="service-card-field">
+										<span className="field-label">Telemóvel</span>
+										<span>{service.client_phone || "-"}</span>
+									</div>
+
+									<div className="service-card-field">
+										<span className="field-label">Saída</span>
+										<span>{service.checkout || "-"}</span>
+									</div>
+
+									<div className="service-card-field">
+										<span className="field-label">Kms</span>
+										<span>{service.kms ?? "-"}</span>
+									</div>
+								</div>
+							)}
+						</div>
+					);
+				})}
+			</div>
+			</>
+		);
 	}
 
 	return (
@@ -251,15 +568,28 @@ export default function ServicesList() {
 								onChange={updateFilter}
 							/>
 
-							<label className="unfinished-filter">
-								<input
-									type="checkbox"
-									name="only_unfinished"
-									checked={filters.only_unfinished}
-									onChange={updateFilter}
-								/>
-								<span>Serviços por terminar</span>
-							</label>
+							<select
+								name="service_type_id"
+								value={filters.service_type_id}
+								onChange={updateFilter}
+							>
+								<option value="">Tipo de Serviço</option>
+								{serviceTypes.map((type) => (
+									<option key={type.id} value={type.id}>
+										{type.name}
+									</option>
+								))}
+							</select>
+
+							<select
+								name="status"
+								value={filters.status}
+								onChange={updateFilter}
+							>
+								<option value="all">Todos</option>
+								<option value="unfinished">Por Terminar</option>
+								<option value="finished">Terminados</option>
+							</select>
 
 							<button className="options" onClick={clearFilters}>
 								<i className="fa-solid fa-broom" /> Limpar
@@ -270,75 +600,7 @@ export default function ServicesList() {
 							</button>
 						</div>
 
-						<table>
-							<thead>
-								<tr>
-									<th>Entrada</th>
-									<th>Saída</th>
-									<th>Cliente</th>
-									<th>Telemóvel</th>
-									<th>Matrícula</th>
-									<th>Marca</th>
-									<th>Modelo</th>
-									<th>Kms</th>
-									<th>Estado</th>
-								</tr>
-							</thead>
-
-							<tbody>
-								{loading && services.length === 0 ? (
-									<tr>
-										<td data-label="" style={{ gridColumn: "1 / -1" }}>A Carregar...</td>
-									</tr>
-								) : !loading && services.length === 0 ? (
-									<tr>
-										<td data-label="" style={{ gridColumn: "1 / -1" }}>Sem Serviços.</td>
-									</tr>
-								) : (
-									services.map((service) => {
-										const isFinished = Boolean(service.is_finished);
-										const isDelivered = Boolean(service.checkout);
-
-										return (
-											<tr
-												key={service.id}
-												className={
-													isDelivered
-														? "service-delivered-row"
-														: isFinished
-															? "service-finished-row"
-															: ""
-												}
-												onClick={() => navigate(`/s/${service.id}`)}
-											>
-												<td data-label="Entrada">{service.checkin || "-"}</td>
-												<td data-label="Saída">{service.checkout || "-"}</td>
-												<td data-label="Cliente">{service.client_name || "-"}</td>
-												<td data-label="Telemóvel">{service.client_phone || "-"}</td>
-												<td data-label="Matrícula">{service.car_plate || "-"}</td>
-												<td data-label="Marca">{service.car_make_name || "-"}</td>
-												<td data-label="Modelo">{service.car_model_name || "-"}</td>
-												<td data-label="Kms">{service.kms ?? "-"}</td>
-
-												<td data-label="Estado">
-													<span
-														className={`service-status ${
-															isDelivered
-																? "service-status-delivered"
-																: isFinished
-																	? "service-status-finished"
-																	: "service-status-pending"
-														}`}
-													>
-														{isDelivered ? "Entregue" : isFinished ? "Terminado" : "Por terminar"}
-													</span>
-												</td>
-											</tr>
-										);
-									})
-								)}
-							</tbody>
-						</table>
+						{isMobile ? renderMobileList() : renderDesktopTable()}
 
 						<div className="pagination">
 							<button

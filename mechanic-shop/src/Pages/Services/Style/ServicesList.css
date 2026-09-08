@@ -1,5 +1,5 @@
 .services-page table tr{
-	grid-template-columns: repeat(7, 1fr) 0.7fr 1fr;
+	grid-template-columns: repeat(8, 1fr) 0.7fr 1fr;
 }
 
 .services-page .filters .date-field{
@@ -9,25 +9,20 @@
 	text-align: center;
 }
 
-.services-page .unfinished-filter{
-	display: flex;
-	align-items: center;
-	gap: var(--padding);
-	line-height: var(--line-height);
-	padding: var(--padding);
-	background: var(--bg-card);
-	border: 1px solid var(--border);
-	border-radius: 5px;
-	font-weight: 600;
-	white-space: nowrap;
+.services-page table th.sortable{
 	cursor: pointer;
+	gap: var(--small-padding);
+	user-select: none;
 
-	input{
-		width: 17px;
-		height: 17px;
-		margin: 0;
-		accent-color: var(--accent);
-		cursor: pointer;
+	i{
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+	}
+
+	&:hover{
+		background: var(--bg-page-dark);
+
+		i{ color: var(--txt-light); }
 	}
 }
 
@@ -80,4 +75,130 @@
 .services-page .service-status-delivered{
 	background: var(--primary);
 	color: #fff;
+}
+
+.services-page .mobile-sort-bar{
+	display: flex;
+	gap: var(--padding);
+	margin-bottom: var(--padding);
+
+	select{
+		flex: 1;
+		line-height: var(--line-height);
+		padding: var(--padding);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+	}
+
+	button{
+		aspect-ratio: 1;
+		height: calc(var(--line-height) + 2 * var(--padding) + 2px);
+		border-radius: 5px;
+
+		&:disabled{
+			opacity: 0.4;
+			cursor: not-allowed;
+		}
+	}
+}
+
+.services-page .services-empty{
+	padding: var(--big-padding);
+	text-align: center;
+	color: var(--txt-muted);
+}
+
+.services-page .services-list-mobile{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+}
+
+.services-page .service-card{
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-card);
+	overflow: hidden;
+}
+
+.services-page .service-card.service-finished-row{
+	background: #dcfce7;
+}
+
+.services-page .service-card.service-delivered-row{
+	background: #bfdbfe;
+}
+
+.services-page .service-card-type-label{
+	padding: 2px var(--padding);
+	background: var(--bg-page);
+	border-bottom: 1px solid var(--border);
+	font-size: 10px;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--txt-muted);
+}
+
+.services-page .service-card-summary{
+	display: grid;
+	grid-template-columns: 1fr 1fr auto;
+	grid-template-areas:
+		"matricula estado toggle"
+		"marca modelo toggle"
+		"cliente entrada toggle";
+	gap: var(--small-padding) var(--padding);
+	align-items: center;
+	padding: var(--padding);
+	cursor: pointer;
+}
+
+.services-page .f-matricula{ grid-area: matricula; }
+.services-page .f-estado{ grid-area: estado; }
+.services-page .f-marca{ grid-area: marca; }
+.services-page .f-modelo{ grid-area: modelo; }
+.services-page .f-cliente{ grid-area: cliente; }
+.services-page .f-entrada{ grid-area: entrada; }
+
+.services-page .service-card-field{
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+
+	.field-label{
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		color: var(--txt-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+	}
+
+	span:not(.field-label){
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+}
+
+.services-page .expand-toggle{
+	grid-area: toggle;
+	align-self: center;
+	aspect-ratio: 1;
+	height: var(--line-height);
+	border-radius: 5px;
+	background: transparent;
+	border: none;
+
+	&:hover{ background: var(--bg-page-dark); }
+}
+
+.services-page .service-card-details{
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--small-padding) var(--padding);
+	padding: var(--padding);
+	border-top: 1px dashed var(--border);
+	cursor: pointer;
 }

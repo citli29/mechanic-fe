@@ -127,7 +127,7 @@ export default function ServiceShow2() {
 		return Object.values(users); 
 	}
 
-	const getServiceStatus = () => {
+	/*const getServiceStatus = () => {
 		if(service?.checkout) return {index: 3, desc:"Entregue"};
 		if(service?.office_check) return {index: 2, desc:"Validado"};
 		if(service?.is_finished) return {index: 1, desc:"Terminado"};
@@ -141,7 +141,7 @@ export default function ServiceShow2() {
 			case 3: return "state-delivered-bg";
 			default: return "";
 		}
-	}
+	}*/
 	const handleClickCheckIsFinished =async (checked) => {
 		const s = await putService({...service,is_finished: checked});
 		if(s) setService(s);
@@ -149,7 +149,7 @@ export default function ServiceShow2() {
 	const [apReload, setApReload] = useState(false);
 
 	return(
-		<div className={`service-page ${getStateClass()}`}>
+		<div className="service-page">
 			<div className="content">
 				<ServiceHeader
 					service={service}
