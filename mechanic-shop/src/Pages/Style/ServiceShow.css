@@ -53,20 +53,28 @@
 				background: var(--bg-card);
 				border-radius: 10px 10px 0 0;				
 			}
-			textarea{
-				resize: none;
+			textarea, input{
 				padding: var(--padding);
 				padding-top: calc( 4 * var(--padding));
 				border: solid 1px var(--border);
 				width: 100%;
 				color: var(--txt-light);
 				font-size: var(--font-size);
+			}
+			textarea{
+				resize: none;
 				height: 12rem;
 			}
+			input{
+				height: calc(5 * var(--padding) + var(--line-height));
+			}
 
-			&:last-child textarea{ border-radius: 0 0 5px 5px; }
+			&:last-child textarea,
+			&:last-child input{ border-radius: 0 0 5px 5px; }
 			textarea:disabled,
-			&:has(textarea:disabled) label {
+			input:disabled,
+			&:has(textarea:disabled) label,
+			&:has(input:disabled) label {
 				background: var(--bg-disabled);
 			}
 		}

@@ -1,15 +1,30 @@
 import { useEffect, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import "./Navbar.css";
 
 export default function Navbar() {
 
 	const dropdownRef = useRef(null);
+	const location = useLocation();
 
 	const linkClass = ({ isActive }) =>
 		isActive
 			? "navbar-link active"
 			: "navbar-link";
+
+	function isSectionActive(prefix) {
+		return (
+			location.pathname === prefix ||
+			location.pathname.startsWith(`${prefix}_`) ||
+			location.pathname.startsWith(`${prefix}/`)
+		);
+	}
+
+	function sectionLinkClass(prefix) {
+		return isSectionActive(prefix)
+			? "navbar-link active"
+			: "navbar-link";
+	}
 
 	useEffect(() => {
 
@@ -75,7 +90,7 @@ export default function Navbar() {
 
 						<NavLink
 							to="/schedules_calendar"
-							className={linkClass}
+							className={() => sectionLinkClass("/schedules")}
 							onClick={closeDropdown}
 						>
 							Marcações
@@ -83,7 +98,7 @@ export default function Navbar() {
 
 						<NavLink
 							to="/services"
-							className={linkClass}
+							className={() => sectionLinkClass("/services")}
 							onClick={closeDropdown}
 						>
 							Serviços

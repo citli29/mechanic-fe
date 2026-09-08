@@ -161,13 +161,14 @@
 
 .card .inline-create{
 	display: flex;
+	flex-wrap: wrap;
 	gap: var(--padding);
 	align-items: center;
 	width: 100%;
 
-	input{
+	input, select{
 		flex: 1;
-		min-width: 0;
+		min-width: 150px;
 	}
 
 	.create-buttons{

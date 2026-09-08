@@ -182,10 +182,25 @@ export default function SchedulesCalendar() {
 				className={`appointment ${getAppointmentStatusClass(schedule)}`}
 				onClick={() => navigate(`/schedules/${schedule.id}`)}
 			>
-				<div className="appointment-plate">
-					{schedule.car_plate
-						? `${schedule.car_plate} - ${[schedule.car_make, schedule.car_model].filter(Boolean).join(" ")}`
-						: [schedule.car_make, schedule.car_model].filter(Boolean).join(" ") || "Sem Viatura"}
+				<div className="appointment-top-row">
+					<div className="appointment-plate">
+						{schedule.car_plate
+							? `${schedule.car_plate} - ${[schedule.car_make, schedule.car_model].filter(Boolean).join(" ")}`
+							: [schedule.car_make, schedule.car_model].filter(Boolean).join(" ") || "Sem Viatura"}
+					</div>
+
+					{schedule.service_id !== null && (
+						<button
+							className="appointment-open-service"
+							title="Abrir Serviço"
+							onClick={(e) => {
+								e.stopPropagation();
+								navigate(`/s/${schedule.service_id}`);
+							}}
+						>
+							<i className="fa-solid fa-arrow-up-right-from-square" />
+						</button>
+					)}
 				</div>
 
 				<div className="appointment-client">
@@ -201,11 +216,20 @@ export default function SchedulesCalendar() {
 
 
 	function renderDayHalves(daySchedules) {
-		const labSchedules = daySchedules.filter((s) => s.service_type_id === 2);
-		const mechanicSchedules = daySchedules.filter((s) => s.service_type_id !== 2);
+		const unassignedSchedules = daySchedules.filter((s) => s.service_id === null);
+		const labSchedules = daySchedules.filter((s) => s.service_id !== null && s.service_type_id === 2);
+		const mechanicSchedules = daySchedules.filter((s) => s.service_id !== null && s.service_type_id !== 2);
 
 		return (
 			<div className="day-halves">
+				{unassignedSchedules.length > 0 && (
+					<div className="day-half day-half-unassigned">
+						<div className="appointments">
+							{unassignedSchedules.map((schedule) => renderAppointment(schedule))}
+						</div>
+					</div>
+				)}
+
 				{labSchedules.length > 0 && (
 					<div className="day-half day-half-top" style={{ borderLeftColor: LAB_ACCENT }}>
 						<div className="day-half-label">Laboratório</div>

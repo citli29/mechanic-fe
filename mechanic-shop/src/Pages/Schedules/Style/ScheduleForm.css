@@ -1,0 +1,110 @@
+/* Shared by SchedulesNew and SchedulesShow: the labeled-field grid and
+   the CarPicker/ClientPicker/MakePicker/ModelPicker integration fixes.
+   Both pages tag their outer .page with "schedule-form-page" so these
+   rules apply without duplicating them per page. */
+
+/* Card.css clips overflow to round the card's corners, but that also
+   crops any Picker dropdown that grows past the card's bottom edge. */
+.schedule-form-page .card{
+	overflow: visible;
+}
+
+.schedule-form-page .details-grid{
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: var(--big-padding);
+}
+
+.schedule-form-page .field-full{
+	grid-column: 1 / -1;
+}
+
+.schedule-form-page .field{
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--small-padding);
+	min-width: 0;
+
+	label{
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		color: var(--txt-light);
+	}
+
+	.field-hint{
+		font-weight: 400;
+		color: var(--txt-muted);
+	}
+
+	input, select, textarea{
+		width: 100%;
+		padding: var(--padding);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		font-size: var(--font-size);
+		color: var(--txt-dark);
+	}
+
+	textarea{
+		resize: vertical;
+		min-height: 5rem;
+	}
+
+	select:disabled, input:disabled{
+		background: var(--bg-disabled);
+		color: var(--disabled-text);
+	}
+
+	/* MakePicker / ModelPicker render their own bare input with no
+	   built-in width of its own — stretch it to fill the field. */
+	.m-picker{ width: 100%; }
+
+	/* Our own padding shorthand above (on input,select,textarea) is more
+	   specific than Picker.css's ".m-selected input{padding-right:...}",
+	   so it wins and eats the space that rule reserves for the edit/cancel
+	   buttons overlaid on the right. Restore that reserved space here. */
+	.m-selected input{
+		padding-right: calc(2 * (var(--font-size-small) + var(--line-height)) + 4 * var(--small-padding));
+	}
+
+	/* Picker.css sizes .card-buttons (top + height) for the taller input
+	   its own .item-field produces (extra padding-top for a floating
+	   label). Our field uses a plain label-above-input instead, so that
+	   box no longer fits and pokes out past the input's bottom edge —
+	   re-center it against our own (shorter) input height instead. */
+	.m-selected .card-buttons{
+		top: var(--small-padding);
+		height: calc(100% - 2 * var(--small-padding));
+	}
+}
+
+.schedule-form-page .picker-row{
+	grid-column: 1 / -1;
+}
+
+.schedule-form-page .details-actions{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+		padding: var(--padding) calc(2 * var(--big-padding));
+		border-radius: 5px;
+		font-weight: 700;
+	}
+}
+
+@media (max-width: 650px){
+	.schedule-form-page .details-grid{
+		grid-template-columns: 1fr;
+	}
+
+	.schedule-form-page .field-full{
+		grid-column: auto;
+	}
+}

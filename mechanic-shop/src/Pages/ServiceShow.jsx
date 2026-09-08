@@ -30,7 +30,7 @@ export default function ServiceShow2() {
 		
 		service_type_id: "",
 		service_type_name: "",
-		signed_service:"Serviço a realizar",
+		signed_service:"",
 		checkout_predict: "2030-01-01",
 		r_name: "",
 		r_phone: "",
@@ -206,12 +206,36 @@ export default function ServiceShow2() {
 						</div>
 						<div className="text-entry">
 							<label htmlFor="malfunction">Serviço a Realizar</label>
-							<textarea 
-								type="text" 
-								value={service.signed_service??""} 
+							<textarea
+								type="text"
+								value={service.signed_service??""}
 								onChange={(e)=>setService(prev => ({
 									...prev,
 									signed_service:e.target.value
+								}))}
+								disabled={!isAllowedEditing}/>
+						</div>
+						<div className="text-entry">
+							<label htmlFor="r_name">Nome do Responsável</label>
+							<input
+								type="text"
+								id="r_name"
+								value={service.r_name??""}
+								onChange={(e)=>setService(prev => ({
+									...prev,
+									r_name:e.target.value
+								}))}
+								disabled={!isAllowedEditing}/>
+						</div>
+						<div className="text-entry">
+							<label htmlFor="r_phone">Telemóvel do Responsável</label>
+							<input
+								type="text"
+								id="r_phone"
+								value={service.r_phone??""}
+								onChange={(e)=>setService(prev => ({
+									...prev,
+									r_phone:e.target.value
 								}))}
 								disabled={!isAllowedEditing}/>
 						</div>

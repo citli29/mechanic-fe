@@ -1,0 +1,19 @@
+.schedules-show-page .schedules-show-empty{
+	padding: var(--big-padding);
+	text-align: center;
+	color: var(--txt-muted);
+}
+
+.schedules-show-page table tr{
+	/* Each <tr> is its own grid (Card.css), so an "auto" last column
+	   sizes independently per row — the empty header cell and a data
+	   row's icon button would compute different widths and not line up.
+	   Give it the same fixed width as the row height (the button's own
+	   rendered size, since it's aspect-ratio:1 and fills the cell) so
+	   every row's last column matches exactly. */
+	grid-template-columns: 1fr 1fr calc(var(--line-height) + 1px + 2 * var(--padding));
+
+	button{
+		aspect-ratio: 1;
+	}
+}

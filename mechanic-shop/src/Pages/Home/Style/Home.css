@@ -1,0 +1,229 @@
+.home-page .quick-actions{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+	margin-bottom: var(--big-padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+		padding: var(--padding) calc(2 * var(--big-padding));
+		border-radius: 5px;
+		font-weight: 700;
+	}
+}
+
+.home-page .stat-grid{
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: var(--padding);
+}
+
+.home-page .stat-card{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--small-padding);
+
+	padding: var(--big-padding);
+
+	background: var(--bg-page);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+
+	text-align: center;
+	cursor: pointer;
+
+	i{
+		font-size: var(--font-size-big);
+		color: var(--primary);
+	}
+
+	&:hover{ background: var(--bg-page-dark); }
+
+	&.stat-card-static{
+		cursor: default;
+
+		&:hover{ background: var(--bg-page); }
+	}
+}
+
+.home-page .stat-value{
+	font-size: calc(1.6 * var(--font-size-big));
+	font-weight: 800;
+	color: var(--txt-dark);
+}
+
+.home-page .stat-label{
+	font-size: var(--font-size-small);
+	font-weight: 600;
+	color: var(--txt-light);
+}
+
+.home-page .home-empty{
+	padding: var(--big-padding);
+	text-align: center;
+	color: var(--txt-muted);
+}
+
+.home-page .home-more{
+	margin-top: var(--padding);
+	text-align: center;
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+}
+
+.home-page table tr{
+	/* Each <tr> is its own grid (Card.css), so an "auto" last column
+	   sizes independently per row — the "Qt." header and a data row's
+	   quantity value would compute different widths and not line up.
+	   A fixed width keeps every row's last column identical. */
+	grid-template-columns: 1fr 4rem;
+}
+
+/* =====================
+   Product Groups
+===================== */
+
+.home-page .product-groups{
+	display: flex;
+	flex-direction: column;
+	gap: var(--big-padding);
+}
+
+.home-page .product-group{
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.home-page .product-group-header{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--padding);
+
+	padding: var(--small-padding) var(--padding);
+
+	background: var(--bg-page);
+	border-bottom: 1px solid var(--border);
+
+	font-size: var(--font-size-small);
+	font-weight: 800;
+	color: var(--txt-dark);
+
+	button{
+		aspect-ratio: 1;
+		height: calc(var(--line-height) - 2 * var(--small-padding));
+		border-radius: 5px;
+	}
+}
+
+.home-page .product-group table{
+	border: none;
+	border-radius: 0;
+}
+
+/* =====================
+   Today's Schedules
+===================== */
+
+.home-page .today-schedules{
+	display: flex;
+	flex-direction: column;
+	gap: var(--small-padding);
+}
+
+.home-page .today-schedule{
+	padding: var(--small-padding) var(--padding);
+	border: 1px solid transparent;
+	border-left: 4px solid transparent;
+	border-radius: 5px;
+	font-size: var(--font-size-small);
+	line-height: 1.35;
+	cursor: pointer;
+
+	&:hover{ filter: brightness(0.95); }
+}
+
+.home-page .today-schedule-top-row{
+	display: flex;
+	align-items: center;
+	gap: var(--small-padding);
+}
+
+.home-page .today-schedule-plate{
+	display: block;
+	font-weight: 800;
+}
+
+.home-page .today-schedule-top-row .today-schedule-plate{
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.home-page .today-schedule-open-service{
+	flex: 0 0 auto;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: calc(var(--font-size-small) + var(--small-padding));
+	height: calc(var(--font-size-small) + var(--small-padding));
+	padding: 0;
+
+	border: none;
+	border-radius: 3px;
+	background: transparent;
+	color: inherit;
+
+	font-size: 10px;
+	cursor: pointer;
+
+	&:hover{ background: rgba(0, 0, 0, 0.12); }
+}
+
+.home-page .today-schedule-client{
+	display: block;
+	margin-top: 2px;
+	font-weight: 600;
+}
+
+.home-page .today-schedule-description{
+	display: block;
+	margin-top: var(--small-padding);
+	word-break: break-word;
+}
+
+.home-page .today-schedule.appointment-without-service{
+	background: var(--bg-page);
+	border-color: var(--border);
+	border-left-color: var(--txt-muted);
+	color: var(--txt-light);
+}
+
+.home-page .today-schedule.appointment-with-service{
+	background: var(--state-not-finished-muted);
+	border-color: var(--state-not-finished);
+	border-left-color: var(--state-not-finished-dark);
+	color: var(--txt-dark);
+}
+
+.home-page .today-schedule.appointment-finished{
+	background: var(--state-finished);
+	border-color: var(--state-finished-dark);
+	border-left-color: var(--state-finished-dark);
+	color: #fff;
+}
+
+.home-page .today-schedule.appointment-delivered{
+	background: var(--state-delivered);
+	border-color: var(--state-delivered-dark);
+	border-left-color: var(--state-delivered-dark);
+	color: #fff;
+}

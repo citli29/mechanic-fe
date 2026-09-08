@@ -90,6 +90,12 @@
 	border-left: 3px solid transparent;
 }
 
+.schedules-calendar-page .day-half-unassigned{
+	flex: 0 0 auto;
+	padding-left: 0;
+	border-left: none;
+}
+
 .schedules-calendar-page .day-half-top{
 	flex: 0 0 auto;
 }
@@ -127,12 +133,45 @@
 	&:hover{ filter: brightness(0.95); }
 }
 
+.schedules-calendar-page .appointment-top-row{
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
 .schedules-calendar-page .appointment-plate{
 	display: block;
 	overflow: hidden;
 	font-weight: 800;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.schedules-calendar-page .appointment-top-row .appointment-plate{
+	flex: 1;
+	min-width: 0;
+}
+
+.schedules-calendar-page .appointment-open-service{
+	flex: 0 0 auto;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 14px;
+	height: 14px;
+	padding: 0;
+
+	border: none;
+	border-radius: 3px;
+	background: transparent;
+	color: inherit;
+
+	font-size: 8px;
+	cursor: pointer;
+
+	&:hover{ background: rgba(0, 0, 0, 0.12); }
 }
 
 .schedules-calendar-page .appointment-client{

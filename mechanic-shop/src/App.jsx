@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout/Layout";
 import TestPage from "./components/TestPage";
 import ServiceShow2 from "./Pages/ServiceShow";
+import Home from "./Pages/Home/Home";
 import MakesList from "./Pages/Makes/MakesList";
 import ProductTypesList from "./Pages/ProductTypes/ProductTypesList";
 import ModelsList from "./Pages/Models/ModelsList";
@@ -10,8 +11,8 @@ import ProductsList from "./Pages/Products/ProductsList";
 import CarsList from "./Pages/Cars/CarsList";
 import SchedulesCalendar from "./Pages/Schedules/SchedulesCalendar";
 import SchedulesList from "./Pages/Schedules/SchedulesList";
-import SchedulesNew from "./pages/Schedules/SchedulesNew";
-import SchedulesShow from "./pages/Schedules/SchedulesShow";
+import SchedulesNew from "./Pages/Schedules/SchedulesNew";
+import SchedulesShow from "./Pages/Schedules/SchedulesShow";
 import ServicesList from "./Pages/Services/ServicesList";
 import ServicesCalendar from "./Pages/Services/ServicesCalendar";
 import ServicesNew from "./pages/Services/ServicesNew";
@@ -37,6 +38,7 @@ function App() {
 
 				<Route element={<Layout />}>
 
+					<Route path="/" element={<Home/>} />
 					<Route path="/s/:id" element={<ServiceShow2/>} />
 					<Route path="/makes" element={<MakesList/>} />
 					<Route path="/product_types" element={<ProductTypesList/>} />
