@@ -4,6 +4,10 @@ import api from "./../../api/axios";
 
 export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) => {
 
+	const finished = !!service?.is_finished;
+	const fieldsLocked = lock || finished;
+	const checkoutLocked = lock && !finished;
+
 	const [schedules, setSchedules] = useState([]);
 	const [showDetails, setShowDetails] = useState(false);
 
@@ -34,7 +38,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 			}else{
 				return [];
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 	const getServiceSchedule = async () => {
 		if(!service.schedule_id) return [];
@@ -45,7 +49,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 			}else{
 				return [];
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	useEffect(() => {
@@ -106,7 +110,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						id="service-r-name"
 						value={service.r_name??""}
 						onChange={(e) => onServiceChange("r_name", e.target.value) }
-						disabled={lock}
+						disabled={fieldsLocked}
 					/>
 				</div>
 
@@ -118,7 +122,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						id="service-r-phone"
 						value={service.r_phone??""}
 						onChange={(e) => onServiceChange("r_phone", e.target.value) }
-						disabled={lock}
+						disabled={fieldsLocked}
 					/>
 				</div>
 
@@ -129,7 +133,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						id="service-checkin"
 						value={service.checkin??""}
 						onChange={(e) => onServiceChange("checkin", e.target.value) }
-						disabled={lock}
+						disabled={fieldsLocked}
 					/>
 				</div>
 
@@ -140,7 +144,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						id="service-checkout-predict"
 						value={service.checkout_predict??""}
 						onChange={(e) => onServiceChange( "checkout_predict", e.target.value) }
-						disabled={lock}
+						disabled={fieldsLocked}
 					/>
 				</div>
 				
@@ -151,7 +155,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						id="service-kms"
 						value={service.kms??""}
 						onChange={(e) => onServiceChange("kms", e.target.value) }
-						disabled={lock}
+						disabled={fieldsLocked}
 					/>
 				</div>
 
@@ -183,7 +187,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						onChange={(e) => onServiceChange( "schedule_id", e.target.value) }
 						name="service-schedule"
 						id="service-schedule"
-						disabled={lock}
+						disabled={fieldsLocked}
 					>
 						<option value=""> S/Marcação </option>
 						{schedules.map((schedule) => (
@@ -205,7 +209,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 						id="service-checkout"
 						value={service.checkout??""}
 						onChange={(e) => onServiceChange( "checkout", e.target.value) }
-						disabled={lock}
+						disabled={checkoutLocked}
 					/>
 				</div>
 				<div className="o-check no-border" id="o-check">
@@ -226,7 +230,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 
 				<div className="lock-start no-border" id="lock-start">
 					<label htmlFor="lock-start"></label>
-					<button className="accent" onClick={(e)=>{onLockChange()}}><i className={`fa-solid ${lock?"fa-lock":"fa-unlock"}`} /></button>
+					<button className="accent" disabled={finished} onClick={(e)=>{onLockChange()}}><i className={`fa-solid ${fieldsLocked?"fa-lock":"fa-unlock"}`} /></button>
 				</div>
 		</>
 		);
@@ -271,7 +275,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							id="service-r-name"
 							value={service.r_name??""}
 							onChange={(e) => onServiceChange("r_name", e.target.value) }
-							disabled={lock}
+							disabled={fieldsLocked}
 						/>
 					</div>
 
@@ -283,7 +287,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							id="service-r-phone"
 							value={service.r_phone??""}
 							onChange={(e) => onServiceChange("r_phone", e.target.value) }
-							disabled={lock}
+							disabled={fieldsLocked}
 						/>
 					</div>
 
@@ -294,7 +298,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							id="service-checkin"
 							value={service.checkin??""}
 							onChange={(e) => onServiceChange("checkin", e.target.value) }
-							disabled={lock}
+							disabled={fieldsLocked}
 						/>
 					</div>
 
@@ -305,7 +309,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							id="service-checkout-predict"
 							value={service.checkout_predict??""}
 							onChange={(e) => onServiceChange( "checkout_predict", e.target.value) }
-							disabled={lock}
+							disabled={fieldsLocked}
 						/>
 					</div>
 
@@ -316,7 +320,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							id="service-kms"
 							value={service.kms??""}
 							onChange={(e) => onServiceChange("kms", e.target.value) }
-							disabled={lock}
+							disabled={fieldsLocked}
 						/>
 					</div>
 
@@ -330,18 +334,9 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							onChange={(e) => onServiceChange( "schedule_id", e.target.value) }
 							name="service-schedule"
 							id="service-schedule"
-							disabled={lock}
+							disabled={fieldsLocked}
 						>
 							<option value=""> S/Marcação </option>
-							{service?.schedule_id && (
-								<option 
-									key={service.schedule_id}
-									value={service.schedule_id.id}
-								>
-									# {service.schedule_id}
-								</option>
-						
-							)}
 							{schedules?.map((schedule) => (
 								<option
 									key={schedule.id}
@@ -361,7 +356,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							id="service-checkout"
 							value={service.checkout??""}
 							onChange={(e) => onServiceChange( "checkout", e.target.value) }
-							disabled={lock}
+							disabled={checkoutLocked}
 						/>
 					</div>
 					<div className="buttons">
@@ -383,7 +378,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 
 						<div className="lock-start no-border" id="lock-start">
 							<label htmlFor="lock-start"></label>
-							<button className="accent" onClick={(e)=>{onLockChange();}}><i className={`fa-solid ${lock?"fa-lock":"fa-unlock"}`} /></button>
+							<button className="accent" disabled={finished} onClick={(e)=>{onLockChange();}}><i className={`fa-solid ${fieldsLocked?"fa-lock":"fa-unlock"}`} /></button>
 						</div>
 					</div>
 				</div>

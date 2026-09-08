@@ -36,7 +36,7 @@ export default function ServiceShow2() {
 		service:"",
 		car_id:"",
 		schedule_id: "",
-		note:"asd fa sd h fjashd fjhas",
+		note:"",
 		is_finished: false,
 		
 		service_type_id: "",
@@ -50,11 +50,11 @@ export default function ServiceShow2() {
 	}
 
 	const markedTextarea = useRef();
-	const hasLoaded = useRef(false);
 	const [service, setService] = useState(defaultService);
 	const [isAllowedEditing, setIsAllowedEditing] = useState(false);
 	const skipSave = useRef(true);
 	const [activeSection, setActiveSection] = useState(NAV_SECTIONS[0].id);
+	const [saveStatus, setSaveStatus] = useState("idle"); // idle | pending | saving | saved | error
 
 	useEffect(() => { loadService(); }, []);
 
@@ -116,6 +116,27 @@ export default function ServiceShow2() {
 		document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 	}
 
+	function handlePrint(mode) {
+		document.body.classList.toggle("print-summary", mode === "summary");
+		window.print();
+	}
+
+	useEffect(() => {
+		function resetPrintMode() {
+			document.body.classList.remove("print-summary");
+		}
+
+		window.addEventListener("afterprint", resetPrintMode);
+		return () => window.removeEventListener("afterprint", resetPrintMode);
+	}, []);
+
+	const NOTE_SEPARATOR = "\u001E";
+	function extractPlainNote(raw) {
+		if (typeof raw !== "string") return "";
+		const i = raw.indexOf(NOTE_SEPARATOR);
+		return i === -1 ? raw : raw.slice(i + NOTE_SEPARATOR.length);
+	}
+
 	async function loadService() {
 		try {
 			const response = await api.get(`/services/${id}`);
@@ -124,8 +145,6 @@ export default function ServiceShow2() {
 				...defaultService,
 				...response.data.service
 			});
-
-			hasLoaded.current = true;
 		} catch (error) {
 			console.error(error);
 		}
@@ -148,9 +167,15 @@ export default function ServiceShow2() {
 
 	useEffect(() => {
 		const f = async () =>{
-			const s = await putService(service); 
+			setSaveStatus("saving");
+
+			const s = await putService(service);
+
 			if(!s) {
+				setSaveStatus("error");
 				loadService();
+			} else {
+				setSaveStatus("saved");
 			}
 		}
 
@@ -161,12 +186,24 @@ export default function ServiceShow2() {
 			return;
 		}
 
+		setSaveStatus("pending");
+
 		const timer = setTimeout(() => {
 			f();
 		}, 300);
 
 		return () => clearTimeout(timer);
 	}, [service]);
+
+	useEffect(() => {
+		if (saveStatus !== "saved" && saveStatus !== "error") return;
+
+		const timer = setTimeout(() => {
+			setSaveStatus("idle");
+		}, saveStatus === "error" ? 5000 : 2000);
+
+		return () => clearTimeout(timer);
+	}, [saveStatus]);
 
 	/* USER TIME */
 	const[uts,setUts] = useState([]);
@@ -182,7 +219,14 @@ export default function ServiceShow2() {
 			} 
 			users[user_id].minutes += minutes??0; 
 		}); 
-		return Object.values(users); 
+		return Object.values(users);
+	}
+
+	const formatMinutes = (minutes) => {
+		const m = minutes ?? 0;
+		const h = Math.floor(m / 60);
+		const rest = m % 60;
+		return h > 0 ? `${h}h ${rest}m` : `${rest}m`;
 	}
 
 	/*const getServiceStatus = () => {
@@ -205,11 +249,29 @@ export default function ServiceShow2() {
 		if(s) setService(s);
 	}
 	const [apReload, setApReload] = useState(false);
+	const [aps, setAps] = useState([]);
+
+	const isFinished = !!service.is_finished;
+	const canEditCarClient = isAllowedEditing && !isFinished;
 
 	return(
 		<div className="service-page">
 			<div className="service-layout">
 				<nav className="service-nav">
+					<button type="button" className="service-nav-print" onClick={() => handlePrint("agreement")}>
+						<i className="fa-solid fa-print" /> Imprimir
+					</button>
+					<button type="button" className="service-nav-print" onClick={() => handlePrint("summary")}>
+						<i className="fa-solid fa-file-lines" /> Imprimir Resumo
+					</button>
+					{saveStatus !== "idle" && (
+						<div className={`service-save-status service-save-status-${saveStatus}`}>
+							{saveStatus === "pending" && <><i className="fa-regular fa-circle"/> Alterações por guardar</>}
+							{saveStatus === "saving" && <><i className="fa-solid fa-spinner fa-spin"/> A guardar...</>}
+							{saveStatus === "saved" && <><i className="fa-solid fa-circle-check"/> Guardado</>}
+							{saveStatus === "error" && <><i className="fa-solid fa-triangle-exclamation"/> Erro ao guardar</>}
+						</div>
+					)}
 					{NAV_SECTIONS.map((section) => (
 						<button
 							key={section.id}
@@ -246,7 +308,7 @@ export default function ServiceShow2() {
 									? prev :
 									{...prev, car_id: value,}
 							))}
-							isAllowedEditing={isAllowedEditing}
+							isAllowedEditing={canEditCarClient}
 						/>
 					</div>
 					<div className="service-section" id="section-client">
@@ -260,7 +322,7 @@ export default function ServiceShow2() {
 									? prev :
 									{...prev, client_id: value,}
 							))}
-							isAllowedEditing={isAllowedEditing}
+							isAllowedEditing={canEditCarClient}
 						/>
 					</div>
 					<div className="service-signed-info-card" id="section-agreed">
@@ -270,15 +332,15 @@ export default function ServiceShow2() {
 					</div>
 					<div className="body">
 						<div className="text-entry">
-							<label htmlFor=""disabled={!isAllowedEditing}>Descrição de Avaria</label>
-							<textarea 
-								type="text" 
-								value={service.malfunction??""} 
+							<label htmlFor=""disabled={!isAllowedEditing || isFinished}>Descrição de Avaria</label>
+							<textarea
+								type="text"
+								value={service.malfunction??""}
 								onChange={(e)=>setService(prev => ({
 									...prev,
 									malfunction:e.target.value
 								}))}
-								disabled={!isAllowedEditing}/>
+								disabled={!isAllowedEditing || isFinished}/>
 						</div>
 						<div className="text-entry">
 							<label htmlFor="malfunction">Serviço a Realizar</label>
@@ -289,12 +351,17 @@ export default function ServiceShow2() {
 									...prev,
 									signed_service:e.target.value
 								}))}
-								disabled={!isAllowedEditing}/>
+								disabled={!isAllowedEditing || isFinished}/>
 						</div>
 					</div>
 					<div className="text-entry" id="signing">
 						<p>Eu, <span>{service?.r_name??"".trim()?service?.r_name:"______________________________"}</span> , tomei conhecimento e autorizo a realização do serviço acima indicado e contacto através do nrº <span>{service?.r_phone??"".trim()?service?.r_phone:"______________________________"}</span>.</p>
 						<p>Assinatura: ________________________________</p>
+					</div>
+					<div className="service-print-action">
+						<button className="options" onClick={() => handlePrint("agreement")}>
+							<i className="fa-solid fa-print"/> Imprimir
+						</button>
 					</div>
 				</div>
 				<div className="service-done-info-card" id="section-done">
@@ -306,33 +373,38 @@ export default function ServiceShow2() {
 
 						<div className="text-entry">
 							<label htmlFor="malfunction">Serviço Realizado</label>
-							<textarea 
-								type="text" 
-								value={service.service??""} 
+							<textarea
+								type="text"
+								value={service.service??""}
 								onChange={(e)=>setService(prev => ({
 									...prev,
 									service:e.target.value
 								}))}
+								disabled={isFinished}
 							/>
 						</div>
 
 						<div className="coloring-buttons">
 							<button
+								disabled={isFinished}
 								onClick={()=>{
 									markedTextarea.current.markSelection("note-red");
 								}}
 							><i className="fa-solid fa-square-pen note-red-button"/></button>
 							<button
+								disabled={isFinished}
 								onClick={()=>{
 									markedTextarea.current.markSelection("note-yellow");
 								}}
 							><i className="fa-solid fa-square-pen note-yellow-button"/></button>
 							<button
+								disabled={isFinished}
 								onClick={()=>{
 									markedTextarea.current.markSelection("note-green");
 								}}
 							><i className="fa-solid fa-square-pen note-green-button"/></button>
 							<button
+								disabled={isFinished}
 								onClick={()=>{
 									markedTextarea.current.unmarkSelection();
 								}}
@@ -352,8 +424,14 @@ export default function ServiceShow2() {
 										note: newValue,
 									}));
 								}}
+								disabled={isFinished}
 							/>
 						</div>
+					</div>
+					<div className="service-print-action">
+						<button className="options" onClick={() => handlePrint("summary")}>
+							<i className="fa-solid fa-file-lines"/> Imprimir Resumo
+						</button>
 					</div>
 				</div>
 				<div className="service-products-requested-card" id="section-requested">
@@ -362,7 +440,7 @@ export default function ServiceShow2() {
 						<h1>Pedido de Produtos</h1>
 					</div>	
 					<div className="body">
-						<ProductsRequested id={id} onProductForwarded={()=>setApReload(true)}/>
+						<ProductsRequested id={id} onProductForwarded={()=>setApReload(true)} disabled={isFinished}/>
 					</div>
 				</div>
 				<div className="service-applied-products-card" id="section-applied">
@@ -371,7 +449,7 @@ export default function ServiceShow2() {
 						<h1>Produtos Aplicados</h1>
 					</div>	
 					<div className="body">
-						<AppliedProducts id={id} apReload={apReload} onApReloaded={()=>setApReload(false)}/>
+						<AppliedProducts id={id} apReload={apReload} onApReloaded={()=>setApReload(false)} copy_aps={setAps} disabled={isFinished}/>
 					</div>
 				</div>
 				<div className="service-user-times-card" id="section-times">
@@ -396,8 +474,8 @@ export default function ServiceShow2() {
 								))}
 							</tbody>
 						</table>
-						<UserTimes id={id} copy_uts={setUts}/>
-						<UserTimePunches id={id} copy_uts={setUtps}/>
+						<UserTimes id={id} copy_uts={setUts} disabled={isFinished}/>
+						<UserTimePunches id={id} copy_uts={setUtps} disabled={isFinished}/>
 					</div>
 				</div>
 				<div className="service-is-finished-card" id="section-finished">
@@ -413,6 +491,82 @@ export default function ServiceShow2() {
 							/>
 						</div>
 					</label>
+				</div>
+				<div className="print-summary-block">
+					<h1>Resumo do Serviço #{service.id}</h1>
+
+					<div className="print-summary-grid">
+						<div><strong>Viatura:</strong> {[service.car_plate, service.car_make_name, service.car_model_name].filter(Boolean).join(" - ") || "-"}</div>
+						<div><strong>Cliente:</strong> {service.client_name || "-"}</div>
+						<div><strong>Telemóvel:</strong> {service.client_phone || "-"}</div>
+						<div><strong>Tipo de Serviço:</strong> {service.service_type_name || "-"}</div>
+						<div><strong>Entrada:</strong> {service.checkin || "-"}</div>
+						<div><strong>Saída:</strong> {service.checkout || "-"}</div>
+						<div><strong>Kms:</strong> {service.kms || "-"}</div>
+					</div>
+
+					<h2>Descrição de Avaria</h2>
+					<p>{service.malfunction || "-"}</p>
+
+					<h2>Serviço Realizado</h2>
+					<p>{service.service || "-"}</p>
+
+					<h2>Notas/Observações</h2>
+					<p>{extractPlainNote(service.note) || "-"}</p>
+
+					<h2>Produtos Aplicados</h2>
+					{aps.length === 0 ? (
+						<p>Sem produtos aplicados.</p>
+					) : (
+						<table>
+							<thead>
+								<tr>
+									<th>Nome</th>
+									<th>Referência</th>
+									<th>Tipo</th>
+									<th>Qt.</th>
+									<th>Aplicado</th>
+								</tr>
+							</thead>
+							<tbody>
+								{aps.map((ap) => (
+									<tr key={ap.sap_id}>
+										<td>{ap.product_name || "-"}</td>
+										<td>{ap.product_reference || "-"}</td>
+										<td>{ap.product_type_name || "-"}</td>
+										<td>{ap.quantity}</td>
+										<td>{ap.is_applied == "1" ? "Sim" : "Não"}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					)}
+
+					<h2>Tempo dos Funcionários</h2>
+					{timeSummary.length === 0 ? (
+						<p>Sem tempos registados.</p>
+					) : (
+						<table>
+							<thead>
+								<tr>
+									<th>Funcionário</th>
+									<th>Tempo</th>
+								</tr>
+							</thead>
+							<tbody>
+								{timeSummary.map(ts => (
+									<tr key={ts.user_id}>
+										<td>{ts.user_name}</td>
+										<td>{formatMinutes(ts.minutes)}</td>
+									</tr>
+								))}
+								<tr>
+									<td><strong>Total</strong></td>
+									<td><strong>{formatMinutes(timeSummary.reduce((sum, ts) => sum + (ts.minutes ?? 0), 0))}</strong></td>
+								</tr>
+							</tbody>
+						</table>
+					)}
 				</div>
 				</div>
 			</div>

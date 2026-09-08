@@ -53,7 +53,7 @@ export const ClientPicker = ({
 			}else{
 				return null;
 			}
-		} catch(error){console.error(error, error.response.data.error);}
+		} catch(error){console.error(error, error?.response?.data?.error);}
 	}
 
 	const putClient = async (newClient, client) =>{
@@ -71,7 +71,7 @@ export const ClientPicker = ({
 			}else{
 				return null;
 			}
-		} catch(error){console.error(error, error.response.data.error);}
+		} catch(error){console.error(error, error?.response?.data?.error);}
 	}
 
 	const getClients = async (searchClient) => {
@@ -86,7 +86,7 @@ export const ClientPicker = ({
 			}else{
 				return [];
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const getClient = async (id) => {
@@ -97,7 +97,7 @@ export const ClientPicker = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	useEffect(() => {

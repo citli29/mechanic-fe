@@ -35,7 +35,7 @@ export const MakePicker = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const putMake = async (name, make) =>{
@@ -48,7 +48,7 @@ export const MakePicker = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const getMakes = async (searchName) => {
@@ -61,7 +61,7 @@ export const MakePicker = ({
 			}else{
 				return [];
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const getMake = async (id) => {
@@ -72,7 +72,7 @@ export const MakePicker = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	useEffect(()=>{

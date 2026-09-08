@@ -14,6 +14,7 @@ export const MarkedTextarea = forwardRef(
 		{
 			value,
 			onChange,
+			disabled,
 		},
 		ref
 	) => {
@@ -841,6 +842,7 @@ export const MarkedTextarea = forwardRef(
 				ref={textareaRef}
 				style={{ width: "100%" }}
 				value={textPresenting ?? ""}
+				readOnly={disabled}
 				onChange={(e) => {
 					e.preventDefault();
 					setTextPresenting(e.target.value);

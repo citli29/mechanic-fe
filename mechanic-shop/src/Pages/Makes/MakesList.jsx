@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -8,6 +8,8 @@ import "./Style/MakesList.css";
 const PER_PAGE = 10;
 
 export default function MakesList() {
+
+	const requestIdRef = useRef(0);
 
 	const [makes, setMakes] = useState([]);
 
@@ -43,7 +45,7 @@ export default function MakesList() {
 		if (err.response?.data?.error) {
 			showMessage("error", err.response.data.error);
 		} else {
-			showMessage("error", "Something went wrong.");
+			showMessage("error", "Ocorreu um erro.");
 		}
 
 		console.error(err);
@@ -66,6 +68,8 @@ export default function MakesList() {
 
 
 	async function loadMakes() {
+		const requestId = ++requestIdRef.current;
+
 		try {
 			const params = Object.fromEntries(
 				Object.entries(filters).filter(([_, value]) => value !== "")
@@ -76,10 +80,14 @@ export default function MakesList() {
 
 			const res = await api.get("/makes", { params });
 
+			if (requestId !== requestIdRef.current) return;
+
 			setMakes(res.data.make_list || []);
 			setTotalPages(res.data.pagination?.total_pages || 1);
 			setTotal(res.data.pagination?.total ?? (res.data.make_list || []).length);
 		} catch (err) {
+			if (requestId !== requestIdRef.current) return;
+
 			console.error(err);
 			setMakes([]);
 		}

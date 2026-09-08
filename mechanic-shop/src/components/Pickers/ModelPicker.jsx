@@ -36,7 +36,7 @@ export const ModelPicker = ({
 				return null;
 			}
 
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const putModel = async (name,make_id, model) =>{
@@ -50,7 +50,7 @@ export const ModelPicker = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const getModels = async (searchName) => {
@@ -68,7 +68,7 @@ export const ModelPicker = ({
 			}else{
 				return [];
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const getModel = async (id) => {
@@ -79,7 +79,7 @@ export const ModelPicker = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 

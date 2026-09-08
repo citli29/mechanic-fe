@@ -21,6 +21,7 @@ import NotificationsList from "./Pages/Notifications/NotificationsList";
 
 import "./style/variables.css";
 import { useEffect } from "react";
+import ErrorToasts from "./components/ErrorToasts/ErrorToasts";
 
 function App() {
 
@@ -34,6 +35,8 @@ function App() {
 	//<Route path="/services/:id" element={<ServicesShow />} />
 	return (
 
+		<>
+		<ErrorToasts/>
 		<BrowserRouter>
 
 			<Routes>
@@ -64,6 +67,7 @@ function App() {
 			</Routes>
 
 		</BrowserRouter>
+		</>
 
 	);
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -8,6 +8,8 @@ import "./Style/ProductTypesList.css";
 const PER_PAGE = 10;
 
 export default function ProductTypesList() {
+
+	const requestIdRef = useRef(0);
 
 	const [productTypes, setProductTypes] = useState([]);
 
@@ -43,7 +45,7 @@ export default function ProductTypesList() {
 		if (err.response?.data?.error) {
 			showMessage("error", err.response.data.error);
 		} else {
-			showMessage("error", "Something went wrong.");
+			showMessage("error", "Ocorreu um erro.");
 		}
 
 		console.error(err);
@@ -66,6 +68,8 @@ export default function ProductTypesList() {
 
 
 	async function loadProductTypes() {
+		const requestId = ++requestIdRef.current;
+
 		try {
 			const params = Object.fromEntries(
 				Object.entries(filters).filter(([_, value]) => value !== "")
@@ -76,10 +80,14 @@ export default function ProductTypesList() {
 
 			const res = await api.get("/product_types", { params });
 
+			if (requestId !== requestIdRef.current) return;
+
 			setProductTypes(res.data.product_type_list || []);
 			setTotalPages(res.data.pagination?.total_pages || 1);
 			setTotal(res.data.pagination?.total ?? (res.data.product_type_list || []).length);
 		} catch (err) {
+			if (requestId !== requestIdRef.current) return;
+
 			console.error(err);
 			setProductTypes([]);
 		}

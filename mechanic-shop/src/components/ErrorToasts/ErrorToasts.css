@@ -1,0 +1,37 @@
+.error-toasts{
+	position: fixed;
+	top: var(--big-padding);
+	right: var(--big-padding);
+	z-index: 9999;
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+	max-width: 360px;
+}
+
+.error-toast{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	padding: var(--padding) var(--big-padding);
+	border-radius: 5px;
+	font-weight: 600;
+	border: 1px solid var(--danger);
+	background: var(--danger-soft);
+	color: var(--danger);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.error-toast span{
+	flex: 1;
+	word-break: break-word;
+}
+
+.error-toast button{
+	background: none;
+	border: none;
+	color: var(--danger);
+	cursor: pointer;
+	padding: 0;
+	line-height: 1;
+}

@@ -3,7 +3,8 @@ import api from "./../api/axios";
 
 export const UserTimePunches = ({
 	id,
-	copy_uts
+	copy_uts,
+	disabled
 }) =>{
 
 	const formatDate = (date) => {
@@ -16,6 +17,16 @@ export const UserTimePunches = ({
 		const day = String(d.getDate()).padStart(2, "0");
 
 		return `${year}-${month}-${day}`;
+	};
+
+	const formatDateDisplay = (value) => {
+		if (!value) return "-";
+
+		const [year, month, day] = value.split("-");
+
+		if (!year || !month || !day) return value;
+
+		return `${day}/${month}/${year}`;
 	};
 
 	const emptyUTP = {
@@ -102,6 +113,7 @@ export const UserTimePunches = ({
 	}
 
 	const handleClickStartAddUTP = () => {
+		if(disabled) return;
 		setNewUserTimePunch(emptyUTP);
 		setIsAddingUTP(true);
 	}
@@ -111,6 +123,7 @@ export const UserTimePunches = ({
 	}
 
 	const handleActionAddUTP = async () =>{
+		if(disabled) return;
 		const utp = await postUserTimePunches(newUserTimePunch.user_id, newUserTimePunch.date);
 		if(utp){
 			setIsAddingUTP(false);
@@ -120,6 +133,7 @@ export const UserTimePunches = ({
 	}
 
 	const handleActionDeleteUTP = async (id) => {
+		if(disabled) return;
 		const utp = await deleteUserTimePunches(id);
 		if(utp)
 			loadUserTimePunches();
@@ -127,6 +141,7 @@ export const UserTimePunches = ({
 
 
 	const handleClickStartEditing = async (sut_id) => {
+		if(disabled) return;
 		setIsEditing(sut_id);
 		await loadUserTimePunches();
 	}
@@ -137,6 +152,7 @@ export const UserTimePunches = ({
 	}
 
 	const handleActionEditUTP = async (ut) =>{
+		if(disabled) return;
 		const u = await putUserTimePunches(ut.sutp_id, ut.user_id, ut.date);
 		if(u){
 			setIsEditing(null);
@@ -145,6 +161,7 @@ export const UserTimePunches = ({
 	}
 
 	const handleActionStartTime = async (sutp_id) =>{
+		if(disabled) return;
 		try{
 			const response = await api.post(`/services/${id}/user_time_punches/${sutp_id}/start`)
 
@@ -157,6 +174,7 @@ export const UserTimePunches = ({
 		}catch(error){console.error(error, error.response.data.error)}
 	}
 	const handleActionStopTime = async (sutp_id) =>{
+		if(disabled) return;
 		try{
 			const response = await api.post(`/services/${id}/user_time_punches/${sutp_id}/stop`)
 			if(typeof response.data.sutp === "undefined"){
@@ -167,14 +185,6 @@ export const UserTimePunches = ({
 			}
 		}catch(error){console.error(error, error.response.data.error)}
 	}
-
-	const goToday = (sutp_id) => {
-		setUserTimePunches(prev => prev.map((_ut) => sutp_id === _ut.sutp_id? 
-			{ ..._ut, date:formatDate(new Date())}
-			: _ut
-		));
-	}
-
 
 
 
@@ -217,25 +227,15 @@ export const UserTimePunches = ({
 									))}
 								</select>
 							</td>
-							<td className={`utp-date ${isEditing===utp.sutp_id?"is-editing":""}`}> 
-								<input 
-									type="date"
-									value={utp?.date??""} 
-									disabled={isEditing!==utp.sutp_id}
-									onChange={async (e) => {
-										const date = formatDate(e.target.value);
-										setUserTimePunches(prev => prev.map((_utp) => utp.sut_id === _utp.sut_id? 
-											{ ..._utp, date:date }
-											: _utp
-										));
-									}}/>
-								<button className="go-today" onClick={() => goToday(utp.sutp_id)}><i className="fa-solid fa-circle-h"/></button>
+							<td className="utp-date just-text">
+								<span>{formatDateDisplay(utp?.date)}</span>
 							</td>
 							{(utp.hours_s!==null && utp.minutes_s!==null)?(
 								<td className="utp-time-start just-text"><span>{`${("0" + utp.hours_s).slice(-2)}:${("0" + utp.minutes_s).slice(-2)}`}</span></td>
 							):(
 								<td className="utp-time-start">
 										<button
+											disabled={disabled}
 											onClick={(e)=>handleActionStartTime(utp.sutp_id)}
 										><i className="fa-solid fa-hourglass-start"/></button></td>
 							)}
@@ -243,8 +243,8 @@ export const UserTimePunches = ({
 								<td className="utp-time-end just-text"><span>{`${("0" + utp.hours_f).slice(-2)}:${("0" + utp.minutes_f).slice(-2)}`}</span></td>
 							):(
 								<td className="utp-time-end">
-										<button 
-											disabled={utp.hours_s===null && utp.minutes_s===null}
+										<button
+											disabled={disabled || (utp.hours_s===null && utp.minutes_s===null)}
 											onClick={(e)=>handleActionStopTime(utp.sutp_id)}
 									><i className="fa-solid fa-hourglass-end"/></button></td>
 							)}
@@ -252,10 +252,10 @@ export const UserTimePunches = ({
 							{isEditing!==utp.sutp_id &&(
 								<>
 									<td className="utp-edit">
-										<button className="options" onClick={()=>handleClickStartEditing(utp.sutp_id)}><i className="fa-solid fa-pencil"/></button>
+										<button className="options" disabled={disabled} onClick={()=>handleClickStartEditing(utp.sutp_id)}><i className="fa-solid fa-pencil"/></button>
 									</td>
 									<td className="utp-cancel">
-										<button className="cancel" onClick={(e)=>handleActionDeleteUTP(utp.sutp_id)}><i className="fa-solid fa-trash"/></button>
+										<button className="cancel" disabled={disabled} onClick={(e)=>handleActionDeleteUTP(utp.sutp_id)}><i className="fa-solid fa-trash"/></button>
 									</td>
 								</>
 							)}
@@ -271,9 +271,9 @@ export const UserTimePunches = ({
 							)}
 						</tr>
 					))}
-					{!isAddingUTP &&(
+					{!isAddingUTP && !disabled &&(
 						<tr className="add-row">
-							<td><button onClick={(e) => handleClickStartAddUTP()}><i className="fa-solid fa-plus"/></button></td>	
+							<td><button onClick={(e) => handleClickStartAddUTP()}><i className="fa-solid fa-plus"/></button></td>
 						</tr>
 					)}
 					{isAddingUTP &&(
@@ -298,17 +298,8 @@ export const UserTimePunches = ({
 									))}
 								</select>
 							</td>
-							<td className="utp-date is-editing"> 
-								<input 
-									type="date"
-									value={newUserTimePunch?.date??""} 
-									onChange={(e) => {
-										const date = formatDate(e.target.value);
-										setNewUserTimePunch(utp => ({ ...utp, date:date }));
-									}}/>
-								<button className="go-today" onClick={() => {
-	setNewUserTimePunch(prev => ({...prev, date: formatDate(new Date())}))
-								}}><i className="fa-solid fa-circle-h"/></button>
+							<td className="utp-date just-text">
+								<span>{formatDateDisplay(newUserTimePunch?.date)}</span>
 							</td>
 							<td className="utp-time-start"/>
 							<td className="utp-time-end"/>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
@@ -19,6 +19,8 @@ export default function Home() {
 
 	const navigate = useNavigate();
 
+	const requestIdRef = useRef(0);
+
 	const [todaySchedules, setTodaySchedules] = useState([]);
 	const [unfinishedServicesTotal, setUnfinishedServicesTotal] = useState(0);
 
@@ -35,6 +37,8 @@ export default function Home() {
 
 
 	async function loadDashboard() {
+		const requestId = ++requestIdRef.current;
+
 		setLoading(true);
 
 		const today = formatDate(new Date());
@@ -48,6 +52,8 @@ export default function Home() {
 				api.get("/services_products_requested", { params: { is_delivered: "true", p: 1, u: PRODUCT_PREVIEW_LIMIT } }),
 			]);
 
+			if (requestId !== requestIdRef.current) return;
+
 			setTodaySchedules(schedulesRes.data.schedule_list || []);
 			setUnfinishedServicesTotal(servicesRes.data.pagination?.total ?? 0);
 
@@ -60,9 +66,11 @@ export default function Home() {
 			setProductsDelivered(sprDeliveredRes.data.spr_list || []);
 			setProductsDeliveredTotal(sprDeliveredRes.data.pagination?.total ?? 0);
 		} catch (err) {
+			if (requestId !== requestIdRef.current) return;
+
 			console.error(err);
 		} finally {
-			setLoading(false);
+			if (requestId === requestIdRef.current) setLoading(false);
 		}
 	}
 

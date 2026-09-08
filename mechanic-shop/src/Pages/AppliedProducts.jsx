@@ -4,7 +4,9 @@ import api from "./../api/axios";
 export const AppliedProducts = ({
 	id,
 	apReload,
-	onApReloaded
+	onApReloaded,
+	copy_aps,
+	disabled
 }) =>{
 
 	const emptyAP = {
@@ -42,6 +44,8 @@ export const AppliedProducts = ({
 			onApReloaded();
 		}
 	},[apReload])
+
+	useEffect(()=>{ copy_aps?.(appliedProducts); },[appliedProducts]);
 
 
 
@@ -84,7 +88,7 @@ export const AppliedProducts = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const postProduct = async (name, reference, product_type_id) =>{
@@ -99,7 +103,7 @@ export const AppliedProducts = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const postAP = async (p_id) =>{
@@ -114,7 +118,7 @@ export const AppliedProducts = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const deleteAP = async (ap_id) =>{
@@ -125,7 +129,7 @@ export const AppliedProducts = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 	const updateAP = async (ap) => {
 		try {
@@ -186,6 +190,7 @@ export const AppliedProducts = ({
 		return str.charAt(0).toUpperCase() + str.slice(1);
 	};
 	const handleClickStartAdd = () => {
+		if(disabled) return;
 		setNewProduct(({...newProduct, name:capitalize(searchProduct)}));
 		setIsAddingProduct(true);
 		setIsSearchSelected(false);
@@ -196,12 +201,14 @@ export const AppliedProducts = ({
 	}
 
 	const handleClickSelect  = async (p) =>{
+		if(disabled) return;
 		setIsSearchSelected(false);
 		const ap = await postAP(p.id);
 		loadAPs();
 	}
 
 	const handleActionAddProduct = async () =>{
+		if(disabled) return;
 		const p = await postProduct(newProduct.name, newProduct.reference, newProduct.product_type_id);
 		if(p){
 			const ap = await postAP(p.id);
@@ -212,6 +219,7 @@ export const AppliedProducts = ({
 	}
 
 	const handleActionDeleteAP = async (id) => {
+		if(disabled) return;
 		const ap = await deleteAP(id);
 		loadAPs();
 	}
@@ -220,14 +228,15 @@ export const AppliedProducts = ({
 		<>
 			<div ref={refSearch}className="search-bar search-products">
 				<span><i className="fa-solid fa-magnifying-glass"/></span>
-				<input 
+				<input
 					type="text"
 					onFocus={()=>setIsSearchSelected(true)}
 					placeholder={"Pesquisar Produto..."}
 					value={searchProduct}
 					onChange={(e)=>{setSearchProduct(e.target.value)}}
+					disabled={disabled}
 				/>
-				{isSearchSelected && (<ul className="dropdown">
+				{!disabled && isSearchSelected && (<ul className="dropdown">
 					<li >
 						<button className="addEntry" onClick={()=>handleClickStartAdd()}>
 
@@ -246,7 +255,7 @@ export const AppliedProducts = ({
 				</ul>)}
 			</div>
 
-			{isAddingProduct && (<div className="add-product-card">
+			{!disabled && isAddingProduct && (<div className="add-product-card">
 				<div className="header">
 					<div className="card-title">
 						<i className="fa-solid fa-dolly"/>
@@ -312,7 +321,8 @@ export const AppliedProducts = ({
 							</td>
 							<td className="p-quantity">
 								<label htmlFor="product-quantity" className="magic-label">Qt:</label>
-								<input type="number" value={ap?.quantity??""} onChange={async (e) => {
+								<input type="number" value={ap?.quantity??""} disabled={disabled} onChange={async (e) => {
+									if(disabled) return;
 									const quantity = e.target.value.trim()!==""?Number(e.target.value):"";
 									setAppliedProducts(prev => prev.map((_ap) => ap.sap_id === _ap.sap_id ?
 										{ ..._ap, quantity }:
@@ -327,8 +337,10 @@ export const AppliedProducts = ({
 								<label>
 									<input
 										type="checkbox"
+										disabled={disabled}
 										checked={ap?.is_applied == "1"}
 										onChange={async (e) => {
+											if(disabled) return;
 											const is_applied = e.target.checked ? "1" : "0";
 											setAppliedProducts(prev => prev.map((_ap) => ap.sap_id === _ap.sap_id ? 
 												{ ..._ap, is_applied }: 
@@ -340,7 +352,7 @@ export const AppliedProducts = ({
 								</label>
 							</td>
 							<td className="p-cancel">
-								<button className="cancel" onClick={()=>handleActionDeleteAP(ap.sap_id)}><i className="fa-solid fa-trash"/></button>
+								<button className="cancel" disabled={disabled} onClick={()=>handleActionDeleteAP(ap.sap_id)}><i className="fa-solid fa-trash"/></button>
 							</td>
 						</tr>
 					))}

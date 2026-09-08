@@ -3,13 +3,26 @@ import api from "./../api/axios";
 
 export const UserTimes = ({
 	id,
-	copy_uts
+	copy_uts,
+	disabled
 }) =>{
+
+	const formatDate = (date) => {
+		if (!date) return "";
+
+		const d = new Date(date);
+
+		const year = d.getFullYear();
+		const month = String(d.getMonth() + 1).padStart(2, "0");
+		const day = String(d.getDate()).padStart(2, "0");
+
+		return `${year}-${month}-${day}`;
+	};
 
 	const emptyUT = {
 		user_id:"",
 		minutes: "0",
-		date: "" 
+		date: formatDate(new Date())
 	}
 
 	const [users,setUsers] = useState([]);
@@ -92,6 +105,7 @@ export const UserTimes = ({
 	}
 
 	const handleClickStartAddUT = () => {
+		if(disabled) return;
 		setNewUserTime(emptyUT);
 		setIsAddingUT(true);
 	}
@@ -99,6 +113,7 @@ export const UserTimes = ({
 		setIsAddingUT(false);
 	}
 	const handleActionAddUT = async () =>{
+		if(disabled) return;
 		const ut = await postUserTimes(newUserTime.user_id, newUserTime.minutes, newUserTime.date);
 		if(ut){
 			loadUserTimes();
@@ -107,24 +122,14 @@ export const UserTimes = ({
 		}
 	}
 	const handleActionDeleteUT = async (id) => {
+		if(disabled) return;
 		const ut = await deleteUserTimes(id);
 		if(ut)
 			loadUserTimes();
 	}
 
-	const formatDate = (date) => {
-		if (!date) return "";
-
-		const d = new Date(date);
-
-		const year = d.getFullYear();
-		const month = String(d.getMonth() + 1).padStart(2, "0");
-		const day = String(d.getDate()).padStart(2, "0");
-
-		return `${year}-${month}-${day}`;
-	};
-
 	const handleClickStartEditing = async (sut_id) => {
+		if(disabled) return;
 		setIsEditing(sut_id);
 		await loadUserTimes();
 	}
@@ -141,16 +146,6 @@ export const UserTimes = ({
 			await loadUserTimes();
 		}
 	}
-
-	const goToday = (sut_id) => {
-
-		setUserTimes(prev => prev.map((_ut) => sut_id === _ut.sut_id? 
-			{ ..._ut, date:formatDate(new Date())}
-			: _ut
-		));
-
-	}
-
 
 	return(
 		<>
@@ -216,15 +211,14 @@ export const UserTimes = ({
 											: _ut
 										));
 									}}/>
-								<button className="go-today" onClick={() => goToday(ut.sut_id)}><i className="fa-solid fa-circle-h"/></button>
 							</td>
 							{isEditing!==ut.sut_id &&(
 								<>
 									<td className="p-edit">
-										<button className="options" onClick={()=>handleClickStartEditing(ut.sut_id)}><i className="fa-solid fa-pencil"/></button>
+										<button className="options" disabled={disabled} onClick={()=>handleClickStartEditing(ut.sut_id)}><i className="fa-solid fa-pencil"/></button>
 									</td>
 									<td className="p-cancel">
-										<button className="cancel" onClick={()=>handleActionDeleteUT(ut.sut_id)}><i className="fa-solid fa-trash"/></button>
+										<button className="cancel" disabled={disabled} onClick={()=>handleActionDeleteUT(ut.sut_id)}><i className="fa-solid fa-trash"/></button>
 									</td>
 								</>
 							)}
@@ -240,9 +234,9 @@ export const UserTimes = ({
 							)}
 						</tr>
 					))}
-					{!isAddingUT &&(
+					{!isAddingUT && !disabled &&(
 						<tr className="add-row">
-							<td><button onClick={(e) => handleClickStartAddUT()}><i className="fa-solid fa-plus"/></button></td>	
+							<td><button onClick={(e) => handleClickStartAddUT()}><i className="fa-solid fa-plus"/></button></td>
 						</tr>
 					)}
 					{isAddingUT &&(
@@ -287,10 +281,6 @@ export const UserTimes = ({
 										const date = formatDate(e.target.value);
 										setNewUserTime(ut => ({ ...ut, date:date }));
 									}}/>
-								<button className="go-today"><i className="fa-solid fa-circle-h"/></button>
-								<button className="go-today" onClick={() => {
-	setNewUserTime(prev => ({...prev, date: formatDate(new Date())}))
-								}}><i className="fa-solid fa-circle-h"/></button>
 							</td>
 							<td className="p-confirm">
 								<button className="confirm" onClick={()=>handleActionAddUT()}><i className="fa-solid fa-check"/></button>

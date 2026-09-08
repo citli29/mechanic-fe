@@ -86,7 +86,7 @@ export default function SchedulesList() {
 		if (err.response?.data?.error) {
 			showMessage("error", err.response.data.error);
 		} else {
-			showMessage("error", "Something went wrong.");
+			showMessage("error", "Ocorreu um erro.");
 		}
 
 		console.error(err);

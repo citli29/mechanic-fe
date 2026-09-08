@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
@@ -56,6 +56,8 @@ export default function ProductRequestsDashboard() {
 
 	const navigate = useNavigate();
 
+	const requestIdRef = useRef(0);
+
 	const [activeTab, setActiveTab] = useState(TABS[0].key);
 	const [counts, setCounts] = useState({});
 
@@ -87,7 +89,7 @@ export default function ProductRequestsDashboard() {
 		if (err.response?.data?.error) {
 			showMessage("error", err.response.data.error);
 		} else {
-			showMessage("error", "Something went wrong.");
+			showMessage("error", "Ocorreu um erro.");
 		}
 
 		console.error(err);
@@ -116,6 +118,8 @@ export default function ProductRequestsDashboard() {
 
 
 	async function loadItems() {
+		const requestId = ++requestIdRef.current;
+
 		setLoading(true);
 
 		try {
@@ -127,13 +131,17 @@ export default function ProductRequestsDashboard() {
 
 			const res = await api.get("/services_products_requested", { params });
 
+			if (requestId !== requestIdRef.current) return;
+
 			setItems(res.data.spr_list || []);
 			setTotalPages(res.data.pagination?.total_pages || 1);
 			setTotal(res.data.pagination?.total ?? 0);
 		} catch (err) {
+			if (requestId !== requestIdRef.current) return;
+
 			handleApiError(err);
 		} finally {
-			setLoading(false);
+			if (requestId === requestIdRef.current) setLoading(false);
 		}
 	}
 
@@ -174,7 +182,7 @@ export default function ProductRequestsDashboard() {
 	async function updateItem(spr) {
 		try {
 			const response = await api.put(
-				`services/${spr.service_id}/products_requested/${spr.id}`,
+				`services/${spr.service_id}/products_requested/${spr.spr_id}`,
 				{
 					product_id: spr.product_id,
 					quantity: spr.quantity,

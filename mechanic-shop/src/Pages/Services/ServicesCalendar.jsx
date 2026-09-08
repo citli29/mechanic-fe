@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
@@ -29,6 +29,8 @@ const MECHANIC_ACCENT = getServiceTypeAccent(1);
 export default function ServicesCalendar() {
 
 	const navigate = useNavigate();
+
+	const requestIdRef = useRef(0);
 
 	const [services, setServices] = useState([]);
 
@@ -90,7 +92,7 @@ export default function ServicesCalendar() {
 		if (err.response?.data?.error) {
 			showMessage("error", err.response.data.error);
 		} else {
-			showMessage("error", "Something went wrong.");
+			showMessage("error", "Ocorreu um erro.");
 		}
 
 		console.error(err);
@@ -98,6 +100,8 @@ export default function ServicesCalendar() {
 
 
 	async function loadServices() {
+		const requestId = ++requestIdRef.current;
+
 		try {
 			const params = {};
 
@@ -112,8 +116,12 @@ export default function ServicesCalendar() {
 
 			const res = await api.get("/services", { params });
 
+			if (requestId !== requestIdRef.current) return;
+
 			setServices(res.data.service_list || []);
 		} catch (err) {
+			if (requestId !== requestIdRef.current) return;
+
 			handleApiError(err);
 		}
 	}

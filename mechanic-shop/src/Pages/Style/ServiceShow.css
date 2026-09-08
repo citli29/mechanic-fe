@@ -3,6 +3,10 @@
 	color:var(--txt-dark);
 	filter: staturate(0.5);
 }
+
+.print-summary-block{
+	display: none;
+}
 .service-layout{
 	display: flex;
 	align-items: flex-start;
@@ -72,6 +76,74 @@
 
 			i{ color: #fff; }
 		}
+	}
+}
+
+.service-nav-print{
+	border: 1px solid var(--border) !important;
+	margin-bottom: var(--small-padding);
+
+	i{ color: var(--txt-light) !important; }
+
+	&:hover{
+		background: var(--bg-page-dark) !important;
+	}
+}
+
+.service-save-status{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+
+	padding: var(--padding);
+	margin-bottom: var(--small-padding);
+	border-radius: 6px;
+
+	font-size: var(--font-size-small);
+	font-weight: 600;
+
+	background: var(--bg-page);
+	color: var(--txt-muted);
+
+	i{ width: 1.1em; text-align: center; }
+}
+
+.service-save-status-saving{
+	color: var(--txt-light);
+}
+
+.service-save-status-saved{
+	background: var(--success);
+	color: #fff;
+}
+
+.service-save-status-error{
+	background: var(--danger-soft);
+	color: var(--danger);
+}
+
+.service-signed-info-card .body{
+	/* .service-print-action below is now the last visible block in this
+	   card, so it (not .body) should carry the card's bottom rounding. */
+	border-radius: 0;
+}
+
+.service-print-action{
+	display: flex;
+	justify-content: flex-end;
+
+	padding: 0 var(--big-padding) var(--big-padding);
+
+	background: var(--bg-card);
+	border-radius: 0 0 10px 10px;
+
+	button{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+		padding: var(--padding) calc(2 * var(--padding));
+		border-radius: 5px;
+		font-weight: 700;
 	}
 }
 
@@ -966,6 +1038,83 @@
 			display: grid !important;
 			grid-template-columns: 1fr 1fr !important;
 			gap: 3pt !important;
+		}
+	}
+
+	/* Default (agreement) print keeps the summary block hidden — only the
+	   "Imprimir Resumo" buttons (via body.print-summary) flip this around. */
+	.print-summary-block{
+		display: none !important;
+	}
+
+	body.print-summary .service-header-card,
+	body.print-summary .car-picker,
+	body.print-summary .client-picker,
+	body.print-summary .service-signed-info-card,
+	body.print-summary .print-title{
+		display: none !important;
+	}
+
+	body.print-summary .print-summary-block{
+		display: block !important;
+
+		h1{
+			display: block !important;
+			margin: 0 !important;
+			margin-top: 5pt !important;
+			padding: 4pt !important;
+			border: solid 0.5px black !important;
+			background-color: #ccc !important;
+			font-size: 15pt !important;
+		}
+
+		h2{
+			margin: 8pt 0 0 !important;
+			padding: 3pt 4pt !important;
+			border: 0.5px solid black !important;
+			background-color: #eee !important;
+			font-size: 12pt !important;
+		}
+
+		p{
+			margin: 0 !important;
+			padding: 4pt !important;
+			border: 0.5px solid black !important;
+			border-top: none !important;
+			min-height: 18pt !important;
+			white-space: pre-wrap !important;
+			font-size: 10pt !important;
+		}
+
+		.print-summary-grid{
+			display: grid !important;
+			grid-template-columns: 1fr 1fr !important;
+			gap: 0 !important;
+			margin-top: 5pt !important;
+			border: 0.5px solid black !important;
+
+			div{
+				padding: 3pt 4pt !important;
+				border-bottom: 0.5px solid black !important;
+				font-size: 10pt !important;
+			}
+		}
+
+		table{
+			width: 100% !important;
+			border-collapse: collapse !important;
+			margin-top: 4pt !important;
+
+			th, td{
+				border: 0.5px solid black !important;
+				padding: 3pt 4pt !important;
+				text-align: left !important;
+				font-size: 9pt !important;
+			}
+
+			th{
+				background-color: #eee !important;
+			}
 		}
 	}
 }

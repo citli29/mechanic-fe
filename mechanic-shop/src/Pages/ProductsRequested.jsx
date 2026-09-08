@@ -3,7 +3,8 @@ import api from "./../api/axios";
 
 export const ProductsRequested = ({
 	id,
-	onProductForwarded
+	onProductForwarded,
+	disabled
 }) =>{
 
 	const [productsRequested,setProductsRequested] = useState([]);
@@ -67,7 +68,7 @@ export const ProductsRequested = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const postProduct = async (name, reference, product_type_id) =>{
@@ -82,7 +83,7 @@ export const ProductsRequested = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const postPR = async (p_id) =>{
@@ -96,7 +97,7 @@ export const ProductsRequested = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const postAP = async (ap) =>{
@@ -107,7 +108,7 @@ export const ProductsRequested = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const deletePR = async (spr_id) =>{
@@ -118,7 +119,7 @@ export const ProductsRequested = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 	const updatePR = async (pr) => {
 		try {
@@ -180,6 +181,7 @@ export const ProductsRequested = ({
 		return str.charAt(0).toUpperCase() + str.slice(1);
 	};
 	const handleClickStartAdd = () => {
+		if(disabled) return;
 		setNewProduct(({...newProduct, name:capitalize(searchProduct)}));
 		setIsAddingProduct(true);
 		setIsSearchSelected(false);
@@ -190,12 +192,14 @@ export const ProductsRequested = ({
 	}
 
 	const handleClickSelect  = async (p) =>{
+		if(disabled) return;
 		setIsSearchSelected(false);
 		const pr = await postPR(p.id);
 		loadPRs();
 	}
 
 	const handleActionAddProduct = async () =>{
+		if(disabled) return;
 		const p = await postProduct(newProduct.name, newProduct.reference, newProduct.product_type_id);
 		if(p){
 			const ap = await postPR(p.id);
@@ -205,6 +209,7 @@ export const ProductsRequested = ({
 		}
 	}
 	const handleInputChangeBlur = async (pr) => {
+		if(disabled) return;
 		const newPr = await updatePR(pr);
 		if(newPr){
 			loadPRs();
@@ -222,17 +227,18 @@ export const ProductsRequested = ({
 	};
 
 	const handleActionDeletePR = async (id) => {
+		if(disabled) return;
 		const pr = await deletePR(id);
 		loadPRs();
 	}
 
 	const handleActionForwardPR = async (pr) => {
+		if(disabled) return;
 		const newAp = {
-			product_id: pr.product_id, 
-			quantity: pr.quanitity,
+			product_id: pr.product_id,
+			quantity: pr.quantity,
 			is_applied: "0",
 		}
-		console.log(newAp);
 		const ap = await postAP(newAp);
 		if(ap) {
 			onProductForwarded();
@@ -246,14 +252,15 @@ export const ProductsRequested = ({
 		<>
 			<div ref={refSearch}className="search-bar search-products">
 				<span><i className="fa-solid fa-magnifying-glass"/></span>
-				<input 
+				<input
 					type="text"
 					onFocus={()=>setIsSearchSelected(true)}
 					placeholder={"Pesquisar Produto..."}
 					value={searchProduct}
 					onChange={(e)=>{setSearchProduct(e.target.value)}}
+					disabled={disabled}
 				/>
-				{isSearchSelected && (<ul className="dropdown">
+				{!disabled && isSearchSelected && (<ul className="dropdown">
 					<li >
 						<button className="addEntry" onClick={()=>handleClickStartAdd()}>
 
@@ -272,7 +279,7 @@ export const ProductsRequested = ({
 				</ul>)}
 			</div>
 
-			{isAddingProduct && (<div className="add-product-card">
+			{!disabled && isAddingProduct && (<div className="add-product-card">
 				<div className="header">
 					<div className="card-title">
 						<i className="fa-solid fa-dolly"/>
@@ -331,13 +338,13 @@ export const ProductsRequested = ({
 							<td id="pr-p-p-t">{pr.product_type_name}</td>
 							<td id="pr-quant">
 								<label htmlFor="product-quantity" className="magic-label">Qt:</label>
-								<input type="number" value={pr.quantity} 
+								<input type="number" value={pr.quantity} disabled={disabled}
 								onChange={(e)=>{handleInputChange({...pr, quantity:e.target.value})}}
 								onBlur={(e)=>{handleInputChangeBlur({...pr, quantity:e.target.value});}}/></td>
-							<td id="pr-ord"><label htmlFor="is-ordered"><input type="checkbox" checked={pr.is_ordered==1} onChange={(e)=>{handleInputChangeBlur({...pr, is_ordered:e.target.checked?1:0});}}/></label></td>
-							<td id="pr-del"><label htmlFor="is-delivered"><input id="is-delivered"type="checkbox" checked={pr.is_delivered==1} onChange={(e)=>{handleInputChangeBlur({...pr, is_delivered:e.target.checked?1:0});}}/></label></td>
-							<td id="pr-for"><button className="confirm"><i className="fa-solid fa-forward" onClick={(e)=>handleActionForwardPR(pr)}/></button></td>
-							<td id="pr-delete"><button className="cancel"><i className="fa-solid fa-trash" onClick={(e)=>handleActionDeletePR(pr.spr_id)}/></button></td>
+							<td id="pr-ord"><label htmlFor="is-ordered"><input type="checkbox" disabled={disabled} checked={pr.is_ordered==1} onChange={(e)=>{handleInputChangeBlur({...pr, is_ordered:e.target.checked?1:0});}}/></label></td>
+							<td id="pr-del"><label htmlFor="is-delivered"><input id="is-delivered"type="checkbox" disabled={disabled} checked={pr.is_delivered==1} onChange={(e)=>{handleInputChangeBlur({...pr, is_delivered:e.target.checked?1:0});}}/></label></td>
+							<td id="pr-for"><button className="confirm" disabled={disabled}><i className="fa-solid fa-forward" onClick={(e)=>handleActionForwardPR(pr)}/></button></td>
+							<td id="pr-delete"><button className="cancel" disabled={disabled}><i className="fa-solid fa-trash" onClick={(e)=>handleActionDeletePR(pr.spr_id)}/></button></td>
 						</tr>
 					))}
 				</tbody>

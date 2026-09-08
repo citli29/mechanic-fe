@@ -45,16 +45,7 @@ export const CarPicker = ({
 			car ? formatPlate(car.plate) === car.plate : true
 		);
 	}, [car]);
-	/*
-	useEffect(() => {
-		if (!car) return;
 
-		onCarIdChange(car?.id??"");
-		setPresentingCar(car??emptyCar);
-		setIsPlateLocked(car?formatPlate(car.plate)===car.plate: true);
-	},[car]);
-	*/
-	
 	const postCar = async (newCar) =>{
 		try{
 			const response = await api.post(`cars`, {
@@ -73,7 +64,7 @@ export const CarPicker = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const putCar = async (newCar, car) =>{
@@ -94,7 +85,7 @@ export const CarPicker = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const getCars = async (searchCar) => {
@@ -109,7 +100,7 @@ export const CarPicker = ({
 			}else{
 				return [];
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	const getCar = async (id) => {
@@ -120,7 +111,7 @@ export const CarPicker = ({
 			}else{
 				return null;
 			}
-		}catch(error){console.error(error, error.response.data.error)}
+		}catch(error){console.error(error, error?.response?.data?.error)}
 	}
 
 	useEffect(() => {

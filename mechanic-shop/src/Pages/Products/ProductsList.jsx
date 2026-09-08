@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -19,6 +19,8 @@ const capitalize = (str) => {
 };
 
 export default function ProductsList() {
+
+	const requestIdRef = useRef(0);
 
 	const [products, setProducts] = useState([]);
 	const [productTypes, setProductTypes] = useState([]);
@@ -60,7 +62,7 @@ export default function ProductsList() {
 		if (err.response?.data?.error) {
 			showMessage("error", err.response.data.error);
 		} else {
-			showMessage("error", "Something went wrong.");
+			showMessage("error", "Ocorreu um erro.");
 		}
 
 		console.error(err);
@@ -86,6 +88,8 @@ export default function ProductsList() {
 
 
 	async function loadProducts() {
+		const requestId = ++requestIdRef.current;
+
 		try {
 			const params = Object.fromEntries(
 				Object.entries(filters).filter(([_, value]) => value !== "")
@@ -96,10 +100,14 @@ export default function ProductsList() {
 
 			const res = await api.get("/products", { params });
 
+			if (requestId !== requestIdRef.current) return;
+
 			setProducts(res.data.product_list || []);
 			setTotalPages(res.data.pagination?.total_pages || 1);
 			setTotal(res.data.pagination?.total ?? (res.data.product_list || []).length);
 		} catch (err) {
+			if (requestId !== requestIdRef.current) return;
+
 			console.error(err);
 			setProducts([]);
 		}

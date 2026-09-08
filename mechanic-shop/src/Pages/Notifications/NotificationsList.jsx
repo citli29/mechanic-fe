@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import { getStoredViewTypeId, setStoredViewTypeId } from "../../utils/notificationView";
@@ -23,6 +23,8 @@ function formatDateTime(value) {
 export default function NotificationsList() {
 
 	const navigate = useNavigate();
+
+	const requestIdRef = useRef(0);
 
 	const [notifications, setNotifications] = useState([]);
 	const [onlyUnread, setOnlyUnread] = useState(true);
@@ -55,7 +57,7 @@ export default function NotificationsList() {
 		if (err.response?.data?.error) {
 			showMessage("error", err.response.data.error);
 		} else {
-			showMessage("error", "Something went wrong.");
+			showMessage("error", "Ocorreu um erro.");
 		}
 
 		console.error(err);
@@ -86,6 +88,8 @@ export default function NotificationsList() {
 	async function loadNotifications() {
 		if (!effectiveViewTypeId) return;
 
+		const requestId = ++requestIdRef.current;
+
 		setLoading(true);
 
 		try {
@@ -98,13 +102,17 @@ export default function NotificationsList() {
 
 			const res = await api.get("/notifications", { params });
 
+			if (requestId !== requestIdRef.current) return;
+
 			setNotifications(res.data.notification_list || []);
 			setTotalPages(res.data.pagination?.total_pages || 1);
 			setTotal(res.data.pagination?.total ?? 0);
 		} catch (err) {
+			if (requestId !== requestIdRef.current) return;
+
 			handleApiError(err);
 		} finally {
-			setLoading(false);
+			if (requestId === requestIdRef.current) setLoading(false);
 		}
 	}
 
