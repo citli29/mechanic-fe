@@ -117,19 +117,35 @@ export default function Navbar() {
 
 			<div className="navbar-container">
 
-				<NavLink
-					to="/"
-					className="navbar-logo"
-					onClick={closeDropdown}
-				>
-					<span className="navbar-logo-icon">
-						OL
-					</span>
+				<div className="navbar-top-row">
 
-					<span className="navbar-logo-text">
-						Oficina Lima
-					</span>
-				</NavLink>
+					<NavLink
+						to="/"
+						className="navbar-logo"
+						onClick={closeDropdown}
+					>
+						<span className="navbar-logo-icon">
+							OL
+						</span>
+
+						<span className="navbar-logo-text">
+							Oficina Lima
+						</span>
+					</NavLink>
+
+					<NavLink
+						to="/notifications"
+						className={({ isActive }) => isActive ? "navbar-notif-mobile active" : "navbar-notif-mobile"}
+						onClick={closeDropdown}
+						aria-label="Notificações"
+					>
+						<i className="fa-solid fa-bell" />
+						{unreadCount > 0 && (
+							<span className="navbar-notif-mobile-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+						)}
+					</NavLink>
+
+				</div>
 
 				<div className="navbar-navigation">
 
@@ -161,7 +177,7 @@ export default function Navbar() {
 
 						<NavLink
 							to="/notifications"
-							className={linkClass}
+							className={(navData) => `${linkClass(navData)} navbar-link-notif-desktop`}
 							onClick={closeDropdown}
 						>
 							Notificações

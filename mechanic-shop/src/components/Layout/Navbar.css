@@ -37,6 +37,19 @@
 
 
 /* =====================
+   Top row (logo + mobile notif icon)
+===================== */
+
+.navbar-top-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+
+/* =====================
    Logo
 ===================== */
 
@@ -74,6 +87,66 @@
 
 .navbar-logo-text {
 	white-space: nowrap;
+}
+
+
+/* =====================
+   Mobile notification icon
+===================== */
+
+.navbar-notif-mobile {
+	display: none;
+	position: relative;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+
+	width: 40px;
+	height: 40px;
+
+	border-radius: 10px;
+
+	color: #d1d5db;
+	text-decoration: none;
+	font-size: 1.15rem;
+
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease;
+}
+
+.navbar-notif-mobile:hover {
+	background: rgba(255, 255, 255, 0.08);
+	color: #ffffff;
+}
+
+.navbar-notif-mobile.active {
+	background: #f59e0b;
+	color: #111827;
+}
+
+.navbar-notif-mobile-badge {
+	position: absolute;
+	top: 0;
+	right: 0;
+
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	min-width: 17px;
+	height: 17px;
+	padding: 0 4px;
+
+	border-radius: 999px;
+	border: 2px solid #111827;
+
+	background: #dc2626;
+	color: #ffffff;
+
+	font-size: 0.62rem;
+	font-weight: 800;
+	line-height: 1;
 }
 
 
@@ -308,6 +381,10 @@
 		padding: 12px 0;
 	}
 
+	.navbar-top-row {
+		width: 100%;
+	}
+
 	.navbar-navigation {
 		width: 100%;
 		justify-content: space-between;
@@ -354,6 +431,14 @@
 	.navbar-logo-icon {
 		width: 36px;
 		height: 36px;
+	}
+
+	.navbar-notif-mobile {
+		display: inline-flex;
+	}
+
+	.navbar-link-notif-desktop {
+		display: none;
 	}
 
 	.navbar-navigation {
