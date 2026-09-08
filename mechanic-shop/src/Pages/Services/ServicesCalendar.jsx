@@ -4,7 +4,7 @@ import api from "../../api/axios";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
-import "./Style/SchedulesCalendar.css";
+import "./Style/ServicesCalendar.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
 
 function formatDate(date) {
@@ -26,11 +26,11 @@ function getServiceTypeAccent(serviceTypeId) {
 const LAB_ACCENT = getServiceTypeAccent(2);
 const MECHANIC_ACCENT = getServiceTypeAccent(1);
 
-export default function SchedulesCalendar() {
+export default function ServicesCalendar() {
 
 	const navigate = useNavigate();
 
-	const [schedules, setSchedules] = useState([]);
+	const [services, setServices] = useState([]);
 
 	const [serviceTypes, setServiceTypes] = useState([]);
 
@@ -97,20 +97,22 @@ export default function SchedulesCalendar() {
 	}
 
 
-	async function loadSchedules() {
+	async function loadServices() {
 		try {
-			const params = Object.fromEntries(
-				Object.entries(filters).filter(
-					([key, value]) => value !== "" && !(key === "status" && value === "all")
-				)
-			);
+			const params = {};
+
+			if (filters.car_plate) params.car_plate = filters.car_plate;
+			if (filters.client_name) params.client_name = filters.client_name;
+			if (filters.service_type_id) params.service_type_id = filters.service_type_id;
+
+			if (filters.status !== "all") params.status = filters.status;
 
 			params.start_date = formatDate(new Date(year, month, 1));
 			params.end_date = formatDate(new Date(year, month + 1, 0));
 
-			const res = await api.get("/schedules", { params });
+			const res = await api.get("/services", { params });
 
-			setSchedules(res.data.schedule_list || []);
+			setServices(res.data.service_list || []);
 		} catch (err) {
 			handleApiError(err);
 		}
@@ -129,10 +131,10 @@ export default function SchedulesCalendar() {
 
 	useEffect(() => { loadServiceTypes(); }, []);
 
-	useEffect(() => { loadSchedules(); }, [year, month]);
+	useEffect(() => { loadServices(); }, [year, month]);
 
 	useEffect(() => {
-		const timer = setTimeout(() => { loadSchedules(); }, 400);
+		const timer = setTimeout(() => { loadServices(); }, 400);
 		return () => clearTimeout(timer);
 	}, [filters]);
 
@@ -167,61 +169,67 @@ export default function SchedulesCalendar() {
 	}
 
 
-	function getAppointmentStatusClass(schedule) {
-		if (schedule.service_checkout) return "appointment-delivered";
-		if (schedule.service_is_finished === 1) return "appointment-finished";
-		if (schedule.service_id !== null) return "appointment-with-service";
-		return "appointment-without-service";
+	function getServiceStatusClass(service) {
+		if (service.checkout) return "appointment-delivered";
+		if (service.is_finished === 1) return "appointment-finished";
+		return "appointment-pending";
 	}
 
 
-	function renderAppointment(schedule) {
+	function getServiceStatusLabel(service) {
+		if (service.checkout) return "Entregue";
+		if (service.is_finished === 1) return "Terminado";
+		return "Por Terminar";
+	}
+
+
+	function renderAppointment(service) {
 		return (
 			<div
-				key={schedule.id}
-				className={`appointment ${getAppointmentStatusClass(schedule)}`}
-				onClick={() => navigate(`/schedules/${schedule.id}`)}
+				key={service.id}
+				className={`appointment ${getServiceStatusClass(service)}`}
+				onClick={() => navigate(`/s/${service.id}`)}
 			>
 				<div className="appointment-plate">
-					{schedule.car_plate
-						? `${schedule.car_plate} - ${[schedule.car_make, schedule.car_model].filter(Boolean).join(" ")}`
-						: [schedule.car_make, schedule.car_model].filter(Boolean).join(" ") || "Sem Viatura"}
+					{service.car_plate
+						? `${service.car_plate} - ${[service.car_make_name, service.car_model_name].filter(Boolean).join(" ")}`
+						: [service.car_make_name, service.car_model_name].filter(Boolean).join(" ") || "Sem Viatura"}
 				</div>
 
 				<div className="appointment-client">
-					{schedule.client_name || "Sem Cliente"}
+					{service.client_name || "Sem Cliente"}
 				</div>
 
 				<div className="appointment-description">
-					{schedule.description}
+					{getServiceStatusLabel(service)}
 				</div>
 			</div>
 		);
 	}
 
 
-	function renderDayHalves(daySchedules) {
-		const labSchedules = daySchedules.filter((s) => s.service_type_id === 2);
-		const mechanicSchedules = daySchedules.filter((s) => s.service_type_id !== 2);
+	function renderDayHalves(dayServices) {
+		const labServices = dayServices.filter((s) => s.service_type_id === 2);
+		const mechanicServices = dayServices.filter((s) => s.service_type_id !== 2);
 
 		return (
 			<div className="day-halves">
-				{labSchedules.length > 0 && (
+				{labServices.length > 0 && (
 					<div className="day-half day-half-top" style={{ borderLeftColor: LAB_ACCENT }}>
 						<div className="day-half-label">Laboratório</div>
 
 						<div className="appointments">
-							{labSchedules.map((schedule) => renderAppointment(schedule))}
+							{labServices.map((service) => renderAppointment(service))}
 						</div>
 					</div>
 				)}
 
-				{mechanicSchedules.length > 0 && (
+				{mechanicServices.length > 0 && (
 					<div className="day-half day-half-bottom" style={{ borderLeftColor: MECHANIC_ACCENT }}>
 						<div className="day-half-label">Mecânica</div>
 
 						<div className="appointments">
-							{mechanicSchedules.map((schedule) => renderAppointment(schedule))}
+							{mechanicServices.map((service) => renderAppointment(service))}
 						</div>
 					</div>
 				)}
@@ -230,16 +238,17 @@ export default function SchedulesCalendar() {
 	}
 
 
-	const groupedSchedules = useMemo(() => {
+	const groupedServices = useMemo(() => {
 		const grouped = {};
 
-		schedules.forEach((schedule) => {
-			if (!grouped[schedule.date]) grouped[schedule.date] = [];
-			grouped[schedule.date].push(schedule);
+		services.forEach((service) => {
+			if (!service.checkin) return;
+			if (!grouped[service.checkin]) grouped[service.checkin] = [];
+			grouped[service.checkin].push(service);
 		});
 
 		return grouped;
-	}, [schedules]);
+	}, [services]);
 
 
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -260,7 +269,7 @@ export default function SchedulesCalendar() {
 		calendarDays.push({
 			day,
 			key,
-			schedules: groupedSchedules[key] || [],
+			services: groupedServices[key] || [],
 		});
 	}
 
@@ -307,7 +316,7 @@ export default function SchedulesCalendar() {
 							<>
 								<div className="day-number">{day.day}</div>
 
-								{renderDayHalves(day.schedules)}
+								{renderDayHalves(day.services)}
 							</>
 						)}
 					</div>
@@ -347,7 +356,7 @@ export default function SchedulesCalendar() {
 								<span className="day-number">{day.day}</span>
 							</div>
 
-							{renderDayHalves(day.schedules)}
+							{renderDayHalves(day.services)}
 						</div>
 					))}
 				</div>
@@ -356,15 +365,15 @@ export default function SchedulesCalendar() {
 	}
 
 	return (
-		<div className="page schedules-calendar-page">
+		<div className="page services-calendar-page">
 			<div className="content">
 
 				<div className="card">
 					<div className="header">
-						<i className="fa-solid fa-calendar-days" />
-						<h1>Marcações</h1>
+						<i className="fa-solid fa-clipboard-list" />
+						<h1>Serviços</h1>
 
-						<ViewToggle listPath="/schedules" calendarPath="/schedules_calendar" />
+						<ViewToggle listPath="/services" calendarPath="/services_calendar" />
 					</div>
 
 					<div className="body">
@@ -420,19 +429,18 @@ export default function SchedulesCalendar() {
 								value={filters.status}
 								onChange={updateFilter}
 							>
-								<option value="all">Todos os Estados</option>
-								<option value="without_service">Sem Serviço</option>
-								<option value="with_service">Com Serviço</option>
-								<option value="finished">Terminado</option>
-								<option value="delivered">Entregue</option>
+								<option value="all">Todos</option>
+								<option value="unfinished">Por Terminar</option>
+								<option value="finished">Terminados</option>
+								<option value="delivered">Entregues</option>
 							</select>
 
 							<button className="options" onClick={clearFilters}>
 								<i className="fa-solid fa-broom" /> Limpar
 							</button>
 
-							<button className="confirm" onClick={() => navigate("/schedules/new")}>
-								<i className="fa-solid fa-plus" /> Adicionar Marcação
+							<button className="confirm" onClick={() => navigate("/services/new")}>
+								<i className="fa-solid fa-plus" /> Adicionar Serviço
 							</button>
 						</div>
 

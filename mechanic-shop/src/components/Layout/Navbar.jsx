@@ -78,7 +78,7 @@ export default function Navbar() {
 							className={linkClass}
 							onClick={closeDropdown}
 						>
-							Calendário
+							Marcações
 						</NavLink>
 
 						<NavLink
@@ -87,14 +87,6 @@ export default function Navbar() {
 							onClick={closeDropdown}
 						>
 							Serviços
-						</NavLink>
-
-						<NavLink
-							to="/schedules"
-							className={linkClass}
-							onClick={closeDropdown}
-						>
-							Marcações
 						</NavLink>
 
 					</div>

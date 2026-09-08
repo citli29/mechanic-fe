@@ -4,7 +4,7 @@ import api from "../../api/axios";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
-import "./Style/ServicesList.css";
+import "./Style/SchedulesList.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
 
 const PER_PAGE = 10;
@@ -17,18 +17,16 @@ function getServiceTypeAccent(serviceTypeId) {
 }
 
 const SORTABLE_COLUMNS = [
-	{ column: "checkin", label: "Entrada" },
-	{ column: "checkout", label: "Saída" },
+	{ column: "date", label: "Data" },
 	{ column: "client_name", label: "Cliente" },
 	{ column: "car_plate", label: "Matrícula" },
-	{ column: "kms", label: "Kms" },
 ];
 
-export default function ServicesList() {
+export default function SchedulesList() {
 
 	const navigate = useNavigate();
 
-	const [services, setServices] = useState([]);
+	const [schedules, setSchedules] = useState([]);
 	const [serviceTypes, setServiceTypes] = useState([]);
 
 	const [filters, setFilters] = useState({
@@ -40,7 +38,7 @@ export default function ServicesList() {
 		car_make: "",
 		car_model: "",
 		service_type_id: "",
-		status: "unfinished",
+		status: "all",
 	});
 
 	const [page, setPage] = useState(1);
@@ -118,7 +116,7 @@ export default function ServicesList() {
 	}
 
 
-	async function loadServices() {
+	async function loadSchedules() {
 		try {
 			setLoading(true);
 
@@ -126,7 +124,7 @@ export default function ServicesList() {
 
 			const date = buildDateFilter();
 
-			if (date) params.checkin = date;
+			if (date) params.date = date;
 			if (filters.client_name) params.client_name = filters.client_name;
 			if (filters.car_plate) params.car_plate = filters.car_plate;
 			if (filters.car_make) params.car_make = filters.car_make;
@@ -143,11 +141,11 @@ export default function ServicesList() {
 			params.p = page;
 			params.u = PER_PAGE;
 
-			const res = await api.get("/services", { params });
+			const res = await api.get("/schedules", { params });
 
-			setServices(res.data.service_list || []);
+			setSchedules(res.data.schedule_list || []);
 			setTotalPages(res.data.pagination?.total_pages || 1);
-			setTotal(res.data.pagination?.total ?? (res.data.service_list || []).length);
+			setTotal(res.data.pagination?.total ?? (res.data.schedule_list || []).length);
 		} catch (err) {
 			handleApiError(err);
 		} finally {
@@ -159,13 +157,13 @@ export default function ServicesList() {
 	useEffect(() => { loadServiceTypes(); }, []);
 
 
-	useEffect(() => { loadServices(); }, [page]);
+	useEffect(() => { loadSchedules(); }, [page]);
 
 	useEffect(() => {
 		if (page !== 1) {
 			setPage(1);
 		} else {
-			loadServices();
+			loadSchedules();
 		}
 	}, [sortColumn, sortDirection]);
 
@@ -174,7 +172,7 @@ export default function ServicesList() {
 			if (page !== 1) {
 				setPage(1);
 			} else {
-				loadServices();
+				loadSchedules();
 			}
 		}, 400);
 
@@ -193,11 +191,11 @@ export default function ServicesList() {
 
 
 	function updateFilter(e) {
-		const { name, value, type, checked } = e.target;
+		const { name, value } = e.target;
 
-		let updatedValue = type === "checkbox" ? checked : value;
+		let updatedValue = value;
 
-		if (type !== "checkbox" && ["day", "month", "year"].includes(name)) {
+		if (["day", "month", "year"].includes(name)) {
 			updatedValue = updatedValue.replace(/\D/g, "");
 
 			if (name === "day") updatedValue = updatedValue.slice(0, 2);
@@ -237,19 +235,20 @@ export default function ServicesList() {
 	}
 
 
-	function getStatusInfo(service) {
-		const isFinished = Boolean(service.is_finished);
-		const isDelivered = Boolean(service.checkout);
-
-		if (isDelivered) {
-			return { rowClass: "service-delivered-row", badgeClass: "service-status-delivered", label: "Entregue" };
+	function getStatusInfo(schedule) {
+		if (schedule.service_checkout) {
+			return { rowClass: "schedule-delivered-row", badgeClass: "schedule-status-delivered", label: "Entregue" };
 		}
 
-		if (isFinished) {
-			return { rowClass: "service-finished-row", badgeClass: "service-status-finished", label: "Terminado" };
+		if (schedule.service_is_finished === 1) {
+			return { rowClass: "schedule-finished-row", badgeClass: "schedule-status-finished", label: "Terminado" };
 		}
 
-		return { rowClass: "", badgeClass: "service-status-pending", label: "Por terminar" };
+		if (schedule.service_id !== null) {
+			return { rowClass: "schedule-with-service-row", badgeClass: "schedule-status-with-service", label: "Com Serviço" };
+		}
+
+		return { rowClass: "", badgeClass: "schedule-status-without-service", label: "Sem Serviço" };
 	}
 
 
@@ -292,7 +291,7 @@ export default function ServicesList() {
 			car_make: "",
 			car_model: "",
 			service_type_id: "",
-			status: "unfinished",
+			status: "all",
 		});
 	}
 
@@ -302,50 +301,48 @@ export default function ServicesList() {
 			<table>
 				<thead>
 					<tr>
-						{renderSortableHeader("checkin", "Entrada")}
-						{renderSortableHeader("checkout", "Saída")}
+						{renderSortableHeader("date", "Data")}
 						{renderSortableHeader("client_name", "Cliente")}
 						<th>Telemóvel</th>
 						{renderSortableHeader("car_plate", "Matrícula")}
 						<th>Marca</th>
 						<th>Modelo</th>
 						<th>Tipo de Serviço</th>
-						{renderSortableHeader("kms", "Kms")}
+						<th>Descrição</th>
 						<th>Estado</th>
 					</tr>
 				</thead>
 
 				<tbody>
-					{loading && services.length === 0 ? (
+					{loading && schedules.length === 0 ? (
 						<tr>
 							<td data-label="" style={{ gridColumn: "1 / -1" }}>A Carregar...</td>
 						</tr>
-					) : !loading && services.length === 0 ? (
+					) : !loading && schedules.length === 0 ? (
 						<tr>
-							<td data-label="" style={{ gridColumn: "1 / -1" }}>Sem Serviços.</td>
+							<td data-label="" style={{ gridColumn: "1 / -1" }}>Sem Marcações.</td>
 						</tr>
 					) : (
-						services.map((service) => {
-							const status = getStatusInfo(service);
+						schedules.map((schedule) => {
+							const status = getStatusInfo(schedule);
 
 							return (
 								<tr
-									key={service.id}
+									key={schedule.id}
 									className={status.rowClass}
-									onClick={() => navigate(`/s/${service.id}`)}
+									onClick={() => navigate(`/schedules/${schedule.id}`)}
 								>
-									<td data-label="Entrada">{service.checkin || "-"}</td>
-									<td data-label="Saída">{service.checkout || "-"}</td>
-									<td data-label="Cliente">{service.client_name || "-"}</td>
-									<td data-label="Telemóvel">{service.client_phone || "-"}</td>
-									<td data-label="Matrícula">{service.car_plate || "-"}</td>
-									<td data-label="Marca">{service.car_make_name || "-"}</td>
-									<td data-label="Modelo">{service.car_model_name || "-"}</td>
-									<td data-label="Tipo de Serviço">{service.service_type_name || "-"}</td>
-									<td data-label="Kms">{service.kms ?? "-"}</td>
+									<td data-label="Data">{schedule.date || "-"}</td>
+									<td data-label="Cliente">{schedule.client_name || "-"}</td>
+									<td data-label="Telemóvel">{schedule.client_phone || "-"}</td>
+									<td data-label="Matrícula">{schedule.car_plate || "-"}</td>
+									<td data-label="Marca">{schedule.car_make || "-"}</td>
+									<td data-label="Modelo">{schedule.car_model || "-"}</td>
+									<td data-label="Tipo de Serviço">{schedule.service_type_name || "-"}</td>
+									<td data-label="Descrição">{schedule.description || "-"}</td>
 
 									<td data-label="Estado">
-										<span className={`service-status ${status.badgeClass}`}>
+										<span className={`schedule-status ${status.badgeClass}`}>
 											{status.label}
 										</span>
 									</td>
@@ -385,20 +382,20 @@ export default function ServicesList() {
 
 
 	function renderMobileList() {
-		if (loading && services.length === 0) {
+		if (loading && schedules.length === 0) {
 			return (
 				<>
 					{renderMobileSortBar()}
-					<p className="services-empty">A Carregar...</p>
+					<p className="schedules-empty">A Carregar...</p>
 				</>
 			);
 		}
 
-		if (!loading && services.length === 0) {
+		if (!loading && schedules.length === 0) {
 			return (
 				<>
 					{renderMobileSortBar()}
-					<p className="services-empty">Sem Serviços.</p>
+					<p className="schedules-empty">Sem Marcações.</p>
 				</>
 			);
 		}
@@ -406,58 +403,58 @@ export default function ServicesList() {
 		return (
 			<>
 			{renderMobileSortBar()}
-			<div className="services-list-mobile">
-				{services.map((service) => {
-					const status = getStatusInfo(service);
-					const isExpanded = expandedIds.has(service.id);
-					const typeAccent = getServiceTypeAccent(service.service_type_id);
+			<div className="schedules-list-mobile">
+				{schedules.map((schedule) => {
+					const status = getStatusInfo(schedule);
+					const isExpanded = expandedIds.has(schedule.id);
+					const typeAccent = getServiceTypeAccent(schedule.service_type_id);
 
 					return (
 						<div
-							key={service.id}
-							className={`service-card ${status.rowClass}`}
+							key={schedule.id}
+							className={`schedule-card ${status.rowClass}`}
 							style={{ borderTop: `3px solid ${typeAccent}` }}
 						>
-							<div className="service-card-type-label">
-								{service.service_type_name || "Sem Tipo"}
+							<div className="schedule-card-type-label">
+								{schedule.service_type_name || "Sem Tipo"}
 							</div>
 
-							<div className="service-card-summary" onClick={() => navigate(`/s/${service.id}`)}>
-								<div className="service-card-field f-matricula">
+							<div className="schedule-card-summary" onClick={() => navigate(`/schedules/${schedule.id}`)}>
+								<div className="schedule-card-field f-matricula">
 									<span className="field-label">Matrícula</span>
-									<span>{service.car_plate || "-"}</span>
+									<span>{schedule.car_plate || "-"}</span>
 								</div>
 
-								<div className="service-card-field f-estado">
+								<div className="schedule-card-field f-estado">
 									<span className="field-label">Estado</span>
-									<span className={`service-status ${status.badgeClass}`}>{status.label}</span>
+									<span className={`schedule-status ${status.badgeClass}`}>{status.label}</span>
 								</div>
 
-								<div className="service-card-field f-marca">
+								<div className="schedule-card-field f-marca">
 									<span className="field-label">Marca</span>
-									<span>{service.car_make_name || "-"}</span>
+									<span>{schedule.car_make || "-"}</span>
 								</div>
 
-								<div className="service-card-field f-modelo">
+								<div className="schedule-card-field f-modelo">
 									<span className="field-label">Modelo</span>
-									<span>{service.car_model_name || "-"}</span>
+									<span>{schedule.car_model || "-"}</span>
 								</div>
 
-								<div className="service-card-field f-cliente">
+								<div className="schedule-card-field f-cliente">
 									<span className="field-label">Cliente</span>
-									<span>{service.client_name || "-"}</span>
+									<span>{schedule.client_name || "-"}</span>
 								</div>
 
-								<div className="service-card-field f-entrada">
-									<span className="field-label">Entrada</span>
-									<span>{service.checkin || "-"}</span>
+								<div className="schedule-card-field f-data">
+									<span className="field-label">Data</span>
+									<span>{schedule.date || "-"}</span>
 								</div>
 
 								<button
 									className="expand-toggle"
 									onClick={(e) => {
 										e.stopPropagation();
-										toggleExpanded(service.id);
+										toggleExpanded(schedule.id);
 									}}
 								>
 									<i className={`fa-solid fa-chevron-${isExpanded ? "up" : "down"}`} />
@@ -465,20 +462,15 @@ export default function ServicesList() {
 							</div>
 
 							{isExpanded && (
-								<div className="service-card-details" onClick={() => navigate(`/s/${service.id}`)}>
-									<div className="service-card-field">
+								<div className="schedule-card-details" onClick={() => navigate(`/schedules/${schedule.id}`)}>
+									<div className="schedule-card-field">
 										<span className="field-label">Telemóvel</span>
-										<span>{service.client_phone || "-"}</span>
+										<span>{schedule.client_phone || "-"}</span>
 									</div>
 
-									<div className="service-card-field">
-										<span className="field-label">Saída</span>
-										<span>{service.checkout || "-"}</span>
-									</div>
-
-									<div className="service-card-field">
-										<span className="field-label">Kms</span>
-										<span>{service.kms ?? "-"}</span>
+									<div className="schedule-card-field">
+										<span className="field-label">Descrição</span>
+										<span>{schedule.description || "-"}</span>
 									</div>
 								</div>
 							)}
@@ -491,15 +483,15 @@ export default function ServicesList() {
 	}
 
 	return (
-		<div className="page services-page">
+		<div className="page schedules-page">
 			<div className="content">
 
 				<div className="card">
 					<div className="header">
-						<i className="fa-solid fa-clipboard-list" />
-						<h1>Serviços</h1>
+						<i className="fa-solid fa-calendar-days" />
+						<h1>Marcações</h1>
 
-						<ViewToggle listPath="/services" calendarPath="/services_calendar" />
+						<ViewToggle listPath="/schedules" calendarPath="/schedules_calendar" />
 					</div>
 
 					<div className="body">
@@ -588,18 +580,19 @@ export default function ServicesList() {
 								value={filters.status}
 								onChange={updateFilter}
 							>
-								<option value="all">Todos</option>
-								<option value="unfinished">Por Terminar</option>
-								<option value="finished">Terminados</option>
-								<option value="delivered">Entregues</option>
+								<option value="all">Todos os Estados</option>
+								<option value="without_service">Sem Serviço</option>
+								<option value="with_service">Com Serviço</option>
+								<option value="finished">Terminado</option>
+								<option value="delivered">Entregue</option>
 							</select>
 
 							<button className="options" onClick={clearFilters}>
 								<i className="fa-solid fa-broom" /> Limpar
 							</button>
 
-							<button className="confirm" onClick={() => navigate("/services/new")}>
-								<i className="fa-solid fa-plus" /> Adicionar Serviço
+							<button className="confirm" onClick={() => navigate("/schedules/new")}>
+								<i className="fa-solid fa-plus" /> Adicionar Marcação
 							</button>
 						</div>
 
@@ -614,7 +607,7 @@ export default function ServicesList() {
 								<i className="fa-solid fa-chevron-left" />
 							</button>
 
-							<span>Página {page} de {totalPages} ({total} serviços)</span>
+							<span>Página {page} de {totalPages} ({total} marcações)</span>
 
 							<button
 								className="options"

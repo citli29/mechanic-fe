@@ -36,11 +36,23 @@
 	}
 
 	input, select, button{
+		height: calc(var(--line-height) + 2 * var(--padding) + 2px);
 		line-height: var(--line-height);
 		padding: var(--padding);
 		background: var(--bg-card);
 		border: 1px solid var(--border);
 		border-radius: 5px;
+	}
+
+	select{
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		padding-right: calc(2 * var(--padding) + 10px);
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath fill='%23475569' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right var(--padding) center;
+		background-size: 10px 6px;
 	}
 
 	button{

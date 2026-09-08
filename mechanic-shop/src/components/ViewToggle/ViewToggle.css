@@ -1,0 +1,34 @@
+.view-toggle{
+	display: flex;
+	gap: 2px;
+	margin-left: auto;
+	padding: 3px;
+	background: var(--bg-page-dark);
+	border-radius: 8px;
+
+	button{
+		display: flex;
+		align-items: center;
+		gap: var(--small-padding);
+		padding: var(--small-padding) var(--padding);
+		border: none;
+		border-radius: 6px;
+		background: transparent;
+		color: var(--txt-light);
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		white-space: nowrap;
+
+		&:hover{ color: var(--txt-dark); }
+
+		&.active{
+			background: var(--bg-card);
+			color: var(--primary);
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+		}
+	}
+}
+
+@media(max-width: 650px){
+	.view-toggle button span{ display: none; }
+}

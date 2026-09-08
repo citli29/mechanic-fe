@@ -9,9 +9,11 @@ import ClientsList from "./Pages/Clients/ClientsList";
 import ProductsList from "./Pages/Products/ProductsList";
 import CarsList from "./Pages/Cars/CarsList";
 import SchedulesCalendar from "./Pages/Schedules/SchedulesCalendar";
+import SchedulesList from "./Pages/Schedules/SchedulesList";
 import SchedulesNew from "./pages/Schedules/SchedulesNew";
 import SchedulesShow from "./pages/Schedules/SchedulesShow";
 import ServicesList from "./Pages/Services/ServicesList";
+import ServicesCalendar from "./Pages/Services/ServicesCalendar";
 import ServicesNew from "./pages/Services/ServicesNew";
 
 import "./style/variables.css";
@@ -43,9 +45,11 @@ function App() {
 					<Route path="/products" element={<ProductsList/>} />
 					<Route path="/cars" element={<CarsList/>} />
 					<Route path="/schedules_calendar" element={<SchedulesCalendar/>} />
+					<Route path="/schedules" element={<SchedulesList/>} />
 					<Route path="/schedules/new" element={<SchedulesNew/>} />
 					<Route path="/schedules/:id" element={<SchedulesShow/>} />
 					<Route path="/services" element={<ServicesList/>} />
+					<Route path="/services_calendar" element={<ServicesCalendar/>} />
 					<Route path="/services/new" element={<ServicesNew/>} />
 					<Route path="/test" element={<TestPage/>} />
 
