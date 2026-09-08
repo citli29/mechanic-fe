@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
+import { getStoredViewTypeId, setStoredViewTypeId } from "../../utils/notificationView";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -25,6 +26,9 @@ export default function NotificationsList() {
 
 	const [notifications, setNotifications] = useState([]);
 	const [onlyUnread, setOnlyUnread] = useState(true);
+
+	const [notificationTypes, setNotificationTypes] = useState([]);
+	const [viewTypeId, setViewTypeId] = useState(getStoredViewTypeId());
 
 	const [page, setPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
@@ -58,13 +62,39 @@ export default function NotificationsList() {
 	}
 
 
+	const generalType = notificationTypes.find((t) => t.name === "Geral");
+	const selectableTypes = notificationTypes.filter((t) => t.name !== "Geral");
+
+	const effectiveViewTypeId = selectableTypes.some((t) => String(t.id) === String(viewTypeId))
+		? viewTypeId
+		: selectableTypes[0]?.id ?? "";
+
+
+	async function loadNotificationTypes() {
+		try {
+			const res = await api.get("/notification_types");
+			setNotificationTypes(res.data.notification_type_list || []);
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
+
+	useEffect(() => { loadNotificationTypes(); }, []);
+
+
 	async function loadNotifications() {
+		if (!effectiveViewTypeId) return;
+
 		setLoading(true);
 
 		try {
 			const params = { p: page, u: PER_PAGE };
 
 			if (onlyUnread) params.is_checked = "false";
+
+			const typeIds = [generalType?.id, effectiveViewTypeId].filter(Boolean);
+			if (typeIds.length) params["n-type-in"] = typeIds.join(",");
 
 			const res = await api.get("/notifications", { params });
 
@@ -79,11 +109,18 @@ export default function NotificationsList() {
 	}
 
 
-	useEffect(() => { loadNotifications(); }, [onlyUnread, page]);
+	useEffect(() => { loadNotifications(); }, [onlyUnread, page, effectiveViewTypeId]);
 
 
 	function selectFilter(unreadOnly) {
 		setOnlyUnread(unreadOnly);
+		setPage(1);
+	}
+
+
+	function selectViewType(id) {
+		setStoredViewTypeId(id);
+		setViewTypeId(id);
 		setPage(1);
 	}
 
@@ -129,6 +166,22 @@ export default function NotificationsList() {
 						)}
 
 						<div className="filters">
+							<label className="notif-view-label" htmlFor="notif-view-type">
+								A ver como
+							</label>
+
+							<select
+								id="notif-view-type"
+								value={effectiveViewTypeId}
+								onChange={(e) => selectViewType(e.target.value)}
+							>
+								{selectableTypes.map((type) => (
+									<option key={type.id} value={type.id}>
+										{type.name}
+									</option>
+								))}
+							</select>
+
 							<button
 								className={onlyUnread ? "confirm" : "options"}
 								onClick={() => selectFilter(true)}

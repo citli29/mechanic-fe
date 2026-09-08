@@ -51,6 +51,19 @@
 	cursor: pointer;
 }
 
+.notifications-page .notif-view-label{
+	flex: 0 0 auto;
+	white-space: nowrap;
+	font-weight: 600;
+	color: var(--txt-light);
+	font-size: var(--font-size-small);
+}
+
+.notifications-page .filters select{
+	flex: 0 0 auto;
+	min-width: 140px;
+}
+
 @media(max-width: 650px){
 	.notifications-page .notif-message{
 		white-space: normal;

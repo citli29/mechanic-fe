@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import api from "../../api/axios";
+import { getStoredViewTypeId, onViewTypeChanged } from "../../utils/notificationView";
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -9,18 +10,49 @@ export default function Navbar() {
 	const location = useLocation();
 
 	const [unreadCount, setUnreadCount] = useState(0);
+	const [notificationTypes, setNotificationTypes] = useState([]);
 
 	useEffect(() => {
+		api.get("/notification_types")
+			.then((res) => setNotificationTypes(res.data.notification_type_list || []))
+			.catch(() => {});
+	}, []);
+
+	useEffect(() => {
+		if (notificationTypes.length === 0) return;
+
 		let isCurrent = true;
 
-		api.get("/notifications", { params: { is_checked: "false", p: 1, u: 1 } })
-			.then((res) => {
-				if (isCurrent) setUnreadCount(res.data.pagination?.total ?? 0);
-			})
-			.catch(() => {});
+		function loadUnreadCount() {
+			const generalId = notificationTypes.find((t) => t.name === "Geral")?.id;
+			const selectableTypes = notificationTypes.filter((t) => t.name !== "Geral");
+			const storedId = getStoredViewTypeId();
 
-		return () => { isCurrent = false; };
-	}, [location.pathname]);
+			const viewTypeId = selectableTypes.some((t) => String(t.id) === String(storedId))
+				? storedId
+				: selectableTypes[0]?.id;
+
+			const typeIds = [generalId, viewTypeId].filter(Boolean);
+
+			const params = { is_checked: "false", p: 1, u: 1 };
+			if (typeIds.length) params["n-type-in"] = typeIds.join(",");
+
+			api.get("/notifications", { params })
+				.then((res) => {
+					if (isCurrent) setUnreadCount(res.data.pagination?.total ?? 0);
+				})
+				.catch(() => {});
+		}
+
+		loadUnreadCount();
+
+		const unsubscribe = onViewTypeChanged(loadUnreadCount);
+
+		return () => {
+			isCurrent = false;
+			unsubscribe();
+		};
+	}, [location.pathname, notificationTypes]);
 
 	const linkClass = ({ isActive }) =>
 		isActive
