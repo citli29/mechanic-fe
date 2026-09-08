@@ -13,6 +13,17 @@ import { UserTimes } from "./UserTimes";
 import { UserTimePunches } from "./UserTimePunches";
 import { ProductsRequested } from "./ProductsRequested";
 
+const NAV_SECTIONS = [
+	{ id: "section-car", label: "Viatura", icon: "fa-car" },
+	{ id: "section-client", label: "Cliente", icon: "fa-user" },
+	{ id: "section-agreed", label: "Serviço Acordado", icon: "fa-pen-fancy" },
+	{ id: "section-done", label: "Serviço Realizado", icon: "fa-wrench" },
+	{ id: "section-requested", label: "Pedido de Produtos", icon: "fa-cart-arrow-down" },
+	{ id: "section-applied", label: "Produtos Aplicados", icon: "fa-store" },
+	{ id: "section-times", label: "Tempos de Serviço", icon: "fa-hourglass-half" },
+	{ id: "section-finished", label: "Finalizado", icon: "fa-flag-checkered" },
+];
+
 export default function ServiceShow2() {
 	const { id } = useParams();
 	const defaultService = {
@@ -43,6 +54,7 @@ export default function ServiceShow2() {
 	const [service, setService] = useState(defaultService);
 	const [isAllowedEditing, setIsAllowedEditing] = useState(false);
 	const skipSave = useRef(true);
+	const [activeSection, setActiveSection] = useState(NAV_SECTIONS[0].id);
 
 	useEffect(() => { loadService(); }, []);
 
@@ -57,6 +69,52 @@ export default function ServiceShow2() {
 			});
 		});
 	},[])
+
+	useEffect(() => {
+		const OFFSET = 96;
+		let ticking = false;
+
+		function updateActiveSection() {
+			let current = NAV_SECTIONS[0].id;
+
+			for (const { id } of NAV_SECTIONS) {
+				const el = document.getElementById(id);
+				if (!el) continue;
+
+				if (el.getBoundingClientRect().top <= OFFSET) {
+					current = id;
+				} else {
+					break;
+				}
+			}
+
+			setActiveSection((prev) => (prev === current ? prev : current));
+		}
+
+		function onScroll() {
+			if (ticking) return;
+			ticking = true;
+
+			requestAnimationFrame(() => {
+				updateActiveSection();
+				ticking = false;
+			});
+		}
+
+		updateActiveSection();
+
+		window.addEventListener("scroll", onScroll, { passive: true });
+		window.addEventListener("resize", onScroll);
+
+		return () => {
+			window.removeEventListener("scroll", onScroll);
+			window.removeEventListener("resize", onScroll);
+		};
+	}, []);
+
+	function scrollToSection(id) {
+		document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+	}
 
 	async function loadService() {
 		try {
@@ -150,44 +208,62 @@ export default function ServiceShow2() {
 
 	return(
 		<div className="service-page">
-			<div className="content">
-				<ServiceHeader
-					service={service}
-					onServiceChange={
-						(field, value) =>
-							setService(prev => ({
-								...prev,
-								[field]: value,
-							}))
-					}
-					lock={!isAllowedEditing}
-					onLockChange={()=>{setIsAllowedEditing(!isAllowedEditing)}}
-				/>
-				<h1 className="print-title">
-					Informação da viatura
-				</h1>
-				<CarPicker
-					car_id={service.car_id}
-					onCarIdChange={(value)=>setService(prev => (
-						prev.car_id === value
-							? prev :
-							{...prev, car_id: value,}
+			<div className="service-layout">
+				<nav className="service-nav">
+					{NAV_SECTIONS.map((section) => (
+						<button
+							key={section.id}
+							type="button"
+							className={activeSection === section.id ? "active" : ""}
+							onClick={() => scrollToSection(section.id)}
+						>
+							<i className={`fa-solid ${section.icon}`} />
+							{section.label}
+						</button>
 					))}
-					isAllowedEditing={isAllowedEditing}
-				/>
-				<h1 className="print-title">
-					Informação do cliente
-				</h1>
-				<ClientPicker
-					client_id={service.client_id}
-					onClientIdChange={(value)=>setService(prev => (
-						prev.client_id === value
-							? prev :
-							{...prev, client_id: value,}
-					))}
-					isAllowedEditing={isAllowedEditing}
-				/>
-				<div className="service-signed-info-card">
+				</nav>
+				<div className="content">
+					<ServiceHeader
+						service={service}
+						onServiceChange={
+							(field, value) =>
+								setService(prev => ({
+									...prev,
+									[field]: value,
+								}))
+						}
+						lock={!isAllowedEditing}
+						onLockChange={()=>{setIsAllowedEditing(!isAllowedEditing)}}
+					/>
+					<div className="service-section" id="section-car">
+						<h1 className="print-title">
+							Informação da viatura
+						</h1>
+						<CarPicker
+							car_id={service.car_id}
+							onCarIdChange={(value)=>setService(prev => (
+								prev.car_id === value
+									? prev :
+									{...prev, car_id: value,}
+							))}
+							isAllowedEditing={isAllowedEditing}
+						/>
+					</div>
+					<div className="service-section" id="section-client">
+						<h1 className="print-title">
+							Informação do cliente
+						</h1>
+						<ClientPicker
+							client_id={service.client_id}
+							onClientIdChange={(value)=>setService(prev => (
+								prev.client_id === value
+									? prev :
+									{...prev, client_id: value,}
+							))}
+							isAllowedEditing={isAllowedEditing}
+						/>
+					</div>
+					<div className="service-signed-info-card" id="section-agreed">
 					<div className="header">
 						<i className="fa-solid fa-pen-fancy"/> 
 						<h1>Serviço Acordado</h1>
@@ -215,37 +291,13 @@ export default function ServiceShow2() {
 								}))}
 								disabled={!isAllowedEditing}/>
 						</div>
-						<div className="text-entry">
-							<label htmlFor="r_name">Nome do Responsável</label>
-							<input
-								type="text"
-								id="r_name"
-								value={service.r_name??""}
-								onChange={(e)=>setService(prev => ({
-									...prev,
-									r_name:e.target.value
-								}))}
-								disabled={!isAllowedEditing}/>
-						</div>
-						<div className="text-entry">
-							<label htmlFor="r_phone">Telemóvel do Responsável</label>
-							<input
-								type="text"
-								id="r_phone"
-								value={service.r_phone??""}
-								onChange={(e)=>setService(prev => ({
-									...prev,
-									r_phone:e.target.value
-								}))}
-								disabled={!isAllowedEditing}/>
-						</div>
 					</div>
 					<div className="text-entry" id="signing">
 						<p>Eu, <span>{service?.r_name??"".trim()?service?.r_name:"______________________________"}</span> , tomei conhecimento e autorizo a realização do serviço acima indicado e contacto através do nrº <span>{service?.r_phone??"".trim()?service?.r_phone:"______________________________"}</span>.</p>
 						<p>Assinatura: ________________________________</p>
 					</div>
 				</div>
-				<div className="service-done-info-card">
+				<div className="service-done-info-card" id="section-done">
 					<div className="header">
 						<i className="fa-solid fa-wrench"></i>
 						<h1>Serviço Realizado</h1>
@@ -304,7 +356,7 @@ export default function ServiceShow2() {
 						</div>
 					</div>
 				</div>
-				<div className="service-products-requested-card">
+				<div className="service-products-requested-card" id="section-requested">
 					<div className="header">
 						<i className="fa-solid fa-cart-arrow-down"/>
 						<h1>Pedido de Produtos</h1>
@@ -313,7 +365,7 @@ export default function ServiceShow2() {
 						<ProductsRequested id={id} onProductForwarded={()=>setApReload(true)}/>
 					</div>
 				</div>
-				<div className="service-applied-products-card">
+				<div className="service-applied-products-card" id="section-applied">
 					<div className="header">
 						<i className="fa-solid fa-store"></i>
 						<h1>Produtos Aplicados</h1>
@@ -322,7 +374,7 @@ export default function ServiceShow2() {
 						<AppliedProducts id={id} apReload={apReload} onApReloaded={()=>setApReload(false)}/>
 					</div>
 				</div>
-				<div className="service-user-times-card">
+				<div className="service-user-times-card" id="section-times">
 					<div className="header">
 						<i className="fa-solid fa-hourglass-half"></i>
 						<h1>Tempos de Serviço</h1>
@@ -348,7 +400,7 @@ export default function ServiceShow2() {
 						<UserTimePunches id={id} copy_uts={setUtps}/>
 					</div>
 				</div>
-				<div className="service-is-finished-card">
+				<div className="service-is-finished-card" id="section-finished">
 					<label htmlFor="is-finished">
 						<div className="header">
 							<i className="fa-solid fa-flag-checkered"></i>
@@ -359,8 +411,9 @@ export default function ServiceShow2() {
 								checked={service.is_finished}
 								onChange={(e) => {handleClickCheckIsFinished(e.target.checked); }}
 							/>
-						</div>	
+						</div>
 					</label>
+				</div>
 				</div>
 			</div>
 		</div>

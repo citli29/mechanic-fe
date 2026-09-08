@@ -1,6 +1,6 @@
-/* Shared by SchedulesNew and SchedulesShow: the labeled-field grid and
-   the CarPicker/ClientPicker/MakePicker/ModelPicker integration fixes.
-   Both pages tag their outer .page with "schedule-form-page" so these
+/* Shared by SchedulesNew, SchedulesShow and ServicesNew: the labeled-field
+   grid and the CarPicker/ClientPicker/MakePicker/ModelPicker integration
+   fixes. Each page tags its outer .page with "schedule-form-page" so these
    rules apply without duplicating them per page. */
 
 /* Card.css clips overflow to round the card's corners, but that also

@@ -15,7 +15,7 @@ import SchedulesNew from "./Pages/Schedules/SchedulesNew";
 import SchedulesShow from "./Pages/Schedules/SchedulesShow";
 import ServicesList from "./Pages/Services/ServicesList";
 import ServicesCalendar from "./Pages/Services/ServicesCalendar";
-import ServicesNew from "./pages/Services/ServicesNew";
+import ServicesNew from "./Pages/Services/ServicesNew";
 
 import "./style/variables.css";
 import { useEffect } from "react";
