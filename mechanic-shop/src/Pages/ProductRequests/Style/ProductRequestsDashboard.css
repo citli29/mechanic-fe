@@ -1,0 +1,146 @@
+.product-requests-page .pr-tabs{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+
+		padding: var(--padding) calc(1.5 * var(--padding));
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--bg-page);
+		color: var(--txt-light);
+
+		font-weight: 700;
+		font-size: var(--font-size-small);
+		cursor: pointer;
+
+		&:hover{ background: var(--bg-page-dark); }
+
+		&.active{
+			background: var(--primary);
+			border-color: var(--primary);
+			color: #fff;
+
+			.pr-tab-count{ background: rgba(255, 255, 255, 0.25); color: #fff; }
+		}
+	}
+}
+
+.product-requests-page .pr-tab-count{
+	padding: 2px 7px;
+	border-radius: 999px;
+	background: var(--bg-page-dark);
+	color: var(--txt-dark);
+	font-size: 11px;
+}
+
+.product-requests-page .pr-empty{
+	padding: var(--big-padding);
+	text-align: center;
+	color: var(--txt-muted);
+}
+
+/* =====================
+   Product Groups
+===================== */
+
+.product-requests-page .pr-groups{
+	display: flex;
+	flex-direction: column;
+	gap: var(--big-padding);
+}
+
+.product-requests-page .pr-group{
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.product-requests-page .pr-group.pr-group-ready{
+	border-color: var(--state-finished-dark);
+}
+
+.product-requests-page .pr-group-header{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--padding);
+
+	padding: var(--small-padding) var(--padding);
+
+	background: var(--bg-page);
+	border-bottom: 1px solid var(--border);
+
+	font-size: var(--font-size-small);
+	font-weight: 800;
+	color: var(--txt-dark);
+
+	button{
+		aspect-ratio: 1;
+		height: calc(var(--line-height) - 2 * var(--small-padding));
+		border-radius: 5px;
+	}
+}
+
+.product-requests-page .pr-group-ready .pr-group-header{
+	background: var(--state-finished-muted);
+	border-bottom-color: var(--state-finished-dark);
+	color: #fff;
+}
+
+.product-requests-page .pr-ready-icon{
+	margin-right: var(--small-padding);
+	color: var(--state-finished-dark);
+}
+
+.product-requests-page .pr-group-ready .pr-ready-icon{
+	color: #fff;
+}
+
+.product-requests-page .pr-group-ready .pr-group-header button.options{
+	background: var(--state-finished-dark);
+	border-color: var(--state-finished-dark);
+	color: #fff;
+}
+
+.product-requests-page .pr-group-ready .pr-group-header button.options:hover{
+	background: var(--success-hover);
+}
+
+.product-requests-page .pr-group table{
+	border: none;
+	border-radius: 0;
+}
+
+.product-requests-page table tr{
+	/* Each <tr> is its own grid (Card.css), so columns must be fixed
+	   explicitly per table — matches the ratio used by the equivalent
+	   per-service table on ServiceShow (Pages/Style/ServiceShow.css).
+	   Nome, Referência, Tipo, Qt., Pedido, Recebido. */
+	grid-template-columns: repeat(3, 3fr) repeat(3, 2fr);
+}
+
+.product-requests-page table.pr-no-received tr{
+	/* "Por Encomendar" tab has no Recebido column. */
+	grid-template-columns: repeat(3, 3fr) repeat(2, 2fr);
+}
+
+.product-requests-page .pr-checkbox-cell input{
+	width: unset;
+	aspect-ratio: 1;
+}
+
+.product-requests-page .pr-qty-cell input{
+	text-align: center;
+}
+
+@media(max-width: 650px){
+	.product-requests-page .pr-tabs button{
+		flex: 1 1 auto;
+		justify-content: center;
+	}
+}

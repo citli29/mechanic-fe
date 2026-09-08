@@ -16,6 +16,8 @@ import SchedulesShow from "./Pages/Schedules/SchedulesShow";
 import ServicesList from "./Pages/Services/ServicesList";
 import ServicesCalendar from "./Pages/Services/ServicesCalendar";
 import ServicesNew from "./Pages/Services/ServicesNew";
+import ProductRequestsDashboard from "./Pages/ProductRequests/ProductRequestsDashboard";
+import NotificationsList from "./Pages/Notifications/NotificationsList";
 
 import "./style/variables.css";
 import { useEffect } from "react";
@@ -39,7 +41,7 @@ function App() {
 				<Route element={<Layout />}>
 
 					<Route path="/" element={<Home/>} />
-					<Route path="/s/:id" element={<ServiceShow2/>} />
+					<Route path="/service/:id" element={<ServiceShow2/>} />
 					<Route path="/makes" element={<MakesList/>} />
 					<Route path="/product_types" element={<ProductTypesList/>} />
 					<Route path="/models" element={<ModelsList/>} />
@@ -53,6 +55,8 @@ function App() {
 					<Route path="/services" element={<ServicesList/>} />
 					<Route path="/services_calendar" element={<ServicesCalendar/>} />
 					<Route path="/services/new" element={<ServicesNew/>} />
+					<Route path="/products_requested" element={<ProductRequestsDashboard/>} />
+					<Route path="/notifications" element={<NotificationsList/>} />
 					<Route path="/test" element={<TestPage/>} />
 
 				</Route>

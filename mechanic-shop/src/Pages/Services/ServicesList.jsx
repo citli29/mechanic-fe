@@ -332,7 +332,7 @@ export default function ServicesList() {
 								<tr
 									key={service.id}
 									className={status.rowClass}
-									onClick={() => navigate(`/s/${service.id}`)}
+									onClick={() => navigate(`/service/${service.id}`)}
 								>
 									<td data-label="Entrada">{service.checkin || "-"}</td>
 									<td data-label="Saída">{service.checkout || "-"}</td>
@@ -422,7 +422,7 @@ export default function ServicesList() {
 								{service.service_type_name || "Sem Tipo"}
 							</div>
 
-							<div className="service-card-summary" onClick={() => navigate(`/s/${service.id}`)}>
+							<div className="service-card-summary" onClick={() => navigate(`/service/${service.id}`)}>
 								<div className="service-card-field f-matricula">
 									<span className="field-label">Matrícula</span>
 									<span>{service.car_plate || "-"}</span>
@@ -465,7 +465,7 @@ export default function ServicesList() {
 							</div>
 
 							{isExpanded && (
-								<div className="service-card-details" onClick={() => navigate(`/s/${service.id}`)}>
+								<div className="service-card-details" onClick={() => navigate(`/service/${service.id}`)}>
 									<div className="service-card-field">
 										<span className="field-label">Telemóvel</span>
 										<span>{service.client_phone || "-"}</span>

@@ -188,7 +188,7 @@ export default function ServicesCalendar() {
 			<div
 				key={service.id}
 				className={`appointment ${getServiceStatusClass(service)}`}
-				onClick={() => navigate(`/s/${service.id}`)}
+				onClick={() => navigate(`/service/${service.id}`)}
 			>
 				<div className="appointment-plate">
 					{service.car_plate

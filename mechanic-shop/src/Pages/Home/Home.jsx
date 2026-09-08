@@ -123,7 +123,7 @@ export default function Home() {
 						<div className="product-group-header">
 							<span>{group.context}</span>
 
-							<button className="options" onClick={() => navigate(`/s/${group.service_id}`)}>
+							<button className="options" onClick={() => navigate(`/service/${group.service_id}`)}>
 								<i className="fa-solid fa-arrow-up-right-from-square" />
 							</button>
 						</div>
@@ -241,7 +241,7 @@ export default function Home() {
 													title="Abrir Serviço"
 													onClick={(e) => {
 														e.stopPropagation();
-														navigate(`/s/${schedule.service_id}`);
+														navigate(`/service/${schedule.service_id}`);
 													}}
 												>
 													<i className="fa-solid fa-arrow-up-right-from-square" />

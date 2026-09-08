@@ -1,0 +1,58 @@
+.notifications-page table tr{
+	/* Each <tr> is its own grid (Card.css), so columns must be fixed
+	   explicitly per table. Estado, Tipo, Título, Mensagem, Data. */
+	grid-template-columns: 100px 110px 1.5fr 2.5fr 140px;
+
+	cursor: pointer;
+}
+
+.notifications-page table td{
+	text-align: left;
+	justify-content: flex-start;
+}
+
+.notifications-page table th{
+	text-align: left;
+	justify-content: flex-start;
+}
+
+.notifications-page table td:first-child,
+.notifications-page table th:first-child{
+	text-align: center;
+	justify-content: center;
+}
+
+.notifications-page .notif-message{
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.notifications-page tr.notif-unread{
+	background: var(--primary-soft);
+	font-weight: 700;
+}
+
+.notifications-page tr.notif-unread:hover{
+	background: var(--bg-page-dark);
+}
+
+.notifications-page tr.notif-read{
+	color: var(--txt-light);
+}
+
+.notifications-page tr.notif-read:hover{
+	background: var(--bg-page-dark);
+}
+
+.notifications-page td[data-label="Estado"] input[type="checkbox"]{
+	width: 18px;
+	height: 18px;
+	cursor: pointer;
+}
+
+@media(max-width: 650px){
+	.notifications-page .notif-message{
+		white-space: normal;
+	}
+}

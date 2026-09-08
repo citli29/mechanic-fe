@@ -245,7 +245,7 @@ export default function SchedulesShow() {
 
 			if (!newServiceId) throw new Error("The API did not return the new service ID.");
 
-			navigate(`/s/${newServiceId}`);
+			navigate(`/service/${newServiceId}`);
 		} catch (err) {
 			handleApiError(err);
 		} finally {
@@ -493,7 +493,7 @@ export default function SchedulesShow() {
 											<td data-label="Entrada">{service.checkin || "-"}</td>
 
 											<td className="actions">
-												<button className="options" onClick={() => navigate(`/s/${service.id}`)}>
+												<button className="options" onClick={() => navigate(`/service/${service.id}`)}>
 													<i className="fa-solid fa-arrow-up-right-from-square" />
 												</button>
 											</td>

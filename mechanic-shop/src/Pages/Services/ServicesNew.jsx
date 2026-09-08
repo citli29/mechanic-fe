@@ -141,7 +141,7 @@ export default function ServicesNew() {
 
 			const res = await api.post("/services", data);
 
-			navigate(`/s/${res.data.service.id}`);
+			navigate(`/service/${res.data.service.id}`);
 		} catch (err) {
 			handleApiError(err);
 		} finally {

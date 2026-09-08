@@ -195,7 +195,7 @@ export default function SchedulesCalendar() {
 							title="Abrir Serviço"
 							onClick={(e) => {
 								e.stopPropagation();
-								navigate(`/s/${schedule.service_id}`);
+								navigate(`/service/${schedule.service_id}`);
 							}}
 						>
 							<i className="fa-solid fa-arrow-up-right-from-square" />

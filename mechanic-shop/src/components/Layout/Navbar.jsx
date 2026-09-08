@@ -1,11 +1,26 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import api from "../../api/axios";
 import "./Navbar.css";
 
 export default function Navbar() {
 
 	const dropdownRef = useRef(null);
 	const location = useLocation();
+
+	const [unreadCount, setUnreadCount] = useState(0);
+
+	useEffect(() => {
+		let isCurrent = true;
+
+		api.get("/notifications", { params: { is_checked: "false", p: 1, u: 1 } })
+			.then((res) => {
+				if (isCurrent) setUnreadCount(res.data.pagination?.total ?? 0);
+			})
+			.catch(() => {});
+
+		return () => { isCurrent = false; };
+	}, [location.pathname]);
 
 	const linkClass = ({ isActive }) =>
 		isActive
@@ -102,6 +117,25 @@ export default function Navbar() {
 							onClick={closeDropdown}
 						>
 							Serviços
+						</NavLink>
+
+						<NavLink
+							to="/products_requested"
+							className={linkClass}
+							onClick={closeDropdown}
+						>
+							Encomendas
+						</NavLink>
+
+						<NavLink
+							to="/notifications"
+							className={linkClass}
+							onClick={closeDropdown}
+						>
+							Notificações
+							{unreadCount > 0 && (
+								<span className="navbar-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+							)}
 						</NavLink>
 
 					</div>
