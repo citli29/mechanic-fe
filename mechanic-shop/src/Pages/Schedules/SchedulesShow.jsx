@@ -16,6 +16,8 @@ const emptyServiceForm = {
 	kms: "",
 	checkin: "",
 	service_type_id: "",
+	r_name: "",
+	r_phone: "",
 };
 
 export default function SchedulesShow() {
@@ -213,6 +215,8 @@ export default function SchedulesShow() {
 			kms: "",
 			checkin: editing.date || schedule?.date || "",
 			service_type_id: "",
+			r_name: "",
+			r_phone: "",
 		});
 
 		setCreatingService(true);
@@ -237,6 +241,8 @@ export default function SchedulesShow() {
 				checkin: serviceForm.checkin || null,
 				schedule_id: Number(id),
 				service_type_id: serviceForm.service_type_id || null,
+				r_name: serviceForm.r_name || null,
+				r_phone: serviceForm.r_phone || null,
 			};
 
 			const res = await api.post(`/schedules/${id}/create_service`, data);
@@ -437,6 +443,32 @@ export default function SchedulesShow() {
 											</option>
 										))}
 									</select>
+								</div>
+
+								<div className="field">
+									<label>Nome do Responsável</label>
+
+									<input
+										type="text"
+										placeholder="S/ Nome"
+										value={serviceForm.r_name ?? ""}
+										onChange={(e) =>
+											setServiceForm((prev) => ({ ...prev, r_name: e.target.value }))
+										}
+									/>
+								</div>
+
+								<div className="field">
+									<label>Telemóvel do Responsável</label>
+
+									<input
+										type="text"
+										placeholder="S/ Telemóvel"
+										value={serviceForm.r_phone ?? ""}
+										onChange={(e) =>
+											setServiceForm((prev) => ({ ...prev, r_phone: e.target.value }))
+										}
+									/>
 								</div>
 							</div>
 

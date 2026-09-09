@@ -1,5 +1,6 @@
 const STORAGE_KEY = "notification_view_type_id";
 const CHANGE_EVENT = "notification-view-changed";
+const UPDATED_EVENT = "notifications-updated";
 
 export function getStoredViewTypeId() {
 	try {
@@ -24,4 +25,16 @@ export function onViewTypeChanged(handler) {
 	return () => window.removeEventListener(CHANGE_EVENT, handler);
 }
 
-export { CHANGE_EVENT };
+// Call after any action that reads/creates/changes notifications (marking
+// one dealt with, finishing a service, ...) so the navbar badge - and any
+// other mounted notifications list - can refresh without needing a navigation.
+export function notifyNotificationsUpdated() {
+	window.dispatchEvent(new Event(UPDATED_EVENT));
+}
+
+export function onNotificationsUpdated(handler) {
+	window.addEventListener(UPDATED_EVENT, handler);
+	return () => window.removeEventListener(UPDATED_EVENT, handler);
+}
+
+export { CHANGE_EVENT, UPDATED_EVENT };

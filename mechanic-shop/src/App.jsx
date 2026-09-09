@@ -14,6 +14,7 @@ import SchedulesList from "./Pages/Schedules/SchedulesList";
 import SchedulesNew from "./Pages/Schedules/SchedulesNew";
 import SchedulesShow from "./Pages/Schedules/SchedulesShow";
 import ServicesList from "./Pages/Services/ServicesList";
+import ServicesManageList from "./Pages/Services/ServicesManageList";
 import ServicesCalendar from "./Pages/Services/ServicesCalendar";
 import ServicesNew from "./Pages/Services/ServicesNew";
 import ProductRequestsDashboard from "./Pages/ProductRequests/ProductRequestsDashboard";
@@ -56,6 +57,7 @@ function App() {
 					<Route path="/schedules/new" element={<SchedulesNew/>} />
 					<Route path="/schedules/:id" element={<SchedulesShow/>} />
 					<Route path="/services" element={<ServicesList/>} />
+					<Route path="/services_manage" element={<ServicesManageList/>} />
 					<Route path="/services_calendar" element={<ServicesCalendar/>} />
 					<Route path="/services/new" element={<ServicesNew/>} />
 					<Route path="/products_requested" element={<ProductRequestsDashboard/>} />

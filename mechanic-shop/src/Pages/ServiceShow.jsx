@@ -246,7 +246,9 @@ export default function ServiceShow2() {
 	}*/
 	const handleClickCheckIsFinished =async (checked) => {
 		const s = await putService({...service,is_finished: checked});
-		if(s) setService(s);
+		if(s){
+			setService(s);
+		}
 	}
 	const [apReload, setApReload] = useState(false);
 	const [aps, setAps] = useState([]);

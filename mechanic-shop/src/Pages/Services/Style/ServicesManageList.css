@@ -1,0 +1,43 @@
+.services-manage-page table tr{
+	grid-template-columns: 1fr 1fr 1fr 1fr 1fr calc(3 * 42.59px);
+}
+
+.services-manage-page table td.actions button{
+	width: 42.59px;
+	height: 42.59px;
+	aspect-ratio: 1;
+}
+
+.services-manage-page table td select:disabled{
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+
+	opacity: 1;
+	color: var(--txt-light);
+	-webkit-text-fill-color: var(--txt-light);
+}
+
+@media(min-width: 651px){
+	.services-manage-page table td,
+	.services-manage-page table th{
+		text-align: center;
+		justify-content: center;
+	}
+
+	.services-manage-page table td select{
+		text-align: center;
+		text-align-last: center;
+	}
+}
+
+@media(max-width: 650px){
+	.services-manage-page table td select{
+		width: auto;
+		flex: 0 1 auto;
+		min-width: 0;
+
+		text-align: right;
+		text-align-last: right;
+	}
+}

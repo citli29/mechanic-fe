@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
-import { getStoredViewTypeId, setStoredViewTypeId } from "../../utils/notificationView";
+import { getStoredViewTypeId, notifyNotificationsUpdated, setStoredViewTypeId } from "../../utils/notificationView";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -149,6 +149,7 @@ export default function NotificationsList() {
 			const action = notification.is_checked ? "uncheck" : "check";
 			await api.put(`/notifications/${notification.id}/${action}`);
 			loadNotifications();
+			notifyNotificationsUpdated();
 		} catch (err) {
 			handleApiError(err);
 		}

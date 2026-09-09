@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import api from "../../api/axios";
-import { getStoredViewTypeId, onViewTypeChanged } from "../../utils/notificationView";
+import { getStoredViewTypeId, onNotificationsUpdated, onViewTypeChanged } from "../../utils/notificationView";
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -46,11 +46,18 @@ export default function Navbar() {
 
 		loadUnreadCount();
 
-		const unsubscribe = onViewTypeChanged(loadUnreadCount);
+		// Same-tab actions refresh instantly via the events below; this poll
+		// is what picks up changes made by other users/devices/tabs.
+		const pollId = setInterval(loadUnreadCount, 5000);
+
+		const unsubscribeView = onViewTypeChanged(loadUnreadCount);
+		const unsubscribeUpdated = onNotificationsUpdated(loadUnreadCount);
 
 		return () => {
 			isCurrent = false;
-			unsubscribe();
+			clearInterval(pollId);
+			unsubscribeView();
+			unsubscribeUpdated();
 		};
 	}, [location.pathname, notificationTypes]);
 
@@ -202,6 +209,16 @@ export default function Navbar() {
 						</summary>
 
 						<div className="navbar-dropdown-menu">
+
+							<NavLink
+								to="/services_manage"
+								className={linkClass}
+								onClick={closeDropdown}
+							>
+								Gestão de Serviços
+							</NavLink>
+
+							<div className="navbar-dropdown-divider" />
 
 							<NavLink
 								to="/clients"
