@@ -1,5 +1,22 @@
 .services-manage-page table tr{
-	grid-template-columns: 1fr 1fr 1fr 1fr 1fr calc(3 * 42.59px);
+	grid-template-columns: 70px 1fr 1fr 1fr 1fr 1fr calc(3 * 42.59px);
+}
+
+.services-manage-page table th.sortable{
+	cursor: pointer;
+	gap: var(--small-padding);
+	user-select: none;
+
+	i{
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+	}
+
+	&:hover{
+		background: var(--bg-page-dark);
+
+		i{ color: var(--txt-light); }
+	}
 }
 
 .services-manage-page table td.actions button{

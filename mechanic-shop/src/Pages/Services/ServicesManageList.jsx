@@ -23,6 +23,9 @@ export default function ServicesManageList() {
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
+	const [sortColumn, setSortColumn] = useState(null);
+	const [sortDirection, setSortDirection] = useState("asc");
+
 	const [loading, setLoading] = useState(true);
 
 	const [editing, setEditing] = useState(null);
@@ -75,6 +78,11 @@ export default function ServicesManageList() {
 
 			if (search) params.q = search;
 
+			if (sortColumn) {
+				params.sort = sortColumn;
+				params.dir = sortDirection;
+			}
+
 			const res = await api.get("/services", { params });
 
 			if (requestId !== requestIdRef.current) return;
@@ -98,6 +106,14 @@ export default function ServicesManageList() {
 	useEffect(() => { loadServices(); }, [page]);
 
 	useEffect(() => {
+		if (page !== 1) {
+			setPage(1);
+		} else {
+			loadServices();
+		}
+	}, [sortColumn, sortDirection]);
+
+	useEffect(() => {
 		const timer = setTimeout(() => {
 			if (page !== 1) {
 				setPage(1);
@@ -108,6 +124,30 @@ export default function ServicesManageList() {
 
 		return () => clearTimeout(timer);
 	}, [search]);
+
+
+	function handleSort(column) {
+		if (sortColumn === column) {
+			setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+		} else {
+			setSortColumn(column);
+			setSortDirection("asc");
+		}
+	}
+
+
+	function renderSortableHeader(column, label) {
+		const isActive = sortColumn === column;
+
+		return (
+			<th className="sortable" onClick={() => handleSort(column)}>
+				{label}
+				<i
+					className={`fa-solid ${isActive && sortDirection === "desc" ? "fa-sort-down" : isActive ? "fa-sort-up" : "fa-sort"}`}
+				/>
+			</th>
+		);
+	}
 
 
 	async function getFreeSchedules() {
@@ -228,9 +268,10 @@ export default function ServicesManageList() {
 						<table>
 							<thead>
 								<tr>
-									<th>Tipo de Serviço</th>
-									<th>Marcação</th>
-									<th>Matrícula</th>
+									{renderSortableHeader("id", "ID")}
+									{renderSortableHeader("service_type_name", "Tipo de Serviço")}
+									{renderSortableHeader("schedule_id", "Marcação")}
+									{renderSortableHeader("car_plate", "Matrícula")}
 									<th>Cliente</th>
 									<th>Telemóvel</th>
 									<th></th>
@@ -260,6 +301,7 @@ export default function ServicesManageList() {
 
 										return (
 											<tr key={service.id} className={isEditingRow ? "editing" : ""}>
+												<td data-label="ID">#{service.id}</td>
 												<td data-label="Tipo de Serviço">
 													<select
 														disabled={rowDisabled}
