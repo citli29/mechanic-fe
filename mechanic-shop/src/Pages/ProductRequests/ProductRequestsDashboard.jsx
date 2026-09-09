@@ -4,6 +4,7 @@ import api from "../../api/axios";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
+import "../../components/Pickers/style/Picker.css";
 import "./Style/ProductRequestsDashboard.css";
 
 const PER_PAGE = 20;
@@ -74,6 +75,15 @@ export default function ProductRequestsDashboard() {
 		type: "",
 		text: "",
 	});
+
+	const [productTypes, setProductTypes] = useState([]);
+
+	const [pickerItemId, setPickerItemId] = useState(null);
+	const [pickerSearch, setPickerSearch] = useState("");
+	const [pickerResults, setPickerResults] = useState([]);
+	const [pickerAddingNew, setPickerAddingNew] = useState(false);
+	const [pickerNewProduct, setPickerNewProduct] = useState({ name: "", reference: "", product_type_id: "" });
+	const [pickerLoading, setPickerLoading] = useState(false);
 
 
 	function showMessage(type, text) {
@@ -146,7 +156,19 @@ export default function ProductRequestsDashboard() {
 	}
 
 
+	async function loadProductTypes() {
+		try {
+			const res = await api.get("/product_types");
+			setProductTypes(res.data.product_type_list || []);
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
+
 	useEffect(() => { loadCounts(); }, []);
+
+	useEffect(() => { loadProductTypes(); }, []);
 
 	useEffect(() => { loadItems(); }, [activeTab, page]);
 
@@ -211,6 +233,100 @@ export default function ProductRequestsDashboard() {
 	}
 
 
+	function capitalize(str) {
+		str = str.trim();
+		return str.charAt(0).toUpperCase() + str.slice(1);
+	}
+
+
+	function startAddingNewProduct() {
+		setPickerNewProduct((prev) => ({ ...prev, name: capitalize(pickerSearch) }));
+		setPickerAddingNew(true);
+	}
+
+
+	function openPicker(item) {
+		setPickerItemId(item.id);
+		setPickerSearch("");
+		setPickerResults([]);
+		setPickerAddingNew(false);
+		setPickerNewProduct({ name: "", reference: "", product_type_id: "" });
+	}
+
+
+	function closePicker() {
+		setPickerItemId(null);
+		setPickerSearch("");
+		setPickerResults([]);
+		setPickerAddingNew(false);
+	}
+
+
+	useEffect(() => {
+		if (pickerItemId === null) return;
+
+		let isCurrent = true;
+
+		const timer = setTimeout(async () => {
+			try {
+				const res = await api.get("productsOr", { params: { q: pickerSearch } });
+				if (isCurrent) setPickerResults(res.data.product_list || []);
+			} catch (err) {
+				console.error(err);
+			}
+		}, 300);
+
+		return () => {
+			isCurrent = false;
+			clearTimeout(timer);
+		};
+	}, [pickerSearch, pickerItemId]);
+
+
+	async function applyProductAndDeliver(item, product) {
+		setPickerLoading(true);
+
+		try {
+			const updated = await updateItem({ ...item, product_id: product.id, is_delivered: 1 });
+
+			if (updated) {
+				closePicker();
+				refreshAfterMutation();
+			}
+		} finally {
+			setPickerLoading(false);
+		}
+	}
+
+
+	async function handlePickExistingProduct(item, product) {
+		await applyProductAndDeliver(item, product);
+	}
+
+
+	async function handleCreateAndApplyProduct(item) {
+		if (!pickerNewProduct.name.trim()) return;
+
+		setPickerLoading(true);
+
+		try {
+			const response = await api.post("products", {
+				name: pickerNewProduct.name,
+				reference: pickerNewProduct.reference,
+				product_type_id: pickerNewProduct.product_type_id,
+			});
+
+			const product = response.data.product;
+
+			if (product) await applyProductAndDeliver(item, product);
+		} catch (err) {
+			handleApiError(err);
+		} finally {
+			setPickerLoading(false);
+		}
+	}
+
+
 	function renderGroups() {
 		const showReceived = activeTab !== "to_order";
 
@@ -251,7 +367,7 @@ export default function ProductRequestsDashboard() {
 
 							<tbody>
 								{group.items.map((item) => (
-									<tr key={item.id}>
+									<tr key={item.id} className={pickerItemId === item.id ? "pr-row-selected" : ""}>
 										<td data-label="Nome">{item.product_name || "-"}</td>
 										<td data-label="Referência">{item.product_reference || "-"}</td>
 										<td data-label="Tipo">{item.product_type_name || "-"}</td>
@@ -273,7 +389,7 @@ export default function ProductRequestsDashboard() {
 											</label>
 										</td>
 										{showReceived && (
-											<td data-label="Recebido" className="pr-checkbox-cell">
+											<td data-label="Recebido" className="pr-checkbox-cell pr-received-cell">
 												<label>
 													<input
 														type="checkbox"
@@ -281,6 +397,14 @@ export default function ProductRequestsDashboard() {
 														onChange={(e) => handleToggle(item, "is_delivered", e.target.checked)}
 													/>
 												</label>
+												{activeTab === "awaiting_delivery" && (
+													<button
+														className="pr-btn-specify options"
+														onClick={() => (pickerItemId === item.id ? closePicker() : openPicker(item))}
+													>
+														<i className="fa-solid fa-boxes-packing" />
+													</button>
+												)}
 											</td>
 										)}
 									</tr>
@@ -289,6 +413,115 @@ export default function ProductRequestsDashboard() {
 						</table>
 					</div>
 				))}
+			</div>
+		);
+	}
+
+
+	function renderPickerModal() {
+		if (pickerItemId === null) return null;
+
+		const item = items.find((i) => i.id === pickerItemId);
+
+		if (!item) return null;
+
+		return (
+			<div className="pr-picker-backdrop" onClick={closePicker}>
+				<div className="pr-picker-modal" onClick={(e) => e.stopPropagation()}>
+					<div className="pr-picker-modal-header">
+						<div>
+							<h2>Especificar Produto Entregue</h2>
+							<p>{item.product_name} · Qt. {item.quantity}</p>
+						</div>
+
+						<button className="cancel" onClick={closePicker}>
+							<i className="fa-solid fa-x" />
+						</button>
+					</div>
+
+					<div className="search-bar search-products">
+						<span><i className="fa-solid fa-magnifying-glass" /></span>
+						<input
+							type="text"
+							autoFocus
+							placeholder="Pesquisar Produto..."
+							value={pickerSearch}
+							onChange={(e) => setPickerSearch(e.target.value)}
+						/>
+					</div>
+
+					{!pickerAddingNew && (
+						<ul className="dropdown pr-picker-dropdown">
+							<li>
+								<button className="addEntry" onClick={startAddingNewProduct}>
+									<span><i className="fa-solid fa-plus" />Adicionar Produto</span>
+									<span>{pickerSearch}</span>
+								</button>
+							</li>
+							{pickerResults.map((p) => (
+								<li key={p.id}>
+									<button disabled={pickerLoading} onClick={() => handlePickExistingProduct(item, p)}>
+										<span>{p.name}</span>
+										<span>{p.reference}</span>
+										<span>{p.product_type_name}</span>
+									</button>
+								</li>
+							))}
+						</ul>
+					)}
+
+					{pickerAddingNew && (
+						<div className="pr-add-product">
+							<div className="item-field">
+								<label>Nome:</label>
+								<input
+									type="text"
+									placeholder="S/Nome"
+									value={pickerNewProduct.name}
+									onChange={(e) => setPickerNewProduct((prev) => ({ ...prev, name: e.target.value }))}
+								/>
+							</div>
+
+							<div className="item-field">
+								<label>Referência:</label>
+								<input
+									className="uppercase"
+									type="text"
+									placeholder="S/Referencia"
+									value={pickerNewProduct.reference}
+									onChange={(e) => setPickerNewProduct((prev) => ({ ...prev, reference: e.target.value }))}
+								/>
+							</div>
+
+							<div className="item-field">
+								<label>Tipo de Produto:</label>
+								<select
+									value={pickerNewProduct.product_type_id}
+									onChange={(e) => setPickerNewProduct((prev) => ({ ...prev, product_type_id: e.target.value }))}
+								>
+									<option value="" disabled>Selecione um tipo</option>
+									{productTypes.map((pt) => (
+										<option key={pt.id} value={pt.id}>{pt.name}</option>
+									))}
+								</select>
+							</div>
+
+							<div className="pr-add-product-actions">
+								<button
+									className="confirm"
+									disabled={pickerLoading}
+									onClick={() => handleCreateAndApplyProduct(item)}
+								>
+									<i className="fa-solid fa-check" /> Criar e Marcar Entregue
+								</button>
+
+								<button className="cancel" onClick={() => setPickerAddingNew(false)}>
+									<i className="fa-solid fa-x" />
+								</button>
+							</div>
+						</div>
+					)}
+				</div>
 			</div>
 		);
 	}
@@ -360,6 +593,8 @@ export default function ProductRequestsDashboard() {
 				</div>
 
 			</div>
+
+			{renderPickerModal()}
 		</div>
 	);
 }
