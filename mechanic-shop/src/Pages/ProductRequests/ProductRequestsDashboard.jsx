@@ -340,8 +340,15 @@ export default function ProductRequestsDashboard() {
 
 		return (
 			<div className="pr-groups">
-				{groupByService(items).map((group) => (
-					<div key={group.service_id} className={`pr-group ${group.ready ? "pr-group-ready" : ""}`}>
+				{groupByService(items).map((group) => {
+					const groupStatusClass = group.ready
+						? "pr-group-ready"
+						: activeTab === "delivered"
+							? "pr-group-partial"
+							: "";
+
+					return (
+					<div key={group.service_id} className={`pr-group ${groupStatusClass}`}>
 						<div className="pr-group-header">
 							<span>
 								{group.ready && <i className="fa-solid fa-circle-check pr-ready-icon" title="Tudo entregue" />}
@@ -412,7 +419,8 @@ export default function ProductRequestsDashboard() {
 							</tbody>
 						</table>
 					</div>
-				))}
+					);
+				})}
 			</div>
 		);
 	}

@@ -96,12 +96,9 @@
 	border-left: none;
 }
 
-.schedules-calendar-page .day-half-top{
-	flex: 0 0 auto;
-}
-
+.schedules-calendar-page .day-half-top,
 .schedules-calendar-page .day-half-bottom{
-	flex: 1 1 auto;
+	flex: 0 0 auto;
 }
 
 .schedules-calendar-page .day-half-label{

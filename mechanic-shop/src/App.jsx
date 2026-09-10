@@ -9,6 +9,7 @@ import ModelsList from "./Pages/Models/ModelsList";
 import ClientsList from "./Pages/Clients/ClientsList";
 import ProductsList from "./Pages/Products/ProductsList";
 import CarsList from "./Pages/Cars/CarsList";
+import CarShow from "./Pages/Cars/CarShow";
 import SchedulesCalendar from "./Pages/Schedules/SchedulesCalendar";
 import SchedulesList from "./Pages/Schedules/SchedulesList";
 import SchedulesNew from "./Pages/Schedules/SchedulesNew";
@@ -52,6 +53,7 @@ function App() {
 					<Route path="/clients" element={<ClientsList/>} />
 					<Route path="/products" element={<ProductsList/>} />
 					<Route path="/cars" element={<CarsList/>} />
+					<Route path="/cars/:id" element={<CarShow/>} />
 					<Route path="/schedules_calendar" element={<SchedulesCalendar/>} />
 					<Route path="/schedules" element={<SchedulesList/>} />
 					<Route path="/schedules/new" element={<SchedulesNew/>} />

@@ -61,6 +61,14 @@ export default function Navbar() {
 		};
 	}, [location.pathname, notificationTypes]);
 
+	useEffect(() => {
+		document.title = unreadCount > 0 ? `(${unreadCount}) Oficina Lima` : "Oficina Lima";
+
+		return () => {
+			document.title = "Oficina Lima";
+		};
+	}, [unreadCount]);
+
 	const linkClass = ({ isActive }) =>
 		isActive
 			? "navbar-link active"

@@ -388,25 +388,21 @@ export default function ServiceShow2() {
 
 						<div className="coloring-buttons">
 							<button
-								disabled={isFinished}
 								onClick={()=>{
 									markedTextarea.current.markSelection("note-red");
 								}}
 							><i className="fa-solid fa-square-pen note-red-button"/></button>
 							<button
-								disabled={isFinished}
 								onClick={()=>{
 									markedTextarea.current.markSelection("note-yellow");
 								}}
 							><i className="fa-solid fa-square-pen note-yellow-button"/></button>
 							<button
-								disabled={isFinished}
 								onClick={()=>{
 									markedTextarea.current.markSelection("note-green");
 								}}
 							><i className="fa-solid fa-square-pen note-green-button"/></button>
 							<button
-								disabled={isFinished}
 								onClick={()=>{
 									markedTextarea.current.unmarkSelection();
 								}}
@@ -426,7 +422,6 @@ export default function ServiceShow2() {
 										note: newValue,
 									}));
 								}}
-								disabled={isFinished}
 							/>
 						</div>
 					</div>

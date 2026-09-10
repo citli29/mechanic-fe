@@ -166,3 +166,80 @@
 	}
 }
 
+.schedule-import-backdrop{
+	position: fixed;
+	inset: 0;
+	z-index: 2000;
+
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+
+	padding: 10vh var(--big-padding) var(--big-padding);
+	overflow-y: auto;
+
+	background: rgba(15, 23, 42, 0.45);
+}
+
+.schedule-import-modal{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+
+	width: 100%;
+	max-width: 520px;
+	max-height: 80vh;
+
+	padding: var(--big-padding);
+	border-radius: 10px;
+	background: var(--bg-card);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+	overflow-y: auto;
+}
+
+.schedule-import-header{
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--padding);
+
+	h2{
+		font-size: var(--font-size-big);
+	}
+
+	button{
+		aspect-ratio: 1;
+		height: calc(var(--line-height) - 2 * var(--small-padding));
+		border-radius: 5px;
+	}
+}
+
+.schedule-import-text{
+	padding: var(--padding);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-page);
+	color: var(--txt-light);
+
+	white-space: pre-wrap;
+	font-size: var(--font-size-small);
+}
+
+.schedule-import-actions{
+	display: flex;
+	gap: var(--padding);
+	width: 100%;
+
+	button{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--small-padding);
+		flex: 1;
+		height: calc(var(--line-height) + 2 * var(--padding));
+		padding: 0 var(--big-padding);
+		border-radius: 5px;
+		white-space: nowrap;
+	}
+}
+

@@ -1,0 +1,150 @@
+/* Info is always expanded on this page (defaultInfoShowing on the
+   CarPicker) - the show/hide chevron has nothing to toggle, so hide it. */
+.cars-show-page .item-header .card-buttons button.car{
+	display: none;
+}
+
+.cars-show-page .details-actions{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+		padding: var(--padding) calc(2 * var(--big-padding));
+		border-radius: 5px;
+		font-weight: 700;
+	}
+}
+
+.cars-show-page .car-history-empty{
+	padding: var(--big-padding);
+	text-align: center;
+	color: var(--txt-muted);
+}
+
+.cars-show-page .car-history-list{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+}
+
+.cars-show-page .car-history-item{
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: var(--padding) var(--big-padding);
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	gap: var(--small-padding);
+
+	&:hover{
+		background: var(--bg-page);
+	}
+}
+
+.cars-show-page .car-history-item-header{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--padding);
+	font-weight: 600;
+
+	.car-history-id{
+		color: var(--txt-muted);
+		font-weight: 700;
+	}
+
+	.car-history-kms{
+		font-weight: 400;
+		color: var(--txt-muted);
+		font-size: var(--font-size-small);
+	}
+
+	.car-history-dates{
+		margin-left: auto;
+		font-weight: 400;
+		color: var(--txt-muted);
+		font-size: var(--font-size-small);
+	}
+}
+
+.cars-show-page .car-history-status{
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 10px;
+	border-radius: 999px;
+	color: #fff;
+	font-size: var(--font-size-small);
+	font-weight: 700;
+}
+
+.cars-show-page .car-history-label{
+	display: block;
+	font-size: var(--font-size-small);
+	font-weight: 700;
+	color: var(--txt-muted);
+	text-transform: uppercase;
+	letter-spacing: .02em;
+	margin-top: var(--small-padding);
+}
+
+.cars-show-page .car-history-subcards{
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--padding);
+}
+
+.cars-show-page .car-history-subcard{
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: var(--padding);
+	background: var(--bg-page);
+
+	.car-history-label{
+		margin-top: 0;
+	}
+
+	p{
+		white-space: pre-wrap;
+		margin: var(--small-padding) 0 0;
+		font-size: var(--font-size-small);
+	}
+}
+
+@media(max-width: 650px){
+	.cars-show-page .car-history-subcards{
+		grid-template-columns: 1fr;
+	}
+}
+
+.cars-show-page .car-history-products ul{
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.cars-show-page .car-history-products li{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	padding: var(--padding);
+	background: var(--bg-page);
+	font-size: var(--font-size);
+
+	&:not(:last-child){
+		border-bottom: 1px solid var(--border);
+	}
+
+	i{
+		font-size: var(--font-size-big);
+		color: var(--state-finished-dark);
+	}
+}

@@ -13,27 +13,28 @@ function formatDate(date) {
 	return `${y}-${m}-${d}`;
 }
 
-const PRODUCT_PREVIEW_LIMIT = 6;
+const DELIVERED_PER_PAGE = 5;
 
 export default function Home() {
 
 	const navigate = useNavigate();
 
 	const requestIdRef = useRef(0);
+	const deliveredRequestIdRef = useRef(0);
 
 	const [todaySchedules, setTodaySchedules] = useState([]);
 	const [unfinishedServicesTotal, setUnfinishedServicesTotal] = useState(0);
 
-	const [productsToOrder, setProductsToOrder] = useState([]);
 	const [productsToOrderTotal, setProductsToOrderTotal] = useState(0);
-
-	const [productsAwaitingDelivery, setProductsAwaitingDelivery] = useState([]);
 	const [productsAwaitingDeliveryTotal, setProductsAwaitingDeliveryTotal] = useState(0);
 
 	const [productsDelivered, setProductsDelivered] = useState([]);
 	const [productsDeliveredTotal, setProductsDeliveredTotal] = useState(0);
+	const [deliveredPage, setDeliveredPage] = useState(1);
+	const [deliveredTotalPages, setDeliveredTotalPages] = useState(1);
 
 	const [loading, setLoading] = useState(true);
+	const [loadingDelivered, setLoadingDelivered] = useState(true);
 
 
 	async function loadDashboard() {
@@ -44,12 +45,11 @@ export default function Home() {
 		const today = formatDate(new Date());
 
 		try {
-			const [schedulesRes, servicesRes, sprToOrderRes, sprAwaitingDeliveryRes, sprDeliveredRes] = await Promise.all([
+			const [schedulesRes, servicesRes, sprToOrderRes, sprAwaitingDeliveryRes] = await Promise.all([
 				api.get("/schedules", { params: { start_date: today, end_date: today } }),
 				api.get("/services", { params: { status: "unfinished", p: 1, u: 1 } }),
-				api.get("/services_products_requested", { params: { is_ordered: "false", p: 1, u: PRODUCT_PREVIEW_LIMIT } }),
-				api.get("/services_products_requested", { params: { is_ordered: "true", is_delivered: "false", p: 1, u: PRODUCT_PREVIEW_LIMIT } }),
-				api.get("/services_products_requested", { params: { is_delivered: "true", p: 1, u: PRODUCT_PREVIEW_LIMIT } }),
+				api.get("/services_products_requested", { params: { is_ordered: "false", p: 1, u: 1 } }),
+				api.get("/services_products_requested", { params: { is_ordered: "true", is_delivered: "false", p: 1, u: 1 } }),
 			]);
 
 			if (requestId !== requestIdRef.current) return;
@@ -57,14 +57,8 @@ export default function Home() {
 			setTodaySchedules(schedulesRes.data.schedule_list || []);
 			setUnfinishedServicesTotal(servicesRes.data.pagination?.total ?? 0);
 
-			setProductsToOrder(sprToOrderRes.data.spr_list || []);
 			setProductsToOrderTotal(sprToOrderRes.data.pagination?.total ?? 0);
-
-			setProductsAwaitingDelivery(sprAwaitingDeliveryRes.data.spr_list || []);
 			setProductsAwaitingDeliveryTotal(sprAwaitingDeliveryRes.data.pagination?.total ?? 0);
-
-			setProductsDelivered(sprDeliveredRes.data.spr_list || []);
-			setProductsDeliveredTotal(sprDeliveredRes.data.pagination?.total ?? 0);
 		} catch (err) {
 			if (requestId !== requestIdRef.current) return;
 
@@ -75,7 +69,33 @@ export default function Home() {
 	}
 
 
+	async function loadDelivered() {
+		const requestId = ++deliveredRequestIdRef.current;
+
+		setLoadingDelivered(true);
+
+		try {
+			const res = await api.get("/services_products_requested", {
+				params: { is_delivered: "true", p: deliveredPage, u: DELIVERED_PER_PAGE },
+			});
+
+			if (requestId !== deliveredRequestIdRef.current) return;
+
+			setProductsDelivered(res.data.spr_list || []);
+			setProductsDeliveredTotal(res.data.pagination?.total ?? 0);
+			setDeliveredTotalPages(res.data.pagination?.total_pages || 1);
+		} catch (err) {
+			if (requestId !== deliveredRequestIdRef.current) return;
+
+			console.error(err);
+		} finally {
+			if (requestId === deliveredRequestIdRef.current) setLoadingDelivered(false);
+		}
+	}
+
+
 	useEffect(() => { loadDashboard(); }, []);
+	useEffect(() => { loadDelivered(); }, [deliveredPage]);
 
 
 	function getAppointmentStatusClass(schedule) {
@@ -109,6 +129,7 @@ export default function Home() {
 				group = {
 					service_id: product.service_id,
 					context: productContext(product),
+					ready: Number(product.service_ready) === 1,
 					items: [],
 				};
 
@@ -127,9 +148,12 @@ export default function Home() {
 		return (
 			<div className="product-groups">
 				{groupByService(products).map((group) => (
-					<div key={group.service_id} className="product-group">
+					<div key={group.service_id} className={`product-group ${group.ready ? "product-group-ready" : "product-group-partial"}`}>
 						<div className="product-group-header">
-							<span>{group.context}</span>
+							<span>
+								{group.ready && <i className="fa-solid fa-circle-check product-ready-icon" title="Tudo entregue" />}
+								{group.context}
+							</span>
 
 							<button className="options" onClick={() => navigate(`/service/${group.service_id}`)}>
 								<i className="fa-solid fa-arrow-up-right-from-square" />
@@ -273,54 +297,12 @@ export default function Home() {
 
 				<div className="card">
 					<div className="header">
-						<i className="fa-solid fa-cart-shopping" />
-						<h1>Produtos Por Encomendar</h1>
-					</div>
-
-					<div className="body">
-						{loading ? (
-							<p className="home-empty">A carregar...</p>
-						) : productsToOrder.length === 0 ? (
-							<p className="home-empty">Sem produtos por encomendar.</p>
-						) : (
-							renderProductGroups(productsToOrder)
-						)}
-
-						{productsToOrderTotal > productsToOrder.length && (
-							<p className="home-more">+{productsToOrderTotal - productsToOrder.length} adicionais</p>
-						)}
-					</div>
-				</div>
-
-				<div className="card">
-					<div className="header">
-						<i className="fa-solid fa-truck" />
-						<h1>Produtos A Aguardar Entrega</h1>
-					</div>
-
-					<div className="body">
-						{loading ? (
-							<p className="home-empty">A carregar...</p>
-						) : productsAwaitingDelivery.length === 0 ? (
-							<p className="home-empty">Sem produtos a aguardar entrega.</p>
-						) : (
-							renderProductGroups(productsAwaitingDelivery)
-						)}
-
-						{productsAwaitingDeliveryTotal > productsAwaitingDelivery.length && (
-							<p className="home-more">+{productsAwaitingDeliveryTotal - productsAwaitingDelivery.length} adicionais</p>
-						)}
-					</div>
-				</div>
-
-				<div className="card">
-					<div className="header">
 						<i className="fa-solid fa-dolly" />
 						<h1>Produtos Entregues</h1>
 					</div>
 
 					<div className="body">
-						{loading ? (
+						{loadingDelivered && productsDelivered.length === 0 ? (
 							<p className="home-empty">A carregar...</p>
 						) : productsDelivered.length === 0 ? (
 							<p className="home-empty">Sem produtos entregues.</p>
@@ -328,9 +310,25 @@ export default function Home() {
 							renderProductGroups(productsDelivered)
 						)}
 
-						{productsDeliveredTotal > productsDelivered.length && (
-							<p className="home-more">+{productsDeliveredTotal - productsDelivered.length} adicionais</p>
-						)}
+						<div className="pagination">
+							<button
+								className="options"
+								disabled={deliveredPage <= 1}
+								onClick={() => setDeliveredPage((p) => Math.max(1, p - 1))}
+							>
+								<i className="fa-solid fa-chevron-left" />
+							</button>
+
+							<span>Página {deliveredPage} de {deliveredTotalPages} ({productsDeliveredTotal} produtos)</span>
+
+							<button
+								className="options"
+								disabled={deliveredPage >= deliveredTotalPages}
+								onClick={() => setDeliveredPage((p) => Math.min(deliveredTotalPages, p + 1))}
+							>
+								<i className="fa-solid fa-chevron-right" />
+							</button>
+						</div>
 					</div>
 				</div>
 

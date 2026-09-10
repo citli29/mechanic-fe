@@ -125,6 +125,51 @@
 	border-radius: 0;
 }
 
+.home-page .product-group.product-group-ready{
+	border-color: var(--state-finished-dark);
+}
+
+.home-page .product-group-ready .product-group-header{
+	background: var(--state-finished-muted);
+	border-bottom-color: var(--state-finished-dark);
+	color: #fff;
+}
+
+.home-page .product-group-ready .product-group-header button.options{
+	background: var(--state-finished-dark);
+	border-color: var(--state-finished-dark);
+	color: #fff;
+}
+
+.home-page .product-group-ready .product-group-header button.options:hover{
+	background: var(--success-hover);
+}
+
+.home-page .product-ready-icon{
+	margin-right: var(--small-padding);
+	color: #fff;
+}
+
+.home-page .product-group.product-group-partial{
+	border-color: var(--state-not-finished);
+}
+
+.home-page .product-group-partial .product-group-header{
+	background: var(--state-not-finished);
+	border-bottom-color: var(--state-not-finished);
+	color: #fff;
+}
+
+.home-page .product-group-partial .product-group-header button.options{
+	background: color-mix(in srgb, var(--state-not-finished) 75%, black);
+	border-color: color-mix(in srgb, var(--state-not-finished) 75%, black);
+	color: #fff;
+}
+
+.home-page .product-group-partial .product-group-header button.options:hover{
+	background: color-mix(in srgb, var(--state-not-finished) 60%, black);
+}
+
 /* =====================
    Today's Schedules
 ===================== */

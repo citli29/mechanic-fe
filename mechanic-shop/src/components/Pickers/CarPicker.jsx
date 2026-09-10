@@ -26,6 +26,8 @@ export const CarPicker = ({
 	car_id="",
 	onCarIdChange,
 	isAllowedEditing,
+	allowDeselect=true,
+	defaultInfoShowing=false,
 }) => {
 	const [cars, setCars] = useState([]);
 	const [searchCar, setSearchCar] = useState("");
@@ -33,7 +35,7 @@ export const CarPicker = ({
 	const [car,setCar] = useState(null);
 	const [state, setState] = useState(-1);
 
-	const [isInfoShowing, setIsInfoShowing] = useState(false);
+	const [isInfoShowing, setIsInfoShowing] = useState(defaultInfoShowing);
 	const [presentingCar, setPresentingCar] = useState(emptyCar);
 
 	useEffect(() => {
@@ -132,6 +134,7 @@ export const CarPicker = ({
 
 			if (c) {
 				setCar(c);
+				setPresentingCar(c);
 				setState(SELECTED);
 			} else {
 				setCar(null);
@@ -260,7 +263,9 @@ export const CarPicker = ({
 						{isAllowedEditing && (
 							<>
 								<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
-								<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
+								{allowDeselect && (
+									<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
+								)}
 							</>
 						)}
 					</div>

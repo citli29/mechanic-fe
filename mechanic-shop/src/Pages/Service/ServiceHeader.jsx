@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import "./Style/ServiceHeader.css";
 import api from "./../../api/axios";
 
+function oneLine(text) {
+	return (text || "").replace(/\s+/g, " ").trim();
+}
+
 export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) => {
 
 	const finished = !!service?.is_finished;
@@ -10,6 +14,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 
 	const [schedules, setSchedules] = useState([]);
 	const [showDetails, setShowDetails] = useState(false);
+	const [pendingSchedule, setPendingSchedule] = useState(null);
 
 	
 	const [isMobile, setIsMobile] = useState(
@@ -92,6 +97,28 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 		}
 		
 	}
+	function handleScheduleSelect(e) {
+		const value = e.target.value;
+
+		onServiceChange("schedule_id", value);
+
+		if (!value) return;
+
+		const schedule = schedules.find((s) => String(s.id) === String(value));
+
+		if (schedule && oneLine(schedule.description)) {
+			setPendingSchedule(schedule);
+		}
+	}
+
+	function handleConfirmImportDescription() {
+		const imported = pendingSchedule.description || "";
+		const current = service.malfunction || "";
+
+		onServiceChange("malfunction", current ? `${imported}\n\n${current}` : imported);
+		setPendingSchedule(null);
+	}
+
 	const renderInfoBig = () => {
 		return (
 				<>
@@ -184,7 +211,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 
 					<select
 						value={service.schedule_id??""}
-						onChange={(e) => onServiceChange( "schedule_id", e.target.value) }
+						onChange={handleScheduleSelect}
 						name="service-schedule"
 						id="service-schedule"
 						disabled={fieldsLocked}
@@ -195,7 +222,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 								key={schedule.id}
 								value={schedule.id}
 							>
-								# {schedule.id}
+								#{schedule.id} — {schedule.date} — {oneLine(schedule.description)}
 							</option>
 						))}
 					</select>
@@ -331,7 +358,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 
 						<select
 							value={service.schedule_id??""}
-							onChange={(e) => onServiceChange( "schedule_id", e.target.value) }
+							onChange={handleScheduleSelect}
 							name="service-schedule"
 							id="service-schedule"
 							disabled={fieldsLocked}
@@ -342,7 +369,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 									key={schedule.id}
 									value={schedule.id??""}
 								>
-									# {schedule.id}
+									#{schedule.id} — {schedule.date} — {oneLine(schedule.description)}
 								</option>
 							))}
 						</select>
@@ -392,6 +419,36 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 				{ !isMobile && renderInfoBig()}
 				{ isMobile && renderInfoSmall()}
 			</div>
+
+			{pendingSchedule && (
+				<div className="schedule-import-backdrop" onClick={() => setPendingSchedule(null)}>
+					<div className="schedule-import-modal" onClick={(e) => e.stopPropagation()}>
+						<div className="schedule-import-header">
+							<h2>Importar Descrição da Marcação</h2>
+							<button className="cancel" onClick={() => setPendingSchedule(null)}>
+								<i className="fa-solid fa-xmark" />
+							</button>
+						</div>
+
+						<p>A marcação #{pendingSchedule.id} tem a seguinte descrição:</p>
+
+						<div className="schedule-import-text">
+							{pendingSchedule.description}
+						</div>
+
+						<p>Deseja importar para a Descrição de Avaria?</p>
+
+						<div className="schedule-import-actions">
+							<button className="confirm" onClick={handleConfirmImportDescription}>
+								<i className="fa-solid fa-check" /> Sim, Importar
+							</button>
+							<button className="cancel" onClick={() => setPendingSchedule(null)}>
+								<i className="fa-solid fa-xmark" /> Não
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

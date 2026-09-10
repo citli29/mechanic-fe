@@ -25,6 +25,7 @@ function getServiceTypeAccent(serviceTypeId) {
 
 const LAB_ACCENT = getServiceTypeAccent(2);
 const MECHANIC_ACCENT = getServiceTypeAccent(1);
+const DESLOCACOES_ACCENT = "#4c1d95";
 
 export default function ServicesCalendar() {
 
@@ -35,6 +36,11 @@ export default function ServicesCalendar() {
 	const [services, setServices] = useState([]);
 
 	const [serviceTypes, setServiceTypes] = useState([]);
+
+	const deslocacoesId = useMemo(
+		() => serviceTypes.find((t) => t.name === "Deslocações")?.id,
+		[serviceTypes]
+	);
 
 	const [filters, setFilters] = useState({
 		car_plate: "",
@@ -218,7 +224,10 @@ export default function ServicesCalendar() {
 
 	function renderDayHalves(dayServices) {
 		const labServices = dayServices.filter((s) => s.service_type_id === 2);
-		const mechanicServices = dayServices.filter((s) => s.service_type_id !== 2);
+		const deslocacoesServices = dayServices.filter((s) => s.service_type_id === deslocacoesId);
+		const mechanicServices = dayServices.filter(
+			(s) => s.service_type_id !== 2 && s.service_type_id !== deslocacoesId
+		);
 
 		return (
 			<div className="day-halves">
@@ -233,11 +242,21 @@ export default function ServicesCalendar() {
 				)}
 
 				{mechanicServices.length > 0 && (
-					<div className="day-half day-half-bottom" style={{ borderLeftColor: MECHANIC_ACCENT }}>
+					<div className="day-half day-half-top" style={{ borderLeftColor: MECHANIC_ACCENT }}>
 						<div className="day-half-label">Mecânica</div>
 
 						<div className="appointments">
 							{mechanicServices.map((service) => renderAppointment(service))}
+						</div>
+					</div>
+				)}
+
+				{deslocacoesServices.length > 0 && (
+					<div className="day-half day-half-bottom" style={{ borderLeftColor: DESLOCACOES_ACCENT }}>
+						<div className="day-half-label">Deslocações</div>
+
+						<div className="appointments">
+							{deslocacoesServices.map((service) => renderAppointment(service))}
 						</div>
 					</div>
 				)}

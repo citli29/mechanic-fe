@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -21,6 +22,7 @@ const emptyCar = {
 
 export default function CarsList() {
 
+	const navigate = useNavigate();
 	const requestIdRef = useRef(0);
 
 	const [cars, setCars] = useState([]);
@@ -697,6 +699,9 @@ export default function CarsList() {
 											<td data-label="Nr. Chassi">{car.chassi_nr}</td>
 
 											<td className="actions">
+												<button className="options" onClick={() => navigate(`/cars/${car.id}`)}>
+													<i className="fa-solid fa-arrow-up-right-from-square" />
+												</button>
 												<button className="options" onClick={() => editCar(car)}>
 													<i className="fa-solid fa-pencil" />
 												</button>

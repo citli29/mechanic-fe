@@ -90,12 +90,9 @@
 	border-left: 3px solid transparent;
 }
 
-.services-calendar-page .day-half-top{
-	flex: 0 0 auto;
-}
-
+.services-calendar-page .day-half-top,
 .services-calendar-page .day-half-bottom{
-	flex: 1 1 auto;
+	flex: 0 0 auto;
 }
 
 .services-calendar-page .day-half-label{

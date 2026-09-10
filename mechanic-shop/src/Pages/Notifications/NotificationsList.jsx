@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
-import { getStoredViewTypeId, notifyNotificationsUpdated, setStoredViewTypeId } from "../../utils/notificationView";
+import { getStoredViewTypeId, notifyNotificationsUpdated, onNotificationsUpdated, setStoredViewTypeId } from "../../utils/notificationView";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -66,10 +66,11 @@ export default function NotificationsList() {
 
 	const generalType = notificationTypes.find((t) => t.name === "Geral");
 	const selectableTypes = notificationTypes.filter((t) => t.name !== "Geral");
+	const defaultType = selectableTypes.find((t) => t.name === "Oficina") ?? selectableTypes[0];
 
 	const effectiveViewTypeId = selectableTypes.some((t) => String(t.id) === String(viewTypeId))
 		? viewTypeId
-		: selectableTypes[0]?.id ?? "";
+		: defaultType?.id ?? "";
 
 
 	async function loadNotificationTypes() {
@@ -119,6 +120,16 @@ export default function NotificationsList() {
 
 	useEffect(() => { loadNotifications(); }, [onlyUnread, page, effectiveViewTypeId]);
 
+	useEffect(() => {
+		const pollId = setInterval(loadNotifications, 5000);
+		const unsubscribeUpdated = onNotificationsUpdated(loadNotifications);
+
+		return () => {
+			clearInterval(pollId);
+			unsubscribeUpdated();
+		};
+	}, [onlyUnread, page, effectiveViewTypeId]);
+
 
 	function selectFilter(unreadOnly) {
 		setOnlyUnread(unreadOnly);
@@ -148,7 +159,6 @@ export default function NotificationsList() {
 		try {
 			const action = notification.is_checked ? "uncheck" : "check";
 			await api.put(`/notifications/${notification.id}/${action}`);
-			loadNotifications();
 			notifyNotificationsUpdated();
 		} catch (err) {
 			handleApiError(err);
@@ -191,19 +201,14 @@ export default function NotificationsList() {
 								))}
 							</select>
 
-							<button
-								className={onlyUnread ? "confirm" : "options"}
-								onClick={() => selectFilter(true)}
-							>
+							<label className="notif-unread-toggle">
+								<input
+									type="checkbox"
+									checked={onlyUnread}
+									onChange={(e) => selectFilter(e.target.checked)}
+								/>
 								Por Tratar
-							</button>
-
-							<button
-								className={!onlyUnread ? "confirm" : "options"}
-								onClick={() => selectFilter(false)}
-							>
-								Todas
-							</button>
+							</label>
 						</div>
 
 						<table>

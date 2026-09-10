@@ -76,17 +76,23 @@ export const MakePicker = ({
 	}
 
 	useEffect(()=>{
+		let cancelled = false;
+
 		async function f1(){
-			const m = await getMake(make_id); 
+			const m = await getMake(make_id);
+			if(cancelled) return;
 			setMake(m);
 		}
 		async function f2(){
-			const m = await getMakes(""); 
+			const m = await getMakes("");
+			if(cancelled) return;
 			setMakes(m);
 		}
 
 		if(make_id) { f1(); setState(SELECTED);
 		}else{ f2(); setState(SEARCHING); }
+
+		return () => { cancelled = true; };
 	} ,[make_id,]);
 
 	useEffect(()=>{

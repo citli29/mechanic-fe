@@ -64,6 +64,10 @@
 	border-color: var(--state-finished-dark);
 }
 
+.product-requests-page .pr-group.pr-group-partial{
+	border-color: var(--state-not-finished);
+}
+
 .product-requests-page .pr-group-header{
 	display: flex;
 	align-items: center;
@@ -109,6 +113,22 @@
 
 .product-requests-page .pr-group-ready .pr-group-header button.options:hover{
 	background: var(--success-hover);
+}
+
+.product-requests-page .pr-group-partial .pr-group-header{
+	background: var(--state-not-finished);
+	border-bottom-color: var(--state-not-finished);
+	color: #fff;
+}
+
+.product-requests-page .pr-group-partial .pr-group-header button.options{
+	background: color-mix(in srgb, var(--state-not-finished) 75%, black);
+	border-color: color-mix(in srgb, var(--state-not-finished) 75%, black);
+	color: #fff;
+}
+
+.product-requests-page .pr-group-partial .pr-group-header button.options:hover{
+	background: color-mix(in srgb, var(--state-not-finished) 60%, black);
 }
 
 .product-requests-page .pr-group table{

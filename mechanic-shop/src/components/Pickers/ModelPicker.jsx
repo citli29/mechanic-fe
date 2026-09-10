@@ -85,8 +85,12 @@ export const ModelPicker = ({
 
 	
 	useEffect(()=>{
+		let cancelled = false;
+
 		const load = async () =>{
 			if(!make_id){
+				if(cancelled) return;
+
 				setIsSearchSelected(false);
 				setModel(null);
 				setModelName("");
@@ -102,10 +106,12 @@ export const ModelPicker = ({
 			}
 			if(model_id){
 				const m = await getModel(model_id);
+				if(cancelled) return;
 				setModel(m);
 				setState(SELECTED);
 			}else{
 				const m = await getModels("");
+				if(cancelled) return;
 				setModels(m);
 				setModel(null);
 				setState(SEARCHING);
@@ -113,6 +119,8 @@ export const ModelPicker = ({
 
 		}
 		load();
+
+		return () => { cancelled = true; };
 	} ,[make_id,model_id]);
 
 	useEffect(()=>{

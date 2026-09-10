@@ -25,6 +25,7 @@ function getServiceTypeAccent(serviceTypeId) {
 
 const LAB_ACCENT = getServiceTypeAccent(2);
 const MECHANIC_ACCENT = getServiceTypeAccent(1);
+const DESLOCACOES_ACCENT = "#4c1d95";
 
 export default function SchedulesCalendar() {
 
@@ -35,6 +36,11 @@ export default function SchedulesCalendar() {
 	const [schedules, setSchedules] = useState([]);
 
 	const [serviceTypes, setServiceTypes] = useState([]);
+
+	const deslocacoesId = useMemo(
+		() => serviceTypes.find((t) => t.name === "Deslocações")?.id,
+		[serviceTypes]
+	);
 
 	const [filters, setFilters] = useState({
 		car_plate: "",
@@ -226,7 +232,12 @@ export default function SchedulesCalendar() {
 	function renderDayHalves(daySchedules) {
 		const unassignedSchedules = daySchedules.filter((s) => s.service_id === null);
 		const labSchedules = daySchedules.filter((s) => s.service_id !== null && s.service_type_id === 2);
-		const mechanicSchedules = daySchedules.filter((s) => s.service_id !== null && s.service_type_id !== 2);
+		const deslocacoesSchedules = daySchedules.filter(
+			(s) => s.service_id !== null && s.service_type_id === deslocacoesId
+		);
+		const mechanicSchedules = daySchedules.filter(
+			(s) => s.service_id !== null && s.service_type_id !== 2 && s.service_type_id !== deslocacoesId
+		);
 
 		return (
 			<div className="day-halves">
@@ -249,11 +260,21 @@ export default function SchedulesCalendar() {
 				)}
 
 				{mechanicSchedules.length > 0 && (
-					<div className="day-half day-half-bottom" style={{ borderLeftColor: MECHANIC_ACCENT }}>
+					<div className="day-half day-half-top" style={{ borderLeftColor: MECHANIC_ACCENT }}>
 						<div className="day-half-label">Mecânica</div>
 
 						<div className="appointments">
 							{mechanicSchedules.map((schedule) => renderAppointment(schedule))}
+						</div>
+					</div>
+				)}
+
+				{deslocacoesSchedules.length > 0 && (
+					<div className="day-half day-half-bottom" style={{ borderLeftColor: DESLOCACOES_ACCENT }}>
+						<div className="day-half-label">Deslocações</div>
+
+						<div className="appointments">
+							{deslocacoesSchedules.map((schedule) => renderAppointment(schedule))}
 						</div>
 					</div>
 				)}
