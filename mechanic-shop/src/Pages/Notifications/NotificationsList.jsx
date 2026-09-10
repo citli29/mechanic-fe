@@ -28,6 +28,7 @@ export default function NotificationsList() {
 
 	const [notifications, setNotifications] = useState([]);
 	const [onlyUnread, setOnlyUnread] = useState(true);
+	const [viewingNotification, setViewingNotification] = useState(null);
 
 	const [notificationTypes, setNotificationTypes] = useState([]);
 	const [viewTypeId, setViewTypeId] = useState(getStoredViewTypeId());
@@ -153,12 +154,25 @@ export default function NotificationsList() {
 	}
 
 
-	async function handleToggleChecked(notification, e) {
+	function handleViewMessage(notification, e) {
 		e.stopPropagation();
+		setViewingNotification(notification);
+	}
+
+
+	async function handleToggleChecked(notification, e) {
+		e?.stopPropagation();
 
 		try {
 			const action = notification.is_checked ? "uncheck" : "check";
 			await api.put(`/notifications/${notification.id}/${action}`);
+
+			setViewingNotification((prev) =>
+				prev && prev.id === notification.id
+					? { ...prev, is_checked: prev.is_checked ? 0 : 1 }
+					: prev
+			);
+
 			notifyNotificationsUpdated();
 		} catch (err) {
 			handleApiError(err);
@@ -250,7 +264,16 @@ export default function NotificationsList() {
 											</td>
 											<td data-label="Tipo">{notification.notification_type_name || "-"}</td>
 											<td data-label="Título">{notification.title}</td>
-											<td data-label="Mensagem" className="notif-message">{notification.message}</td>
+											<td data-label="Mensagem" className="notif-message">
+												<span className="notif-message-text">{notification.message}</span>
+												<button
+													className="notif-message-toggle"
+													onClick={(e) => handleViewMessage(notification, e)}
+													title="Ver mensagem completa"
+												>
+													<i className="fa-solid fa-eye" />
+												</button>
+											</td>
 											<td data-label="Data">{formatDateTime(notification.created_at)}</td>
 										</tr>
 									))
@@ -282,6 +305,52 @@ export default function NotificationsList() {
 				</div>
 
 			</div>
+
+			{viewingNotification && (
+				<div className="notif-detail-backdrop" onClick={() => setViewingNotification(null)}>
+					<div className="notif-detail-modal" onClick={(e) => e.stopPropagation()}>
+						<div className="notif-detail-header">
+							<h2>{viewingNotification.title}</h2>
+							<button className="cancel" onClick={() => setViewingNotification(null)}>
+								<i className="fa-solid fa-xmark" />
+							</button>
+						</div>
+
+						<div className="notif-detail-meta-row">
+							<p className="notif-detail-meta">
+								{viewingNotification.notification_type_name || "-"} — {formatDateTime(viewingNotification.created_at)}
+							</p>
+
+							<label className="notif-detail-checked">
+								<input
+									type="checkbox"
+									checked={!!viewingNotification.is_checked}
+									onChange={(e) => handleToggleChecked(viewingNotification, e)}
+								/>
+								Tratada
+							</label>
+						</div>
+
+						<div className="notif-detail-text">
+							{viewingNotification.message}
+						</div>
+
+						{viewingNotification.data?.url && (
+							<div className="notif-detail-actions">
+								<button
+									className="confirm"
+									onClick={() => {
+										handleOpenNotification(viewingNotification);
+										setViewingNotification(null);
+									}}
+								>
+									<i className="fa-solid fa-arrow-up-right-from-square" /> Abrir
+								</button>
+							</div>
+						)}
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
