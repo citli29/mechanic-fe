@@ -122,13 +122,13 @@
 }
 
 .product-requests-page .pr-group-partial .pr-group-header button.options{
-	background: color-mix(in srgb, var(--state-not-finished) 75%, black);
-	border-color: color-mix(in srgb, var(--state-not-finished) 75%, black);
+	background: var(--state-not-finished);
+	border-color: var(--state-not-finished);
 	color: #fff;
 }
 
 .product-requests-page .pr-group-partial .pr-group-header button.options:hover{
-	background: color-mix(in srgb, var(--state-not-finished) 60%, black);
+	filter: brightness(0.9);
 }
 
 .product-requests-page .pr-group table{

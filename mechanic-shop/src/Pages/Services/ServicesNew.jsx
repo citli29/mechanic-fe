@@ -42,6 +42,7 @@ export default function ServicesNew() {
 	const [serviceTypes, setServiceTypes] = useState([]);
 	const [freeSchedules, setFreeSchedules] = useState([]);
 	const [saving, setSaving] = useState(false);
+	const [pendingSchedule, setPendingSchedule] = useState(null);
 
 	const [message, setMessage] = useState({
 		type: "",
@@ -108,6 +109,33 @@ export default function ServicesNew() {
 
 	function updateCarId(id) {
 		setEditing((prev) => ({ ...prev, car_id: id }));
+	}
+
+
+	function handleScheduleSelect(e) {
+		const value = e.target.value;
+
+		setEditing((prev) => ({ ...prev, schedule_id: value }));
+
+		if (!value) return;
+
+		const schedule = freeSchedules.find((s) => String(s.id) === String(value));
+
+		if (schedule && oneLine(schedule.description)) {
+			setPendingSchedule(schedule);
+		}
+	}
+
+
+	function handleConfirmImportDescription() {
+		const imported = pendingSchedule.description || "";
+		const current = editing.malfunction || "";
+
+		setEditing((prev) => ({
+			...prev,
+			malfunction: current ? `${imported}\n\n${current}` : imported,
+		}));
+		setPendingSchedule(null);
 	}
 
 
@@ -265,7 +293,7 @@ export default function ServicesNew() {
 									id="schedule"
 									name="schedule_id"
 									value={editing.schedule_id}
-									onChange={updateField}
+									onChange={handleScheduleSelect}
 								>
 									<option value="">Sem Marcação</option>
 									{freeSchedules.map((schedule) => (
@@ -283,6 +311,7 @@ export default function ServicesNew() {
 									name="signed_service"
 									value={editing.signed_service}
 									onChange={updateField}
+									rows={8}
 								/>
 							</div>
 
@@ -293,6 +322,7 @@ export default function ServicesNew() {
 									name="malfunction"
 									value={editing.malfunction}
 									onChange={updateField}
+									rows={8}
 								/>
 							</div>
 
@@ -312,6 +342,36 @@ export default function ServicesNew() {
 				</div>
 
 			</div>
+
+			{pendingSchedule && (
+				<div className="schedule-import-backdrop" onClick={() => setPendingSchedule(null)}>
+					<div className="schedule-import-modal" onClick={(e) => e.stopPropagation()}>
+						<div className="schedule-import-header">
+							<h2>Importar Descrição da Marcação</h2>
+							<button className="cancel" onClick={() => setPendingSchedule(null)}>
+								<i className="fa-solid fa-xmark" />
+							</button>
+						</div>
+
+						<p>A marcação #{pendingSchedule.id} tem a seguinte descrição:</p>
+
+						<div className="schedule-import-text">
+							{pendingSchedule.description}
+						</div>
+
+						<p>Deseja importar para a Descrição de Avaria?</p>
+
+						<div className="schedule-import-actions">
+							<button className="confirm" onClick={handleConfirmImportDescription}>
+								<i className="fa-solid fa-check" /> Sim, Importar
+							</button>
+							<button className="cancel" onClick={() => setPendingSchedule(null)}>
+								<i className="fa-solid fa-xmark" /> Não
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
