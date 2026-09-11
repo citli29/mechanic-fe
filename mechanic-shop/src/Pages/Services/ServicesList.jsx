@@ -7,7 +7,7 @@ import "../Style/Card.css";
 import "./Style/ServicesList.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
 
-const PER_PAGE = 10;
+const PER_PAGE = 30;
 
 const SERVICE_TYPE_COLORS = ["#2563eb", "#e8aa2e", "#ba2323", "#22c55e", "#a3540a", "#e823d1"];
 
