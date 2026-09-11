@@ -38,7 +38,20 @@ export const CarPicker = ({
 	const [isInfoShowing, setIsInfoShowing] = useState(defaultInfoShowing);
 	const [presentingCar, setPresentingCar] = useState(emptyCar);
 
+	const isFirstCarEffect = useRef(true);
+
 	useEffect(() => {
+		if (isFirstCarEffect.current) {
+			isFirstCarEffect.current = false;
+
+			// On mount, `car` starts as null regardless of whether a
+			// car_id prop was passed in. If one was, the car_id effect
+			// below is already fetching it — don't report "no car" to
+			// the parent here, or it'll overwrite the real car_id before
+			// that fetch resolves and the fetch gets cancelled for nothing.
+			if (car_id) return;
+		}
+
 		onCarIdChange(car?.id ?? "");
 
 		setPresentingCar(car ?? emptyCar);
