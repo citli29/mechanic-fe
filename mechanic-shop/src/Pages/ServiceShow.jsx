@@ -28,6 +28,7 @@ export default function ServiceShow2() {
 	const { id } = useParams();
 	const defaultService = {
 		id: "",
+		version: null,
 		client_id:"",
 		kms:"",
 		checkin: "",
@@ -52,11 +53,17 @@ export default function ServiceShow2() {
 	const markedTextarea = useRef();
 	const [service, setService] = useState(defaultService);
 	const [isAllowedEditing, setIsAllowedEditing] = useState(false);
-	const skipSave = useRef(true);
+	const lastSavedServiceRef = useRef(null);
 	const [activeSection, setActiveSection] = useState(NAV_SECTIONS[0].id);
-	const [saveStatus, setSaveStatus] = useState("idle"); // idle | pending | saving | saved | error
+	const [saveStatus, setSaveStatus] = useState("idle"); // idle | pending | saving | saved | error | conflict
 
-	useEffect(() => { loadService(); }, []);
+	useEffect(() => {
+		let cancelled = false;
+
+		loadService(() => cancelled);
+
+		return () => { cancelled = true; };
+	}, []);
 
 	useEffect(()=>{
 		document.querySelectorAll(".info").forEach((element) => {
@@ -116,6 +123,21 @@ export default function ServiceShow2() {
 		document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 	}
 
+	const hasScrolledToHash = useRef(false);
+
+	useEffect(() => {
+		if (!service?.id) return;
+		if (hasScrolledToHash.current) return;
+
+		hasScrolledToHash.current = true;
+
+		const hash = window.location.hash?.slice(1);
+
+		if (hash) {
+			scrollToSection(hash);
+		}
+	}, [service]);
+
 	function handlePrint(mode) {
 		document.body.classList.toggle("print-summary", mode === "summary");
 		window.print();
@@ -137,31 +159,33 @@ export default function ServiceShow2() {
 		return i === -1 ? raw : raw.slice(i + NOTE_SEPARATOR.length);
 	}
 
-	async function loadService() {
+	async function loadService(isCancelled = () => false) {
 		try {
 			const response = await api.get(`/services/${id}`);
 
-			setService({
+			if (isCancelled()) return;
+
+			const merged = {
 				...defaultService,
 				...response.data.service
-			});
+			};
+
+			// Set the baseline *before* setService, using this exact object
+			// reference, so the autosave effect below sees no real change
+			// to save for this load.
+			lastSavedServiceRef.current = merged;
+			setService(merged);
 		} catch (error) {
-			console.error(error);
+			if (!isCancelled()) console.error(error);
 		}
 	}
 
 	const putService = async (service) =>{
-		try{
-			if(service?.id){
-				const response = await api.put(`services/${service.id}`,service)
-				if(typeof response.data.service !== "undefined"){
-					return response.data.service;
-				}else{
-					return null;
-				}
-			}
-			return defaultService;
-		}catch(error){console.error(error, error.response.data.error)}
+		if(service?.id){
+			const response = await api.put(`services/${service.id}`,service)
+			return typeof response.data.service !== "undefined" ? response.data.service : null;
+		}
+		return defaultService;
 	}
 
 
@@ -169,22 +193,37 @@ export default function ServiceShow2() {
 		const f = async () =>{
 			setSaveStatus("saving");
 
-			const s = await putService(service);
+			try {
+				const s = await putService(service);
 
-			if(!s) {
-				setSaveStatus("error");
+				if(!s) {
+					setSaveStatus("error");
+					loadService();
+				} else {
+					// Adopt the server's response (bumped version included) as
+					// the new baseline *and* the live state, same-reference,
+					// so the next edit is built on the version that's actually
+					// current — otherwise the next save would still carry the
+					// pre-save version and get rejected as a false conflict
+					// against ourselves.
+					lastSavedServiceRef.current = s;
+					setService(s);
+					setSaveStatus("saved");
+				}
+			} catch (error) {
+				console.error(error, error?.response?.data?.error);
+
+				setSaveStatus(error?.response?.status === 409 ? "conflict" : "error");
 				loadService();
-			} else {
-				setSaveStatus("saved");
 			}
 		}
 
 		if (!service?.id) return;
 
-		if (skipSave.current) {
-			skipSave.current = false;
-			return;
-		}
+		// No real change since the last load/save (covers the initial
+		// load and React StrictMode's extra dev-mode effect re-run) —
+		// nothing to save.
+		if (lastSavedServiceRef.current === service) return;
 
 		setSaveStatus("pending");
 
@@ -196,11 +235,11 @@ export default function ServiceShow2() {
 	}, [service]);
 
 	useEffect(() => {
-		if (saveStatus !== "saved" && saveStatus !== "error") return;
+		if (saveStatus !== "saved" && saveStatus !== "error" && saveStatus !== "conflict") return;
 
 		const timer = setTimeout(() => {
 			setSaveStatus("idle");
-		}, saveStatus === "error" ? 5000 : 2000);
+		}, saveStatus === "saved" ? 2000 : 5000);
 
 		return () => clearTimeout(timer);
 	}, [saveStatus]);
@@ -272,6 +311,7 @@ export default function ServiceShow2() {
 							{saveStatus === "saving" && <><i className="fa-solid fa-spinner fa-spin"/> A guardar...</>}
 							{saveStatus === "saved" && <><i className="fa-solid fa-circle-check"/> Guardado</>}
 							{saveStatus === "error" && <><i className="fa-solid fa-triangle-exclamation"/> Erro ao guardar</>}
+						{saveStatus === "conflict" && <><i className="fa-solid fa-triangle-exclamation"/> Alterado por outro utilizador — dados recarregados</>}
 						</div>
 					)}
 					{NAV_SECTIONS.map((section) => (

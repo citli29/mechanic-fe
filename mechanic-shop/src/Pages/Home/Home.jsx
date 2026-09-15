@@ -6,6 +6,11 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/Home.css";
 
+function formatPunchStart(hours, minutes) {
+	if (hours === null || hours === undefined || minutes === null || minutes === undefined) return "-";
+	return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
 function formatDate(date) {
 	const y = date.getFullYear();
 	const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -24,6 +29,7 @@ export default function Home() {
 
 	const [todaySchedules, setTodaySchedules] = useState([]);
 	const [unfinishedServicesTotal, setUnfinishedServicesTotal] = useState(0);
+	const [openPunches, setOpenPunches] = useState([]);
 
 	const [productsToOrderTotal, setProductsToOrderTotal] = useState(0);
 	const [productsAwaitingDeliveryTotal, setProductsAwaitingDeliveryTotal] = useState(0);
@@ -45,11 +51,12 @@ export default function Home() {
 		const today = formatDate(new Date());
 
 		try {
-			const [schedulesRes, servicesRes, sprToOrderRes, sprAwaitingDeliveryRes] = await Promise.all([
+			const [schedulesRes, servicesRes, sprToOrderRes, sprAwaitingDeliveryRes, openPunchesRes] = await Promise.all([
 				api.get("/schedules", { params: { start_date: today, end_date: today } }),
 				api.get("/services", { params: { status: "unfinished", p: 1, u: 1 } }),
 				api.get("/services_products_requested", { params: { is_ordered: "false", p: 1, u: 1 } }),
 				api.get("/services_products_requested", { params: { is_ordered: "true", is_delivered: "false", p: 1, u: 1 } }),
+				api.get("/user_time_punches/open"),
 			]);
 
 			if (requestId !== requestIdRef.current) return;
@@ -59,6 +66,8 @@ export default function Home() {
 
 			setProductsToOrderTotal(sprToOrderRes.data.pagination?.total ?? 0);
 			setProductsAwaitingDeliveryTotal(sprAwaitingDeliveryRes.data.pagination?.total ?? 0);
+
+			setOpenPunches(openPunchesRes.data.sutp_list || []);
 		} catch (err) {
 			if (requestId !== requestIdRef.current) return;
 
@@ -291,6 +300,54 @@ export default function Home() {
 									</div>
 								))}
 							</div>
+						)}
+					</div>
+				</div>
+
+				<div className="card">
+					<div className="header">
+						<i className="fa-solid fa-stopwatch" />
+						<h1>Tempos Por Terminar</h1>
+					</div>
+
+					<div className="body">
+						{loading ? (
+							<p className="home-empty">A carregar...</p>
+						) : openPunches.length === 0 ? (
+							<p className="home-empty">Sem tempos por terminar.</p>
+						) : (
+							<table className="open-punches-table">
+								<thead>
+									<tr>
+										<th>Utilizador</th>
+										<th>Viatura</th>
+										<th>Início</th>
+										<th>Data</th>
+										<th></th>
+									</tr>
+								</thead>
+
+								<tbody>
+									{openPunches.map((punch) => (
+										<tr key={punch.id} onClick={() => navigate(`/service/${punch.service_id}#section-times`)}>
+											<td data-label="Utilizador">{punch.user_name || "-"}</td>
+											<td data-label="Viatura">
+												{punch.car_plate
+													? `${punch.car_plate} - ${[punch.car_make_name, punch.car_model_name].filter(Boolean).join(" ")}`
+													: [punch.car_make_name, punch.car_model_name].filter(Boolean).join(" ") || "-"}
+											</td>
+											<td data-label="Início">{formatPunchStart(punch.hours_s, punch.minutes_s)}</td>
+											<td data-label="Data">{punch.date || "-"}</td>
+
+											<td className="actions" onClick={(e) => e.stopPropagation()}>
+												<button className="options" onClick={() => navigate(`/service/${punch.service_id}#section-times`)}>
+													<i className="fa-solid fa-arrow-up-right-from-square" />
+												</button>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
 						)}
 					</div>
 				</div>

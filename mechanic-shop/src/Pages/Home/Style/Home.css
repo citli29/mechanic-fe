@@ -82,6 +82,17 @@
 	grid-template-columns: 1fr 4rem;
 }
 
+.home-page .open-punches-table tr{
+	/* Utilizador, Viatura, Início, Data, ação. */
+	grid-template-columns: 1fr 1.5fr 100px 120px 60px;
+
+	cursor: pointer;
+}
+
+.home-page .open-punches-table tr:hover{
+	background: var(--bg-page-dark);
+}
+
 /* =====================
    Product Groups
 ===================== */
