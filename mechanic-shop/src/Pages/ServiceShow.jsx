@@ -190,25 +190,38 @@ export default function ServiceShow2() {
 
 
 	useEffect(() => {
+		const sentSnapshot = service;
+
 		const f = async () =>{
 			setSaveStatus("saving");
 
 			try {
-				const s = await putService(service);
+				const s = await putService(sentSnapshot);
 
 				if(!s) {
 					setSaveStatus("error");
 					loadService();
 				} else {
-					// Adopt the server's response (bumped version included) as
-					// the new baseline *and* the live state, same-reference,
-					// so the next edit is built on the version that's actually
-					// current — otherwise the next save would still carry the
-					// pre-save version and get rejected as a false conflict
-					// against ourselves.
-					lastSavedServiceRef.current = s;
-					setService(s);
 					setSaveStatus("saved");
+
+					setService(current => {
+						if (current === sentSnapshot) {
+							// Nothing changed while this save was in flight —
+							// safe to fully adopt the server's response.
+							lastSavedServiceRef.current = s;
+							return s;
+						}
+
+						// The user kept typing while this save was in
+						// flight — only bring the version number up to
+						// date, don't clobber their newer edits with the
+						// (now stale) snapshot we just sent. Since the ref
+						// below still won't match `current`, the debounce
+						// effect naturally schedules another save with the
+						// newer content and the now-correct version.
+						lastSavedServiceRef.current = { ...sentSnapshot, version: s.version };
+						return { ...current, version: s.version };
+					});
 				}
 			} catch (error) {
 				console.error(error, error?.response?.data?.error);
