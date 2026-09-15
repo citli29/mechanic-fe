@@ -229,7 +229,7 @@ export default function ServiceShow2() {
 
 		const timer = setTimeout(() => {
 			f();
-		}, 300);
+		}, 1000);
 
 		return () => clearTimeout(timer);
 	}, [service]);
