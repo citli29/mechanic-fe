@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import api from "../../api/axios";
-import { getStoredViewTypeId, onNotificationsUpdated, onViewTypeChanged } from "../../utils/notificationView";
+import { getDefaultViewTypeId, getStoredViewTypeId, onNotificationsUpdated, onViewTypeChanged } from "../../utils/notificationView";
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -30,7 +30,7 @@ export default function Navbar() {
 
 			const viewTypeId = selectableTypes.some((t) => String(t.id) === String(storedId))
 				? storedId
-				: selectableTypes[0]?.id;
+				: getDefaultViewTypeId(selectableTypes);
 
 			const typeIds = [generalId, viewTypeId].filter(Boolean);
 

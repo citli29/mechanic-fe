@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
-import { getStoredViewTypeId, notifyNotificationsUpdated, onNotificationsUpdated, setStoredViewTypeId } from "../../utils/notificationView";
+import { getDefaultViewTypeId, getStoredViewTypeId, notifyNotificationsUpdated, onNotificationsUpdated, setStoredViewTypeId } from "../../utils/notificationView";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -67,11 +67,10 @@ export default function NotificationsList() {
 
 	const generalType = notificationTypes.find((t) => t.name === "Geral");
 	const selectableTypes = notificationTypes.filter((t) => t.name !== "Geral");
-	const defaultType = selectableTypes.find((t) => t.name === "Oficina") ?? selectableTypes[0];
 
 	const effectiveViewTypeId = selectableTypes.some((t) => String(t.id) === String(viewTypeId))
 		? viewTypeId
-		: defaultType?.id ?? "";
+		: getDefaultViewTypeId(selectableTypes);
 
 
 	async function loadNotificationTypes() {

@@ -20,6 +20,15 @@ export function setStoredViewTypeId(id) {
 	window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
+// Picks which notification type to show when nothing is stored yet (first
+// visit, cleared storage, etc). Kept in one place so every consumer agrees —
+// previously the navbar and the Notifications page each guessed differently,
+// causing the badge to show a different type's count until the dropdown was
+// touched at least once.
+export function getDefaultViewTypeId(selectableTypes) {
+	return (selectableTypes.find((t) => t.name === "Oficina") ?? selectableTypes[0])?.id ?? "";
+}
+
 export function onViewTypeChanged(handler) {
 	window.addEventListener(CHANGE_EVENT, handler);
 	return () => window.removeEventListener(CHANGE_EVENT, handler);
