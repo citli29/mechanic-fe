@@ -341,8 +341,18 @@ export const ProductsRequested = ({
 								<input type="number" value={pr.quantity} disabled={disabled}
 								onChange={(e)=>{handleInputChange({...pr, quantity:e.target.value})}}
 								onBlur={(e)=>{handleInputChangeBlur({...pr, quantity:e.target.value});}}/></td>
-							<td id="pr-ord"><label htmlFor="is-ordered"><input type="checkbox" disabled={disabled} checked={pr.is_ordered==1} onChange={(e)=>{handleInputChangeBlur({...pr, is_ordered:e.target.checked?1:0});}}/></label></td>
-							<td id="pr-del"><label htmlFor="is-delivered"><input id="is-delivered"type="checkbox" disabled={disabled} checked={pr.is_delivered==1} onChange={(e)=>{handleInputChangeBlur({...pr, is_delivered:e.target.checked?1:0});}}/></label></td>
+							<td id="pr-ord" className="pr-status-cell" title="Gerido na página de Encomendas">
+								<label className="magic-label">P</label>
+								<span className="pr-status-wrap">
+									<i className={`fa-solid ${pr.is_ordered==1 ? "fa-circle-check pr-status-yes" : "fa-circle pr-status-no"}`}/>
+								</span>
+							</td>
+							<td id="pr-del" className="pr-status-cell" title="Gerido na página de Encomendas">
+								<label className="magic-label">E</label>
+								<span className="pr-status-wrap">
+									<i className={`fa-solid ${pr.is_delivered==1 ? "fa-circle-check pr-status-yes" : "fa-circle pr-status-no"}`}/>
+								</span>
+							</td>
 							<td id="pr-for"><button className="confirm" disabled={disabled}><i className="fa-solid fa-forward" onClick={(e)=>handleActionForwardPR(pr)}/></button></td>
 							<td id="pr-delete"><button className="cancel" disabled={disabled}><i className="fa-solid fa-trash" onClick={(e)=>handleActionDeletePR(pr.spr_id)}/></button></td>
 						</tr>

@@ -66,6 +66,13 @@
 	background: rgba(0, 0, 0, 0.12);
 }
 
+/* Lives duplicated in the Estado cell for the mobile card layout (see the
+   max-width:650px block below) — on desktop the table layout already has
+   room for it next to the message, so this copy stays hidden there. */
+.notifications-page .notif-message-toggle-mobile{
+	display: none;
+}
+
 .notifications-page tr.notif-unread{
 	background: var(--primary-soft);
 	font-weight: 700;
@@ -219,6 +226,99 @@
 	word-break: break-word;
 }
 
+.notif-service-preview{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+
+	padding: var(--padding);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-page);
+}
+
+.notif-service-preview-loading{
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+}
+
+.notif-service-preview-row{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+}
+
+.notif-service-preview-malfunction{
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--small-padding);
+}
+
+.notif-service-preview-label{
+	flex: 0 0 auto;
+	font-weight: 600;
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+}
+
+.notif-service-preview-state{
+	padding: var(--small-padding) var(--padding);
+	border-radius: 999px;
+	font-weight: 700;
+	font-size: var(--font-size-small);
+	color: var(--txt-dark);
+}
+
+.notif-service-preview-text{
+	margin: 0;
+	color: var(--txt-dark);
+
+	white-space: pre-wrap;
+	word-break: break-word;
+
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.notif-service-preview-cards{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+}
+
+.notif-service-preview-card{
+	flex: 1 1 140px;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--small-padding);
+
+	padding: var(--padding);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-card);
+	color: var(--txt-dark);
+
+	cursor: pointer;
+
+	i{
+		color: var(--primary);
+		font-size: var(--font-size-big);
+	}
+}
+
+.notif-service-preview-card:hover{
+	background: var(--bg-page-dark);
+	border-color: var(--primary);
+}
+
+.notif-service-preview-card-id{
+	font-weight: 700;
+}
+
 .notif-detail-actions{
 	display: flex;
 
@@ -274,7 +374,25 @@
 		text-align: left;
 	}
 
-	.notifications-page .notif-message-toggle{
+	/* The eye moves up into the Estado row here instead of sitting
+	   inline after the message text, since the stacked card layout
+	   puts Estado first anyway. "Estado" + the checkbox stay packed
+	   together on the left (override the shared td's space-between),
+	   and the eye gets pushed out to the far right edge on its own. */
+	.notifications-page .notif-estado-cell{
+		justify-content: flex-start;
+		gap: var(--small-padding);
+	}
+
+	.notifications-page .notif-estado-cell .notif-message-toggle-mobile{
+		margin-left: auto;
+	}
+
+	.notifications-page .notif-message-toggle:not(.notif-message-toggle-mobile){
 		display: none;
+	}
+
+	.notifications-page .notif-message-toggle-mobile{
+		display: flex;
 	}
 }

@@ -27,17 +27,24 @@ baseAudio.preload = "auto";
 baseAudio.volume = 0.9;
 
 // Browsers only allow audio playback after a real user gesture on the page.
-// Priming it once during an actual click/key/touch (even though it's
-// immediately paused) establishes that permission well before a real
-// notification needs to play.
+// Priming it once during an actual click/key/touch establishes that
+// permission well before a real notification needs to play. play() actually
+// starts audible playback the instant it begins — pausing only once the
+// promise resolves still lets a brief blip through — so this is muted for
+// the priming call specifically; it's meant to be silent, not an early ding.
 export function unlockNotificationSound() {
+	const wasMuted = baseAudio.muted;
+	baseAudio.muted = true;
+
 	baseAudio.play()
 		.then(() => {
 			baseAudio.pause();
 			baseAudio.currentTime = 0;
+			baseAudio.muted = wasMuted;
 		})
 		.catch(() => {
 			// Still locked down (e.g. no gesture yet) — next real attempt will retry
+			baseAudio.muted = wasMuted;
 		});
 }
 

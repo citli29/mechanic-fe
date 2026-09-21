@@ -220,6 +220,21 @@
 }
 
 /* =====================
+   Highlighted row (arrived from a notification)
+===================== */
+
+.product-requests-page tr.pr-row-highlighted{
+	outline: 2px solid var(--accent);
+	outline-offset: -2px;
+	position: relative;
+	z-index: 1;
+
+	td{
+		background: var(--accent-soft, #fef3c7) !important;
+	}
+}
+
+/* =====================
    Delivery Product Picker (popup)
 ===================== */
 
@@ -334,5 +349,40 @@
 	.product-requests-page .pr-tabs button{
 		flex: 1 1 auto;
 		justify-content: center;
+	}
+
+	/* Card.css's mobile layout puts the data-label::before on the left
+	   and the control on the right via flex — that's why "Pedido"
+	   already looks right here. ".pr-received-cell" permanently forces
+	   display:grid (for its desktop 2-column [checkbox][specify-button]
+	   layout), which defeats that trick and leaves "Recebido" broken.
+	   Put it back on the same flex row Pedido uses, with the checkbox
+	   and the optional specify-button grouped together on the right. */
+	.product-requests-page .pr-received-cell{
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		text-align: left;
+	}
+
+	.product-requests-page .pr-received-cell label{
+		width: unset !important;
+		height: unset !important;
+	}
+
+	.product-requests-page .pr-received-controls{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+	}
+
+	.product-requests-page .pr-received-cell .pr-btn-specify{
+		width: auto;
+		height: auto;
+	}
+
+	.product-requests-page .pr-received-cell button{
+		height: calc(var(--line-height) - 2 * var(--small-padding));
+		aspect-ratio: 1;
 	}
 }

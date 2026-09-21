@@ -9,6 +9,58 @@ import "./Style/NotificationsList.css";
 
 const PER_PAGE = 20;
 
+const SERVICE_FINISHED_TITLE = "Folha de serviço finalizada";
+const SERVICE_STARTED_TITLE = "Serviço iniciado";
+const PRODUCT_REQUESTED_TITLE = "Produto pedido";
+const PRODUCT_DELIVERED_TITLE = "Produto entregue";
+const SAME_CAR_TITLE = "Folha de serviço aberta para o mesmo carro";
+
+// Same 4-state precedence as ServiceHeader.jsx's getServiceStatus/getStateClass
+// — kept in sync manually since there's no shared module for it yet.
+function getServiceStatus(service) {
+	if (service?.checkout) return { desc: "Entregue", stateClass: "state-delivered" };
+	if (service?.office_check) return { desc: "Validado", stateClass: "state-validated" };
+	if (service?.is_finished) return { desc: "Terminado", stateClass: "state-finished" };
+	return { desc: "Por Terminar", stateClass: "state-not-finished" };
+}
+
+function formatCarLabel(service) {
+	if (!service?.car_plate) return null;
+	return [service.car_plate, service.car_make_name, service.car_model_name].filter(Boolean).join(" - ");
+}
+
+// The notification `data` payload only ever carries a service url — the
+// product's name has to be pulled back out of the message text itself so we
+// can match it against /products_requested and show its reference/tipo/qtd.
+function extractProductName(message, title) {
+	if (!message) return null;
+	const verb = title === PRODUCT_REQUESTED_TITLE ? "pedido" : "entregue";
+	const match = message.match(new RegExp(`^Produto (.+?) ${verb} `));
+	return match ? match[1] : null;
+}
+
+function extractServiceIdFromUrl(url) {
+	const match = url?.match(/^service\/(\d+)$/);
+	return match ? match[1] : null;
+}
+
+// Shared by the popup preview and by "open" navigation (for highlighting the
+// row on the Encomendas page) so both agree on which product a notification
+// is actually about.
+async function findMatchingProductRequest(serviceId, message, title) {
+	const productName = extractProductName(message, title);
+	if (!serviceId || !productName) return null;
+
+	try {
+		const res = await api.get(`/services/${serviceId}/products_requested`);
+		return (res.data.spr_list || []).find(
+			(pr) => (pr.product_name || "").trim().toLowerCase() === productName.trim().toLowerCase()
+		) || null;
+	} catch {
+		return null;
+	}
+}
+
 function formatDateTime(value) {
 	if (!value) return "-";
 
@@ -29,6 +81,8 @@ export default function NotificationsList() {
 	const [notifications, setNotifications] = useState([]);
 	const [onlyUnread, setOnlyUnread] = useState(true);
 	const [viewingNotification, setViewingNotification] = useState(null);
+	const [preview, setPreview] = useState(null);
+	const [previewLoading, setPreviewLoading] = useState(false);
 
 	const [notificationTypes, setNotificationTypes] = useState([]);
 	const [viewTypeId, setViewTypeId] = useState(getStoredViewTypeId());
@@ -131,6 +185,61 @@ export default function NotificationsList() {
 	}, [onlyUnread, page, effectiveViewTypeId]);
 
 
+	useEffect(() => {
+		const title = viewingNotification?.title;
+		const serviceId = extractServiceIdFromUrl(viewingNotification?.data?.url);
+
+		let isCurrent = true;
+		setPreview(null);
+		setPreviewLoading(false);
+
+		async function run() {
+			if ((title === SERVICE_FINISHED_TITLE || title === SERVICE_STARTED_TITLE) && serviceId) {
+				setPreviewLoading(true);
+				try {
+					const res = await api.get(`/services/${serviceId}`);
+					if (isCurrent) setPreview({ type: "service", service: res.data.service });
+				} catch {
+					// leave preview empty — popup still shows the plain message
+				} finally {
+					if (isCurrent) setPreviewLoading(false);
+				}
+			} else if ((title === PRODUCT_REQUESTED_TITLE || title === PRODUCT_DELIVERED_TITLE) && serviceId) {
+				setPreviewLoading(true);
+				try {
+					const [serviceRes, product] = await Promise.all([
+						api.get(`/services/${serviceId}`),
+						findMatchingProductRequest(serviceId, viewingNotification.message, title),
+					]);
+					if (isCurrent) setPreview({ type: "product", service: serviceRes.data.service, product });
+				} catch {
+					// leave preview empty — popup still shows the plain message
+				} finally {
+					if (isCurrent) setPreviewLoading(false);
+				}
+			} else if (title === SAME_CAR_TITLE) {
+				const existingId = viewingNotification.message?.match(/#(\d+)/)?.[1];
+				const ids = [...new Set([serviceId, existingId].filter(Boolean))];
+				if (ids.length === 0) return;
+
+				setPreviewLoading(true);
+				try {
+					const services = await Promise.all(
+						ids.map((id) => api.get(`/services/${id}`).then((r) => r.data.service).catch(() => null))
+					);
+					if (isCurrent) setPreview({ type: "same-car", services: services.filter(Boolean) });
+				} finally {
+					if (isCurrent) setPreviewLoading(false);
+				}
+			}
+		}
+
+		run();
+
+		return () => { isCurrent = false; };
+	}, [viewingNotification]);
+
+
 	function selectFilter(unreadOnly) {
 		setOnlyUnread(unreadOnly);
 		setPage(1);
@@ -144,7 +253,29 @@ export default function NotificationsList() {
 	}
 
 
-	function handleOpenNotification(notification) {
+	async function handleOpenNotification(notification) {
+		// A requested product is waiting to be handled from Encomendas now
+		// (see the "Pedido"/"Recebido" toggles moved there), not from the
+		// service page itself — so this one goes there instead of data.url's
+		// service link. Products_requested defaults to the "Por Encomendar"
+		// tab already, which is exactly what a fresh "Produto pedido" needs.
+		if (notification.title === PRODUCT_REQUESTED_TITLE) {
+			const serviceId = extractServiceIdFromUrl(notification.data?.url);
+			const product = await findMatchingProductRequest(serviceId, notification.message, notification.title);
+
+			// It may well have moved on since the notification fired (e.g.
+			// already ordered) — land on whichever Encomendas tab it's
+			// actually sitting in now, not blindly on "Por Encomendar".
+			const activeTab = product?.is_delivered == 1
+				? "delivered"
+				: product?.is_ordered == 1
+					? "awaiting_delivery"
+					: "to_order";
+
+			navigate("/products_requested", product ? { state: { highlightId: product.id, activeTab } } : undefined);
+			return;
+		}
+
 		const url = notification.data?.url;
 
 		if (url) {
@@ -253,13 +384,20 @@ export default function NotificationsList() {
 											className={notification.is_checked ? "notif-read" : "notif-unread"}
 											onClick={() => handleOpenNotification(notification)}
 										>
-											<td data-label="Estado" onClick={(e) => e.stopPropagation()}>
+											<td data-label="Estado" className="notif-estado-cell" onClick={(e) => e.stopPropagation()}>
 												<input
 													type="checkbox"
 													checked={!!notification.is_checked}
 													title={notification.is_checked ? "Tratada" : "Por Tratar"}
 													onChange={(e) => handleToggleChecked(notification, e)}
 												/>
+												<button
+													className="notif-message-toggle notif-message-toggle-mobile"
+													onClick={(e) => handleViewMessage(notification, e)}
+													title="Ver mensagem completa"
+												>
+													<i className="fa-solid fa-eye" />
+												</button>
 											</td>
 											<td data-label="Tipo">{notification.notification_type_name || "-"}</td>
 											<td data-label="Título">{notification.title}</td>
@@ -333,6 +471,93 @@ export default function NotificationsList() {
 						<div className="notif-detail-text">
 							{viewingNotification.message}
 						</div>
+
+						{(previewLoading || preview) && (
+							<div className="notif-service-preview">
+								{previewLoading ? (
+									<p className="notif-service-preview-loading">A carregar...</p>
+								) : preview.type === "service" ? (
+									<>
+										<div className="notif-service-preview-row">
+											<span className="notif-service-preview-label">Estado</span>
+											<span className={`notif-service-preview-state ${getServiceStatus(preview.service).stateClass}`}>
+												{getServiceStatus(preview.service).desc}
+											</span>
+										</div>
+
+										<div className="notif-service-preview-row">
+											<span className="notif-service-preview-label">Tipo de Serviço</span>
+											<span>{preview.service?.service_type_name || "-"}</span>
+										</div>
+
+										{formatCarLabel(preview.service) && (
+											<div className="notif-service-preview-row">
+												<span className="notif-service-preview-label">Viatura</span>
+												<span>{formatCarLabel(preview.service)}</span>
+											</div>
+										)}
+
+										{preview.service?.malfunction && (
+											<div className="notif-service-preview-row notif-service-preview-malfunction">
+												<span className="notif-service-preview-label">Descrição de Avaria</span>
+												<p className="notif-service-preview-text">{preview.service.malfunction}</p>
+											</div>
+										)}
+									</>
+								) : preview.type === "product" ? (
+									<>
+										<div className="notif-service-preview-row">
+											<span className="notif-service-preview-label">Tipo de Serviço</span>
+											<span>{preview.service?.service_type_name || "-"}</span>
+										</div>
+
+										{preview.product && (
+											<>
+												<div className="notif-service-preview-row">
+													<span className="notif-service-preview-label">Produto</span>
+													<span>{preview.product.product_name}</span>
+												</div>
+
+												<div className="notif-service-preview-row">
+													<span className="notif-service-preview-label">Referência</span>
+													<span>{preview.product.product_reference || "-"}</span>
+												</div>
+
+												<div className="notif-service-preview-row">
+													<span className="notif-service-preview-label">Tipo de Produto</span>
+													<span>{preview.product.product_type_name || "-"}</span>
+												</div>
+
+												<div className="notif-service-preview-row">
+													<span className="notif-service-preview-label">Quantidade</span>
+													<span>{preview.product.quantity}</span>
+												</div>
+											</>
+										)}
+									</>
+								) : preview.type === "same-car" ? (
+									<div className="notif-service-preview-cards">
+										{preview.services.map((s) => (
+											<button
+												key={s.id}
+												type="button"
+												className="notif-service-preview-card"
+												onClick={() => {
+													navigate(`/service/${s.id}`);
+													setViewingNotification(null);
+												}}
+											>
+												<i className="fa-solid fa-arrow-up-right-from-square" />
+												<span className="notif-service-preview-card-id">Serviço #{s.id}</span>
+												<span className={`notif-service-preview-state ${getServiceStatus(s).stateClass}`}>
+													{getServiceStatus(s).desc}
+												</span>
+											</button>
+										))}
+									</div>
+								) : null}
+							</div>
+						)}
 
 						{viewingNotification.data?.url && (
 							<div className="notif-detail-actions">

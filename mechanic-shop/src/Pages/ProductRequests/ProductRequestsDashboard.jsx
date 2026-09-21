@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -56,11 +56,25 @@ function groupByService(products) {
 export default function ProductRequestsDashboard() {
 
 	const navigate = useNavigate();
+	const location = useLocation();
 
 	const requestIdRef = useRef(0);
 
-	const [activeTab, setActiveTab] = useState(TABS[0].key);
+	const [activeTab, setActiveTab] = useState(() => {
+		const requested = location.state?.activeTab;
+		return TABS.some((t) => t.key === requested) ? requested : TABS[0].key;
+	});
 	const [counts, setCounts] = useState({});
+
+	// Arrived here from a "Produto pedido" notification — briefly highlight
+	// that exact row so it's not just "somewhere in this list of products."
+	const [highlightId, setHighlightId] = useState(() => location.state?.highlightId ?? null);
+
+	useEffect(() => {
+		if (!highlightId) return;
+		const timer = setTimeout(() => setHighlightId(null), 4000);
+		return () => clearTimeout(timer);
+	}, [highlightId]);
 
 	const [items, setItems] = useState([]);
 	const [page, setPage] = useState(1);
@@ -374,7 +388,14 @@ export default function ProductRequestsDashboard() {
 
 							<tbody>
 								{group.items.map((item) => (
-									<tr key={item.id} className={pickerItemId === item.id ? "pr-row-selected" : ""}>
+									<tr
+										key={item.id}
+										ref={item.id === highlightId ? (el) => el?.scrollIntoView({ behavior: "smooth", block: "center" }) : undefined}
+										className={[
+											pickerItemId === item.id ? "pr-row-selected" : "",
+											item.id === highlightId ? "pr-row-highlighted" : "",
+										].filter(Boolean).join(" ")}
+									>
 										<td data-label="Nome">{item.product_name || "-"}</td>
 										<td data-label="Referência">{item.product_reference || "-"}</td>
 										<td data-label="Tipo">{item.product_type_name || "-"}</td>
@@ -397,21 +418,23 @@ export default function ProductRequestsDashboard() {
 										</td>
 										{showReceived && (
 											<td data-label="Recebido" className="pr-checkbox-cell pr-received-cell">
-												<label>
-													<input
-														type="checkbox"
-														checked={item.is_delivered == 1}
-														onChange={(e) => handleToggle(item, "is_delivered", e.target.checked)}
-													/>
-												</label>
-												{activeTab === "awaiting_delivery" && (
-													<button
-														className="pr-btn-specify options"
-														onClick={() => (pickerItemId === item.id ? closePicker() : openPicker(item))}
-													>
-														<i className="fa-solid fa-boxes-packing" />
-													</button>
-												)}
+												<span className="pr-received-controls">
+													<label>
+														<input
+															type="checkbox"
+															checked={item.is_delivered == 1}
+															onChange={(e) => handleToggle(item, "is_delivered", e.target.checked)}
+														/>
+													</label>
+													{activeTab === "awaiting_delivery" && (
+														<button
+															className="pr-btn-specify options"
+															onClick={() => (pickerItemId === item.id ? closePicker() : openPicker(item))}
+														>
+															<i className="fa-solid fa-boxes-packing" />
+														</button>
+													)}
+												</span>
 											</td>
 										)}
 									</tr>

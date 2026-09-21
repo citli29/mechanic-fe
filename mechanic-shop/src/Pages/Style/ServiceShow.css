@@ -401,9 +401,40 @@
 								aspect-ratio:1;
 							}
 						}
-						
+
 					}
-					
+
+					/* Pedido/Recebido are read-only status here now (managed
+					   from Encomendas), rendered as an icon rather than a
+					   disabled checkbox since Chrome forces disabled form
+					   controls to look gray no matter what color is set. */
+					&.pr-status-cell{
+						cursor: default;
+
+						/* Other cells in this row look centered because their
+						   content (input/button) fills the cell height itself
+						   — a bare icon doesn't, so it falls back to baseline
+						   alignment and sits noticeably high. Same fix as the
+						   checkbox label above: a flex wrapper filling the
+						   cell. */
+						.pr-status-wrap{
+							display: flex;
+							width: 100%;
+							height: 100%;
+							align-items: center;
+							justify-content: center;
+						}
+
+						.pr-status-yes{
+							color: var(--primary);
+							font-size: 1.1em;
+						}
+						.pr-status-no{
+							color: var(--border);
+							font-size: 0.6em;
+						}
+					}
+
 					&:has(input:not(:disabled)):hover,
 					&:has(button:not(.go-today)):hover{
 						background: var(--bg-page-dark);
@@ -1154,6 +1185,23 @@
 			#pr-del{
 				grid-row:3;
 				grid-column:2;
+			}
+			/* Header row is hidden at this width, so "Pedido"/"Recebido"
+			   (Entregue) lose all context — a small floating letter, same
+			   idea as the "Qt:" magic-label, keeps them readable. */
+			.pr-status-cell{
+				position: relative;
+
+				.magic-label{
+					display: unset !important;
+					position: absolute;
+					top: var(--small-padding);
+					left: var(--small-padding);
+					font-size: var(--font-size-small);
+					font-weight: 700;
+					color: var(--txt-muted);
+					background: transparent;
+				}
 			}
 			#pr-delete{
 				grid-row:1;

@@ -5,6 +5,15 @@ import { getDefaultViewTypeId, getStoredViewTypeId, onNotificationsUpdated, onVi
 import { claimNotificationDing, isNotificationSoundMuted, playNotificationSound, setNotificationSoundMuted, unlockNotificationSound } from "../../utils/notificationSound";
 import "./Navbar.css";
 
+// Each view cares about a different stage of the same Encomendas pipeline:
+// Oficina wants to know what's ready to use (delivered), Escritório wants to
+// know what still needs to be ordered. Filters match ProductRequestsDashboard's
+// own tabs exactly, so this count is always consistent with that page.
+const RELATED_PRODUCT_COUNTS = {
+	"Oficina": { filters: { is_delivered: "true" } },
+	"Escritório": { filters: { is_ordered: "false" } },
+};
+
 export default function Navbar() {
 
 	const dropdownRef = useRef(null);
@@ -13,6 +22,8 @@ export default function Navbar() {
 	const [unreadCount, setUnreadCount] = useState(0);
 	const [notificationTypes, setNotificationTypes] = useState([]);
 	const [soundMuted, setSoundMuted] = useState(() => isNotificationSoundMuted());
+	const [viewTypeName, setViewTypeName] = useState(null);
+	const [productCount, setProductCount] = useState(null);
 
 	// Highest notification id already dinged for, per view-type scope (e.g.
 	// "3,5" for Geral+Oficina) — null until that scope's first real fetch, so
@@ -56,6 +67,60 @@ export default function Navbar() {
 			.then((res) => setNotificationTypes(res.data.notification_type_list || []))
 			.catch(() => {});
 	}, []);
+
+	// Tracks which view (Oficina/Escritório) is currently selected — same
+	// source of truth the notification poll below uses — so the Encomendas
+	// badge always matches. Recomputed whenever the stored view changes
+	// (e.g. switched via the dropdown on the Notifications page), not just
+	// when notificationTypes first loads.
+	useEffect(() => {
+		function updateViewTypeName() {
+			const selectableTypes = notificationTypes.filter((t) => t.name !== "Geral");
+
+			if (selectableTypes.length === 0) {
+				setViewTypeName(null);
+				return;
+			}
+
+			const storedId = getStoredViewTypeId();
+			const viewTypeId = selectableTypes.some((t) => String(t.id) === String(storedId))
+				? storedId
+				: getDefaultViewTypeId(selectableTypes);
+
+			setViewTypeName(selectableTypes.find((t) => String(t.id) === String(viewTypeId))?.name ?? null);
+		}
+
+		updateViewTypeName();
+
+		return onViewTypeChanged(updateViewTypeName);
+	}, [notificationTypes]);
+
+	useEffect(() => {
+		const relatedProductInfo = viewTypeName ? RELATED_PRODUCT_COUNTS[viewTypeName] : null;
+
+		if (!relatedProductInfo) {
+			setProductCount(null);
+			return;
+		}
+
+		let isCurrent = true;
+
+		function loadProductCount() {
+			api.get("/services_products_requested", { params: { ...relatedProductInfo.filters, p: 1, u: 1 } })
+				.then((res) => {
+					if (isCurrent) setProductCount(res.data.pagination?.total ?? 0);
+				})
+				.catch(() => {});
+		}
+
+		loadProductCount();
+		const pollId = setInterval(loadProductCount, 5000);
+
+		return () => {
+			isCurrent = false;
+			clearInterval(pollId);
+		};
+	}, [viewTypeName]);
 
 	useEffect(() => {
 		if (notificationTypes.length === 0) return;
@@ -294,6 +359,9 @@ export default function Navbar() {
 							onClick={closeDropdown}
 						>
 							Encomendas
+							{productCount > 0 && (
+								<span className="navbar-badge">{productCount > 99 ? "99+" : productCount}</span>
+							)}
 						</NavLink>
 
 						<NavLink
