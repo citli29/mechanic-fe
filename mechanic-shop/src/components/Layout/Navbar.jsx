@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import api from "../../api/axios";
 import { getDefaultViewTypeId, getStoredViewTypeId, onNotificationsUpdated, onViewTypeChanged } from "../../utils/notificationView";
-import { isNotificationSoundMuted, playNotificationSound, setNotificationSoundMuted, unlockNotificationSound } from "../../utils/notificationSound";
+import { claimNotificationDing, isNotificationSoundMuted, playNotificationSound, setNotificationSoundMuted, unlockNotificationSound } from "../../utils/notificationSound";
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -14,9 +14,18 @@ export default function Navbar() {
 	const [notificationTypes, setNotificationTypes] = useState([]);
 	const [soundMuted, setSoundMuted] = useState(() => isNotificationSoundMuted());
 
-	// null until the first real fetch resolves, so we never "ding" just for
-	// loading the page with pre-existing unread notifications.
-	const prevUnreadCountRef = useRef(null);
+	// Highest notification id already dinged for, per view-type scope (e.g.
+	// "3,5" for Geral+Oficina) — null until that scope's first real fetch, so
+	// we never "ding" just for loading the page with pre-existing unread
+	// notifications. Id-based rather than count-based: a raw count is
+	// ambiguous (if one notification gets marked read the same moment a new
+	// one arrives, the count can stay flat and the new one silently never
+	// dings) — an id higher than anything seen before is unambiguous
+	// regardless of what else happened concurrently. Scoped per view so
+	// switching between Escritório/Oficina never causes a false ding (the
+	// "most recent" notification id jumps when the filter changes) and never
+	// suppresses a real one for the other view.
+	const prevTopIdByScopeRef = useRef({});
 
 	// Browsers require a real user gesture before an AudioContext can play
 	// audible sound — a background notification poll doesn't count. This
@@ -59,10 +68,21 @@ export default function Navbar() {
 		// would both read the same stale prevUnreadCountRef before either
 		// writes it, so a single new notification could "ding" twice.
 		let isFetching = false;
+		let stuckFetchTimeoutId = null;
 
 		function loadUnreadCount() {
 			if (isFetching) return;
 			isFetching = true;
+
+			// Safety net: if a request never settles for some reason axios's own
+			// timeout doesn't catch (a suspended background tab, etc.), don't
+			// let that wedge this lock — and with it, all future polling —
+			// forever. Force it open again after a bounded wait so the next
+			// poll can retry cleanly.
+			clearTimeout(stuckFetchTimeoutId);
+			stuckFetchTimeoutId = setTimeout(() => {
+				isFetching = false;
+			}, 15000);
 
 			const generalId = notificationTypes.find((t) => t.name === "Geral")?.id;
 			const selectableTypes = notificationTypes.filter((t) => t.name !== "Geral");
@@ -73,6 +93,7 @@ export default function Navbar() {
 				: getDefaultViewTypeId(selectableTypes);
 
 			const typeIds = [generalId, viewTypeId].filter(Boolean);
+			const scopeKey = typeIds.join(",");
 
 			const params = { is_checked: "false", p: 1, u: 1 };
 			if (typeIds.length) params["n-type-in"] = typeIds.join(",");
@@ -82,16 +103,30 @@ export default function Navbar() {
 					if (!isCurrent) return;
 
 					const newCount = res.data.pagination?.total ?? 0;
+					// Sorted newest-first server-side, so this is the most recent
+					// unread notification's id, if there is one.
+					const latestId = res.data.notification_list?.[0]?.id ?? null;
 
-					if (prevUnreadCountRef.current !== null && newCount > prevUnreadCountRef.current) {
-						playNotificationSound();
+					const prevTopId = prevTopIdByScopeRef.current[scopeKey] ?? null;
+
+					if (prevTopId !== null && latestId !== null && latestId > prevTopId) {
+						// Still per-tab gated above (never dings on this tab's own
+						// first load for this scope) — the shared claim only dedups
+						// the same rise being noticed by more than one open tab.
+						if (claimNotificationDing(scopeKey, latestId)) {
+							playNotificationSound();
+						}
 					}
 
-					prevUnreadCountRef.current = newCount;
+					if (latestId !== null) {
+						prevTopIdByScopeRef.current[scopeKey] = latestId;
+					}
+
 					setUnreadCount(newCount);
 				})
 				.catch(() => {})
 				.finally(() => {
+					clearTimeout(stuckFetchTimeoutId);
 					isFetching = false;
 				});
 		}
@@ -108,6 +143,7 @@ export default function Navbar() {
 		return () => {
 			isCurrent = false;
 			clearInterval(pollId);
+			clearTimeout(stuckFetchTimeoutId);
 			unsubscribeView();
 			unsubscribeUpdated();
 		};

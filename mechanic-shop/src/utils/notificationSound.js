@@ -1,4 +1,7 @@
 const MUTE_KEY = "oficina-lima-notif-sound-muted";
+const SHARED_ID_KEY_PREFIX = "oficina-lima-notif-last-dinged-id:";
+const SOUND_URL = "/sounds/notification-ding.wav";
+const SOUND_DURATION_MS = 810; // matches the generated file's actual length
 
 export function isNotificationSoundMuted() {
 	try {
@@ -16,65 +19,94 @@ export function setNotificationSoundMuted(muted) {
 	}
 }
 
-let audioCtx = null;
+// A real sampled WAV instead of live-synthesized tones — a plain <audio>
+// element doesn't get auto-suspended after idle the way a Web Audio
+// AudioContext does, which was the cause of the "sometimes silent" bug.
+const baseAudio = new Audio(SOUND_URL);
+baseAudio.preload = "auto";
+baseAudio.volume = 0.9;
 
-function getAudioCtx() {
-	if (!audioCtx) {
-		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-	}
-	return audioCtx;
-}
-
-// Chrome (and most browsers) will only let an AudioContext produce audible
-// sound if it was created/resumed during a real user gesture — a
-// notification poll firing minutes later doesn't count, so without this the
-// context stays silently suspended forever and nothing plays, no error
-// thrown either. Call this once from an actual click/key/touch handler as
-// early as possible so the context is already running by the time a
+// Browsers only allow audio playback after a real user gesture on the page.
+// Priming it once during an actual click/key/touch (even though it's
+// immediately paused) establishes that permission well before a real
 // notification needs to play.
 export function unlockNotificationSound() {
+	baseAudio.play()
+		.then(() => {
+			baseAudio.pause();
+			baseAudio.currentTime = 0;
+		})
+		.catch(() => {
+			// Still locked down (e.g. no gesture yet) — next real attempt will retry
+		});
+}
+
+// Identity-based, not count-based: the caller passes the id of the most
+// recent unread notification (ids only ever increase) rather than a total
+// count. Counts are ambiguous — if a notification gets marked read at the
+// same moment a new one arrives, the count can stay flat and a real new
+// notification silently never dings. An id that's higher than anything
+// dinged before is unambiguous no matter what else happened concurrently.
+//
+// scopeKey identifies which set of notification types this check is for
+// (e.g. "3,5" for Geral+Oficina) — two tabs watching the same view share a
+// key and dedupe each other; a tab on a different view (different scopeKey)
+// is unaffected, so switching views never causes a false ding or suppresses
+// a real one for the other view.
+//
+// Two tabs open to the site each poll independently, so both would
+// otherwise notice the same real notification and each play their own
+// sound, landing at unsynchronized moments — sounds like a random stray
+// beep rather than one clean ding. localStorage is shared across
+// same-origin tabs, so whichever tab notices a given id first "claims" it
+// here; the other sees it's already handled and stays quiet.
+export function claimNotificationDing(scopeKey, latestId) {
+	const storageKey = SHARED_ID_KEY_PREFIX + scopeKey;
+
 	try {
-		const ctx = getAudioCtx();
-		if (ctx.state === "suspended") ctx.resume();
+		const stored = localStorage.getItem(storageKey);
+		const alreadyDingedFor = stored === null ? null : Number(stored);
+
+		if (alreadyDingedFor !== null && latestId <= alreadyDingedFor) {
+			return false;
+		}
+
+		localStorage.setItem(storageKey, String(latestId));
+		return true;
 	} catch {
-		// Web Audio unsupported — playNotificationSound() will no-op too
+		return true; // localStorage unavailable — fall back to per-tab behavior
 	}
 }
 
-function playTone(ctx, freq, startTime, duration, peakGain) {
-	const osc = ctx.createOscillator();
-	const gain = ctx.createGain();
+// Tracks when the last scheduled ding finishes, across calls — otherwise two
+// notifications landing close together would each start playing immediately
+// and independently, overlapping and muddying each other instead of playing
+// as two clean, sequential dings.
+let nextAvailableAt = 0;
 
-	osc.type = "triangle";
-	osc.frequency.setValueAtTime(freq, startTime);
-
-	gain.gain.setValueAtTime(0, startTime);
-	gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.015);
-	gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-	osc.connect(gain);
-	gain.connect(ctx.destination);
-
-	osc.start(startTime);
-	osc.stop(startTime + duration);
-}
-
-// Two short, bright, ascending notes (a perfect-fifth "ding-dong") rather
-// than one smooth tone — discrete notes cut through background music much
-// better than a continuous sweep. Synthesized with the Web Audio API, no
-// audio file to fetch/host.
 export function playNotificationSound() {
 	if (isNotificationSoundMuted()) return;
 
-	try {
-		const ctx = getAudioCtx();
-		if (ctx.state === "suspended") ctx.resume();
+	const now = Date.now();
+	const startAt = Math.max(now, nextAvailableAt);
+	const delay = startAt - now;
 
-		const now = ctx.currentTime;
-		playTone(ctx, 1046.5, now, 0.18, 0.4); // C6
-		playTone(ctx, 1568, now + 0.15, 0.28, 0.4); // G6
-	} catch {
-		// Autoplay blocked or Web Audio unsupported — fail silently, the
-		// visual badge still updates regardless.
-	}
+	nextAvailableAt = startAt + SOUND_DURATION_MS;
+
+	setTimeout(() => {
+		if (isNotificationSoundMuted()) return;
+
+		try {
+			// A fresh clone per play so overlapping/queued dings never fight
+			// over the same element's playback position.
+			const instance = baseAudio.cloneNode();
+			instance.volume = baseAudio.volume;
+			instance.play().catch(() => {
+				// Autoplay blocked — fail silently, the visual badge still
+				// updates regardless.
+			});
+		} catch {
+			// Audio unsupported — fail silently
+		}
+	}, delay);
 }
