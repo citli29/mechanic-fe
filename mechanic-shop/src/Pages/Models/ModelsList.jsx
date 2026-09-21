@@ -343,8 +343,8 @@ export default function ModelsList() {
 										</tr>
 									) : (
 										<tr key={model.id}>
-											<td data-label="Modelo">{model.name}</td>
-											<td data-label="Marca">{model.make_name}</td>
+											<td data-label="Modelo"><span className="cell-truncate" title={model.name}>{model.name}</span></td>
+											<td data-label="Marca"><span className="cell-truncate" title={model.make_name}>{model.make_name}</span></td>
 
 											<td className="actions">
 												<button className="options" onClick={() => editModel(model)}>

@@ -262,7 +262,7 @@ export default function MakesList() {
 										</tr>
 									) : (
 										<tr key={make.id}>
-											<td data-label="Marca">{make.name}</td>
+											<td data-label="Marca"><span className="cell-truncate" title={make.name}>{make.name}</span></td>
 
 											<td className="actions">
 												<button className="options" onClick={() => editMake(make)}>

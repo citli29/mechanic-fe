@@ -688,15 +688,15 @@ export default function CarsList() {
 										</tr>
 									) : (
 										<tr key={car.id}>
-											<td data-label="Matrícula">{car.plate}</td>
-											<td data-label="Marca">{car.make_name}</td>
-											<td data-label="Modelo">{car.model_name}</td>
-											<td data-label="Mês">{car.month}</td>
-											<td data-label="Ano">{car.year}</td>
-											<td data-label="CC">{car.cc}</td>
-											<td data-label="Cod. Motor">{car.engine_code}</td>
-											<td data-label="Cod. Cor">{car.color_code}</td>
-											<td data-label="Nr. Chassi">{car.chassi_nr}</td>
+											<td data-label="Matrícula"><span className="cell-truncate" title={car.plate}>{car.plate}</span></td>
+											<td data-label="Marca"><span className="cell-truncate" title={car.make_name}>{car.make_name}</span></td>
+											<td data-label="Modelo"><span className="cell-truncate" title={car.model_name}>{car.model_name}</span></td>
+											<td data-label="Mês"><span className="cell-truncate" title={car.month}>{car.month}</span></td>
+											<td data-label="Ano"><span className="cell-truncate" title={car.year}>{car.year}</span></td>
+											<td data-label="CC"><span className="cell-truncate" title={car.cc}>{car.cc}</span></td>
+											<td data-label="Cod. Motor"><span className="cell-truncate" title={car.engine_code}>{car.engine_code}</span></td>
+											<td data-label="Cod. Cor"><span className="cell-truncate" title={car.color_code}>{car.color_code}</span></td>
+											<td data-label="Nr. Chassi"><span className="cell-truncate" title={car.chassi_nr}>{car.chassi_nr}</span></td>
 
 											<td className="actions">
 												<button className="options" onClick={() => navigate(`/cars/${car.id}`)}>

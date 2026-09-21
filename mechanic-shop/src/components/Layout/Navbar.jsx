@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import api from "../../api/axios";
 import { getDefaultViewTypeId, getStoredViewTypeId, onNotificationsUpdated, onViewTypeChanged } from "../../utils/notificationView";
+import { isNotificationSoundMuted, playNotificationSound, setNotificationSoundMuted, unlockNotificationSound } from "../../utils/notificationSound";
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -11,6 +12,35 @@ export default function Navbar() {
 
 	const [unreadCount, setUnreadCount] = useState(0);
 	const [notificationTypes, setNotificationTypes] = useState([]);
+	const [soundMuted, setSoundMuted] = useState(() => isNotificationSoundMuted());
+
+	// null until the first real fetch resolves, so we never "ding" just for
+	// loading the page with pre-existing unread notifications.
+	const prevUnreadCountRef = useRef(null);
+
+	// Browsers require a real user gesture before an AudioContext can play
+	// audible sound — a background notification poll doesn't count. This
+	// unlocks it on the very first interaction with the page (any click,
+	// key press or tap), so it's already running well before a real
+	// notification needs to ding.
+	useEffect(() => {
+		function unlock() {
+			unlockNotificationSound();
+			document.removeEventListener("click", unlock);
+			document.removeEventListener("keydown", unlock);
+			document.removeEventListener("touchstart", unlock);
+		}
+
+		document.addEventListener("click", unlock);
+		document.addEventListener("keydown", unlock);
+		document.addEventListener("touchstart", unlock);
+
+		return () => {
+			document.removeEventListener("click", unlock);
+			document.removeEventListener("keydown", unlock);
+			document.removeEventListener("touchstart", unlock);
+		};
+	}, []);
 
 	useEffect(() => {
 		api.get("/notification_types")
@@ -23,7 +53,17 @@ export default function Navbar() {
 
 		let isCurrent = true;
 
+		// Three independent triggers can call loadUnreadCount() close together
+		// (the 5s poll, a same-tab notification-updated event, a view-type
+		// change) — without this guard, two overlapping in-flight requests
+		// would both read the same stale prevUnreadCountRef before either
+		// writes it, so a single new notification could "ding" twice.
+		let isFetching = false;
+
 		function loadUnreadCount() {
+			if (isFetching) return;
+			isFetching = true;
+
 			const generalId = notificationTypes.find((t) => t.name === "Geral")?.id;
 			const selectableTypes = notificationTypes.filter((t) => t.name !== "Geral");
 			const storedId = getStoredViewTypeId();
@@ -39,9 +79,21 @@ export default function Navbar() {
 
 			api.get("/notifications", { params })
 				.then((res) => {
-					if (isCurrent) setUnreadCount(res.data.pagination?.total ?? 0);
+					if (!isCurrent) return;
+
+					const newCount = res.data.pagination?.total ?? 0;
+
+					if (prevUnreadCountRef.current !== null && newCount > prevUnreadCountRef.current) {
+						playNotificationSound();
+					}
+
+					prevUnreadCountRef.current = newCount;
+					setUnreadCount(newCount);
 				})
-				.catch(() => {});
+				.catch(() => {})
+				.finally(() => {
+					isFetching = false;
+				});
 		}
 
 		loadUnreadCount();
@@ -148,17 +200,35 @@ export default function Navbar() {
 						</span>
 					</NavLink>
 
-					<NavLink
-						to="/notifications"
-						className={({ isActive }) => isActive ? "navbar-notif-mobile active" : "navbar-notif-mobile"}
-						onClick={closeDropdown}
-						aria-label="Notificações"
-					>
-						<i className="fa-solid fa-bell" />
-						{unreadCount > 0 && (
-							<span className="navbar-notif-mobile-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
-						)}
-					</NavLink>
+					<div className="navbar-top-row-icons">
+
+						<button
+							type="button"
+							className="navbar-sound-toggle"
+							onClick={() => {
+								const next = !soundMuted;
+								setSoundMuted(next);
+								setNotificationSoundMuted(next);
+							}}
+							aria-label={soundMuted ? "Ativar som de notificações" : "Silenciar som de notificações"}
+							title={soundMuted ? "Ativar som de notificações" : "Silenciar som de notificações"}
+						>
+							<i className={`fa-solid ${soundMuted ? "fa-volume-xmark" : "fa-volume-high"}`} />
+						</button>
+
+						<NavLink
+							to="/notifications"
+							className={({ isActive }) => isActive ? "navbar-notif-mobile active" : "navbar-notif-mobile"}
+							onClick={closeDropdown}
+							aria-label="Notificações"
+						>
+							<i className="fa-solid fa-bell" />
+							{unreadCount > 0 && (
+								<span className="navbar-notif-mobile-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+							)}
+						</NavLink>
+
+					</div>
 
 				</div>
 
@@ -276,6 +346,16 @@ export default function Navbar() {
 								onClick={closeDropdown}
 							>
 								Tipos de Produtos
+							</NavLink>
+
+							<div className="navbar-dropdown-divider" />
+
+							<NavLink
+								to="/user_times_stats"
+								className={linkClass}
+								onClick={closeDropdown}
+							>
+								Tempos dos Utilizadores
 							</NavLink>
 
 						</div>

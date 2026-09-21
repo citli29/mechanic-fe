@@ -118,8 +118,26 @@
 		align-items: center;
 		justify-content: center;
 		text-align: center;
+		min-width: 0;
 	}
 	th{ font-size: var(--font-size-big); }
+
+	tr th:first-child, tr td:first-child{
+		padding-left: var(--padding);
+	}
+
+	/* A td/th is a flex container (for centering), so text-overflow does
+	   NOT reliably render on its direct text content — it just clips with
+	   no "…". Wrap cell text in <span className="cell-truncate"> to get a
+	   real ellipsis when it overflows. */
+	.cell-truncate{
+		display: block;
+		min-width: 0;
+		max-width: 100%;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
 
 	td{
 		input, select{

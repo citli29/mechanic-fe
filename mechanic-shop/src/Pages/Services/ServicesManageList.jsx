@@ -301,7 +301,7 @@ export default function ServicesManageList() {
 
 										return (
 											<tr key={service.id} className={isEditingRow ? "editing" : ""}>
-												<td data-label="ID">#{service.id}</td>
+												<td data-label="ID"><span className="cell-truncate" title={`#${service.id}`}>#{service.id}</span></td>
 												<td data-label="Tipo de Serviço">
 													<select
 														disabled={rowDisabled}
@@ -327,9 +327,9 @@ export default function ServicesManageList() {
 													</select>
 												</td>
 
-												<td data-label="Matrícula">{service.car_plate || "-"}</td>
-												<td data-label="Cliente">{service.client_name || "-"}</td>
-												<td data-label="Telemóvel">{service.client_phone || "-"}</td>
+												<td data-label="Matrícula"><span className="cell-truncate" title={service.car_plate || "-"}>{service.car_plate || "-"}</span></td>
+												<td data-label="Cliente"><span className="cell-truncate" title={service.client_name || "-"}>{service.client_name || "-"}</span></td>
+												<td data-label="Telemóvel"><span className="cell-truncate" title={service.client_phone || "-"}>{service.client_phone || "-"}</span></td>
 
 												<td className="actions">
 													<button className="options" onClick={() => navigate(`/service/${service.id}`)}>

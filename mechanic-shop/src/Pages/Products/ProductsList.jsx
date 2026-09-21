@@ -467,9 +467,9 @@ export default function ProductsList() {
 										</tr>
 									) : (
 										<tr key={product.id}>
-											<td data-label="Nome">{product.name}</td>
-											<td data-label="Referência">{product.reference}</td>
-											<td data-label="Tipo de Produto">{product.product_type_name}</td>
+											<td data-label="Nome"><span className="cell-truncate" title={product.name}>{product.name}</span></td>
+											<td data-label="Referência"><span className="cell-truncate" title={product.reference}>{product.reference}</span></td>
+											<td data-label="Tipo de Produto"><span className="cell-truncate" title={product.product_type_name}>{product.product_type_name}</span></td>
 
 											<td className="actions">
 												<button className="options" onClick={() => editProduct(product)}>

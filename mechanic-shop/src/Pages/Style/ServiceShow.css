@@ -127,31 +127,6 @@
 	color: var(--danger);
 }
 
-.service-signed-info-card .body{
-	/* .service-print-action below is now the last visible block in this
-	   card, so it (not .body) should carry the card's bottom rounding. */
-	border-radius: 0;
-}
-
-.service-print-action{
-	display: flex;
-	justify-content: flex-end;
-
-	padding: 0 var(--big-padding) var(--big-padding);
-
-	background: var(--bg-card);
-	border-radius: 0 0 10px 10px;
-
-	button{
-		display: flex;
-		align-items: center;
-		gap: var(--padding);
-		padding: var(--padding) calc(2 * var(--padding));
-		border-radius: 5px;
-		font-weight: 700;
-	}
-}
-
 .service-section,
 .service-signed-info-card,
 .service-done-info-card,

@@ -334,15 +334,15 @@ export default function ServicesList() {
 									className={status.rowClass}
 									onClick={() => navigate(`/service/${service.id}`)}
 								>
-									<td data-label="Entrada">{service.checkin || "-"}</td>
-									<td data-label="Saída">{service.checkout || "-"}</td>
-									<td data-label="Cliente">{service.client_name || "-"}</td>
-									<td data-label="Telemóvel">{service.client_phone || "-"}</td>
-									<td data-label="Matrícula">{service.car_plate || "-"}</td>
-									<td data-label="Marca">{service.car_make_name || "-"}</td>
-									<td data-label="Modelo">{service.car_model_name || "-"}</td>
-									<td data-label="Tipo de Serviço">{service.service_type_name || "-"}</td>
-									<td data-label="Kms">{service.kms ?? "-"}</td>
+									<td data-label="Entrada"><span className="cell-truncate" title={service.checkin || "-"}>{service.checkin || "-"}</span></td>
+									<td data-label="Saída"><span className="cell-truncate" title={service.checkout || "-"}>{service.checkout || "-"}</span></td>
+									<td data-label="Cliente"><span className="cell-truncate" title={service.client_name || "-"}>{service.client_name || "-"}</span></td>
+									<td data-label="Telemóvel"><span className="cell-truncate" title={service.client_phone || "-"}>{service.client_phone || "-"}</span></td>
+									<td data-label="Matrícula"><span className="cell-truncate" title={service.car_plate || "-"}>{service.car_plate || "-"}</span></td>
+									<td data-label="Marca"><span className="cell-truncate" title={service.car_make_name || "-"}>{service.car_make_name || "-"}</span></td>
+									<td data-label="Modelo"><span className="cell-truncate" title={service.car_model_name || "-"}>{service.car_model_name || "-"}</span></td>
+									<td data-label="Tipo de Serviço"><span className="cell-truncate" title={service.service_type_name || "-"}>{service.service_type_name || "-"}</span></td>
+									<td data-label="Kms"><span className="cell-truncate" title={service.kms ?? "-"}>{service.kms ?? "-"}</span></td>
 
 									<td data-label="Estado">
 										<span className={`service-status ${status.badgeClass}`}>

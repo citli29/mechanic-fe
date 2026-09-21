@@ -1,5 +1,5 @@
 .schedules-page table tr{
-	grid-template-columns: repeat(7, 1fr) 1.6fr 1fr;
+	grid-template-columns: repeat(7, minmax(0, 1fr)) minmax(0, 1.6fr) minmax(0, 1fr);
 }
 
 .schedules-page .filters .date-field{

@@ -1,5 +1,5 @@
 .services-manage-page table tr{
-	grid-template-columns: 70px 1fr 1fr 1fr 1fr 1fr calc(3 * 42.59px);
+	grid-template-columns: 70px repeat(5, minmax(0, 1fr)) calc(3 * 42.59px);
 }
 
 .services-manage-page table th.sortable{

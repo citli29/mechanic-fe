@@ -332,14 +332,14 @@ export default function SchedulesList() {
 									className={status.rowClass}
 									onClick={() => navigate(`/schedules/${schedule.id}`)}
 								>
-									<td data-label="Data">{schedule.date || "-"}</td>
-									<td data-label="Cliente">{schedule.client_name || "-"}</td>
-									<td data-label="Telemóvel">{schedule.client_phone || "-"}</td>
-									<td data-label="Matrícula">{schedule.car_plate || "-"}</td>
-									<td data-label="Marca">{schedule.car_make || "-"}</td>
-									<td data-label="Modelo">{schedule.car_model || "-"}</td>
-									<td data-label="Tipo de Serviço">{schedule.service_type_name || "-"}</td>
-									<td data-label="Descrição">{schedule.description || "-"}</td>
+									<td data-label="Data"><span className="cell-truncate" title={schedule.date || "-"}>{schedule.date || "-"}</span></td>
+									<td data-label="Cliente"><span className="cell-truncate" title={schedule.client_name || "-"}>{schedule.client_name || "-"}</span></td>
+									<td data-label="Telemóvel"><span className="cell-truncate" title={schedule.client_phone || "-"}>{schedule.client_phone || "-"}</span></td>
+									<td data-label="Matrícula"><span className="cell-truncate" title={schedule.car_plate || "-"}>{schedule.car_plate || "-"}</span></td>
+									<td data-label="Marca"><span className="cell-truncate" title={schedule.car_make || "-"}>{schedule.car_make || "-"}</span></td>
+									<td data-label="Modelo"><span className="cell-truncate" title={schedule.car_model || "-"}>{schedule.car_model || "-"}</span></td>
+									<td data-label="Tipo de Serviço"><span className="cell-truncate" title={schedule.service_type_name || "-"}>{schedule.service_type_name || "-"}</span></td>
+									<td data-label="Descrição"><span className="cell-truncate" title={schedule.description || "-"}>{schedule.description || "-"}</span></td>
 
 									<td data-label="Estado">
 										<span className={`schedule-status ${status.badgeClass}`}>

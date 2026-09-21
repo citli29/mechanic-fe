@@ -91,6 +91,44 @@
 
 
 /* =====================
+   Notification sound toggle
+===================== */
+
+.navbar-top-row-icons {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.navbar-sound-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+
+	width: 40px;
+	height: 40px;
+
+	border: none;
+	border-radius: 10px;
+	background: transparent;
+
+	color: #d1d5db;
+	font-size: 1.05rem;
+	cursor: pointer;
+
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease;
+}
+
+.navbar-sound-toggle:hover {
+	background: rgba(255, 255, 255, 0.08);
+	color: #ffffff;
+}
+
+/* =====================
    Mobile notification icon
 ===================== */
 

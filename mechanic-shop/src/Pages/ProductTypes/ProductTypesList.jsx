@@ -266,7 +266,7 @@ export default function ProductTypesList() {
 										</tr>
 									) : (
 										<tr key={productType.id}>
-											<td data-label="Tipo de Produto">{productType.name}</td>
+											<td data-label="Tipo de Produto"><span className="cell-truncate" title={productType.name}>{productType.name}</span></td>
 
 											<td className="actions">
 												<button className="options" onClick={() => editProductType(productType)}>

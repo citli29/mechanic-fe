@@ -406,12 +406,12 @@ export default function ClientsList() {
 										</tr>
 									) : (
 										<tr key={client.id}>
-											<td data-label="Nome">{client.name}</td>
-											<td data-label="Telemóvel">{client.phone}</td>
-											<td data-label="Email">{client.email || "-"}</td>
-											<td data-label="Morada">{client.address || "-"}</td>
-											<td data-label="Cod. Postal">{client.zip_code || "-"}</td>
-											<td data-label="NIF">{client.tax_nr || "-"}</td>
+											<td data-label="Nome"><span className="cell-truncate" title={client.name}>{client.name}</span></td>
+											<td data-label="Telemóvel"><span className="cell-truncate" title={client.phone}>{client.phone}</span></td>
+											<td data-label="Email"><span className="cell-truncate" title={client.email || "-"}>{client.email || "-"}</span></td>
+											<td data-label="Morada"><span className="cell-truncate" title={client.address || "-"}>{client.address || "-"}</span></td>
+											<td data-label="Cod. Postal"><span className="cell-truncate" title={client.zip_code || "-"}>{client.zip_code || "-"}</span></td>
+											<td data-label="NIF"><span className="cell-truncate" title={client.tax_nr || "-"}>{client.tax_nr || "-"}</span></td>
 
 											<td className="actions">
 												<button className="options" onClick={() => editClient(client)}>

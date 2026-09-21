@@ -20,6 +20,7 @@ import ServicesCalendar from "./Pages/Services/ServicesCalendar";
 import ServicesNew from "./Pages/Services/ServicesNew";
 import ProductRequestsDashboard from "./Pages/ProductRequests/ProductRequestsDashboard";
 import NotificationsList from "./Pages/Notifications/NotificationsList";
+import UserTimeStats from "./Pages/UserTimes/UserTimeStats";
 
 import "./style/variables.css";
 import { useEffect } from "react";
@@ -60,6 +61,7 @@ function App() {
 					<Route path="/schedules/:id" element={<SchedulesShow/>} />
 					<Route path="/services" element={<ServicesList/>} />
 					<Route path="/services_manage" element={<ServicesManageList/>} />
+				<Route path="/user_times_stats" element={<UserTimeStats/>} />
 					<Route path="/services_calendar" element={<ServicesCalendar/>} />
 					<Route path="/services/new" element={<ServicesNew/>} />
 					<Route path="/products_requested" element={<ProductRequestsDashboard/>} />

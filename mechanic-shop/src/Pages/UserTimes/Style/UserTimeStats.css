@@ -1,0 +1,543 @@
+.user-time-stats-page .filters{
+	flex-wrap: nowrap;
+}
+
+.user-time-stats-year{
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	text-align: center;
+	font-weight: 800;
+	font-size: var(--font-size-big);
+	color: var(--txt-dark);
+}
+
+.user-time-stats-empty{
+	padding: var(--big-padding);
+	text-align: center;
+	color: var(--txt-muted);
+}
+
+/* =====================
+   Toolbar (view tabs + print button)
+===================== */
+
+.user-time-stats-page .user-time-stats-toolbar{
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--padding);
+	margin-bottom: var(--padding);
+}
+
+.user-time-stats-page .uts-tabs{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+
+		padding: var(--padding) calc(1.5 * var(--padding));
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--bg-page);
+		color: var(--txt-light);
+
+		font-weight: 700;
+		font-size: var(--font-size-small);
+		cursor: pointer;
+
+		&:hover{ background: var(--bg-page-dark); }
+
+		&.active{
+			background: var(--primary);
+			border-color: var(--primary);
+			color: #fff;
+		}
+	}
+}
+
+/* =====================
+   Yearly totals
+===================== */
+
+.user-time-stats-yearly-totals{
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+	gap: var(--small-padding);
+	margin-top: var(--padding);
+}
+
+.user-time-stats-yearly-tile{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+
+	padding: var(--small-padding);
+	background: var(--bg-page);
+	border: 1px solid var(--border);
+	border-top: 3px solid var(--border);
+	border-radius: 8px;
+
+	text-align: center;
+}
+
+.user-time-stats-yearly-value{
+	font-size: var(--font-size-big);
+	font-weight: 700;
+	color: var(--txt-dark);
+}
+
+.user-time-stats-yearly-label{
+	font-size: var(--font-size-small);
+	font-weight: 600;
+	color: var(--txt-light);
+}
+
+@media(max-width: 650px){
+	.user-time-stats-yearly-totals{
+		grid-template-columns: 1fr;
+	}
+
+	.user-time-stats-yearly-tile{
+		flex-direction: row;
+		justify-content: flex-start;
+		gap: var(--padding);
+		padding: var(--padding);
+		text-align: left;
+	}
+}
+
+/* =====================
+   Chart
+===================== */
+
+.user-time-stats-chart{
+	margin-top: var(--big-padding);
+	overflow-x: auto;
+}
+
+.user-time-stats-chart-row{
+	display: flex;
+	gap: var(--padding);
+}
+
+.user-time-stats-axis, .user-time-stats-axis-spacer{
+	flex: 0 0 auto;
+	width: 40px;
+}
+
+.user-time-stats-axis{
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: flex-end;
+
+	height: 238px;
+	padding-right: var(--small-padding);
+}
+
+.user-time-stats-axis-tick{
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+	line-height: 1;
+}
+
+.user-time-stats-plot{
+	position: relative;
+
+	display: flex;
+	align-items: flex-end;
+	gap: var(--padding);
+
+	flex: 1;
+	height: 238px;
+
+	border-left: 1px solid var(--border);
+}
+
+.user-time-stats-gridline{
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: var(--border);
+}
+
+.user-time-stats-month-group{
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+
+	flex: 1;
+	min-width: 0;
+	height: 100%;
+}
+
+.user-time-stats-bars{
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	gap: 4px;
+
+	width: 100%;
+	height: 100%;
+}
+
+.user-time-stats-bar{
+	position: relative;
+
+	flex: 0 0 16px;
+	width: 16px;
+	max-width: 24px;
+	min-height: 1px;
+	border-radius: 4px 4px 0 0;
+	cursor: pointer;
+	transition: opacity 0.15s;
+}
+
+.user-time-stats-bar-label{
+	position: absolute;
+	bottom: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	margin-bottom: 2px;
+
+	font-size: 9px;
+	font-weight: 700;
+	color: var(--txt-light);
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+.user-time-stats-bar:hover{
+	opacity: 0.8;
+}
+
+.user-time-stats-labels-row{
+	display: flex;
+	gap: var(--padding);
+	margin-top: var(--small-padding);
+}
+
+.user-time-stats-labels{
+	display: flex;
+	gap: var(--padding);
+	flex: 1;
+}
+
+.user-time-stats-month-label{
+	flex: 1;
+	min-width: 0;
+	text-align: center;
+	font-size: var(--font-size-small);
+	font-weight: 600;
+	color: var(--txt-muted);
+}
+
+/* =====================
+   Mobile chart (horizontal bars, months stacked vertically)
+===================== */
+
+.user-time-stats-mobile-chart{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+	margin-top: var(--big-padding);
+}
+
+.user-time-stats-mobile-month{
+	padding-bottom: var(--padding);
+	border-bottom: 1px solid var(--border);
+}
+
+.user-time-stats-mobile-month:last-child{
+	padding-bottom: 0;
+	border-bottom: none;
+}
+
+.user-time-stats-mobile-month-label{
+	margin-bottom: var(--small-padding);
+	font-weight: 700;
+	color: var(--txt-dark);
+}
+
+.user-time-stats-mobile-row{
+	display: flex;
+	align-items: center;
+	gap: var(--small-padding);
+	margin-bottom: 4px;
+}
+
+.user-time-stats-mobile-row:last-child{
+	margin-bottom: 0;
+}
+
+.user-time-stats-mobile-row-label{
+	flex: 0 0 70px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+}
+
+.user-time-stats-mobile-bar-track{
+	flex: 1;
+	height: 14px;
+	background: var(--bg-page);
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.user-time-stats-mobile-bar{
+	height: 100%;
+	min-width: 2px;
+	border-radius: 4px;
+}
+
+.user-time-stats-mobile-row-value{
+	flex: 0 0 auto;
+	min-width: 32px;
+	text-align: right;
+
+	font-size: var(--font-size-small);
+	font-weight: 700;
+	color: var(--txt-dark);
+}
+
+/* =====================
+   Tooltip
+===================== */
+
+.user-time-stats-tooltip{
+	position: fixed;
+	transform: translate(-50%, calc(-100% - var(--small-padding)));
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+
+	padding: var(--small-padding) var(--padding);
+	border-radius: 6px;
+	background: var(--txt-dark);
+	color: #fff;
+
+	font-size: var(--font-size-small);
+	white-space: nowrap;
+	pointer-events: none;
+	z-index: 1000;
+
+	strong{ font-weight: 700; }
+	span{ color: rgba(255, 255, 255, 0.8); }
+}
+
+/* =====================
+   Print report
+===================== */
+
+.user-time-stats-page .user-time-stats-print-buttons{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+
+	/* Matches ServiceShow's .service-nav-print buttons: no fill, thin
+	   border, left-aligned icon+label, hover fills light gray — instead
+	   of the filled .options look used elsewhere on this page. */
+	button{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+
+		padding: var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: transparent;
+		color: var(--txt-light);
+
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		text-align: left;
+		cursor: pointer;
+
+		i{
+			width: 1.1em;
+			text-align: center;
+			color: var(--txt-light);
+		}
+
+		&:hover{
+			background: var(--bg-page-dark);
+			color: var(--txt-dark);
+		}
+	}
+}
+
+.user-time-stats-print-anual,
+.user-time-stats-print-semanal{
+	display: none;
+}
+
+@media print{
+	/* The whole interactive card (tabs, filters, tiles, chart) is app-only —
+	   print only ever shows the dedicated report markup below, which lives
+	   outside .card specifically so none of Card.css's table-as-grid rules
+	   (meant for the on-screen list pages) apply to it. */
+	.navbar,
+	.footer,
+	.user-time-stats-page .card{
+		display: none !important;
+	}
+
+	/* ServiceShow.css runs `* { all: revert !important; }` on every print job
+	   app-wide, which wipes out the plain (non-media) display:none above —
+	   so both reports would show regardless of body class unless this hide
+	   is re-asserted here, inside @media print, with matching !important. */
+	.user-time-stats-print-anual,
+	.user-time-stats-print-semanal{
+		display: none !important;
+	}
+
+	body.print-report-anual .user-time-stats-print-anual{
+		display: block !important;
+	}
+
+	body.print-report-semanal .user-time-stats-print-semanal{
+		display: block !important;
+	}
+
+	/* Every declaration below needs !important for the same reason as the
+	   display rules above: ServiceShow.css's `* { all: revert !important; }`
+	   applies to every element on every print job app-wide, and without
+	   matching !important here it silently wins, reverting the table back
+	   to unstyled browser defaults (auto width/layout, centered th, no
+	   borders, default font-size) — exactly what "not aligned, not full
+	   width" looks like. */
+	.user-time-stats-print-anual h2,
+	.user-time-stats-print-semanal h2{
+		margin-bottom: 4px !important;
+		font-size: 16pt !important;
+	}
+
+	.user-time-stats-print-meta{
+		margin-bottom: 12pt !important;
+		color: #444 !important;
+		font-size: 10pt !important;
+	}
+
+	.user-time-stats-print-table{
+		width: 100% !important;
+		table-layout: fixed !important;
+		/* border-collapse shares one border between adjacent cells, and that
+		   shared edge silently drops when a page break (or a tbody boundary
+		   kept together by break-inside: avoid) falls right on it — every
+		   cell owning its own complete border avoids that class of bug
+		   entirely, at the cost of internal lines rendering ~2px instead of
+		   1px where two cells touch. */
+		border-collapse: separate !important;
+		border-spacing: 0 !important;
+		margin-bottom: 4pt !important;
+
+		/* The site-wide `* { font-size: var(--font-size); }` reset (see
+		   variables.css) sets an explicit font-size on every th/td directly,
+		   so it never inherits from the table — it must be set here too. */
+		th, td{
+			font-size: 10pt !important;
+			border: 1px solid #999 !important;
+			padding: 4pt 6pt !important;
+			text-align: right !important;
+		}
+
+		th{
+			text-align: left !important;
+		}
+
+		td:first-child{
+			text-align: left !important;
+		}
+
+		/* rowSpan on the month cell means only the group's first row has it
+		   as an actual first-child — :first-child alone won't reach the
+		   "Dias" column on the group's other rows, so both get their own
+		   explicit class instead of relying on cell position. */
+		.user-time-stats-print-month-cell,
+		.user-time-stats-print-day-cell{
+			text-align: left !important;
+		}
+
+		.user-time-stats-print-month-cell{
+			vertical-align: middle !important;
+			font-weight: 700 !important;
+		}
+
+		thead th{
+			background: #eee !important;
+		}
+
+		/* Browsers repeat a <tfoot> at the bottom of every printed page by
+		   default (it's meant for that on very long tables) — here we only
+		   want the Total row once, at the true end of the table, so it's
+		   forced back to behaving like an ordinary row group. */
+		tfoot{
+			display: table-row-group !important;
+		}
+
+		tfoot td{
+			font-weight: 700 !important;
+			background: #f5f5f5 !important;
+		}
+	}
+
+	/* Every week of the year in one table — sized to spread across ~2 pages
+	   rather than cram 53 rows onto one, which was unreadably small. */
+	.user-time-stats-print-semanal .user-time-stats-print-table{
+		th, td{
+			font-size: 13pt !important;
+			padding: 5pt 7pt !important;
+		}
+
+		/* "Mês" only needs to be as wide as the rotated text is tall —
+		   Dezembro/Setembro were clipping when this column shared an even
+		   fixed-layout width with the numeric ones. The header cell needs
+		   the same rotation, or "Mês" itself (still horizontal) overflows
+		   the now-narrow column just the same way. */
+		th:first-child{
+			width: 26pt !important;
+			padding: 5pt 2pt !important;
+			writing-mode: vertical-rl !important;
+			text-orientation: mixed !important;
+			transform: rotate(180deg) !important;
+			white-space: nowrap !important;
+			text-align: center !important;
+		}
+
+		.user-time-stats-print-month-cell{
+			writing-mode: vertical-rl !important;
+			text-orientation: mixed !important;
+			transform: rotate(180deg) !important;
+			white-space: nowrap !important;
+			text-align: center !important;
+		}
+
+		/* One <tbody> per month. Without this, a page break landing mid-month
+		   slices the month's rowSpan cell in half, and the cut edge silently
+		   loses its border (top border missing on the continuation page,
+		   bottom border missing on the page it was cut from) — collapsed
+		   borders don't survive a spanned cell being split across pages. */
+		tbody{
+			break-inside: avoid !important;
+			page-break-inside: avoid !important;
+		}
+	}
+}
+

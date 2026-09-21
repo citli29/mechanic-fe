@@ -413,11 +413,6 @@ export default function ServiceShow2() {
 						<p>Eu, <span>{service?.r_name??"".trim()?service?.r_name:"______________________________"}</span> , tomei conhecimento e autorizo a realização do serviço acima indicado e contacto através do nrº <span>{service?.r_phone??"".trim()?service?.r_phone:"______________________________"}</span>.</p>
 						<p>Assinatura: ________________________________</p>
 					</div>
-					<div className="service-print-action">
-						<button className="options" onClick={() => handlePrint("agreement")}>
-							<i className="fa-solid fa-print"/> Imprimir
-						</button>
-					</div>
 				</div>
 				<div className="service-done-info-card" id="section-done">
 					<div className="header">
@@ -477,11 +472,6 @@ export default function ServiceShow2() {
 								}}
 							/>
 						</div>
-					</div>
-					<div className="service-print-action">
-						<button className="options" onClick={() => handlePrint("summary")}>
-							<i className="fa-solid fa-file-lines"/> Imprimir Resumo
-						</button>
 					</div>
 				</div>
 				<div className="service-products-requested-card" id="section-requested">
