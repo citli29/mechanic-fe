@@ -82,6 +82,17 @@ export default function SchedulesCalendar() {
 		setWeekIndex(0);
 	}
 
+	// The calendar grid always shows whole weeks — the first/last row
+	// usually spills a few days into the previous/next month. These are
+	// how many, computed once here so both the data fetch below and the
+	// day-grid further down agree on the exact same padded range.
+	const daysInMonth = new Date(year, month + 1, 0).getDate();
+	const firstDay = new Date(year, month, 1).getDay();
+	const startDay = firstDay === 0 ? 6 : firstDay - 1;
+	const lastDayWeekday = new Date(year, month, daysInMonth).getDay();
+	const lastDayIndex = lastDayWeekday === 0 ? 6 : lastDayWeekday - 1;
+	const trailingPad = 6 - lastDayIndex;
+
 
 	function showMessage(type, text) {
 		setMessage({ type, text });
@@ -113,8 +124,12 @@ export default function SchedulesCalendar() {
 				)
 			);
 
-			params.start_date = formatDate(new Date(year, month, 1));
-			params.end_date = formatDate(new Date(year, month + 1, 0));
+			// Padded to the full displayed grid (see startDay/trailingPad
+			// above), not just the month's own days — otherwise a schedule on
+			// one of the spillover days from the previous/next month
+			// wouldn't show up on it.
+			params.start_date = formatDate(new Date(year, month, 1 - startDay));
+			params.end_date = formatDate(new Date(year, month, daysInMonth + trailingPad));
 
 			const res = await api.get("/schedules", { params });
 
@@ -298,24 +313,21 @@ export default function SchedulesCalendar() {
 	}, [schedules]);
 
 
-	const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-	const firstDay = new Date(year, month, 1).getDay();
-
-	const startDay = firstDay === 0 ? 6 : firstDay - 1;
-
+	// A full padded grid — the leading/trailing spillover days (from
+	// startDay/trailingPad above) get real day numbers and data too now,
+	// not blank cells; `new Date(year, month, day)` normalizes on its own
+	// for day <= 0 or day > daysInMonth, landing in the right adjacent
+	// month/year without any special-casing here.
 	const calendarDays = [];
 
-	for (let i = 0; i < startDay; i++) {
-		calendarDays.push(null);
-	}
-
-	for (let day = 1; day <= daysInMonth; day++) {
-		const key = formatDate(new Date(year, month, day));
+	for (let day = 1 - startDay; day <= daysInMonth + trailingPad; day++) {
+		const date = new Date(year, month, day);
+		const key = formatDate(date);
 
 		calendarDays.push({
-			day,
+			day: date.getDate(),
 			key,
+			isOtherMonth: date.getMonth() !== month,
 			schedules: groupedSchedules[key] || [],
 		});
 	}
@@ -332,6 +344,17 @@ export default function SchedulesCalendar() {
 	for (let i = 0; i < calendarDays.length; i += 7) {
 		weeksOfMonth.push(calendarDays.slice(i, i + 7));
 	}
+
+	// Same real-week convention as the "Semanal" tab on Estatísticas de
+	// Utilizadores: label a week by its actual Monday-Sunday day range
+	// instead of an ordinal "Semana N" count — works out to the right
+	// dates even for the week straddling this month and the next/previous
+	// one (calendarDays now carries real adjacent-month days there, but
+	// the real Monday is still just 7 days per row from day 1's grid slot).
+	const weekMonday = new Date(year, month, 1 - startDay + weekIndex * 7);
+	const weekSunday = new Date(weekMonday);
+	weekSunday.setDate(weekMonday.getDate() + 6);
+	const weekLabel = `${weekMonday.getDate()}-${weekSunday.getDate()}`;
 
 	function previousWeek() {
 		setWeekIndex((prev) => Math.max(0, prev - 1));
@@ -357,15 +380,11 @@ export default function SchedulesCalendar() {
 				{calendarDays.map((day, index) => (
 					<div
 						key={index}
-						className={`calendar-day ${!day ? "empty" : ""}`}
+						className={`calendar-day ${day.isOtherMonth ? "other-month" : ""}`}
 					>
-						{day && (
-							<>
-								<div className="day-number">{day.day}</div>
+						<div className="day-number">{day.day}</div>
 
-								{renderDayHalves(day.schedules)}
-							</>
-						)}
+						{renderDayHalves(day.schedules)}
 					</div>
 				))}
 
@@ -384,7 +403,7 @@ export default function SchedulesCalendar() {
 						<i className="fa-solid fa-chevron-left" />
 					</button>
 
-					<span>Semana {weekIndex + 1} de {weeksOfMonth.length}</span>
+					<span>{weekLabel}</span>
 
 					<button
 						className="accent"
@@ -396,8 +415,8 @@ export default function SchedulesCalendar() {
 				</div>
 
 				<div className="calendar calendar-vertical">
-					{week.map((day, index) => day && (
-						<div key={day.key} className="calendar-day">
+					{week.map((day, index) => (
+						<div key={day.key} className={`calendar-day ${day.isOtherMonth ? "other-month" : ""}`}>
 							<div className="day-label">
 								<span className="weekday-name">{WEEKDAY_NAMES[index]}</span>
 								<span className="day-number">{day.day}</span>

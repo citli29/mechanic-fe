@@ -257,7 +257,7 @@
 	z-index: 1;
 
 	td{
-		background: var(--accent-soft, #fef3c7) !important;
+		background: var(--accent-soft) !important;
 	}
 }
 
@@ -379,10 +379,14 @@
 	}
 
 	/* Card.css's mobile layout puts the data-label::before on the left
-	   and the control on the right via flex — that's why "Pedido"
-	   already looks right here. Same idea for "Recebido": the checkbox
-	   + specify-button wrapper stays grouped on the right. */
-	.product-requests-page .pr-received-cell{
+	   and the control on the right via flex, but .pr-checkbox-cell's own
+	   (desktop-oriented) `justify-content: center` beats it — bunching
+	   the label + checkbox together in the middle of the row instead.
+	   Overridden here for every checkbox cell ("Pedido" on all three
+	   tabs, "Recebido" on Aguardar Entrega / Entregues alike) so they
+	   all match the label-left/control-right convention every other
+	   cell in this table already uses. */
+	.product-requests-page .pr-checkbox-cell{
 		justify-content: space-between;
 		text-align: left;
 	}

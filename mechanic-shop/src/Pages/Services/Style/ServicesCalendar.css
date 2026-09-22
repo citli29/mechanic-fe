@@ -9,6 +9,7 @@
 		height: calc(1.8 * var(--line-height));
 		border-radius: 5px;
 		font-size: var(--font-size-big);
+		flex: 0 0 auto;
 	}
 
 	h2{
@@ -16,6 +17,24 @@
 		text-align: center;
 		font-size: var(--font-size-big);
 		color: var(--txt-dark);
+	}
+}
+
+@media(max-width: 650px){
+	/* h2's 220px min-width plus the two fixed-size arrow buttons no
+	   longer fit a narrow phone's card width — the row overflows and
+	   the right arrow ends up flush against the card edge instead of
+	   keeping the card's own padding. Letting the month name shrink
+	   (instead of forcing its 220px) keeps both arrows inside that
+	   padding, however small the screen. */
+	.services-calendar-page .month-navigation{
+		gap: var(--padding);
+
+		h2{
+			min-width: 0;
+			flex: 1;
+			font-size: var(--font-size);
+		}
 	}
 }
 
@@ -57,8 +76,12 @@
 	background: var(--bg-card);
 }
 
-.services-calendar-page .calendar-day.empty{
+.services-calendar-page .calendar-day.other-month{
 	background: var(--bg-page);
+}
+
+.services-calendar-page .calendar-day.other-month .day-number{
+	color: var(--txt-muted);
 }
 
 .services-calendar-page .day-number{

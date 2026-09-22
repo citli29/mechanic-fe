@@ -149,6 +149,10 @@
 	}
 
 	button{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
 		aspect-ratio: 1;
 		height: calc(var(--line-height) - 2 * var(--small-padding));
 		border-radius: 5px;
@@ -251,6 +255,78 @@
 	-webkit-line-clamp: 3;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
+}
+
+/* Produto/Referência/Tipo/Quantidade shown together as one compact
+   entry (a mini table row) instead of four stacked label:value lines —
+   each field wraps as a whole unit on narrow screens rather than the
+   grid columns misaligning. */
+.notif-product-entry{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding) var(--big-padding);
+
+	padding: var(--padding);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-card);
+}
+
+.notif-product-entry-field{
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 70px;
+}
+
+.notif-product-entry-name{
+	/* Full width of its own so it's alone on the first line — the rest
+	   (Referência, Tipo, Qt., Entregue/Pedido) has no room left beside it
+	   and wraps to the line(s) below. */
+	flex: 1 1 100%;
+}
+
+.notif-product-entry-qty{
+	min-width: 50px;
+}
+
+/* Entregue/Pedido read as one line — label right beside its own icon,
+   the two pairs side by side — instead of the label-above-value column
+   layout the other fields use. */
+.notif-product-entry-status{
+	flex-direction: row;
+	align-items: center;
+	gap: var(--big-padding);
+}
+
+.notif-product-entry-status-item{
+	display: flex;
+	align-items: center;
+	gap: var(--small-padding);
+}
+
+.notif-product-entry-label{
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--txt-muted);
+}
+
+.notif-product-entry-value{
+	color: var(--txt-dark);
+	font-weight: 600;
+	word-break: break-word;
+}
+
+.notif-product-status-yes{
+	color: var(--primary);
+	font-size: 1.1em;
+}
+
+.notif-product-status-no{
+	color: var(--border);
+	font-size: 0.6em;
 }
 
 .notif-service-preview-cards{

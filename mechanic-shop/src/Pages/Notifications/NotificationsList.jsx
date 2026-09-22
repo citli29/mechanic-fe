@@ -498,27 +498,39 @@ export default function NotificationsList() {
 										</div>
 
 										{preview.product && (
-											<>
-												<div className="notif-service-preview-row">
-													<span className="notif-service-preview-label">Produto</span>
-													<span>{preview.product.product_name}</span>
+											<div className="notif-product-entry">
+												<div className="notif-product-entry-field notif-product-entry-name">
+													<span className="notif-product-entry-label">Produto</span>
+													<span className="notif-product-entry-value">{preview.product.product_name}</span>
 												</div>
 
-												<div className="notif-service-preview-row">
-													<span className="notif-service-preview-label">Referência</span>
-													<span>{preview.product.product_reference || "-"}</span>
+												<div className="notif-product-entry-field">
+													<span className="notif-product-entry-label">Referência</span>
+													<span className="notif-product-entry-value">{preview.product.product_reference || "-"}</span>
 												</div>
 
-												<div className="notif-service-preview-row">
-													<span className="notif-service-preview-label">Tipo de Produto</span>
-													<span>{preview.product.product_type_name || "-"}</span>
+												<div className="notif-product-entry-field">
+													<span className="notif-product-entry-label">Tipo</span>
+													<span className="notif-product-entry-value">{preview.product.product_type_name || "-"}</span>
 												</div>
 
-												<div className="notif-service-preview-row">
-													<span className="notif-service-preview-label">Quantidade</span>
-													<span>{preview.product.quantity}</span>
+												<div className="notif-product-entry-field notif-product-entry-qty">
+													<span className="notif-product-entry-label">Qt.</span>
+													<span className="notif-product-entry-value">{preview.product.quantity}</span>
 												</div>
-											</>
+
+												<div className="notif-product-entry-field notif-product-entry-status">
+													<span className="notif-product-entry-status-item">
+														<span className="notif-product-entry-label">Entregue</span>
+														<i className={`fa-solid ${preview.product.is_delivered == 1 ? "fa-circle-check notif-product-status-yes" : "fa-circle notif-product-status-no"}`} />
+													</span>
+
+													<span className="notif-product-entry-status-item">
+														<span className="notif-product-entry-label">Pedido</span>
+														<i className={`fa-solid ${preview.product.is_ordered == 1 ? "fa-circle-check notif-product-status-yes" : "fa-circle notif-product-status-no"}`} />
+													</span>
+												</div>
+											</div>
 										)}
 									</>
 								) : preview.type === "same-car" ? (
