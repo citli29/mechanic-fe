@@ -111,6 +111,18 @@ button{
 	background:var(--bg-card);
 }
 
+/* Buttons converted to real <a>/<Link> (for native right-click/middle-click
+   "open in new tab") shouldn't look or behave like a browser default link —
+   underline is already killed by the `*` reset above, this just handles the
+   two things that reset doesn't cover: default link color and the pointer
+   cursor a <button> gets for free. Deliberately not `button, a{...}` above —
+   plain content links (e.g. the footer) already set their own color and
+   should keep doing so; this only establishes the baseline. */
+a{
+	color: inherit;
+	cursor: pointer;
+}
+
 .confirm{ color: var(--success); }
 .confirm:hover{ color: var(--success-hover); }
 .cancel{ color: var(--danger); }

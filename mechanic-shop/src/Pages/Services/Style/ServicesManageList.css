@@ -19,7 +19,8 @@
 	}
 }
 
-.services-manage-page table td.actions button{
+.services-manage-page table td.actions button,
+.services-manage-page table td.actions a{
 	width: 42.59px;
 	height: 42.59px;
 	aspect-ratio: 1;

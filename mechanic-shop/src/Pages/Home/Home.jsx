@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -21,8 +21,6 @@ function formatDate(date) {
 const DELIVERED_PER_PAGE = 5;
 
 export default function Home() {
-
-	const navigate = useNavigate();
 
 	const requestIdRef = useRef(0);
 	const deliveredRequestIdRef = useRef(0);
@@ -164,9 +162,9 @@ export default function Home() {
 								{group.context}
 							</span>
 
-							<button className="options" onClick={() => navigate(`/service/${group.service_id}`)}>
+							<Link className="options" to={`/service/${group.service_id}`}>
 								<i className="fa-solid fa-arrow-up-right-from-square" />
-							</button>
+							</Link>
 						</div>
 
 						<table>
@@ -206,27 +204,27 @@ export default function Home() {
 					<div className="body">
 
 						<div className="quick-actions">
-							<button className="confirm" onClick={() => navigate("/schedules/new")}>
+							<Link className="confirm" to="/schedules/new">
 								<i className="fa-solid fa-calendar-plus" /> Nova Marcação
-							</button>
+							</Link>
 
-							<button className="confirm" onClick={() => navigate("/services/new")}>
+							<Link className="confirm" to="/services/new">
 								<i className="fa-solid fa-clipboard-list" /> Novo Serviço
-							</button>
+							</Link>
 						</div>
 
 						<div className="stat-grid">
-							<button className="stat-card" onClick={() => navigate("/schedules_calendar")}>
+							<Link className="stat-card" to="/schedules_calendar">
 								<i className="fa-solid fa-calendar-day" />
 								<div className="stat-value">{todaySchedules.length}</div>
 								<div className="stat-label">Marcações Hoje</div>
-							</button>
+							</Link>
 
-							<button className="stat-card" onClick={() => navigate("/services")}>
+							<Link className="stat-card" to="/services">
 								<i className="fa-solid fa-wrench" />
 								<div className="stat-value">{unfinishedServicesTotal}</div>
 								<div className="stat-label">Serviços Por Terminar</div>
-							</button>
+							</Link>
 
 							<div className="stat-card stat-card-static">
 								<i className="fa-solid fa-cart-shopping" />
@@ -264,39 +262,44 @@ export default function Home() {
 						) : (
 							<div className="today-schedules">
 								{todaySchedules.map((schedule) => (
-									<div
-										key={schedule.id}
-										className={`today-schedule ${getAppointmentStatusClass(schedule)}`}
-										onClick={() => navigate(`/schedules/${schedule.id}`)}
-									>
-										<div className="today-schedule-top-row">
-											<div className="today-schedule-plate">
-												{schedule.car_plate
-													? `${schedule.car_plate} - ${[schedule.car_make, schedule.car_model].filter(Boolean).join(" ")}`
-													: [schedule.car_make, schedule.car_model].filter(Boolean).join(" ") || "Sem Viatura"}
+									<div key={schedule.id} className="today-schedule-wrap">
+										<Link
+											className={`today-schedule ${getAppointmentStatusClass(schedule)}`}
+											to={`/schedules/${schedule.id}`}
+										>
+											<div className="today-schedule-top-row">
+												<div className="today-schedule-plate">
+													{schedule.car_plate
+														? `${schedule.car_plate} - ${[schedule.car_make, schedule.car_model].filter(Boolean).join(" ")}`
+														: [schedule.car_make, schedule.car_model].filter(Boolean).join(" ") || "Sem Viatura"}
+												</div>
+
+												{/* Reserves the same space the overlaid icon link (below)
+												    occupies, so the plate text doesn't run under it. */}
+												{schedule.service_id !== null && <span className="today-schedule-open-service-spacer" />}
 											</div>
 
-											{schedule.service_id !== null && (
-												<button
-													className="today-schedule-open-service"
-													title="Abrir Serviço"
-													onClick={(e) => {
-														e.stopPropagation();
-														navigate(`/service/${schedule.service_id}`);
-													}}
-												>
-													<i className="fa-solid fa-arrow-up-right-from-square" />
-												</button>
-											)}
-										</div>
+											<div className="today-schedule-client">
+												{schedule.client_name || "Sem Cliente"}
+											</div>
 
-										<div className="today-schedule-client">
-											{schedule.client_name || "Sem Cliente"}
-										</div>
+											<div className="today-schedule-description">
+												{schedule.description}
+											</div>
+										</Link>
 
-										<div className="today-schedule-description">
-											{schedule.description}
-										</div>
+										{schedule.service_id !== null && (
+											// Sibling of the card's own <Link>, not nested inside it — an
+											// <a> inside an <a> is invalid HTML (React warns loudly about
+											// it). Absolutely positioned to land in the same visual spot.
+											<Link
+												className="today-schedule-open-service"
+												title="Abrir Serviço"
+												to={`/service/${schedule.service_id}`}
+											>
+												<i className="fa-solid fa-arrow-up-right-from-square" />
+											</Link>
+										)}
 									</div>
 								))}
 							</div>
@@ -329,8 +332,16 @@ export default function Home() {
 
 								<tbody>
 									{openPunches.map((punch) => (
-										<tr key={punch.id} onClick={() => navigate(`/service/${punch.service_id}#section-times`)}>
-											<td data-label="Utilizador">{punch.user_name || "-"}</td>
+										<tr key={punch.id}>
+											<td data-label="Utilizador">
+												<Link
+													className="row-link-overlay"
+													to={`/service/${punch.service_id}#section-times`}
+													aria-hidden="true"
+													tabIndex={-1}
+												/>
+												{punch.user_name || "-"}
+											</td>
 											<td data-label="Viatura">
 												{punch.car_plate
 													? `${punch.car_plate} - ${[punch.car_make_name, punch.car_model_name].filter(Boolean).join(" ")}`
@@ -339,10 +350,10 @@ export default function Home() {
 											<td data-label="Início">{formatPunchStart(punch.hours_s, punch.minutes_s)}</td>
 											<td data-label="Data">{punch.date || "-"}</td>
 
-											<td className="actions" onClick={(e) => e.stopPropagation()}>
-												<button className="options" onClick={() => navigate(`/service/${punch.service_id}#section-times`)}>
+											<td className="actions">
+												<Link className="options" to={`/service/${punch.service_id}#section-times`}>
 													<i className="fa-solid fa-arrow-up-right-from-square" />
-												</button>
+												</Link>
 											</td>
 										</tr>
 									))}

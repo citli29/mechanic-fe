@@ -1,5 +1,6 @@
 import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
+import "./Style/Page.css";
 
 export const AppliedProducts = ({
 	id,
@@ -31,6 +32,16 @@ export const AppliedProducts = ({
 	const [searchProduct, setSearchProduct] = useState("");
 	const refSearch = useRef(null);
 	const [debouncedValue, setDebouncedValue] = useState("");
+
+	const [message, setMessage] = useState({ type: "", text: "" });
+
+	function showMessage(type, text) {
+		setMessage({ type, text });
+
+		setTimeout(() => {
+			setMessage({ type: "", text: "" });
+		}, 4000);
+	}
 
 	useEffect(()=>{
 		loadAPs();
@@ -198,12 +209,14 @@ export const AppliedProducts = ({
 
 	const handleClickStartAddCancel = () => {
 		setIsAddingProduct(false);
+		setNewProduct({ name: "", reference: "", product_type_id: "" });
 	}
 
 	const handleClickSelect  = async (p) =>{
 		if(disabled) return;
 		setIsSearchSelected(false);
 		const ap = await postAP(p.id);
+		if(ap) showMessage("success", "Produto aplicado adicionado com sucesso");
 		loadAPs();
 	}
 
@@ -212,9 +225,11 @@ export const AppliedProducts = ({
 		const p = await postProduct(newProduct.name, newProduct.reference, newProduct.product_type_id);
 		if(p){
 			const ap = await postAP(p.id);
+			if(ap) showMessage("success", "Produto aplicado adicionado com sucesso");
 			loadAPs();
 			setIsAddingProduct(false);
 			setSearchProduct("");
+			setNewProduct({ name: "", reference: "", product_type_id: "" });
 		}
 	}
 
@@ -226,6 +241,12 @@ export const AppliedProducts = ({
 
 	return(
 		<>
+			{message.text && (
+				<div className={`api-message ${message.type}`}>
+					{message.text}
+				</div>
+			)}
+
 			<div ref={refSearch}className="search-bar search-products">
 				<span><i className="fa-solid fa-magnifying-glass"/></span>
 				<input

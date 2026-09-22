@@ -89,7 +89,7 @@
 	flex-wrap: wrap;
 	gap: var(--padding);
 
-	button{
+	button, a{
 		display: flex;
 		align-items: center;
 		gap: var(--padding);

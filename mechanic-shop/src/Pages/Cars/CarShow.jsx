@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import api from "../../api/axios";
 
 import { CarPicker } from "../../components/Pickers/CarPicker";
@@ -36,7 +36,6 @@ function normalizeSearch(text) {
 export default function CarShow() {
 
 	const { id } = useParams();
-	const navigate = useNavigate();
 
 	const [services, setServices] = useState([]);
 	const [appliedByService, setAppliedByService] = useState({});
@@ -107,9 +106,9 @@ export default function CarShow() {
 			<div className="content">
 
 				<div className="details-actions">
-					<button className="options" onClick={() => navigate("/cars")}>
+					<Link className="options" to="/cars">
 						<i className="fa-solid fa-arrow-left" /> Voltar
-					</button>
+					</Link>
 				</div>
 
 				<CarPicker
@@ -152,10 +151,10 @@ export default function CarShow() {
 									const plainNote = extractPlainNote(service.note);
 
 									return (
-										<div
+										<Link
 											key={service.id}
 											className="car-history-item"
-											onClick={() => navigate(`/service/${service.id}`)}
+											to={`/service/${service.id}`}
 										>
 											<div className="car-history-item-header">
 												<span className="car-history-id">#{service.id}</span>
@@ -196,7 +195,7 @@ export default function CarShow() {
 													</ul>
 												</div>
 											)}
-										</div>
+										</Link>
 									);
 								})}
 							</div>

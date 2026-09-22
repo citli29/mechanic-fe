@@ -113,6 +113,7 @@
 }
 
 .services-calendar-page .appointment{
+	display: block;
 	padding: var(--small-padding) var(--padding);
 	border: 1px solid transparent;
 	border-left: 4px solid transparent;

@@ -44,35 +44,6 @@
 	white-space: nowrap;
 }
 
-.notifications-page .notif-message-toggle{
-	flex: 0 0 auto;
-
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	aspect-ratio: 1;
-	height: calc(var(--line-height) + 1px + 2 * var(--padding));
-	padding: 0;
-
-	border: none;
-	background: transparent;
-	color: inherit;
-
-	cursor: pointer;
-}
-
-.notifications-page .notif-message-toggle:hover{
-	background: rgba(0, 0, 0, 0.12);
-}
-
-/* Lives duplicated in the Estado cell for the mobile card layout (see the
-   max-width:650px block below) — on desktop the table layout already has
-   room for it next to the message, so this copy stays hidden there. */
-.notifications-page .notif-message-toggle-mobile{
-	display: none;
-}
-
 .notifications-page tr.notif-unread{
 	background: var(--primary-soft);
 	font-weight: 700;
@@ -374,25 +345,4 @@
 		text-align: left;
 	}
 
-	/* The eye moves up into the Estado row here instead of sitting
-	   inline after the message text, since the stacked card layout
-	   puts Estado first anyway. "Estado" + the checkbox stay packed
-	   together on the left (override the shared td's space-between),
-	   and the eye gets pushed out to the far right edge on its own. */
-	.notifications-page .notif-estado-cell{
-		justify-content: flex-start;
-		gap: var(--small-padding);
-	}
-
-	.notifications-page .notif-estado-cell .notif-message-toggle-mobile{
-		margin-left: auto;
-	}
-
-	.notifications-page .notif-message-toggle:not(.notif-message-toggle-mobile){
-		display: none;
-	}
-
-	.notifications-page .notif-message-toggle-mobile{
-		display: flex;
-	}
 }

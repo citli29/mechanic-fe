@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -23,8 +23,6 @@ const SORTABLE_COLUMNS = [
 ];
 
 export default function SchedulesList() {
-
-	const navigate = useNavigate();
 
 	const [schedules, setSchedules] = useState([]);
 	const [serviceTypes, setServiceTypes] = useState([]);
@@ -330,9 +328,16 @@ export default function SchedulesList() {
 								<tr
 									key={schedule.id}
 									className={status.rowClass}
-									onClick={() => navigate(`/schedules/${schedule.id}`)}
 								>
-									<td data-label="Data"><span className="cell-truncate" title={schedule.date || "-"}>{schedule.date || "-"}</span></td>
+									<td data-label="Data">
+										<Link
+											className="row-link-overlay"
+											to={`/schedules/${schedule.id}`}
+											aria-hidden="true"
+											tabIndex={-1}
+										/>
+										<span className="cell-truncate" title={schedule.date || "-"}>{schedule.date || "-"}</span>
+									</td>
 									<td data-label="Cliente"><span className="cell-truncate" title={schedule.client_name || "-"}>{schedule.client_name || "-"}</span></td>
 									<td data-label="Telemóvel"><span className="cell-truncate" title={schedule.client_phone || "-"}>{schedule.client_phone || "-"}</span></td>
 									<td data-label="Matrícula"><span className="cell-truncate" title={schedule.car_plate || "-"}>{schedule.car_plate || "-"}</span></td>
@@ -419,7 +424,7 @@ export default function SchedulesList() {
 								{schedule.service_type_name || "Sem Tipo"}
 							</div>
 
-							<div className="schedule-card-summary" onClick={() => navigate(`/schedules/${schedule.id}`)}>
+							<Link className="schedule-card-summary" to={`/schedules/${schedule.id}`}>
 								<div className="schedule-card-field f-matricula">
 									<span className="field-label">Matrícula</span>
 									<span>{schedule.car_plate || "-"}</span>
@@ -459,10 +464,10 @@ export default function SchedulesList() {
 								>
 									<i className={`fa-solid fa-chevron-${isExpanded ? "up" : "down"}`} />
 								</button>
-							</div>
+							</Link>
 
 							{isExpanded && (
-								<div className="schedule-card-details" onClick={() => navigate(`/schedules/${schedule.id}`)}>
+								<Link className="schedule-card-details" to={`/schedules/${schedule.id}`}>
 									<div className="schedule-card-field">
 										<span className="field-label">Telemóvel</span>
 										<span>{schedule.client_phone || "-"}</span>
@@ -472,7 +477,7 @@ export default function SchedulesList() {
 										<span className="field-label">Descrição</span>
 										<span>{schedule.description || "-"}</span>
 									</div>
-								</div>
+								</Link>
 							)}
 						</div>
 					);
@@ -591,9 +596,9 @@ export default function SchedulesList() {
 								<i className="fa-solid fa-broom" /> Limpar
 							</button>
 
-							<button className="confirm" onClick={() => navigate("/schedules/new")}>
+							<Link className="confirm" to="/schedules/new">
 								<i className="fa-solid fa-plus" /> Adicionar Marcação
-							</button>
+							</Link>
 						</div>
 
 						{isMobile ? renderMobileList() : renderDesktopTable()}

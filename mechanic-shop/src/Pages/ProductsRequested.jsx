@@ -1,5 +1,7 @@
 import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
+import "./Style/Page.css";
+import "./Style/ProductsRequested.css";
 
 export const ProductsRequested = ({
 	id,
@@ -22,6 +24,17 @@ export const ProductsRequested = ({
 	const [searchProduct, setSearchProduct] = useState("");
 	const refSearch = useRef(null);
 	const [debouncedValue, setDebouncedValue] = useState("");
+
+	const [message, setMessage] = useState({ type: "", text: "" });
+	const [pendingForwardPR, setPendingForwardPR] = useState(null);
+
+	function showMessage(type, text) {
+		setMessage({ type, text });
+
+		setTimeout(() => {
+			setMessage({ type: "", text: "" });
+		}, 4000);
+	}
 
 	useEffect(()=>{
 		loadPRs();
@@ -189,12 +202,14 @@ export const ProductsRequested = ({
 
 	const handleClickStartAddCancel = () => {
 		setIsAddingProduct(false);
+		setNewProduct({ name: "", reference: "", product_type_id: "" });
 	}
 
 	const handleClickSelect  = async (p) =>{
 		if(disabled) return;
 		setIsSearchSelected(false);
 		const pr = await postPR(p.id);
+		if(pr) showMessage("success", "Produto pedido adicionado com sucesso");
 		loadPRs();
 	}
 
@@ -203,9 +218,11 @@ export const ProductsRequested = ({
 		const p = await postProduct(newProduct.name, newProduct.reference, newProduct.product_type_id);
 		if(p){
 			const ap = await postPR(p.id);
+			if(ap) showMessage("success", "Produto pedido adicionado com sucesso");
 			loadPRs();
 			setIsAddingProduct(false);
 			setSearchProduct("");
+			setNewProduct({ name: "", reference: "", product_type_id: "" });
 		}
 	}
 	const handleInputChangeBlur = async (pr) => {
@@ -232,8 +249,24 @@ export const ProductsRequested = ({
 		loadPRs();
 	}
 
-	const handleActionForwardPR = async (pr) => {
+	const handleActionForwardPR = (pr) => {
 		if(disabled) return;
+
+		if(pr.is_delivered != 1){
+			setPendingForwardPR(pr);
+			return;
+		}
+
+		forwardPR(pr);
+	}
+
+	const handleConfirmForwardPR = () => {
+		if(!pendingForwardPR) return;
+		forwardPR(pendingForwardPR);
+		setPendingForwardPR(null);
+	}
+
+	const forwardPR = async (pr) => {
 		const newAp = {
 			product_id: pr.product_id,
 			quantity: pr.quantity,
@@ -250,6 +283,12 @@ export const ProductsRequested = ({
 
 	return(
 		<>
+			{message.text && (
+				<div className={`api-message ${message.type}`}>
+					{message.text}
+				</div>
+			)}
+
 			<div ref={refSearch}className="search-bar search-products">
 				<span><i className="fa-solid fa-magnifying-glass"/></span>
 				<input
@@ -359,6 +398,31 @@ export const ProductsRequested = ({
 					))}
 				</tbody>
 			</table>
+
+			{pendingForwardPR && (
+				<div className="pr-forward-confirm-backdrop" onClick={() => setPendingForwardPR(null)}>
+					<div className="pr-forward-confirm-modal" onClick={(e) => e.stopPropagation()}>
+						<div className="pr-forward-confirm-header">
+							<h2>Produto ainda não recebido</h2>
+							<button className="cancel" onClick={() => setPendingForwardPR(null)}>
+								<i className="fa-solid fa-xmark" />
+							</button>
+						</div>
+						<p>
+							"{pendingForwardPR.product_name}" ainda não foi marcado como recebido.
+							Quer avançar mesmo assim e enviá-lo para Produtos Aplicados?
+						</p>
+						<div className="pr-forward-confirm-actions">
+							<button className="confirm" onClick={handleConfirmForwardPR}>
+								<i className="fa-solid fa-check" /> Sim, Avançar
+							</button>
+							<button className="cancel" onClick={() => setPendingForwardPR(null)}>
+								<i className="fa-solid fa-xmark" /> Não
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</>
 	);
 }

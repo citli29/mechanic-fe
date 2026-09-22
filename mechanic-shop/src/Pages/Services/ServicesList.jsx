@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -25,8 +25,6 @@ const SORTABLE_COLUMNS = [
 ];
 
 export default function ServicesList() {
-
-	const navigate = useNavigate();
 
 	const [services, setServices] = useState([]);
 	const [serviceTypes, setServiceTypes] = useState([]);
@@ -332,9 +330,16 @@ export default function ServicesList() {
 								<tr
 									key={service.id}
 									className={status.rowClass}
-									onClick={() => navigate(`/service/${service.id}`)}
 								>
-									<td data-label="Entrada"><span className="cell-truncate" title={service.checkin || "-"}>{service.checkin || "-"}</span></td>
+									<td data-label="Entrada">
+										<Link
+											className="row-link-overlay"
+											to={`/service/${service.id}`}
+											aria-hidden="true"
+											tabIndex={-1}
+										/>
+										<span className="cell-truncate" title={service.checkin || "-"}>{service.checkin || "-"}</span>
+									</td>
 									<td data-label="Saída"><span className="cell-truncate" title={service.checkout || "-"}>{service.checkout || "-"}</span></td>
 									<td data-label="Cliente"><span className="cell-truncate" title={service.client_name || "-"}>{service.client_name || "-"}</span></td>
 									<td data-label="Telemóvel"><span className="cell-truncate" title={service.client_phone || "-"}>{service.client_phone || "-"}</span></td>
@@ -422,7 +427,7 @@ export default function ServicesList() {
 								{service.service_type_name || "Sem Tipo"}
 							</div>
 
-							<div className="service-card-summary" onClick={() => navigate(`/service/${service.id}`)}>
+							<Link className="service-card-summary" to={`/service/${service.id}`}>
 								<div className="service-card-field f-matricula">
 									<span className="field-label">Matrícula</span>
 									<span>{service.car_plate || "-"}</span>
@@ -462,10 +467,10 @@ export default function ServicesList() {
 								>
 									<i className={`fa-solid fa-chevron-${isExpanded ? "up" : "down"}`} />
 								</button>
-							</div>
+							</Link>
 
 							{isExpanded && (
-								<div className="service-card-details" onClick={() => navigate(`/service/${service.id}`)}>
+								<Link className="service-card-details" to={`/service/${service.id}`}>
 									<div className="service-card-field">
 										<span className="field-label">Telemóvel</span>
 										<span>{service.client_phone || "-"}</span>
@@ -480,7 +485,7 @@ export default function ServicesList() {
 										<span className="field-label">Kms</span>
 										<span>{service.kms ?? "-"}</span>
 									</div>
-								</div>
+								</Link>
 							)}
 						</div>
 					);
@@ -598,9 +603,9 @@ export default function ServicesList() {
 								<i className="fa-solid fa-broom" /> Limpar
 							</button>
 
-							<button className="confirm" onClick={() => navigate("/services/new")}>
+							<Link className="confirm" to="/services/new">
 								<i className="fa-solid fa-plus" /> Adicionar Serviço
-							</button>
+							</Link>
 						</div>
 
 						{isMobile ? renderMobileList() : renderDesktopTable()}

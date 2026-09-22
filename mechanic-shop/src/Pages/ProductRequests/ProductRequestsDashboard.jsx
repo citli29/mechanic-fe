@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -55,7 +55,6 @@ function groupByService(products) {
 
 export default function ProductRequestsDashboard() {
 
-	const navigate = useNavigate();
 	const location = useLocation();
 
 	const requestIdRef = useRef(0);
@@ -369,9 +368,9 @@ export default function ProductRequestsDashboard() {
 								{group.context}
 							</span>
 
-							<button className="options" onClick={() => navigate(`/service/${group.service_id}`)}>
+							<Link className="options" to={`/service/${group.service_id}`}>
 								<i className="fa-solid fa-arrow-up-right-from-square" />
-							</button>
+							</Link>
 						</div>
 
 						<table className={showReceived ? "" : "pr-no-received"}>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -28,8 +28,6 @@ const MECHANIC_ACCENT = getServiceTypeAccent(1);
 const DESLOCACOES_ACCENT = "#4c1d95";
 
 export default function SchedulesCalendar() {
-
-	const navigate = useNavigate();
 
 	const requestIdRef = useRef(0);
 
@@ -191,39 +189,44 @@ export default function SchedulesCalendar() {
 
 	function renderAppointment(schedule) {
 		return (
-			<div
-				key={schedule.id}
-				className={`appointment ${getAppointmentStatusClass(schedule)}`}
-				onClick={() => navigate(`/schedules/${schedule.id}`)}
-			>
-				<div className="appointment-top-row">
-					<div className="appointment-plate">
-						{schedule.car_plate
-							? `${schedule.car_plate} - ${[schedule.car_make, schedule.car_model].filter(Boolean).join(" ")}`
-							: [schedule.car_make, schedule.car_model].filter(Boolean).join(" ") || "Sem Viatura"}
+			<div key={schedule.id} className="appointment-wrap">
+				<Link
+					className={`appointment ${getAppointmentStatusClass(schedule)}`}
+					to={`/schedules/${schedule.id}`}
+				>
+					<div className="appointment-top-row">
+						<div className="appointment-plate">
+							{schedule.car_plate
+								? `${schedule.car_plate} - ${[schedule.car_make, schedule.car_model].filter(Boolean).join(" ")}`
+								: [schedule.car_make, schedule.car_model].filter(Boolean).join(" ") || "Sem Viatura"}
+						</div>
+
+						{/* Reserves the same space the overlaid icon link (below)
+						    occupies, so the plate text doesn't run under it. */}
+						{schedule.service_id !== null && <span className="appointment-open-service-spacer" />}
 					</div>
 
-					{schedule.service_id !== null && (
-						<button
-							className="appointment-open-service"
-							title="Abrir Serviço"
-							onClick={(e) => {
-								e.stopPropagation();
-								navigate(`/service/${schedule.service_id}`);
-							}}
-						>
-							<i className="fa-solid fa-arrow-up-right-from-square" />
-						</button>
-					)}
-				</div>
+					<div className="appointment-client">
+						{schedule.client_name || "Sem Cliente"}
+					</div>
 
-				<div className="appointment-client">
-					{schedule.client_name || "Sem Cliente"}
-				</div>
+					<div className="appointment-description">
+						{schedule.description}
+					</div>
+				</Link>
 
-				<div className="appointment-description">
-					{schedule.description}
-				</div>
+				{schedule.service_id !== null && (
+					// Sibling of the card's own <Link>, not nested inside it — an
+					// <a> inside an <a> is invalid HTML (React warns loudly about
+					// it). Absolutely positioned to land in the same visual spot.
+					<Link
+						className="appointment-open-service"
+						title="Abrir Serviço"
+						to={`/service/${schedule.service_id}`}
+					>
+						<i className="fa-solid fa-arrow-up-right-from-square" />
+					</Link>
+				)}
 			</div>
 		);
 	}
@@ -484,9 +487,9 @@ export default function SchedulesCalendar() {
 								<i className="fa-solid fa-broom" /> Limpar
 							</button>
 
-							<button className="confirm" onClick={() => navigate("/schedules/new")}>
+							<Link className="confirm" to="/schedules/new">
 								<i className="fa-solid fa-plus" /> Adicionar Marcação
-							</button>
+							</Link>
 						</div>
 
 						<div className="calendar-wrapper">

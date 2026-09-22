@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -9,8 +9,6 @@ import "./Style/ServicesManageList.css";
 const PER_PAGE = 10;
 
 export default function ServicesManageList() {
-
-	const navigate = useNavigate();
 
 	const requestIdRef = useRef(0);
 
@@ -332,9 +330,9 @@ export default function ServicesManageList() {
 												<td data-label="Telemóvel"><span className="cell-truncate" title={service.client_phone || "-"}>{service.client_phone || "-"}</span></td>
 
 												<td className="actions">
-													<button className="options" onClick={() => navigate(`/service/${service.id}`)}>
+													<Link className="options" to={`/service/${service.id}`}>
 														<i className="fa-solid fa-arrow-up-right-from-square" />
-													</button>
+													</Link>
 
 													{isEditingRow ? (
 														<>

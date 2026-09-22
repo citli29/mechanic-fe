@@ -242,7 +242,7 @@ export default function ServiceShow2() {
 
 		const timer = setTimeout(() => {
 			f();
-		}, 1000);
+		}, 500);
 
 		return () => clearTimeout(timer);
 	}, [service]);
@@ -302,6 +302,16 @@ export default function ServiceShow2() {
 			setService(s);
 		}
 	}
+
+	// Bypasses the debounced autosave — a quick "leave the page right after
+	// checking it" is common enough with this specific field that waiting
+	// out the debounce risks losing the change entirely.
+	const handleOfficeCheckChange = async (checked) => {
+		const s = await putService({...service, office_check: checked});
+		if(s){
+			setService(s);
+		}
+	}
 	const [apReload, setApReload] = useState(false);
 	const [aps, setAps] = useState([]);
 
@@ -349,6 +359,7 @@ export default function ServiceShow2() {
 									[field]: value,
 								}))
 						}
+						onOfficeCheckChange={handleOfficeCheckChange}
 						lock={!isAllowedEditing}
 						onLockChange={()=>{setIsAllowedEditing(!isAllowedEditing)}}
 					/>

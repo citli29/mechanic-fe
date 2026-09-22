@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -28,8 +28,6 @@ const MECHANIC_ACCENT = getServiceTypeAccent(1);
 const DESLOCACOES_ACCENT = "#4c1d95";
 
 export default function ServicesCalendar() {
-
-	const navigate = useNavigate();
 
 	const requestIdRef = useRef(0);
 
@@ -199,10 +197,10 @@ export default function ServicesCalendar() {
 
 	function renderAppointment(service) {
 		return (
-			<div
+			<Link
 				key={service.id}
 				className={`appointment ${getServiceStatusClass(service)}`}
-				onClick={() => navigate(`/service/${service.id}`)}
+				to={`/service/${service.id}`}
 			>
 				<div className="appointment-plate">
 					{service.car_plate
@@ -217,7 +215,7 @@ export default function ServicesCalendar() {
 				<div className="appointment-description">
 					{getServiceStatusLabel(service)}
 				</div>
-			</div>
+			</Link>
 		);
 	}
 
@@ -466,9 +464,9 @@ export default function ServicesCalendar() {
 								<i className="fa-solid fa-broom" /> Limpar
 							</button>
 
-							<button className="confirm" onClick={() => navigate("/services/new")}>
+							<Link className="confirm" to="/services/new">
 								<i className="fa-solid fa-plus" /> Adicionar Serviço
-							</button>
+							</Link>
 						</div>
 
 						<div className="calendar-wrapper">

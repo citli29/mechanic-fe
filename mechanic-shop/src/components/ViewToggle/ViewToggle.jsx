@@ -1,28 +1,27 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "./ViewToggle.css";
 
 export default function ViewToggle({ listPath, calendarPath }) {
 
-	const navigate = useNavigate();
 	const location = useLocation();
 
 	const isCalendar = location.pathname === calendarPath;
 
 	return (
 		<div className="view-toggle">
-			<button
+			<Link
 				className={!isCalendar ? "active" : ""}
-				onClick={() => navigate(listPath)}
+				to={listPath}
 			>
 				<i className="fa-solid fa-list" /> Lista
-			</button>
+			</Link>
 
-			<button
+			<Link
 				className={isCalendar ? "active" : ""}
-				onClick={() => navigate(calendarPath)}
+				to={calendarPath}
 			>
 				<i className="fa-solid fa-calendar-days" /> Calendário
-			</button>
+			</Link>
 		</div>
 	);
 }

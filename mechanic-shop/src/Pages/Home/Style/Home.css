@@ -4,7 +4,7 @@
 	gap: var(--padding);
 	margin-bottom: var(--big-padding);
 
-	button{
+	button, a{
 		display: flex;
 		align-items: center;
 		gap: var(--padding);
@@ -146,13 +146,15 @@
 	color: #fff;
 }
 
-.home-page .product-group-ready .product-group-header button.options{
+.home-page .product-group-ready .product-group-header button.options,
+.home-page .product-group-ready .product-group-header a.options{
 	background: var(--state-finished-dark);
 	border-color: var(--state-finished-dark);
 	color: #fff;
 }
 
-.home-page .product-group-ready .product-group-header button.options:hover{
+.home-page .product-group-ready .product-group-header button.options:hover,
+.home-page .product-group-ready .product-group-header a.options:hover{
 	background: var(--success-hover);
 }
 
@@ -171,13 +173,15 @@
 	color: #fff;
 }
 
-.home-page .product-group-partial .product-group-header button.options{
+.home-page .product-group-partial .product-group-header button.options,
+.home-page .product-group-partial .product-group-header a.options{
 	background: var(--state-not-finished);
 	border-color: var(--state-not-finished);
 	color: #fff;
 }
 
-.home-page .product-group-partial .product-group-header button.options:hover{
+.home-page .product-group-partial .product-group-header button.options:hover,
+.home-page .product-group-partial .product-group-header a.options:hover{
 	filter: brightness(0.9);
 }
 
@@ -191,7 +195,12 @@
 	gap: var(--small-padding);
 }
 
+.home-page .today-schedule-wrap{
+	position: relative;
+}
+
 .home-page .today-schedule{
+	display: block;
 	padding: var(--small-padding) var(--padding);
 	border: 1px solid transparent;
 	border-left: 4px solid transparent;
@@ -222,8 +231,19 @@
 	white-space: nowrap;
 }
 
-.home-page .today-schedule-open-service{
+.home-page .today-schedule-open-service-spacer{
 	flex: 0 0 auto;
+	width: calc(var(--font-size-small) + var(--small-padding));
+	height: calc(var(--font-size-small) + var(--small-padding));
+}
+
+.home-page .today-schedule-open-service{
+	/* Sits over the card's own <Link> (a sibling, not a descendant — see
+	   the comment in Home.jsx) at the same spot the spacer above reserves
+	   inside it. */
+	position: absolute;
+	top: var(--small-padding);
+	right: var(--padding);
 
 	display: flex;
 	align-items: center;

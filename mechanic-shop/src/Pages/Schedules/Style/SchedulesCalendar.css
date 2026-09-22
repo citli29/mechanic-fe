@@ -118,7 +118,12 @@
 	min-width: 0;
 }
 
+.schedules-calendar-page .appointment-wrap{
+	position: relative;
+}
+
 .schedules-calendar-page .appointment{
+	display: block;
 	padding: var(--small-padding) var(--padding);
 	border: 1px solid transparent;
 	border-left: 4px solid transparent;
@@ -149,8 +154,19 @@
 	min-width: 0;
 }
 
-.schedules-calendar-page .appointment-open-service{
+.schedules-calendar-page .appointment-open-service-spacer{
 	flex: 0 0 auto;
+	width: 14px;
+	height: 14px;
+}
+
+.schedules-calendar-page .appointment-open-service{
+	/* Sits over the card's own <Link> (a sibling, not a descendant — see
+	   the comment in SchedulesCalendar.jsx) at the same spot the spacer
+	   above reserves inside it. */
+	position: absolute;
+	top: var(--small-padding);
+	right: var(--padding);
 
 	display: flex;
 	align-items: center;

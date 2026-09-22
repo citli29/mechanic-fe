@@ -6,7 +6,7 @@ function oneLine(text) {
 	return (text || "").replace(/\s+/g, " ").trim();
 }
 
-export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) => {
+export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,lock, onLockChange}) => {
 
 	const finished = !!service?.is_finished;
 	const fieldsLocked = lock || finished;
@@ -249,7 +249,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 							type="checkbox"
 							id="service-office-check"
 							checked={service.office_check??0}
-							onChange={(e) => onServiceChange( "office_check", e.target.checked) }
+							onChange={(e) => onOfficeCheckChange(e.target.checked) }
 						/>
 						<span>Validado</span>
 					</label>
@@ -397,7 +397,7 @@ export const ServiceHeader = ({ service, onServiceChange ,lock, onLockChange}) =
 									type="checkbox"
 									id="service-office-check"
 									checked={service.office_check}
-									onChange={(e) => onServiceChange( "office_check", e.target.checked) }
+									onChange={(e) => onOfficeCheckChange(e.target.checked) }
 								/>
 								<span>Validado</span>
 							</label>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios";
 
 import { CarPicker } from "../../components/Pickers/CarPicker";
@@ -385,9 +385,9 @@ export default function SchedulesShow() {
 								</>
 							)}
 
-							<button className="options" onClick={() => navigate("/schedules_calendar")}>
+							<Link className="options" to="/schedules_calendar">
 								<i className="fa-solid fa-arrow-left" /> Voltar
-							</button>
+							</Link>
 						</div>
 
 					</div>
@@ -525,9 +525,9 @@ export default function SchedulesShow() {
 											<td data-label="Entrada">{service.checkin || "-"}</td>
 
 											<td className="actions">
-												<button className="options" onClick={() => navigate(`/service/${service.id}`)}>
+												<Link className="options" to={`/service/${service.id}`}>
 													<i className="fa-solid fa-arrow-up-right-from-square" />
-												</button>
+												</Link>
 											</td>
 										</tr>
 									))}

@@ -83,7 +83,10 @@
 	font-weight: 800;
 	color: var(--txt-dark);
 
-	button{
+	button, a{
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		aspect-ratio: 1;
 		height: calc(var(--line-height) - 2 * var(--small-padding));
 		border-radius: 5px;
@@ -105,13 +108,15 @@
 	color: #fff;
 }
 
-.product-requests-page .pr-group-ready .pr-group-header button.options{
+.product-requests-page .pr-group-ready .pr-group-header button.options,
+.product-requests-page .pr-group-ready .pr-group-header a.options{
 	background: var(--state-finished-dark);
 	border-color: var(--state-finished-dark);
 	color: #fff;
 }
 
-.product-requests-page .pr-group-ready .pr-group-header button.options:hover{
+.product-requests-page .pr-group-ready .pr-group-header button.options:hover,
+.product-requests-page .pr-group-ready .pr-group-header a.options:hover{
 	background: var(--success-hover);
 }
 
@@ -121,13 +126,15 @@
 	color: #fff;
 }
 
-.product-requests-page .pr-group-partial .pr-group-header button.options{
+.product-requests-page .pr-group-partial .pr-group-header button.options,
+.product-requests-page .pr-group-partial .pr-group-header a.options{
 	background: var(--state-not-finished);
 	border-color: var(--state-not-finished);
 	color: #fff;
 }
 
-.product-requests-page .pr-group-partial .pr-group-header button.options:hover{
+.product-requests-page .pr-group-partial .pr-group-header button.options:hover,
+.product-requests-page .pr-group-partial .pr-group-header a.options:hover{
 	filter: brightness(0.9);
 }
 
@@ -149,63 +156,83 @@
 	grid-template-columns: repeat(3, 3fr) repeat(2, 2fr);
 }
 
-.product-requests-page .pr-checkbox-cell input{
-	width: unset;
-	aspect-ratio: 1;
-}
-
 .product-requests-page .pr-qty-cell input{
 	text-align: center;
 }
 
-.product-requests-page .pr-received-cell {
+/* Shared by every checkbox cell — "Pedido" (all three tabs) and
+   "Recebido" (Aguardar Entrega / Entregues) alike — so they all look and
+   behave the same: a small, normal checkbox with a bigger click/hover
+   target around it, and each control in a cell highlighting only itself. */
+.product-requests-page .pr-checkbox-cell {
 	text-align: center;
-	display: grid;
-	
-	&:has(.pr-btn-specify){grid-template-columns: 1fr calc( 42.59px + var(--big-padding));}
+	display: flex;
+	align-items: center;
+	justify-content: center;
 
+	/* Card.css's shared `td:has(input):hover` rule darkens this whole
+	   cell (and every descendant) the moment anything inside it is
+	   hovered — on "Recebido" that meant hovering the specify-button
+	   also darkened the checkbox beside it (an ancestor of a hovered
+	   element always matches `:hover` too). Neutralized here; the
+	   `label`/`.pr-btn-specify` rules below give each control its own
+	   hover highlight instead. */
+	&:hover, &:hover *{
+		background: transparent !important;
+	}
 
-	label {
-		width: 100% !important;
-		height: 100% !important;
-		flex:1;
+	label{
 		display: flex;
 		align-items: center;
 		justify-content: center;
+
+		/* A bigger click/hover target than the checkbox itself, not a
+		   bigger checkbox — same footprint as .pr-btn-specify below. */
+		width: 44px;
+		height: 32px;
+		border-radius: 5px;
+		cursor: pointer;
+
+		&:hover{
+			background: var(--bg-page-dark) !important;
+		}
+
+		/* Giving this label a definite height above is exactly what lets
+		   Card.css's `td input{ height: calc(100% - 2px) }` resolve to an
+		   actual value against it — that rule normally does nothing here
+		   (percentage heights need a definite-height ancestor, which this
+		   checkbox never had before), so the checkbox itself would balloon
+		   to match the label instead of staying its normal small size. */
 		input{
-			height: unset;
-
+			width: auto !important;
+			height: auto !important;
+			flex: 0 0 auto;
 		}
 	}
+}
 
-	.pr-btn-specify{
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		height: 100%;
-	}
+.product-requests-page .pr-received-controls{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+}
+
+.product-requests-page .pr-received-cell .pr-btn-specify{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	/* A bit wider than tall — roomier to hit than a tight icon-sized
+	   square, without needing to match the checkbox's own square shape. */
+	width: 44px;
+	height: 32px;
+	border-radius: 5px;
+	background: var(--bg-page) !important;
+	border: none;
+
 	&:hover{
-		* {
-			background: var(--bg-page) !important;
-			&:hover{
-				background: var(--bg-page-dark) !important;
-			}
-		}
-
-		i{
-			background: none !important;
-		}
-
-		background: var(--bg-page) !important;
+		background: var(--bg-page-dark) !important;
 	}
-
-	button{
-		height: 42.59px;
-		background: var(--bg-page) !important;
-		border: none;
-	}
-	
 }
 
 /* =====================
@@ -353,36 +380,10 @@
 
 	/* Card.css's mobile layout puts the data-label::before on the left
 	   and the control on the right via flex — that's why "Pedido"
-	   already looks right here. ".pr-received-cell" permanently forces
-	   display:grid (for its desktop 2-column [checkbox][specify-button]
-	   layout), which defeats that trick and leaves "Recebido" broken.
-	   Put it back on the same flex row Pedido uses, with the checkbox
-	   and the optional specify-button grouped together on the right. */
+	   already looks right here. Same idea for "Recebido": the checkbox
+	   + specify-button wrapper stays grouped on the right. */
 	.product-requests-page .pr-received-cell{
-		display: flex;
 		justify-content: space-between;
-		align-items: center;
 		text-align: left;
-	}
-
-	.product-requests-page .pr-received-cell label{
-		width: unset !important;
-		height: unset !important;
-	}
-
-	.product-requests-page .pr-received-controls{
-		display: flex;
-		align-items: center;
-		gap: var(--padding);
-	}
-
-	.product-requests-page .pr-received-cell .pr-btn-specify{
-		width: auto;
-		height: auto;
-	}
-
-	.product-requests-page .pr-received-cell button{
-		height: calc(var(--line-height) - 2 * var(--small-padding));
-		aspect-ratio: 1;
 	}
 }

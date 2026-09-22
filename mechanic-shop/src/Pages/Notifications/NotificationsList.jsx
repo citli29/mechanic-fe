@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import { getDefaultViewTypeId, getStoredViewTypeId, notifyNotificationsUpdated, onNotificationsUpdated, setStoredViewTypeId } from "../../utils/notificationView";
 
@@ -382,34 +382,20 @@ export default function NotificationsList() {
 										<tr
 											key={notification.id}
 											className={notification.is_checked ? "notif-read" : "notif-unread"}
-											onClick={() => handleOpenNotification(notification)}
+											onClick={(e) => handleViewMessage(notification, e)}
 										>
-											<td data-label="Estado" className="notif-estado-cell" onClick={(e) => e.stopPropagation()}>
+											<td data-label="Estado" onClick={(e) => e.stopPropagation()}>
 												<input
 													type="checkbox"
 													checked={!!notification.is_checked}
 													title={notification.is_checked ? "Tratada" : "Por Tratar"}
 													onChange={(e) => handleToggleChecked(notification, e)}
 												/>
-												<button
-													className="notif-message-toggle notif-message-toggle-mobile"
-													onClick={(e) => handleViewMessage(notification, e)}
-													title="Ver mensagem completa"
-												>
-													<i className="fa-solid fa-eye" />
-												</button>
 											</td>
 											<td data-label="Tipo">{notification.notification_type_name || "-"}</td>
 											<td data-label="Título">{notification.title}</td>
 											<td data-label="Mensagem" className="notif-message">
 												<span className="notif-message-text">{notification.message}</span>
-												<button
-													className="notif-message-toggle"
-													onClick={(e) => handleViewMessage(notification, e)}
-													title="Ver mensagem completa"
-												>
-													<i className="fa-solid fa-eye" />
-												</button>
 											</td>
 											<td data-label="Data">{formatDateTime(notification.created_at)}</td>
 										</tr>
@@ -538,21 +524,18 @@ export default function NotificationsList() {
 								) : preview.type === "same-car" ? (
 									<div className="notif-service-preview-cards">
 										{preview.services.map((s) => (
-											<button
+											<Link
 												key={s.id}
-												type="button"
 												className="notif-service-preview-card"
-												onClick={() => {
-													navigate(`/service/${s.id}`);
-													setViewingNotification(null);
-												}}
+												to={`/service/${s.id}`}
+												onClick={() => setViewingNotification(null)}
 											>
 												<i className="fa-solid fa-arrow-up-right-from-square" />
 												<span className="notif-service-preview-card-id">Serviço #{s.id}</span>
 												<span className={`notif-service-preview-state ${getServiceStatus(s).stateClass}`}>
 													{getServiceStatus(s).desc}
 												</span>
-											</button>
+											</Link>
 										))}
 									</div>
 								) : null}
