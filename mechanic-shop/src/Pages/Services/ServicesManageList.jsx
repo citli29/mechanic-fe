@@ -5,6 +5,7 @@ import api from "../../api/axios";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ServicesManageList.css";
+import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
 
 const PER_PAGE = 10;
 
@@ -291,6 +292,10 @@ export default function ServicesManageList() {
 										const rowDisabled = !isEditingRow || editLoading;
 
 										const serviceTypeValue = isEditingRow ? editing.service_type_id : service.service_type_id;
+										const serviceTypeAccent = getServiceTypeAccent(
+											serviceTypeValue,
+											serviceTypes.find((t) => String(t.id) === String(serviceTypeValue))?.name
+										);
 										const scheduleValue = isEditingRow ? editing.schedule_id : service.schedule_id;
 
 										const scheduleOptions = isEditingRow
@@ -305,6 +310,10 @@ export default function ServicesManageList() {
 														disabled={rowDisabled}
 														value={serviceTypeValue || ""}
 														onChange={(e) => setEditing((prev) => ({ ...prev, service_type_id: e.target.value }))}
+														style={{
+															borderColor: serviceTypeAccent,
+															background: `${serviceTypeAccent}1a`,
+														}}
 													>
 														{serviceTypes.map((type) => (
 															<option key={type.id} value={type.id}>{type.name}</option>

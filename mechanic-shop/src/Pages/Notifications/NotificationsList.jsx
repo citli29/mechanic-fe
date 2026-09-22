@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import { getDefaultViewTypeId, getStoredViewTypeId, notifyNotificationsUpdated, onNotificationsUpdated, setStoredViewTypeId } from "../../utils/notificationView";
+import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -44,6 +45,36 @@ function extractServiceIdFromUrl(url) {
 	return match ? match[1] : null;
 }
 
+function normalizeUrl(url) {
+	return url.startsWith("/") ? url : `/${url}`;
+}
+
+// It may well have moved on since the notification fired (e.g. already
+// ordered) — this lands on whichever Encomendas tab it's actually sitting
+// in now, not blindly on "Por Encomendar".
+function getProductRequestActiveTab(product) {
+	if (product?.is_delivered == 1) return "delivered";
+	if (product?.is_ordered == 1) return "awaiting_delivery";
+	return "to_order";
+}
+
+// The notification message only ever carries the product's name as plain
+// text, never an id — this is the one unavoidable name lookup, resolving
+// that text to the actual products.id so everything downstream (spr_list,
+// sap_list — both of which do carry product_id) can be matched by id
+// instead of by comparing name strings a second/third time.
+async function resolveProductIdByName(productName) {
+	try {
+		const res = await api.get("productsOr", { params: { q: productName } });
+		const match = (res.data.product_list || []).find(
+			(p) => (p.name || "").trim().toLowerCase() === productName.trim().toLowerCase()
+		);
+		return match?.id ?? null;
+	} catch {
+		return null;
+	}
+}
+
 // Shared by the popup preview and by "open" navigation (for highlighting the
 // row on the Encomendas page) so both agree on which product a notification
 // is actually about.
@@ -52,10 +83,31 @@ async function findMatchingProductRequest(serviceId, message, title) {
 	if (!serviceId || !productName) return null;
 
 	try {
+		const productId = await resolveProductIdByName(productName);
+		if (!productId) return null;
+
 		const res = await api.get(`/services/${serviceId}/products_requested`);
-		return (res.data.spr_list || []).find(
-			(pr) => (pr.product_name || "").trim().toLowerCase() === productName.trim().toLowerCase()
-		) || null;
+		return (res.data.spr_list || []).find((pr) => pr.product_id === productId) || null;
+	} catch {
+		return null;
+	}
+}
+
+// Only checked when the product isn't in Produtos Pedidos anymore — tells
+// the popup WHY: forwarded on to Produtos Aplicados (found here) versus
+// deleted outright (found in neither list). Matched by product_id — spr/sap
+// rows both carry it (forwarding a request copies it straight across, see
+// ProductsRequested.jsx's forwardPR).
+async function findMatchingAppliedProduct(serviceId, message, title) {
+	const productName = extractProductName(message, title);
+	if (!serviceId || !productName) return null;
+
+	try {
+		const productId = await resolveProductIdByName(productName);
+		if (!productId) return null;
+
+		const res = await api.get(`/services/${serviceId}/applied_products`);
+		return (res.data.sap_list || []).find((ap) => ap.product_id === productId) || null;
 	} catch {
 		return null;
 	}
@@ -143,6 +195,15 @@ export default function NotificationsList() {
 	async function loadNotifications() {
 		if (!effectiveViewTypeId) return;
 
+		// A background refresh (poll, or another tab checking/unchecking
+		// something) would otherwise replace `notifications` out from under
+		// an open popup — dropping the notification being viewed right out
+		// of the array the moment it no longer matches the current filter
+		// (e.g. checking "Tratada" while on "Não tratadas") and breaking
+		// its prev/next nav. Paused while the popup is open; picks back up
+		// as soon as it's closed (see the effect below).
+		if (viewingNotification) return;
+
 		const requestId = ++requestIdRef.current;
 
 		setLoading(true);
@@ -174,6 +235,8 @@ export default function NotificationsList() {
 
 	useEffect(() => { loadNotifications(); }, [onlyUnread, page, effectiveViewTypeId]);
 
+	const isViewingNotification = Boolean(viewingNotification);
+
 	useEffect(() => {
 		const pollId = setInterval(loadNotifications, 5000);
 		const unsubscribeUpdated = onNotificationsUpdated(loadNotifications);
@@ -182,7 +245,24 @@ export default function NotificationsList() {
 			clearInterval(pollId);
 			unsubscribeUpdated();
 		};
-	}, [onlyUnread, page, effectiveViewTypeId]);
+		// isViewingNotification (not viewingNotification itself) so this only
+		// re-arms on open/close, not on every prev/next step or check toggle
+		// while the popup's already open.
+	}, [onlyUnread, page, effectiveViewTypeId, isViewingNotification]);
+
+	const isFirstViewingEffect = useRef(true);
+
+	// Catches the list up to the real state right away on close, instead of
+	// leaving whatever got checked/unchecked while browsing to sit stale
+	// until the next 5s poll.
+	useEffect(() => {
+		if (isFirstViewingEffect.current) {
+			isFirstViewingEffect.current = false;
+			return;
+		}
+
+		if (!isViewingNotification) loadNotifications();
+	}, [isViewingNotification]);
 
 
 	useEffect(() => {
@@ -211,7 +291,15 @@ export default function NotificationsList() {
 						api.get(`/services/${serviceId}`),
 						findMatchingProductRequest(serviceId, viewingNotification.message, title),
 					]);
-					if (isCurrent) setPreview({ type: "product", service: serviceRes.data.service, product });
+
+					// Not in Produtos Pedidos anymore — check whether it moved
+					// on to Produtos Aplicados or was deleted outright, so the
+					// popup can say which instead of just showing nothing.
+					const appliedProduct = product
+						? null
+						: await findMatchingAppliedProduct(serviceId, viewingNotification.message, title);
+
+					if (isCurrent) setPreview({ type: "product", service: serviceRes.data.service, product, appliedProduct });
 				} catch {
 					// leave preview empty — popup still shows the plain message
 				} finally {
@@ -263,23 +351,16 @@ export default function NotificationsList() {
 			const serviceId = extractServiceIdFromUrl(notification.data?.url);
 			const product = await findMatchingProductRequest(serviceId, notification.message, notification.title);
 
-			// It may well have moved on since the notification fired (e.g.
-			// already ordered) — land on whichever Encomendas tab it's
-			// actually sitting in now, not blindly on "Por Encomendar".
-			const activeTab = product?.is_delivered == 1
-				? "delivered"
-				: product?.is_ordered == 1
-					? "awaiting_delivery"
-					: "to_order";
-
-			navigate("/products_requested", product ? { state: { highlightId: product.id, activeTab } } : undefined);
+			navigate("/products_requested", product
+				? { state: { highlightId: product.id, activeTab: getProductRequestActiveTab(product) } }
+				: undefined);
 			return;
 		}
 
 		const url = notification.data?.url;
 
 		if (url) {
-			navigate(url.startsWith("/") ? url : `/${url}`);
+			navigate(normalizeUrl(url));
 		}
 	}
 
@@ -297,16 +378,34 @@ export default function NotificationsList() {
 			const action = notification.is_checked ? "uncheck" : "check";
 			await api.put(`/notifications/${notification.id}/${action}`);
 
-			setViewingNotification((prev) =>
-				prev && prev.id === notification.id
-					? { ...prev, is_checked: prev.is_checked ? 0 : 1 }
-					: prev
-			);
+			// Patched in place rather than re-fetched/refiltered — keeps this
+			// notification at its same spot in the array (even if it no
+			// longer matches the "Não tratadas" filter) so the popup's
+			// prev/next nav doesn't reshuffle out from under whoever's
+			// browsing it. The list catches up to the real filtered state
+			// on its own next poll/page change.
+			const patch = (n) => n.id === notification.id ? { ...n, is_checked: n.is_checked ? 0 : 1 } : n;
+
+			setViewingNotification((prev) => prev && patch(prev));
+			setNotifications((prev) => prev.map(patch));
 
 			notifyNotificationsUpdated();
 		} catch (err) {
 			handleApiError(err);
 		}
+	}
+
+
+	// Steps through the currently loaded page of notifications, not across
+	// pages — same page-scoped boundary-disable pattern as the calendars'
+	// week/month navigation elsewhere in the app.
+	const viewingIndex = viewingNotification
+		? notifications.findIndex((n) => n.id === viewingNotification.id)
+		: -1;
+
+	function goToNotification(offset) {
+		const target = notifications[viewingIndex + offset];
+		if (target) setViewingNotification(target);
 	}
 
 
@@ -439,6 +538,26 @@ export default function NotificationsList() {
 							</button>
 						</div>
 
+						<div className="notif-detail-nav">
+							<button
+								className="accent"
+								disabled={viewingIndex <= 0}
+								onClick={() => goToNotification(-1)}
+							>
+								<i className="fa-solid fa-chevron-left" />
+							</button>
+
+							<span>{viewingIndex + 1} de {notifications.length}</span>
+
+							<button
+								className="accent"
+								disabled={viewingIndex === -1 || viewingIndex >= notifications.length - 1}
+								onClick={() => goToNotification(1)}
+							>
+								<i className="fa-solid fa-chevron-right" />
+							</button>
+						</div>
+
 						<div className="notif-detail-meta-row">
 							<p className="notif-detail-meta">
 								{viewingNotification.notification_type_name || "-"} — {formatDateTime(viewingNotification.created_at)}
@@ -473,7 +592,7 @@ export default function NotificationsList() {
 
 										<div className="notif-service-preview-row">
 											<span className="notif-service-preview-label">Tipo de Serviço</span>
-											<span>{preview.service?.service_type_name || "-"}</span>
+											<ServiceTypeBadge serviceTypeId={preview.service?.service_type_id} label={preview.service?.service_type_name} />
 										</div>
 
 										{formatCarLabel(preview.service) && (
@@ -494,10 +613,10 @@ export default function NotificationsList() {
 									<>
 										<div className="notif-service-preview-row">
 											<span className="notif-service-preview-label">Tipo de Serviço</span>
-											<span>{preview.service?.service_type_name || "-"}</span>
+											<ServiceTypeBadge serviceTypeId={preview.service?.service_type_id} label={preview.service?.service_type_name} />
 										</div>
 
-										{preview.product && (
+										{preview.product ? (
 											<div className="notif-product-entry">
 												<div className="notif-product-entry-field notif-product-entry-name">
 													<span className="notif-product-entry-label">Produto</span>
@@ -531,6 +650,12 @@ export default function NotificationsList() {
 													</span>
 												</div>
 											</div>
+										) : (
+											<p className="notif-product-missing">
+												{preview.appliedProduct
+													? "Este produto já foi aplicado ao serviço — já não consta em Produtos Pedidos."
+													: "Este produto já não consta em Produtos Pedidos — pode ter sido removido."}
+											</p>
 										)}
 									</>
 								) : preview.type === "same-car" ? (
@@ -556,15 +681,32 @@ export default function NotificationsList() {
 
 						{viewingNotification.data?.url && (
 							<div className="notif-detail-actions">
-								<button
+								{/* "Produto pedido" redirects to /products_requested instead of
+								    the plain service url (see handleOpenNotification) — the
+								    preview pane already looked its product up by the time this
+								    renders, so the href can point there directly (highlight/tab
+								    as query params, since a right/middle-click "open in new tab"
+								    has no router state to carry them through) instead of falling
+								    back to the wrong page. A normal left click still goes through
+								    handleOpenNotification (preventDefault below), which re-does
+								    the lookup in case it's changed since the preview loaded. */}
+								<Link
 									className="confirm"
-									onClick={() => {
+									to={
+										viewingNotification.title === PRODUCT_REQUESTED_TITLE
+											? preview?.product
+												? `/products_requested?highlight=${preview.product.id}&tab=${getProductRequestActiveTab(preview.product)}`
+												: "/products_requested"
+											: normalizeUrl(viewingNotification.data.url)
+									}
+									onClick={(e) => {
+										e.preventDefault();
 										handleOpenNotification(viewingNotification);
 										setViewingNotification(null);
 									}}
 								>
 									<i className="fa-solid fa-arrow-up-right-from-square" /> Abrir
-								</button>
+								</Link>
 							</div>
 						)}
 					</div>

@@ -6,15 +6,9 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ServicesList.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
+import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
 
 const PER_PAGE = 30;
-
-const SERVICE_TYPE_COLORS = ["#2563eb", "#e8aa2e", "#ba2323", "#22c55e", "#a3540a", "#e823d1"];
-
-function getServiceTypeAccent(serviceTypeId) {
-	if (!serviceTypeId) return "#cbd5e1";
-	return SERVICE_TYPE_COLORS[serviceTypeId % SERVICE_TYPE_COLORS.length];
-}
 
 const SORTABLE_COLUMNS = [
 	{ column: "checkin", label: "Entrada" },
@@ -346,7 +340,9 @@ export default function ServicesList() {
 									<td data-label="Matrícula"><span className="cell-truncate" title={service.car_plate || "-"}>{service.car_plate || "-"}</span></td>
 									<td data-label="Marca"><span className="cell-truncate" title={service.car_make_name || "-"}>{service.car_make_name || "-"}</span></td>
 									<td data-label="Modelo"><span className="cell-truncate" title={service.car_model_name || "-"}>{service.car_model_name || "-"}</span></td>
-									<td data-label="Tipo de Serviço"><span className="cell-truncate" title={service.service_type_name || "-"}>{service.service_type_name || "-"}</span></td>
+									<td data-label="Tipo de Serviço">
+										<ServiceTypeBadge serviceTypeId={service.service_type_id} label={service.service_type_name} />
+									</td>
 									<td data-label="Kms"><span className="cell-truncate" title={service.kms ?? "-"}>{service.kms ?? "-"}</span></td>
 
 									<td data-label="Estado">
@@ -415,16 +411,14 @@ export default function ServicesList() {
 				{services.map((service) => {
 					const status = getStatusInfo(service);
 					const isExpanded = expandedIds.has(service.id);
-					const typeAccent = getServiceTypeAccent(service.service_type_id);
 
 					return (
 						<div
 							key={service.id}
 							className={`service-card ${status.rowClass}`}
-							style={{ borderTop: `3px solid ${typeAccent}` }}
 						>
 							<div className="service-card-type-label">
-								{service.service_type_name || "Sem Tipo"}
+								<ServiceTypeBadge serviceTypeId={service.service_type_id} label={service.service_type_name} />
 							</div>
 
 							<Link className="service-card-summary" to={`/service/${service.id}`}>

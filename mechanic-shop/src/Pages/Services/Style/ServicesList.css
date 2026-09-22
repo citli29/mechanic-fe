@@ -131,14 +131,10 @@
 }
 
 .services-page .service-card-type-label{
-	padding: 2px var(--padding);
+	display: flex;
+	padding: var(--small-padding) var(--padding);
 	background: var(--bg-page);
 	border-bottom: 1px solid var(--border);
-	font-size: 10px;
-	font-weight: 800;
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
-	color: var(--txt-muted);
 }
 
 .services-page .service-card-summary{

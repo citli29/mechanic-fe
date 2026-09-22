@@ -4,6 +4,7 @@ import api from "../../api/axios";
 
 import { CarPicker } from "../../components/Pickers/CarPicker";
 import { ClientPicker } from "../../components/Pickers/ClientPicker";
+import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -73,7 +74,16 @@ export default function ServicesNew() {
 	async function loadServiceTypes() {
 		try {
 			const res = await api.get("/service_types");
-			setServiceTypes(res.data.service_type_list || []);
+			const types = res.data.service_type_list || [];
+			setServiceTypes(types);
+
+			// Mecânica is the common case — pre-selected so it's not an
+			// extra click for the vast majority of services, while staying
+			// changeable like any other field.
+			const mecanica = types.find((t) => t.name === "Mecânica");
+			if (mecanica) {
+				setEditing((prev) => prev.service_type_id ? prev : { ...prev, service_type_id: mecanica.id });
+			}
 		} catch (err) {
 			handleApiError(err);
 		}
@@ -177,6 +187,9 @@ export default function ServicesNew() {
 		}
 	}
 
+	const selectedTypeName = serviceTypes.find((t) => String(t.id) === String(editing.service_type_id))?.name;
+	const selectedTypeAccent = getServiceTypeAccent(editing.service_type_id, selectedTypeName);
+
 
 	return (
 		<div className="page services-new-page schedule-form-page">
@@ -221,8 +234,11 @@ export default function ServicesNew() {
 									name="service_type_id"
 									value={editing.service_type_id}
 									onChange={updateField}
+									style={{
+										borderColor: selectedTypeAccent,
+										background: `${selectedTypeAccent}1a`,
+									}}
 								>
-									<option value="">Mecânica</option>
 									{serviceTypes.map((type) => (
 										<option key={type.id} value={type.id}>
 											{type.name}

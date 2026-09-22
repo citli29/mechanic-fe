@@ -159,6 +159,30 @@
 	}
 }
 
+.notif-detail-nav{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--big-padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		aspect-ratio: 1;
+		height: calc(1.6 * var(--line-height));
+		border-radius: 5px;
+	}
+
+	span{
+		font-weight: 600;
+		color: var(--txt-light);
+		font-size: var(--font-size-small);
+		white-space: nowrap;
+	}
+}
+
 .notif-detail-meta-row{
 	display: flex;
 	align-items: center;
@@ -215,6 +239,16 @@
 .notif-service-preview-loading{
 	color: var(--txt-muted);
 	font-size: var(--font-size-small);
+}
+
+.notif-product-missing{
+	padding: var(--padding);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-card);
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+	font-style: italic;
 }
 
 .notif-service-preview-row{
@@ -369,7 +403,7 @@
 .notif-detail-actions{
 	display: flex;
 
-	button{
+	button, a{
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -377,7 +411,12 @@
 		width: 100%;
 		height: calc(var(--line-height) + 2 * var(--padding));
 		padding: 0 var(--big-padding);
+		/* <a> doesn't get the global `button{border;background}` rule (it's
+		   a tag selector, not shared) — restated here so the converted
+		   "Abrir" link still looks like a button, not flat text. */
+		border: 1px solid var(--border-light);
 		border-radius: 5px;
+		background: var(--bg-card);
 		white-space: nowrap;
 	}
 }

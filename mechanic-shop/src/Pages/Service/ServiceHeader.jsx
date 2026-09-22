@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./Style/ServiceHeader.css";
 import api from "./../../api/axios";
+import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
 
 function oneLine(text) {
 	return (text || "").replace(/\s+/g, " ").trim();
@@ -126,7 +127,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 					<div className="logo"><i className="fa-regular fa-file-lines"/></div>
 					<div className="not-logo">
 						<h1>Serviço #{service.id}</h1>
-						<h2>{service.service_type_name??""}</h2>
+						<ServiceTypeBadge serviceTypeId={service.service_type_id} label={service.service_type_name} />
 					</div>
 				</div>
 				<div className="item-field" id="r-name">
@@ -271,7 +272,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 						<div className="logo"><i className="fa-regular fa-file-lines"/></div>
 						<div className="not-logo">
 							<h1>Serviço #{service.id}</h1>
-							<h2>{service.service_type_name}</h2>
+							<ServiceTypeBadge serviceTypeId={service.service_type_id} label={service.service_type_name} />
 						</div>
 					</div>
 

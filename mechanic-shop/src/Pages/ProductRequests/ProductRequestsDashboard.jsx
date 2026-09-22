@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -56,18 +56,34 @@ function groupByService(products) {
 export default function ProductRequestsDashboard() {
 
 	const location = useLocation();
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	const requestIdRef = useRef(0);
 
+	// A same-tab click from the notifications popup passes these through
+	// router state; a link opened in a new tab (right/middle click) has no
+	// router state to inherit, only whatever's in the URL — so ?tab=/
+	// ?highlight= from the notification's href are the fallback here.
 	const [activeTab, setActiveTab] = useState(() => {
-		const requested = location.state?.activeTab;
+		const requested = location.state?.activeTab ?? searchParams.get("tab");
 		return TABS.some((t) => t.key === requested) ? requested : TABS[0].key;
 	});
 	const [counts, setCounts] = useState({});
 
 	// Arrived here from a "Produto pedido" notification — briefly highlight
 	// that exact row so it's not just "somewhere in this list of products."
-	const [highlightId, setHighlightId] = useState(() => location.state?.highlightId ?? null);
+	const [highlightId, setHighlightId] = useState(() => {
+		const requested = location.state?.highlightId ?? searchParams.get("highlight");
+		return requested ? Number(requested) : null;
+	});
+
+	// Only meant to run once, right after landing here with tab/highlight in
+	// the URL — not every time activeTab/highlightId change afterwards.
+	useEffect(() => {
+		if (searchParams.has("tab") || searchParams.has("highlight")) {
+			setSearchParams({}, { replace: true });
+		}
+	}, []);
 
 	useEffect(() => {
 		if (!highlightId) return;

@@ -6,6 +6,7 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ServicesCalendar.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
+import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
 
 function formatDate(date) {
 	const y = date.getFullYear();
@@ -16,16 +17,9 @@ function formatDate(date) {
 
 const WEEKDAY_NAMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
 
-const SERVICE_TYPE_COLORS = ["#2563eb", "#e8aa2e", "#ba2323", "#22c55e", "#a3540a", "#e823d1"];
-
-function getServiceTypeAccent(serviceTypeId) {
-	if (!serviceTypeId) return "#cbd5e1";
-	return SERVICE_TYPE_COLORS[serviceTypeId % SERVICE_TYPE_COLORS.length];
-}
-
 const LAB_ACCENT = getServiceTypeAccent(2);
 const MECHANIC_ACCENT = getServiceTypeAccent(1);
-const DESLOCACOES_ACCENT = "#4c1d95";
+const DESLOCACOES_ACCENT = getServiceTypeAccent(null, "Deslocações");
 
 export default function ServicesCalendar() {
 

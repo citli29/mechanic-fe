@@ -1,0 +1,34 @@
+/* Same "colored + bordered pill" language as the Estado badges
+   (.state-not-finished etc, .notif-service-preview-state) — a light tint
+   of the accent as background (border/text carry the actual color) keeps
+   it legible no matter how dark or light that accent happens to be. */
+.service-type-badge{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	max-width: 100%;
+
+	padding: var(--small-padding) var(--padding);
+	border: 2px solid transparent;
+	border-radius: 999px;
+
+	font-weight: 700;
+	font-size: var(--font-size-small);
+	color: var(--txt-dark);
+}
+
+/* The label is its own inner element (not text directly in the flex
+   container) because text-overflow doesn't reliably apply to a flex
+   item's direct text content — same reasoning as Card.css's
+   .cell-truncate. Without this, a badge in a column too narrow for its
+   label (e.g. "Deslocações") silently overflows into the next cell —
+   invisible at rest since both cells share the same background, but
+   the neighboring cell's own opaque hover background then paints over
+   and "cuts" the overflowing part the moment you hover the row. */
+.service-type-badge-label{
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
