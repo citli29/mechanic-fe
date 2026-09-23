@@ -33,6 +33,7 @@ export default function LabManagement() {
 		setCreatingProperty(false);
 		setNewPropertyName("");
 		setNewPropertyIcon("");
+		setNewPropertyIsPrimary(false);
 	}
 
 	function resetActionEditing() {
@@ -76,6 +77,7 @@ export default function LabManagement() {
 	const [creatingProperty, setCreatingProperty] = useState(false);
 	const [newPropertyName, setNewPropertyName] = useState("");
 	const [newPropertyIcon, setNewPropertyIcon] = useState("");
+	const [newPropertyIsPrimary, setNewPropertyIsPrimary] = useState(false);
 
 	// Selecting an action shows its own "Valores" below it — same
 	// selection/properties idea as items → actions, one level deeper.
@@ -154,7 +156,7 @@ export default function LabManagement() {
 		}
 
 		try {
-			await api.post("/items", { name: newName, icon: newIcon });
+			await api.post("/items", { name: newName, i_class: newIcon });
 
 			showMessage("success", "Item criado com sucesso.");
 
@@ -187,7 +189,7 @@ export default function LabManagement() {
 		}
 
 		try {
-			await api.put(`/items/${editing.id}`, { name: editing.name, icon: editing.icon });
+			await api.put(`/items/${editing.id}`, { name: editing.name, i_class: editing.i_class });
 
 			showMessage("success", "Item atualizado com sucesso.");
 
@@ -209,6 +211,14 @@ export default function LabManagement() {
 
 			showMessage("success", "Item apagado com sucesso.");
 
+			if (selectedItemId === id) {
+				setSelectedItemId(null);
+				setSelectedActionId(null);
+				resetPropertyEditing();
+				resetActionEditing();
+				resetValueEditing();
+			}
+
 			loadItems();
 		} catch (err) {
 			handleApiError(err);
@@ -229,7 +239,7 @@ export default function LabManagement() {
 		}
 
 		try {
-			const res = await api.get("/properties", { params: { item_id: itemId } });
+			const res = await api.get("/properties", { params: { t_item_id: itemId } });
 			setProperties(res.data.property_list || []);
 		} catch (err) {
 			console.error(err);
@@ -246,15 +256,17 @@ export default function LabManagement() {
 
 		try {
 			await api.post("/properties", {
-				item_id: selectedItemId,
+				t_item_id: selectedItemId,
 				name: newPropertyName,
 				i_class: newPropertyIcon,
+				is_primary: newPropertyIsPrimary,
 			});
 
 			showMessage("success", "Propriedade criada com sucesso.");
 
 			setNewPropertyName("");
 			setNewPropertyIcon("");
+			setNewPropertyIsPrimary(false);
 			setCreatingProperty(false);
 
 			loadProperties(selectedItemId);
@@ -270,8 +282,8 @@ export default function LabManagement() {
 
 
 	function updateEditProperty(e) {
-		const { name, value } = e.target;
-		setEditingProperty({ ...editingProperty, [name]: value });
+		const { name, value, type, checked } = e.target;
+		setEditingProperty({ ...editingProperty, [name]: type === "checkbox" ? checked : value });
 	}
 
 
@@ -283,9 +295,10 @@ export default function LabManagement() {
 
 		try {
 			await api.put(`/properties/${editingProperty.id}`, {
-				item_id: selectedItemId,
+				t_item_id: selectedItemId,
 				name: editingProperty.name,
 				i_class: editingProperty.i_class,
+				is_primary: editingProperty.is_primary,
 			});
 
 			showMessage("success", "Propriedade atualizada com sucesso.");
@@ -322,7 +335,7 @@ export default function LabManagement() {
 		}
 
 		try {
-			const res = await api.get("/actions", { params: { item_id: itemId } });
+			const res = await api.get("/actions", { params: { t_item_id: itemId } });
 			setActions(res.data.action_list || []);
 		} catch (err) {
 			console.error(err);
@@ -339,7 +352,7 @@ export default function LabManagement() {
 
 		try {
 			await api.post("/actions", {
-				item_id: selectedItemId,
+				t_item_id: selectedItemId,
 				name: newActionName,
 				i_class: newActionIcon,
 			});
@@ -376,7 +389,7 @@ export default function LabManagement() {
 
 		try {
 			await api.put(`/actions/${editingAction.id}`, {
-				item_id: selectedItemId,
+				t_item_id: selectedItemId,
 				name: editingAction.name,
 				i_class: editingAction.i_class,
 			});
@@ -425,7 +438,7 @@ export default function LabManagement() {
 		}
 
 		try {
-			const res = await api.get("/action_tabled_values", { params: { action_id: actionId } });
+			const res = await api.get("/action_tabled_values", { params: { t_action_id: actionId } });
 			setValues(res.data.action_tabled_value_list || []);
 		} catch (err) {
 			console.error(err);
@@ -442,7 +455,7 @@ export default function LabManagement() {
 
 		try {
 			await api.post("/action_tabled_values", {
-				action_id: selectedActionId,
+				t_action_id: selectedActionId,
 				value: newValueName,
 				i_class: newValueIcon,
 			});
@@ -479,7 +492,7 @@ export default function LabManagement() {
 
 		try {
 			await api.put(`/action_tabled_values/${editingValue.id}`, {
-				action_id: selectedActionId,
+				t_action_id: selectedActionId,
 				value: editingValue.value,
 				i_class: editingValue.i_class,
 			});
@@ -553,9 +566,9 @@ export default function LabManagement() {
 
 													<td data-label="Classe">
 														<input
-															name="icon"
+															name="i_class"
 															placeholder={ICON_CLASS_PLACEHOLDER}
-															value={editing.icon || ""}
+															value={editing.i_class || ""}
 															onChange={updateEdit}
 														/>
 													</td>
@@ -579,10 +592,10 @@ export default function LabManagement() {
 												>
 													<td data-label="Item"><span className="cell-truncate" title={item.name}>{item.name}</span></td>
 
-													<td data-label="Classe"><span className="cell-truncate" title={item.icon}>{item.icon}</span></td>
+													<td data-label="Classe"><span className="cell-truncate" title={item.i_class}>{item.i_class}</span></td>
 
 													<td className="lab-icon-cell" data-label="Ícone">
-														{item.icon ? <i className={item.icon} /> : null}
+														{item.i_class ? <i className={item.i_class} /> : null}
 													</td>
 
 													<td className="actions" onClick={(e) => e.stopPropagation()}>
@@ -593,7 +606,7 @@ export default function LabManagement() {
 															className="cancel"
 															onClick={() => deleteItem(item.id)}
 														>
-															<i className="fa-solid fa-trash" />
+															<i className="fa-solid fa-x" />
 														</button>
 													</td>
 												</tr>
@@ -669,7 +682,7 @@ export default function LabManagement() {
 							</div>
 							<div className="lab-management-column">
 								{selectedItem ? (
-									<table className="lab-item-actions-table">
+									<table className="lab-item-actions-table lab-properties-table">
 										<thead>
 										<tr>
 												<th style={{ gridColumn: "1 / -1" }}>Propriedade</th>
@@ -684,6 +697,15 @@ export default function LabManagement() {
 															<input
 																name="name"
 																value={editingProperty.name || ""}
+																onChange={updateEditProperty}
+															/>
+														</td>
+
+														<td className="lab-primary-cell" data-label="Primária">
+															<input
+																type="checkbox"
+																name="is_primary"
+																checked={!!editingProperty.is_primary}
 																onChange={updateEditProperty}
 															/>
 														</td>
@@ -711,6 +733,10 @@ export default function LabManagement() {
 												) : (
 													<tr key={property.id}>
 														<td data-label="Propriedade"><span className="cell-truncate" title={property.name}>{property.name}</span></td>
+
+														<td className="lab-primary-cell" data-label="Primária">
+															{property.is_primary ? <i className="fa-solid fa-check" /> : null}
+														</td>
 
 														<td data-label="Classe"><span className="cell-truncate" title={property.i_class}>{property.i_class}</span></td>
 
@@ -744,6 +770,14 @@ export default function LabManagement() {
 														/>
 													</td>
 
+													<td className="lab-primary-cell" data-label="Primária">
+														<input
+															type="checkbox"
+															checked={newPropertyIsPrimary}
+															onChange={(e) => setNewPropertyIsPrimary(e.target.checked)}
+														/>
+													</td>
+
 													<td data-label="Classe">
 														<input
 															placeholder={ICON_CLASS_PLACEHOLDER}
@@ -764,6 +798,7 @@ export default function LabManagement() {
 																setCreatingProperty(false);
 																setNewPropertyName("");
 																setNewPropertyIcon("");
+																setNewPropertyIsPrimary(false);
 															}}
 														>
 															<i className="fa-solid fa-x" />

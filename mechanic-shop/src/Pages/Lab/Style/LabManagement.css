@@ -2,6 +2,21 @@
 	grid-template-columns: minmax(0, 1fr) 160px 56px 110px;
 }
 
+.lab-management-page .lab-properties-table tr{
+	grid-template-columns: minmax(0, 1fr) 70px 160px 56px 110px;
+}
+
+.lab-management-page table td.lab-primary-cell{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	input[type="checkbox"]{
+		width: 18px;
+		height: 18px;
+	}
+}
+
 .lab-management-page table td.lab-icon-cell i{
 	font-size: var(--font-size-big);
 }

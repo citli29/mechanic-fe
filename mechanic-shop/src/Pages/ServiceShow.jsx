@@ -12,6 +12,7 @@ import { AppliedProducts } from "./AppliedProducts";
 import { UserTimes } from "./UserTimes";
 import { UserTimePunches } from "./UserTimePunches";
 import { ProductsRequested } from "./ProductsRequested";
+import { ServiceLab } from "./ServiceLab";
 
 const NAV_SECTIONS = [
 	{ id: "section-car", label: "Viatura", icon: "fa-car" },
@@ -523,20 +524,7 @@ export default function ServiceShow2() {
 							<h1>Laboratório</h1>
 						</div>
 						<div className="body">
-							<table className="lab-actions-table">
-								<thead>
-									<tr>
-										<th>Ações</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr className="add-row">
-										<td>
-											<i className="fa-solid fa-plus" />
-										</td>
-									</tr>
-								</tbody>
-							</table>
+							<ServiceLab id={id} disabled={isFinished} />
 						</div>
 					</div>
 				)}
