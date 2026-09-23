@@ -130,6 +130,7 @@
 .service-section,
 .service-signed-info-card,
 .service-done-info-card,
+.service-lab-card,
 .service-products-requested-card,
 .service-applied-products-card,
 .service-user-times-card,
@@ -292,6 +293,61 @@
 		border-bottom: 4px solid #ff1111;
 	}
 }
+.service-lab-card{
+	background: var(--bg-card);
+
+	.header{
+		border-bottom: 4px solid #0ea5e9;
+	}
+
+	.body{
+		padding: var(--big-padding);
+		display: flex;
+		flex-direction: column;
+		gap: var(--big-padding);
+	}
+
+	.lab-actions-table{
+		width: 100%;
+		border-collapse: collapse;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		overflow: hidden;
+
+		th{
+			padding: var(--padding) var(--big-padding);
+			text-align: left;
+			background: var(--bg-page);
+		}
+
+		td{
+			padding: var(--padding) var(--big-padding);
+		}
+
+		tr:not(:last-child) td{
+			border-bottom: 1px solid var(--border);
+		}
+
+		.add-row{
+			cursor: pointer;
+
+			td{
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: var(--big-padding);
+				color: var(--txt-muted);
+				font-size: calc(2 * var(--font-size-big));
+			}
+
+			&:hover td{
+				background: var(--bg-page-dark);
+				color: var(--txt-light);
+			}
+		}
+	}
+}
+.service-lab-card,
 .service-products-requested-card,
 .service-user-times-card,
 .service-applied-products-card{
@@ -879,6 +935,7 @@
 	.service-applied-products-card,
 	.service-user-times-card,
 	.service-is-finished-card,
+	.service-lab-card,
 	.service-products-requested-card,
 	button,
 	.footer {

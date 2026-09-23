@@ -1,0 +1,97 @@
+.lab-management-page table tr{
+	grid-template-columns: minmax(0, 1fr) 160px 56px 110px;
+}
+
+.lab-management-page table td.lab-icon-cell i{
+	font-size: var(--font-size-big);
+}
+
+/* Items and Ações rows select into a properties panel below — Valores
+   (the deepest level, for now) doesn't, so it isn't .lab-selectable-table
+   and doesn't get the pointer/hover-select treatment. */
+.lab-management-page .lab-selectable-table tbody tr:not(.editing){
+	cursor: pointer;
+}
+
+/* Not .actions — an opaque hover background there would paint over (and
+   on a selected row, hide) the row's own outline right where the edit/
+   delete buttons sit close to its edge. */
+/*.lab-management-page .lab-selectable-table tbody tr:not(.editing):hover td{
+	background: var(--bg-page-dark);
+}*/
+
+/* Card.css's own action buttons fill the entire cell (width/height:100%),
+   right up to the row's edge — on a selected row that's exactly where
+   the outline is drawn, so its hover background paints over it. Insetting
+   the button by a couple px keeps its own rounded hover fill safely
+   inside the outline instead of overlapping it, on every row (not just
+   selected ones), so the hover feedback stays consistent everywhere. */
+.lab-management-page table td.actions button{
+	width: calc(100% - 2 * var(--small-padding));
+	height: calc(100% - 2 * var(--small-padding));
+	margin: var(--small-padding);
+	border-radius: 5px;
+}
+
+.lab-management-page table td.actions button:hover{
+	background: var(--bg-page-dark) !important;
+}
+
+.lab-management-page tr.selected{
+	outline: 2px solid var(--primary);
+	outline-offset: -2px;
+	position: relative;
+	z-index: 1;
+}
+
+.lab-management-page .lab-item-add-row{
+	cursor: pointer;
+	border-bottom: none;
+
+	td{
+		color: var(--txt-muted);
+		font-size: var(--font-size-big);
+	}
+
+	&:hover td{
+		background: var(--bg-page-dark);
+		color: var(--txt-light);
+	}
+}
+
+/* Item / Ações / Valores side by side, left to right — each column's
+   table is always present (not appearing/disappearing as you select
+   things), showing a placeholder instead of a table when its parent
+   isn't selected yet. */
+.lab-management-page .lab-management-columns{
+	display: flex;
+	align-items: flex-start;
+	gap: var(--big-padding);
+}
+
+.lab-management-page .lab-management-columns + .lab-management-columns{
+	margin-top: var(--big-padding);
+}
+
+.lab-management-page .lab-management-column{
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+}
+
+.lab-management-page .lab-management-empty{
+	padding: var(--big-padding);
+	border: 1px dashed var(--border);
+	border-radius: 8px;
+	text-align: center;
+	color: var(--txt-muted);
+}
+
+@media(max-width: 650px){
+	.lab-management-page .lab-management-columns{
+		flex-direction: column;
+	}
+}
+

@@ -400,6 +400,14 @@ export default function Navbar() {
 								Gestão de Serviços
 							</NavLink>
 
+							<NavLink
+								to="/lab_management"
+								className={linkClass}
+								onClick={closeDropdown}
+							>
+								Gestão de Laboratório
+							</NavLink>
+
 							<div className="navbar-dropdown-divider" />
 
 							<NavLink

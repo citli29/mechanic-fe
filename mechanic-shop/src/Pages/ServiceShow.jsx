@@ -18,11 +18,14 @@ const NAV_SECTIONS = [
 	{ id: "section-client", label: "Cliente", icon: "fa-user" },
 	{ id: "section-agreed", label: "Serviço Acordado", icon: "fa-pen-fancy" },
 	{ id: "section-done", label: "Serviço Realizado", icon: "fa-wrench" },
+	{ id: "section-lab", label: "Laboratório", icon: "fa-flask", labOnly: true },
 	{ id: "section-requested", label: "Pedido de Produtos", icon: "fa-cart-arrow-down" },
 	{ id: "section-applied", label: "Produtos Aplicados", icon: "fa-store" },
 	{ id: "section-times", label: "Tempos de Serviço", icon: "fa-hourglass-half" },
 	{ id: "section-finished", label: "Finalizado", icon: "fa-flag-checkered" },
 ];
+
+const LAB_SERVICE_TYPE_NAME = "Laboratório";
 
 export default function ServiceShow2() {
 	const { id } = useParams();
@@ -56,11 +59,34 @@ export default function ServiceShow2() {
 	const lastSavedServiceRef = useRef(null);
 	const [activeSection, setActiveSection] = useState(NAV_SECTIONS[0].id);
 	const [saveStatus, setSaveStatus] = useState("idle"); // idle | pending | saving | saved | error | conflict
+	const [labServiceTypeId, setLabServiceTypeId] = useState(null);
 
 	useEffect(() => {
 		let cancelled = false;
 
 		loadService(() => cancelled);
+
+		return () => { cancelled = true; };
+	}, []);
+
+	useEffect(() => {
+		let cancelled = false;
+
+		async function loadLabServiceTypeId() {
+			try {
+				const response = await api.get("/service_types");
+				if (cancelled) return;
+
+				const labType = (response.data.service_type_list || [])
+					.find((st) => st.name === LAB_SERVICE_TYPE_NAME);
+
+				setLabServiceTypeId(labType ? labType.id : null);
+			} catch (error) {
+				if (!cancelled) console.error(error);
+			}
+		}
+
+		loadLabServiceTypeId();
 
 		return () => { cancelled = true; };
 	}, []);
@@ -318,6 +344,11 @@ export default function ServiceShow2() {
 	const isFinished = !!service.is_finished;
 	const canEditCarClient = isAllowedEditing && !isFinished;
 
+	const isLabService = labServiceTypeId != null
+		&& Number(service.service_type_id) === Number(labServiceTypeId);
+
+	const visibleNavSections = NAV_SECTIONS.filter((section) => !section.labOnly || isLabService);
+
 	return(
 		<div className="service-page">
 			<div className="service-layout">
@@ -337,7 +368,7 @@ export default function ServiceShow2() {
 						{saveStatus === "conflict" && <><i className="fa-solid fa-triangle-exclamation"/> Alterado por outro utilizador — dados recarregados</>}
 						</div>
 					)}
-					{NAV_SECTIONS.map((section) => (
+					{visibleNavSections.map((section) => (
 						<button
 							key={section.id}
 							type="button"
@@ -485,6 +516,30 @@ export default function ServiceShow2() {
 						</div>
 					</div>
 				</div>
+				{isLabService && (
+					<div className="service-lab-card" id="section-lab">
+						<div className="header">
+							<i className="fa-solid fa-flask"/>
+							<h1>Laboratório</h1>
+						</div>
+						<div className="body">
+							<table className="lab-actions-table">
+								<thead>
+									<tr>
+										<th>Ações</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr className="add-row">
+										<td>
+											<i className="fa-solid fa-plus" />
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				)}
 				<div className="service-products-requested-card" id="section-requested">
 					<div className="header">
 						<i className="fa-solid fa-cart-arrow-down"/>
