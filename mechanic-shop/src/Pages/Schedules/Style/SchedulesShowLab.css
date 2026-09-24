@@ -1,0 +1,400 @@
+.lab-draft-card{
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	overflow: hidden;
+	background: var(--bg-card);
+
+	.header{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+		padding: calc(var(--big-padding) + var(--padding) + 2.5px) var(--big-padding);
+		background: var(--bg-page);
+		border-bottom: 4px solid #0ea5e9;
+
+		i{ font-size: calc(1.5 * var(--font-size-big)); }
+		h1{ font-size: var(--font-size-big); }
+	}
+
+	.body{
+		padding: var(--big-padding);
+		display: flex;
+		flex-direction: column;
+		gap: var(--big-padding);
+	}
+}
+
+.lab-draft-table{
+	width: 100%;
+	table-layout: fixed;
+	background: var(--bg-page);
+	border-collapse: separate;
+	border-spacing: 0;
+	overflow: hidden;
+	border-radius: 0 0 10px 10px;
+	border: 2px solid var(--border);
+
+	/* This table lives inside the page's outer .card, whose generic
+	   `.card table tr{display:grid}` rule (built for a different,
+	   grid-based table pattern) still matches through that ancestor
+	   regardless of this table's own class. Force real table semantics
+	   back so native rowSpan (merging an item's name across its action
+	   rows) actually works — grid has no concept of it. */
+	tr{
+		display: table-row !important;
+	}
+
+	th:nth-child(1), td:nth-child(1){
+		width: 48px;
+	}
+
+	th:nth-child(2), td:nth-child(2){
+		width: 40%;
+	}
+
+	th:nth-child(3), td:nth-child(3){
+		width: 48px;
+	}
+
+	th:nth-child(5), td:nth-child(5){
+		width: 48px;
+	}
+
+	th, td{
+		display: table-cell !important;
+		padding: var(--padding) var(--big-padding);
+		text-align: left !important;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		height: calc(var(--line-height) + 1px + 2 * var(--padding));
+	}
+
+	th{
+		background: var(--bg-page);
+		text-align: center !important;
+		font-size: var(--font-size-big);
+		border-bottom: 5px solid var(--border);
+	}
+
+	td{
+		vertical-align: middle;
+	}
+
+	tbody tr:not(:first-child) td{
+		border-top: 2px solid var(--border);
+	}
+
+	/* Same ancestor-leak problem as the display:grid override above:
+	   .card also has a generic td:has(input):hover rule that paints
+	   every descendant of the hovered cell — meant for that other table
+	   pattern's single-line rows, not this picker's multi-column layout
+	   where one <td> holds the whole item/action/quantity picker. Kill it
+	   here; the picker's own intentional hover states below carry their
+	   own !important to still win. */
+	td:has(input:not(:disabled)):hover,
+	td:has(select:not(:disabled)):hover{
+		background: unset !important;
+	}
+
+	td:has(input:not(:disabled)):hover *,
+	td:has(select:not(:disabled)):hover *{
+		background: unset !important;
+	}
+
+	/* This is the table's first column, so Card.css's generic
+	   `tr td:first-child{padding-left: var(--padding)}` (meant to tighten
+	   up that other table pattern) also leaks in through the outer .card
+	   and overrides just the LEFT half of this cell's padding — leaving
+	   8px left / 16px right instead of the intended equal padding. In a
+	   48px-wide icon column that shrinks the button's available box below
+	   its own width, so it genuinely overflows and the base th/td rule's
+	   text-overflow:ellipsis renders "…" over the clipped edge. Force
+	   equal padding and drop the ellipsis behavior — an icon button
+	   should never be truncated. */
+	.lab-draft-delete-item-cell{
+		text-align: center;
+		padding: var(--padding) !important;
+		overflow: visible !important;
+		text-overflow: clip !important;
+	}
+
+	.lab-draft-delete-item-btn{
+		cursor: pointer;
+		color: var(--txt-muted);
+		background: none;
+		border: none;
+		padding: var(--padding);
+
+		&:hover{
+			color: var(--danger);
+		}
+	}
+
+	.lab-draft-item-name-cell{
+		cursor: pointer;
+
+		&:hover{
+			background: var(--bg-page-dark);
+		}
+	}
+
+	.lab-draft-item-properties-summary{
+		margin-top: calc(var(--padding) / 4);
+		color: var(--txt-muted);
+		font-size: var(--font-size-small);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.lab-add-action-cell{
+		text-align: center;
+	}
+
+	.lab-add-action-btn{
+		cursor: pointer;
+		color: var(--txt-muted);
+		background: none;
+		border: none;
+		padding: var(--padding);
+
+		&:hover{
+			color: var(--txt-light);
+		}
+	}
+
+	.lab-delete-action-cell{
+		text-align: center;
+	}
+
+	.lab-delete-action-btn{
+		cursor: pointer;
+		color: var(--txt-muted);
+		background: none;
+		border: none;
+		padding: var(--padding);
+
+		&:hover{
+			color: var(--danger);
+		}
+	}
+
+	.lab-inline-add-action-controls{
+		display: flex;
+		align-items: stretch;
+		gap: var(--padding);
+
+		select{
+			flex: 1;
+			min-width: 0;
+			padding: var(--padding);
+			border: 1px solid var(--border);
+			border-radius: 5px;
+			background: var(--bg-page);
+		}
+
+		button{
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0;
+			border: 1px solid var(--border);
+			border-radius: 5px;
+			width: 39px;
+		}
+	}
+
+	.add-row{
+		cursor: pointer;
+		color: var(--txt-muted);
+
+		td{
+			padding: calc(var(--padding) / 2) var(--big-padding);
+			text-align: center !important;
+			font-size: var(--font-size-big);
+			height: auto;
+		}
+
+		&:hover{
+			color: var(--txt-light);
+		}
+
+		&:hover td{
+			background: var(--bg-page-dark) !important;
+		}
+	}
+}
+
+.lab-draft-picker-columns{
+	display: flex;
+}
+
+.lab-draft-picker-column{
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.lab-draft-picker-column + .lab-draft-picker-column{
+	border-left: 1px solid var(--border);
+}
+
+.lab-draft-picker-row{
+	display: flex;
+	align-items: center;
+	padding: var(--padding) var(--big-padding);
+	cursor: pointer;
+}
+
+.lab-draft-picker-row:hover{
+	background: var(--bg-page-dark) !important;
+}
+
+.lab-draft-picker-column .lab-draft-picker-row:not(:first-child){
+	border-top: 1px solid var(--border);
+}
+
+.lab-draft-picker-column .lab-draft-picker-row.selected{
+	outline: 2px solid var(--primary);
+	outline-offset: -2px;
+	position: relative;
+	z-index: 1;
+}
+
+.lab-draft-picker-column-confirm{
+	align-items: center;
+	justify-content: center;
+	padding: var(--padding) var(--big-padding);
+}
+
+.lab-draft-confirm-controls{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+
+	label{
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+		white-space: nowrap;
+	}
+
+	/* .card's own td input,select reset (border:none, width:100%, ...)
+	   outranks a plain `.lab-draft-confirm-controls input` selector on
+	   specificity alone — same ancestor-leak as the display:grid and
+	   hover-wash fixes above, just hitting different properties this
+	   time. !important is the only reliable way to win it here. */
+	input{
+		width: 70px !important;
+		height: auto !important;
+		padding: var(--padding) !important;
+		border: 1px solid var(--border) !important;
+		border-radius: 5px;
+		background: var(--bg-page) !important;
+		text-align: center;
+
+		/* Card.css also resets outline:none on this input via the same
+		   ancestor leak — ServiceShow's equivalent field never gets that
+		   reset, so it keeps the browser's native focus ring. Restore an
+		   equivalent (darker) focus outline here explicitly. */
+		&:focus{
+			outline: 2px solid black !important;
+			outline-offset: 1px;
+		}
+	}
+
+	button{
+		width: calc(var(--line-height) + 2 * var(--padding));
+		height: calc(var(--line-height) + 2 * var(--padding));
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		border: none;
+		border-radius: 5px;
+		background: transparent;
+		color: var(--primary);
+		cursor: pointer;
+
+		&:hover{
+			background: var(--bg-page-dark);
+		}
+	}
+}
+
+.lab-properties-backdrop{
+	position: fixed;
+	inset: 0;
+	z-index: 2000;
+
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+
+	padding: 10vh var(--big-padding) var(--big-padding);
+	overflow-y: auto;
+
+	background: rgba(15, 23, 42, 0.45);
+}
+
+.lab-properties-modal{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+
+	width: 100%;
+	max-width: 420px;
+	max-height: 80vh;
+
+	padding: var(--big-padding);
+	border-radius: 10px;
+	background: var(--bg-card);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+	overflow-y: auto;
+}
+
+.lab-properties-modal-header{
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--padding);
+
+	h2{
+		font-size: var(--font-size-big);
+	}
+
+	button{
+		aspect-ratio: 1;
+		height: calc(var(--line-height) - 2 * var(--small-padding));
+		border-radius: 5px;
+	}
+}
+
+.lab-properties-modal-fields{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+}
+
+.lab-properties-modal-empty{
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+}
+
+.lab-properties-modal-field{
+	display: flex;
+	flex-direction: column;
+	gap: calc(var(--padding) / 2);
+
+	label{
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+	}
+
+	input{
+		padding: var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-page);
+	}
+}

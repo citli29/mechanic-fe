@@ -310,10 +310,12 @@
 	.lab-actions-table{
 		width: 100%;
 		table-layout: fixed;
-		border-collapse: collapse;
-		border: 1px solid var(--border);
-		border-radius: 8px;
+		background: var(--bg-page);
+		border-collapse: separate;
+		border-spacing: 0;
 		overflow: hidden;
+		border-radius: 0 0 10px 10px;
+		border: 2px solid var(--border);
 
 		th:nth-child(1), td:nth-child(1){
 			width: 28%;
@@ -336,11 +338,14 @@
 			text-align: left;
 			overflow: hidden;
 			text-overflow: ellipsis;
+			height: calc(var(--line-height) + 1px + 2 * var(--padding));
 		}
 
 		th{
 			background: var(--bg-page);
-			border-bottom: 1px solid var(--border);
+			text-align: center;
+			font-size: var(--font-size-big);
+			border-bottom: 5px solid var(--border);
 		}
 
 		td{
@@ -348,7 +353,7 @@
 		}
 
 		tbody tr:not(:first-child) td{
-			border-top: 1px solid var(--border);
+			border-top: 2px solid var(--border);
 		}
 
 		.lab-value-cell:hover{
@@ -362,6 +367,8 @@
 			border-radius: 5px;
 			background: var(--bg-page);
 			cursor: pointer;
+			text-align: center;
+			text-align-last: center;
 		}
 
 		.lab-custom-value{
@@ -489,6 +496,7 @@
 				padding: calc(var(--padding) / 2) var(--big-padding);
 				text-align: center;
 				font-size: var(--font-size-big);
+				height: auto;
 			}
 
 			&:hover{

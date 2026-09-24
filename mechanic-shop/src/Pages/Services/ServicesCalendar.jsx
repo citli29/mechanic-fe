@@ -52,12 +52,6 @@ export default function ServicesCalendar() {
 		window.matchMedia("(max-width: 650px)").matches
 	);
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
-
 	useEffect(() => {
 		const media = window.matchMedia("(max-width: 650px)");
 
@@ -87,23 +81,7 @@ export default function ServicesCalendar() {
 	const lastDayIndex = lastDayWeekday === 0 ? 6 : lastDayWeekday - 1;
 	const trailingPad = 6 - lastDayIndex;
 
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -415,12 +393,6 @@ export default function ServicesCalendar() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="month-navigation">
 							<button className="accent" onClick={previousMonth}>

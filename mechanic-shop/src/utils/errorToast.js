@@ -1,10 +1,18 @@
 let listeners = [];
 let idCounter = 0;
 
-export function pushErrorToast(message) {
-	const toast = { id: ++idCounter, message: message || "Ocorreu um erro." };
+export function pushToast(message, type = "error") {
+	const toast = { id: ++idCounter, type, message: message || "Ocorreu um erro." };
 	listeners.forEach((fn) => fn(toast));
 	return toast;
+}
+
+export function pushErrorToast(message) {
+	return pushToast(message, "error");
+}
+
+export function pushSuccessToast(message) {
+	return pushToast(message, "success");
 }
 
 export function subscribeErrorToasts(fn) {

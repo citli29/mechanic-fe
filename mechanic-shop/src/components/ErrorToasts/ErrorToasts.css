@@ -16,10 +16,19 @@
 	padding: var(--padding) var(--big-padding);
 	border-radius: 5px;
 	font-weight: 600;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.error-toast.error{
 	border: 1px solid var(--danger);
 	background: var(--danger-soft);
 	color: var(--danger);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.error-toast.success{
+	border: 1px solid var(--success);
+	background: var(--success-soft);
+	color: var(--success);
 }
 
 .error-toast span{
@@ -30,7 +39,7 @@
 .error-toast button{
 	background: none;
 	border: none;
-	color: var(--danger);
+	color: inherit;
 	cursor: pointer;
 	padding: 0;
 	line-height: 1;

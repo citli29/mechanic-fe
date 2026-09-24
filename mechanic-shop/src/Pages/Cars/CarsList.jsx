@@ -5,6 +5,7 @@ import api from "../../api/axios";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/CarsList.css";
+import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 
 const PER_PAGE = 10;
 
@@ -50,28 +51,7 @@ export default function CarsList() {
 
 	const [newCar, setNewCar] = useState(emptyCar);
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -169,7 +149,7 @@ export default function CarsList() {
 			setNewMakeName("");
 			setCreatingMake(false);
 
-			showMessage("success", "Marca criada com sucesso.");
+			pushSuccessToast("Marca criada com sucesso.");
 		} catch (err) {
 			handleApiError(err);
 		}
@@ -198,7 +178,7 @@ export default function CarsList() {
 			setNewModelName("");
 			setCreatingModel(false);
 
-			showMessage("success", "Modelo criado com sucesso.");
+			pushSuccessToast("Modelo criado com sucesso.");
 		} catch (err) {
 			handleApiError(err);
 		}
@@ -254,7 +234,7 @@ export default function CarsList() {
 
 			await api.put(`/cars/${editing.id}`, data);
 
-			showMessage("success", "Viatura atualizada com sucesso.");
+			pushSuccessToast("Viatura atualizada com sucesso.");
 
 			setEditing(null);
 
@@ -267,12 +247,12 @@ export default function CarsList() {
 
 	async function createCar() {
 		if (!newCar.plate.trim()) {
-			showMessage("error", "A matrícula é obrigatória.");
+			pushErrorToast("A matrícula é obrigatória.");
 			return;
 		}
 
 		if (!newCar.make_id) {
-			showMessage("error", "Selecione uma marca.");
+			pushErrorToast("Selecione uma marca.");
 			return;
 		}
 
@@ -283,7 +263,7 @@ export default function CarsList() {
 
 			await api.post("/cars", data);
 
-			showMessage("success", "Viatura criada com sucesso.");
+			pushSuccessToast("Viatura criada com sucesso.");
 
 			setCreatingCar(false);
 			setNewCar(emptyCar);
@@ -302,7 +282,7 @@ export default function CarsList() {
 		try {
 			await api.delete(`/cars/${id}`);
 
-			showMessage("success", "Viatura apagada com sucesso.");
+			pushSuccessToast("Viatura apagada com sucesso.");
 
 			loadCars();
 		} catch (err) {
@@ -433,12 +413,6 @@ export default function CarsList() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="filters">
 							<input

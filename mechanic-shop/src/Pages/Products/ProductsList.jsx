@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ProductsList.css";
+import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 
 const PER_PAGE = 10;
 
@@ -37,34 +38,13 @@ export default function ProductsList() {
 
 	const [editing, setEditing] = useState(null);
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
 	const [creatingProduct, setCreatingProduct] = useState(false);
 	const [creatingProductType, setCreatingProductType] = useState(false);
 	const [newProductTypeName, setNewProductTypeName] = useState("");
 
 	const [newProduct, setNewProduct] = useState(emptyProduct);
 
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -178,7 +158,7 @@ export default function ProductsList() {
 			setNewProductTypeName("");
 			setCreatingProductType(false);
 
-			showMessage("success", "Tipo de produto criado com sucesso.");
+			pushSuccessToast("Tipo de produto criado com sucesso.");
 		} catch (err) {
 			handleApiError(err);
 		}
@@ -187,7 +167,7 @@ export default function ProductsList() {
 
 	async function createProduct() {
 		if (!newProduct.name.trim()) {
-			showMessage("error", "O nome do produto é obrigatório.");
+			pushErrorToast("O nome do produto é obrigatório.");
 			return;
 		}
 
@@ -198,7 +178,7 @@ export default function ProductsList() {
 
 			await api.post("/products", data);
 
-			showMessage("success", "Produto criado com sucesso.");
+			pushSuccessToast("Produto criado com sucesso.");
 
 			setCreatingProduct(false);
 			setCreatingProductType(false);
@@ -214,7 +194,7 @@ export default function ProductsList() {
 
 	async function saveProduct() {
 		if (!editing.name.trim()) {
-			showMessage("error", "O nome do produto é obrigatório.");
+			pushErrorToast("O nome do produto é obrigatório.");
 			return;
 		}
 
@@ -225,7 +205,7 @@ export default function ProductsList() {
 
 			await api.put(`/products/${editing.id}`, data);
 
-			showMessage("success", "Produto atualizado com sucesso.");
+			pushSuccessToast("Produto atualizado com sucesso.");
 
 			setEditing(null);
 			setCreatingProductType(false);
@@ -245,7 +225,7 @@ export default function ProductsList() {
 		try {
 			await api.delete(`/products/${id}`);
 
-			showMessage("success", "Produto apagado com sucesso.");
+			pushSuccessToast("Produto apagado com sucesso.");
 
 			loadProducts();
 		} catch (err) {
@@ -322,12 +302,6 @@ export default function ProductsList() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="filters">
 							<input

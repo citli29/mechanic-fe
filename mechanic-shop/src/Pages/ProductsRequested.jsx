@@ -2,6 +2,7 @@ import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
 import "./Style/Page.css";
 import "./Style/ProductsRequested.css";
+import { pushSuccessToast } from "../utils/errorToast";
 
 export const ProductsRequested = ({
 	id,
@@ -25,16 +26,7 @@ export const ProductsRequested = ({
 	const refSearch = useRef(null);
 	const [debouncedValue, setDebouncedValue] = useState("");
 
-	const [message, setMessage] = useState({ type: "", text: "" });
 	const [pendingForwardPR, setPendingForwardPR] = useState(null);
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
 
 	useEffect(()=>{
 		loadPRs();
@@ -209,7 +201,7 @@ export const ProductsRequested = ({
 		if(disabled) return;
 		setIsSearchSelected(false);
 		const pr = await postPR(p.id);
-		if(pr) showMessage("success", "Produto pedido adicionado com sucesso");
+		if(pr) pushSuccessToast("Produto pedido adicionado com sucesso");
 		loadPRs();
 	}
 
@@ -218,7 +210,7 @@ export const ProductsRequested = ({
 		const p = await postProduct(newProduct.name, newProduct.reference, newProduct.product_type_id);
 		if(p){
 			const ap = await postPR(p.id);
-			if(ap) showMessage("success", "Produto pedido adicionado com sucesso");
+			if(ap) pushSuccessToast("Produto pedido adicionado com sucesso");
 			loadPRs();
 			setIsAddingProduct(false);
 			setSearchProduct("");
@@ -283,12 +275,6 @@ export const ProductsRequested = ({
 
 	return(
 		<>
-			{message.text && (
-				<div className={`api-message ${message.type}`}>
-					{message.text}
-				</div>
-			)}
-
 			<div ref={refSearch}className="search-bar search-products">
 				<span><i className="fa-solid fa-magnifying-glass"/></span>
 				<input

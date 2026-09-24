@@ -6,6 +6,7 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ServicesManageList.css";
 import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
+import { pushSuccessToast } from "../../utils/errorToast";
 
 const PER_PAGE = 10;
 
@@ -31,28 +32,7 @@ export default function ServicesManageList() {
 	const [editSchedules, setEditSchedules] = useState([]);
 	const [editLoading, setEditLoading] = useState(false);
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -209,7 +189,7 @@ export default function ServicesManageList() {
 		try {
 			await api.put(`/services/${editing.id}`, editing);
 
-			showMessage("success", "Serviço atualizado com sucesso.");
+			pushSuccessToast("Serviço atualizado com sucesso.");
 
 			cancelEdit();
 			loadServices();
@@ -229,7 +209,7 @@ export default function ServicesManageList() {
 		try {
 			await api.delete(`/services/${service.id}`);
 
-			showMessage("success", "Serviço apagado com sucesso.");
+			pushSuccessToast("Serviço apagado com sucesso.");
 
 			loadServices();
 		} catch (err) {
@@ -249,12 +229,6 @@ export default function ServicesManageList() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="filters">
 							<input

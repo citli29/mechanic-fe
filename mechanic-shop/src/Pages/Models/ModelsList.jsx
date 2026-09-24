@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ModelsList.css";
+import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 
 const PER_PAGE = 10;
 
@@ -31,28 +32,7 @@ export default function ModelsList() {
 		make_id: "",
 	});
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -115,12 +95,12 @@ export default function ModelsList() {
 
 	async function createModel() {
 		if (!newModel.name.trim()) {
-			showMessage("error", "O nome do modelo é obrigatório.");
+			pushErrorToast("O nome do modelo é obrigatório.");
 			return;
 		}
 
 		if (!newModel.make_id) {
-			showMessage("error", "Selecione uma marca.");
+			pushErrorToast("Selecione uma marca.");
 			return;
 		}
 
@@ -130,7 +110,7 @@ export default function ModelsList() {
 				make_id: newModel.make_id,
 			});
 
-			showMessage("success", "Modelo criado com sucesso.");
+			pushSuccessToast("Modelo criado com sucesso.");
 
 			setCreating(false);
 			setNewModel({ name: "", make_id: "" });
@@ -161,7 +141,7 @@ export default function ModelsList() {
 
 			await api.put(`/models/${editing.id}`, data);
 
-			showMessage("success", "Modelo atualizado com sucesso.");
+			pushSuccessToast("Modelo atualizado com sucesso.");
 
 			setEditing(null);
 
@@ -179,7 +159,7 @@ export default function ModelsList() {
 		try {
 			await api.delete(`/models/${id}`);
 
-			showMessage("success", "Modelo apagado com sucesso.");
+			pushSuccessToast("Modelo apagado com sucesso.");
 
 			loadModels();
 		} catch (err) {
@@ -214,12 +194,6 @@ export default function ModelsList() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="filters">
 							<input

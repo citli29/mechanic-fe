@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ProductTypesList.css";
+import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 
 const PER_PAGE = 10;
 
@@ -26,28 +27,7 @@ export default function ProductTypesList() {
 
 	const [newName, setNewName] = useState("");
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -96,14 +76,14 @@ export default function ProductTypesList() {
 
 	async function createProductType() {
 		if (!newName.trim()) {
-			showMessage("error", "Nome é obrigatório.");
+			pushErrorToast("Nome é obrigatório.");
 			return;
 		}
 
 		try {
 			await api.post("/product_types", { name: newName });
 
-			showMessage("success", "Tipo de produto criado com sucesso.");
+			pushSuccessToast("Tipo de produto criado com sucesso.");
 
 			setNewName("");
 			setCreating(false);
@@ -128,14 +108,14 @@ export default function ProductTypesList() {
 
 	async function saveProductType() {
 		if (!editing.name.trim()) {
-			showMessage("error", "Nome é obrigatório.");
+			pushErrorToast("Nome é obrigatório.");
 			return;
 		}
 
 		try {
 			await api.put(`/product_types/${editing.id}`, { name: editing.name });
 
-			showMessage("success", "Tipo de produto atualizado com sucesso.");
+			pushSuccessToast("Tipo de produto atualizado com sucesso.");
 
 			setEditing(null);
 
@@ -153,7 +133,7 @@ export default function ProductTypesList() {
 		try {
 			await api.delete(`/product_types/${id}`);
 
-			showMessage("success", "Tipo de produto apagado com sucesso.");
+			pushSuccessToast("Tipo de produto apagado com sucesso.");
 
 			loadProductTypes();
 		} catch (err) {
@@ -182,12 +162,6 @@ export default function ProductTypesList() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="filters">
 							<input

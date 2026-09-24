@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
@@ -9,6 +9,8 @@ import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "../Schedules/Style/ScheduleForm.css";
+import "./Style/ServicesNewLab.css";
+import { pushErrorToast } from "../../utils/errorToast";
 
 function oneLine(text) {
 	return (text || "").replace(/\s+/g, " ").trim();
@@ -45,28 +47,28 @@ export default function ServicesNew() {
 	const [saving, setSaving] = useState(false);
 	const [pendingSchedule, setPendingSchedule] = useState(null);
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
+	// Lab items/actions picked before the service exists — kept purely
+	// local (never hit the API) until createService() succeeds, then
+	// replayed as real lab_items/lab_action_values against the new id.
+	const labNextLocalId = useRef(1);
+	const [labDraftItems, setLabDraftItems] = useState([]);
+	const [labAdding, setLabAdding] = useState(false);
+	const [labCatalogItems, setLabCatalogItems] = useState([]);
+	const [labSelectedItemId, setLabSelectedItemId] = useState(null);
+	const [labCatalogActions, setLabCatalogActions] = useState([]);
+	const [labSelectedActionIds, setLabSelectedActionIds] = useState([]);
+	const [labQuantity, setLabQuantity] = useState(1);
+	const [labAddingActionForLocalId, setLabAddingActionForLocalId] = useState(null);
+	const [labInlineActions, setLabInlineActions] = useState([]);
+	const [labInlineActionId, setLabInlineActionId] = useState("");
 
+	const [labPropertiesByItem, setLabPropertiesByItem] = useState({});
+	const [labPropertyInputs, setLabPropertyInputs] = useState({});
+	const [editingPropertiesLocalId, setEditingPropertiesLocalId] = useState(null);
 
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
 
 
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -149,14 +151,215 @@ export default function ServicesNew() {
 	}
 
 
+	async function loadLabCatalogItems() {
+		try {
+			const res = await api.get("/items");
+			setLabCatalogItems(res.data.item_list || []);
+		} catch (err) {
+			console.error(err);
+			setLabCatalogItems([]);
+		}
+	}
+
+
+	async function loadLabCatalogActions(t_item_id) {
+		try {
+			const res = await api.get("/actions", { params: { t_item_id } });
+			setLabCatalogActions(res.data.action_list || []);
+		} catch (err) {
+			console.error(err);
+			setLabCatalogActions([]);
+		}
+	}
+
+
+	function handleLabStart() {
+		loadLabCatalogItems();
+		setLabAdding(true);
+	}
+
+
+	function handleLabCancel() {
+		setLabAdding(false);
+		setLabSelectedItemId(null);
+		setLabSelectedActionIds([]);
+		setLabCatalogActions([]);
+		setLabQuantity(1);
+	}
+
+
+	function toggleLabSelectedItem(itemId) {
+		const alreadySelected = labSelectedItemId === itemId;
+
+		setLabSelectedItemId(alreadySelected ? null : itemId);
+		setLabSelectedActionIds([]);
+		setLabQuantity(1);
+
+		if (alreadySelected) {
+			setLabCatalogActions([]);
+		} else {
+			loadLabCatalogActions(itemId);
+		}
+	}
+
+
+	function toggleLabSelectedAction(actionId) {
+		setLabSelectedActionIds((prev) => (
+			prev.includes(actionId)
+				? prev.filter((id) => id !== actionId)
+				: [...prev, actionId]
+		));
+	}
+
+
+	const labSelectedActions = labSelectedActionIds
+		.map((actionId) => labCatalogActions.find((action) => action.id === actionId))
+		.filter(Boolean);
+
+
+	function handleLabConfirm() {
+		const item = labCatalogItems.find((i) => i.id === labSelectedItemId);
+		if (!item) return;
+
+		const qty = Math.max(1, parseInt(labQuantity, 10) || 1);
+		const newEntries = [];
+
+		for (let i = 0; i < qty; i++) {
+			newEntries.push({
+				localId: labNextLocalId.current++,
+				t_item_id: item.id,
+				item_name: item.name,
+				actions: labSelectedActions.map((action) => ({ id: action.id, name: action.name })),
+			});
+		}
+
+		setLabDraftItems((prev) => [...prev, ...newEntries]);
+		loadLabProperties(item.id);
+		handleLabCancel();
+	}
+
+
+	function handleLabDeleteItem(localId) {
+		setLabDraftItems((prev) => prev.filter((item) => item.localId !== localId));
+	}
+
+
+	async function handleLabToggleAddAction(draftItem) {
+		if (labAddingActionForLocalId === draftItem.localId) {
+			setLabAddingActionForLocalId(null);
+			setLabInlineActions([]);
+			setLabInlineActionId("");
+			return;
+		}
+
+		setLabAddingActionForLocalId(draftItem.localId);
+		setLabInlineActionId("");
+
+		try {
+			const res = await api.get("/actions", { params: { t_item_id: draftItem.t_item_id } });
+			setLabInlineActions(res.data.action_list || []);
+		} catch (err) {
+			console.error(err);
+			setLabInlineActions([]);
+		}
+	}
+
+
+	function handleLabConfirmAddAction(draftItem) {
+		if (!labInlineActionId) return;
+
+		const action = labInlineActions.find((a) => String(a.id) === String(labInlineActionId));
+		if (!action) return;
+
+		setLabDraftItems((prev) => prev.map((item) => (
+			item.localId === draftItem.localId
+				? { ...item, actions: [...item.actions, { id: action.id, name: action.name }] }
+				: item
+		)));
+
+		setLabAddingActionForLocalId(null);
+		setLabInlineActions([]);
+		setLabInlineActionId("");
+	}
+
+
+	function handleLabDeleteAction(draftItem, actionId) {
+		setLabDraftItems((prev) => prev.map((item) => (
+			item.localId === draftItem.localId
+				? { ...item, actions: item.actions.filter((a) => a.id !== actionId) }
+				: item
+		)));
+	}
+
+
+	async function loadLabProperties(t_item_id) {
+		if (labPropertiesByItem[t_item_id] !== undefined) return;
+
+		try {
+			const res = await api.get("/properties", { params: { t_item_id } });
+			setLabPropertiesByItem((prev) => ({ ...prev, [t_item_id]: res.data.property_list || [] }));
+		} catch (err) {
+			console.error(err);
+			setLabPropertiesByItem((prev) => ({ ...prev, [t_item_id]: [] }));
+		}
+	}
+
+
+	function handleOpenLabPropertiesModal(draftItem) {
+		setEditingPropertiesLocalId(draftItem.localId);
+		loadLabProperties(draftItem.t_item_id);
+	}
+
+
+	function handleCloseLabPropertiesModal() {
+		setEditingPropertiesLocalId(null);
+	}
+
+
+	function handleLabPropertyInputChange(localId, propertyId, text) {
+		setLabPropertyInputs((prev) => ({ ...prev, [`${localId}-${propertyId}`]: text }));
+	}
+
+
+	async function createLabDraftItems(serviceId) {
+		for (const draftItem of labDraftItems) {
+			const itemRes = await api.post(`/services/${serviceId}/lab_items`, {
+				t_item_id: draftItem.t_item_id,
+			});
+
+			const labItemId = itemRes.data.lab_item.id;
+
+			for (const action of draftItem.actions) {
+				await api.post(`/services/${serviceId}/lab_action_values`, {
+					l_item_id: labItemId,
+					t_action_id: action.id,
+				});
+			}
+
+			const properties = labPropertiesByItem[draftItem.t_item_id] || [];
+
+			for (const property of properties) {
+				const value = labPropertyInputs[`${draftItem.localId}-${property.id}`];
+				if (!value) continue;
+
+				await api.post(`/services/${serviceId}/lab_property_values`, {
+					l_item_id: labItemId,
+					property_id: property.id,
+					value,
+				});
+			}
+		}
+	}
+
+
 	async function createService() {
 		if (!editing.client_id) {
-			showMessage("error", "Selecione um cliente.");
+			pushErrorToast("Selecione um cliente.");
 			return;
 		}
 
 		if (!editing.checkin) {
-			showMessage("error", "A data de entrada é obrigatória.");
+			pushErrorToast("A data de entrada é obrigatória.");
 			return;
 		}
 
@@ -178,8 +381,13 @@ export default function ServicesNew() {
 			};
 
 			const res = await api.post("/services", data);
+			const newServiceId = res.data.service.id;
 
-			navigate(`/service/${res.data.service.id}`);
+			if (isLabService && labDraftItems.length > 0) {
+				await createLabDraftItems(newServiceId);
+			}
+
+			navigate(`/service/${newServiceId}`);
 		} catch (err) {
 			handleApiError(err);
 		} finally {
@@ -189,6 +397,12 @@ export default function ServicesNew() {
 
 	const selectedTypeName = serviceTypes.find((t) => String(t.id) === String(editing.service_type_id))?.name;
 	const selectedTypeAccent = getServiceTypeAccent(editing.service_type_id, selectedTypeName);
+
+	const laboratorioType = serviceTypes.find((t) => t.name === "Laboratório");
+	const isLabService = !!laboratorioType && String(editing.service_type_id) === String(laboratorioType.id);
+
+	const editingLabItem = labDraftItems.find((item) => item.localId === editingPropertiesLocalId);
+	const editingLabProperties = editingLabItem ? (labPropertiesByItem[editingLabItem.t_item_id] || []) : [];
 
 
 	return (
@@ -202,12 +416,6 @@ export default function ServicesNew() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="details-grid">
 
@@ -330,6 +538,277 @@ export default function ServicesNew() {
 									rows={8}
 								/>
 							</div>
+
+						{isLabService && (
+							<>
+								<div className="lab-draft-card field-full">
+									<div className="header">
+										<i className="fa-solid fa-flask" />
+										<h1>Laboratório</h1>
+									</div>
+
+								<div className="body">
+									<table className="lab-draft-table">
+										<thead>
+											<tr>
+												<th></th>
+												<th>Item</th>
+												<th></th>
+												<th>Ação</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody>
+											{labDraftItems.map((draftItem) => {
+												const isAddingAction = labAddingActionForLocalId === draftItem.localId;
+												const totalRows = draftItem.actions.length + (isAddingAction ? 1 : (draftItem.actions.length === 0 ? 1 : 0));
+												const rows = [];
+
+												const deleteItemCell = (
+													<td rowSpan={totalRows} className="lab-draft-delete-item-cell">
+														<button
+															type="button"
+															className="lab-draft-delete-item-btn"
+															title="Remover item"
+															onClick={() => handleLabDeleteItem(draftItem.localId)}
+														>
+															<i className="fa-solid fa-trash" />
+														</button>
+													</td>
+												);
+
+												const itemProperties = labPropertiesByItem[draftItem.t_item_id] || [];
+												const itemPrimaryProperties = itemProperties.filter((property) => property.is_primary);
+
+												const itemNameCell = (
+													<td
+														rowSpan={totalRows}
+														className="lab-draft-item-name-cell"
+														title="Ver/editar propriedades do item"
+														onClick={() => handleOpenLabPropertiesModal(draftItem)}
+													>
+														<div className="lab-draft-item-name">{draftItem.item_name}</div>
+														{itemPrimaryProperties.length > 0 && (
+															<div className="lab-draft-item-properties-summary">
+																{itemPrimaryProperties.map((property) => {
+																	const value = labPropertyInputs[`${draftItem.localId}-${property.id}`];
+																	return `${property.name}: ${value || "—"}`;
+																}).join(" · ")}
+															</div>
+														)}
+													</td>
+												);
+
+												draftItem.actions.forEach((action, index) => {
+													rows.push(
+														<tr key={`${draftItem.localId}-${action.id}-${index}`}>
+															{index === 0 && deleteItemCell}
+															{index === 0 && itemNameCell}
+															{index === 0 && (
+																<td rowSpan={totalRows} className="lab-add-action-cell">
+																	<button
+																		type="button"
+																		className="lab-add-action-btn"
+																		title="Adicionar ação a este item"
+																		onClick={() => handleLabToggleAddAction(draftItem)}
+																	>
+																		<i className="fa-solid fa-plus" />
+																	</button>
+																</td>
+															)}
+															<td>{action.name}</td>
+															<td className="lab-delete-action-cell">
+																<button
+																	type="button"
+																	className="lab-delete-action-btn"
+																	title="Remover esta ação"
+																	onClick={() => handleLabDeleteAction(draftItem, action.id)}
+																>
+																	<i className="fa-solid fa-xmark" />
+																</button>
+															</td>
+														</tr>
+													);
+												});
+
+												if (draftItem.actions.length === 0 && !isAddingAction) {
+													rows.push(
+														<tr key={`${draftItem.localId}-empty`}>
+															{deleteItemCell}
+															{itemNameCell}
+															<td className="lab-add-action-cell">
+																<button
+																	type="button"
+																	className="lab-add-action-btn"
+																	title="Adicionar ação a este item"
+																	onClick={() => handleLabToggleAddAction(draftItem)}
+																>
+																	<i className="fa-solid fa-plus" />
+																</button>
+															</td>
+															<td>—</td>
+															<td></td>
+														</tr>
+													);
+												}
+
+												if (isAddingAction) {
+													rows.push(
+														<tr key={`${draftItem.localId}-add-action`}>
+															{draftItem.actions.length === 0 && deleteItemCell}
+															{draftItem.actions.length === 0 && itemNameCell}
+															{draftItem.actions.length === 0 && (
+																<td rowSpan={totalRows} className="lab-add-action-cell">
+																	<button
+																		type="button"
+																		className="lab-add-action-btn"
+																		title="Adicionar ação a este item"
+																		onClick={() => handleLabToggleAddAction(draftItem)}
+																	>
+																		<i className="fa-solid fa-plus" />
+																	</button>
+																</td>
+															)}
+															<td className="lab-inline-add-action">
+																<div className="lab-inline-add-action-controls">
+																	<select
+																		value={labInlineActionId}
+																		onChange={(e) => setLabInlineActionId(e.target.value)}
+																	>
+																		<option value="">Selecionar ação...</option>
+																		{labInlineActions.map((action) => (
+																			<option key={action.id} value={action.id}>{action.name}</option>
+																		))}
+																	</select>
+																	<button
+																		type="button"
+																		className="confirm"
+																		title="Confirmar ação"
+																		disabled={!labInlineActionId}
+																		onClick={() => handleLabConfirmAddAction(draftItem)}
+																	>
+																		<i className="fa-solid fa-check" />
+																	</button>
+																	<button
+																		type="button"
+																		className="cancel"
+																		title="Cancelar"
+																		onClick={() => handleLabToggleAddAction(draftItem)}
+																	>
+																		<i className="fa-solid fa-xmark" />
+																	</button>
+																</div>
+															</td>
+															<td></td>
+														</tr>
+													);
+												}
+
+												return rows;
+											})}
+
+											{!labAdding ? (
+												<tr className="add-row" title="Adicionar item" onClick={handleLabStart}>
+													<td colSpan={5}>
+														<i className="fa-solid fa-plus" />
+													</td>
+												</tr>
+											) : (
+												<>
+													<tr>
+														<td colSpan={5} style={{ padding: "0" }}>
+															<div className="lab-draft-picker-columns">
+																<div className="lab-draft-picker-column">
+																	{labCatalogItems.map((item) => (
+																		<div
+																			key={item.id}
+																			className={`lab-draft-picker-row ${labSelectedItemId === item.id ? "selected" : ""}`}
+																			onClick={() => toggleLabSelectedItem(item.id)}
+																		>
+																			{item.name}
+																		</div>
+																	))}
+																</div>
+
+																<div className="lab-draft-picker-column">
+																	{labCatalogActions.map((action) => (
+																		<div
+																			key={action.id}
+																			className={`lab-draft-picker-row ${labSelectedActionIds.includes(action.id) ? "selected" : ""}`}
+																			onClick={() => toggleLabSelectedAction(action.id)}
+																		>
+																			{action.name}
+																		</div>
+																	))}
+																</div>
+
+																<div className="lab-draft-picker-column lab-draft-picker-column-confirm">
+																	{labSelectedItemId && (
+																		<div className="lab-draft-confirm-controls">
+																			<label>Quantidade:</label>
+																			<input
+																				type="number"
+																				min="1"
+																				value={labQuantity}
+																				onChange={(e) => setLabQuantity(e.target.value)}
+																			/>
+																			<button type="button" className="confirm" title="Confirmar" onClick={handleLabConfirm}>
+																				<i className="fa-solid fa-check" />
+																			</button>
+																		</div>
+																	)}
+																</div>
+															</div>
+														</td>
+													</tr>
+													<tr className="add-row" title="Cancelar" onClick={handleLabCancel}>
+														<td colSpan={5}>
+															<i className="fa-solid fa-xmark" />
+														</td>
+													</tr>
+												</>
+											)}
+										</tbody>
+									</table>
+								</div>
+							</div>
+							{editingLabItem && (
+								<div className="lab-properties-backdrop" onClick={handleCloseLabPropertiesModal}>
+									<div className="lab-properties-modal" onClick={(e) => e.stopPropagation()}>
+										<div className="lab-properties-modal-header">
+											<h2>{editingLabItem.item_name}</h2>
+											<button type="button" className="cancel" title="Fechar" onClick={handleCloseLabPropertiesModal}>
+												<i className="fa-solid fa-xmark" />
+											</button>
+										</div>
+
+										<div className="lab-properties-modal-fields">
+											{editingLabProperties.length === 0 && (
+												<p className="lab-properties-modal-empty">Este item não tem propriedades.</p>
+											)}
+
+											{editingLabProperties.map((property) => {
+												const key = `${editingLabItem.localId}-${property.id}`;
+												const value = labPropertyInputs[key] || "";
+
+												return (
+													<div className="lab-properties-modal-field" key={property.id}>
+														<label>{property.name}</label>
+														<input
+															type="text"
+															value={value}
+															onChange={(e) => handleLabPropertyInputChange(editingLabItem.localId, property.id, e.target.value)}
+														/>
+													</div>
+												);
+											})}
+										</div>
+									</div>
+								</div>
+							)}
+							</>
+						)}
+
 
 							<div className="field field-full">
 								<label htmlFor="malfunction">Descrição de Avaria</label>

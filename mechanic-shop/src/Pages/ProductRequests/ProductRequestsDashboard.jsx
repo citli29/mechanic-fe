@@ -100,11 +100,6 @@ export default function ProductRequestsDashboard() {
 
 	const [loading, setLoading] = useState(true);
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
 	const [productTypes, setProductTypes] = useState([]);
 
 	const [pickerItemId, setPickerItemId] = useState(null);
@@ -114,23 +109,7 @@ export default function ProductRequestsDashboard() {
 	const [pickerNewProduct, setPickerNewProduct] = useState({ name: "", reference: "", product_type_id: "" });
 	const [pickerLoading, setPickerLoading] = useState(false);
 
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -584,12 +563,6 @@ export default function ProductRequestsDashboard() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="pr-tabs">
 							{TABS.map((tab) => (

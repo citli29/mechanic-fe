@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/MakesList.css";
+import { pushSuccessToast } from "../../utils/errorToast";
 
 const PER_PAGE = 10;
 
@@ -26,28 +27,7 @@ export default function MakesList() {
 
 	const [newMakeName, setNewMakeName] = useState("");
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -100,7 +80,7 @@ export default function MakesList() {
 		try {
 			await api.post("/makes", { name: newMakeName });
 
-			showMessage("success", "Marca criada com sucesso.");
+			pushSuccessToast("Marca criada com sucesso.");
 
 			setNewMakeName("");
 			setCreating(false);
@@ -131,7 +111,7 @@ export default function MakesList() {
 
 			await api.put(`/makes/${editing.id}`, data);
 
-			showMessage("success", "Marca atualizada com sucesso.");
+			pushSuccessToast("Marca atualizada com sucesso.");
 
 			setEditing(null);
 
@@ -149,7 +129,7 @@ export default function MakesList() {
 		try {
 			await api.delete(`/makes/${id}`);
 
-			showMessage("success", "Marca apagada com sucesso.");
+			pushSuccessToast("Marca apagada com sucesso.");
 
 			loadMakes();
 		} catch (err) {
@@ -178,12 +158,6 @@ export default function MakesList() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="filters">
 							<input

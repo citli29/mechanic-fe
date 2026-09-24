@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/LabManagement.css";
+import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 
 const PER_PAGE = 10;
 const ICON_CLASS_PLACEHOLDER = "fa-solid fa-flask";
@@ -98,28 +99,7 @@ export default function LabManagement() {
 	const [newValueName, setNewValueName] = useState("");
 	const [newValueIcon, setNewValueIcon] = useState("");
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -151,14 +131,14 @@ export default function LabManagement() {
 
 	async function createItem() {
 		if (!newName.trim()) {
-			showMessage("error", "Nome é obrigatório.");
+			pushErrorToast("Nome é obrigatório.");
 			return;
 		}
 
 		try {
 			await api.post("/items", { name: newName, i_class: newIcon });
 
-			showMessage("success", "Item criado com sucesso.");
+			pushSuccessToast("Item criado com sucesso.");
 
 			setNewName("");
 			setNewIcon("");
@@ -184,14 +164,14 @@ export default function LabManagement() {
 
 	async function saveItem() {
 		if (!editing.name.trim()) {
-			showMessage("error", "Nome é obrigatório.");
+			pushErrorToast("Nome é obrigatório.");
 			return;
 		}
 
 		try {
 			await api.put(`/items/${editing.id}`, { name: editing.name, i_class: editing.i_class });
 
-			showMessage("success", "Item atualizado com sucesso.");
+			pushSuccessToast("Item atualizado com sucesso.");
 
 			setEditing(null);
 
@@ -209,7 +189,7 @@ export default function LabManagement() {
 		try {
 			await api.delete(`/items/${id}`);
 
-			showMessage("success", "Item apagado com sucesso.");
+			pushSuccessToast("Item apagado com sucesso.");
 
 			if (selectedItemId === id) {
 				setSelectedItemId(null);
@@ -250,7 +230,7 @@ export default function LabManagement() {
 
 	async function createProperty() {
 		if (!newPropertyName.trim()) {
-			showMessage("error", "Nome é obrigatório.");
+			pushErrorToast("Nome é obrigatório.");
 			return;
 		}
 
@@ -262,7 +242,7 @@ export default function LabManagement() {
 				is_primary: newPropertyIsPrimary,
 			});
 
-			showMessage("success", "Propriedade criada com sucesso.");
+			pushSuccessToast("Propriedade criada com sucesso.");
 
 			setNewPropertyName("");
 			setNewPropertyIcon("");
@@ -289,7 +269,7 @@ export default function LabManagement() {
 
 	async function saveProperty() {
 		if (!editingProperty.name.trim()) {
-			showMessage("error", "Nome é obrigatório.");
+			pushErrorToast("Nome é obrigatório.");
 			return;
 		}
 
@@ -301,7 +281,7 @@ export default function LabManagement() {
 				is_primary: editingProperty.is_primary,
 			});
 
-			showMessage("success", "Propriedade atualizada com sucesso.");
+			pushSuccessToast("Propriedade atualizada com sucesso.");
 
 			setEditingProperty(null);
 
@@ -319,7 +299,7 @@ export default function LabManagement() {
 		try {
 			await api.delete(`/properties/${id}`);
 
-			showMessage("success", "Propriedade apagada com sucesso.");
+			pushSuccessToast("Propriedade apagada com sucesso.");
 
 			loadProperties(selectedItemId);
 		} catch (err) {
@@ -346,7 +326,7 @@ export default function LabManagement() {
 
 	async function createAction() {
 		if (!newActionName.trim()) {
-			showMessage("error", "Nome é obrigatório.");
+			pushErrorToast("Nome é obrigatório.");
 			return;
 		}
 
@@ -357,7 +337,7 @@ export default function LabManagement() {
 				i_class: newActionIcon,
 			});
 
-			showMessage("success", "Ação criada com sucesso.");
+			pushSuccessToast("Ação criada com sucesso.");
 
 			setNewActionName("");
 			setNewActionIcon("");
@@ -383,7 +363,7 @@ export default function LabManagement() {
 
 	async function saveAction() {
 		if (!editingAction.name.trim()) {
-			showMessage("error", "Nome é obrigatório.");
+			pushErrorToast("Nome é obrigatório.");
 			return;
 		}
 
@@ -394,7 +374,7 @@ export default function LabManagement() {
 				i_class: editingAction.i_class,
 			});
 
-			showMessage("success", "Ação atualizada com sucesso.");
+			pushSuccessToast("Ação atualizada com sucesso.");
 
 			setEditingAction(null);
 
@@ -412,7 +392,7 @@ export default function LabManagement() {
 		try {
 			await api.delete(`/actions/${id}`);
 
-			showMessage("success", "Ação apagada com sucesso.");
+			pushSuccessToast("Ação apagada com sucesso.");
 
 			if (selectedActionId === id) {
 				setSelectedActionId(null);
@@ -449,7 +429,7 @@ export default function LabManagement() {
 
 	async function createValue() {
 		if (!newValueName.trim()) {
-			showMessage("error", "Valor é obrigatório.");
+			pushErrorToast("Valor é obrigatório.");
 			return;
 		}
 
@@ -460,7 +440,7 @@ export default function LabManagement() {
 				i_class: newValueIcon,
 			});
 
-			showMessage("success", "Valor criado com sucesso.");
+			pushSuccessToast("Valor criado com sucesso.");
 
 			setNewValueName("");
 			setNewValueIcon("");
@@ -486,7 +466,7 @@ export default function LabManagement() {
 
 	async function saveValue() {
 		if (!editingValue.value.trim()) {
-			showMessage("error", "Valor é obrigatório.");
+			pushErrorToast("Valor é obrigatório.");
 			return;
 		}
 
@@ -497,7 +477,7 @@ export default function LabManagement() {
 				i_class: editingValue.i_class,
 			});
 
-			showMessage("success", "Valor atualizado com sucesso.");
+			pushSuccessToast("Valor atualizado com sucesso.");
 
 			setEditingValue(null);
 
@@ -515,7 +495,7 @@ export default function LabManagement() {
 		try {
 			await api.delete(`/action_tabled_values/${id}`);
 
-			showMessage("success", "Valor apagado com sucesso.");
+			pushSuccessToast("Valor apagado com sucesso.");
 
 			loadActionTabledValues(selectedActionId);
 		} catch (err) {
@@ -535,12 +515,6 @@ export default function LabManagement() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="lab-management-columns">
 

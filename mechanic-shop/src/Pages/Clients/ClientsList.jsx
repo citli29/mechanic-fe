@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ClientsList.css";
+import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 
 const PER_PAGE = 10;
 
@@ -37,28 +38,7 @@ export default function ClientsList() {
 
 	const [newClient, setNewClient] = useState(emptyClient);
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -107,12 +87,12 @@ export default function ClientsList() {
 
 	async function createClient() {
 		if (!newClient.name.trim()) {
-			showMessage("error", "O nome do cliente é obrigatório.");
+			pushErrorToast("O nome do cliente é obrigatório.");
 			return;
 		}
 
 		if (!newClient.phone.trim()) {
-			showMessage("error", "O telemóvel é obrigatório.");
+			pushErrorToast("O telemóvel é obrigatório.");
 			return;
 		}
 
@@ -123,7 +103,7 @@ export default function ClientsList() {
 
 			await api.post("/clients", data);
 
-			showMessage("success", "Cliente criado com sucesso.");
+			pushSuccessToast("Cliente criado com sucesso.");
 
 			setCreating(false);
 			setNewClient(emptyClient);
@@ -148,12 +128,12 @@ export default function ClientsList() {
 
 	async function saveClient() {
 		if (!editing.name.trim()) {
-			showMessage("error", "O nome do cliente é obrigatório.");
+			pushErrorToast("O nome do cliente é obrigatório.");
 			return;
 		}
 
 		if (!editing.phone.trim()) {
-			showMessage("error", "O telemóvel é obrigatório.");
+			pushErrorToast("O telemóvel é obrigatório.");
 			return;
 		}
 
@@ -164,7 +144,7 @@ export default function ClientsList() {
 
 			await api.put(`/clients/${editing.id}`, data);
 
-			showMessage("success", "Cliente atualizado com sucesso.");
+			pushSuccessToast("Cliente atualizado com sucesso.");
 
 			setEditing(null);
 
@@ -182,7 +162,7 @@ export default function ClientsList() {
 		try {
 			await api.delete(`/clients/${id}`);
 
-			showMessage("success", "Cliente apagado com sucesso.");
+			pushSuccessToast("Cliente apagado com sucesso.");
 
 			loadClients();
 		} catch (err) {
@@ -217,12 +197,6 @@ export default function ClientsList() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="filters">
 							<input

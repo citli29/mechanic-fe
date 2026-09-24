@@ -11,6 +11,7 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ScheduleForm.css";
 import "./Style/SchedulesNew.css";
+import { pushSuccessToast } from "../../utils/errorToast";
 
 export default function SchedulesNew() {
 
@@ -33,28 +34,7 @@ export default function SchedulesNew() {
 	);
 	const [schedules, setSchedules] = useState([]);
 
-	const [message, setMessage] = useState({
-		type: "",
-		text: "",
-	});
-
-
-	function showMessage(type, text) {
-		setMessage({ type, text });
-
-		setTimeout(() => {
-			setMessage({ type: "", text: "" });
-		}, 4000);
-	}
-
-
 	function handleApiError(err) {
-		if (err.response?.data?.error) {
-			showMessage("error", err.response.data.error);
-		} else {
-			showMessage("error", "Ocorreu um erro.");
-		}
-
 		console.error(err);
 	}
 
@@ -192,7 +172,7 @@ export default function SchedulesNew() {
 
 			const res = await api.post("/schedules", data);
 
-			showMessage("success", "Schedule created successfully.");
+			pushSuccessToast("Schedule created successfully.");
 
 			navigate(`/schedules/${res.data.schedule.id}`);
 		} catch (err) {
@@ -212,12 +192,6 @@ export default function SchedulesNew() {
 					</div>
 
 					<div className="body">
-
-						{message.text && (
-							<div className={`api-message ${message.type}`}>
-								{message.text}
-							</div>
-						)}
 
 						<div className="schedule-new-layout">
 
