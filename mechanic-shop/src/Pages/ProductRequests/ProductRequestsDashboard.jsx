@@ -363,7 +363,7 @@ export default function ProductRequestsDashboard() {
 								{group.context}
 							</span>
 
-							<Link className="options" to={`/service/${group.service_id}`}>
+							<Link className="options" to={`/services/${group.service_id}`}>
 								<i className="fa-solid fa-arrow-up-right-from-square" />
 							</Link>
 						</div>

@@ -47,6 +47,20 @@ export default function ServicesNew() {
 	const [saving, setSaving] = useState(false);
 	const [pendingSchedule, setPendingSchedule] = useState(null);
 
+	const [isMobile, setIsMobile] = useState(
+		window.matchMedia("(max-width: 650px)").matches
+	);
+
+	useEffect(() => {
+		const media = window.matchMedia("(max-width: 650px)");
+
+		const handleChange = (e) => setIsMobile(e.matches);
+
+		media.addEventListener("change", handleChange);
+
+		return () => media.removeEventListener("change", handleChange);
+	}, []);
+
 	// Lab items/actions picked before the service exists — kept purely
 	// local (never hit the API) until createService() succeeds, then
 	// replayed as real lab_items/lab_action_values against the new id.
@@ -387,7 +401,7 @@ export default function ServicesNew() {
 				await createLabDraftItems(newServiceId);
 			}
 
-			navigate(`/service/${newServiceId}`);
+			navigate(`/services/${newServiceId}`);
 		} catch (err) {
 			handleApiError(err);
 		} finally {
@@ -548,6 +562,166 @@ export default function ServicesNew() {
 									</div>
 
 								<div className="body">
+									{isMobile ? (
+										<div className="lab-draft-mobile-list">
+											{labDraftItems.map((draftItem) => {
+												const isAddingAction = labAddingActionForLocalId === draftItem.localId;
+												const itemProperties = labPropertiesByItem[draftItem.t_item_id] || [];
+												const itemPrimaryProperties = itemProperties.filter((property) => property.is_primary);
+
+												return (
+													<div className="lab-draft-mobile-item" key={draftItem.localId}>
+														<div
+															className="lab-draft-mobile-item-header"
+															title="Ver/editar propriedades do item"
+															onClick={() => handleOpenLabPropertiesModal(draftItem)}
+														>
+															<div>
+																<div className="lab-draft-item-name">{draftItem.item_name}</div>
+																{itemPrimaryProperties.length > 0 && (
+																	<div className="lab-draft-item-properties-summary">
+																		{itemPrimaryProperties.map((property) => {
+																			const value = labPropertyInputs[`${draftItem.localId}-${property.id}`];
+																			return `${property.name}: ${value || "—"}`;
+																		}).join(" · ")}
+																	</div>
+																)}
+															</div>
+															<button
+																type="button"
+																className="lab-draft-delete-item-btn"
+																title="Remover item"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	handleLabDeleteItem(draftItem.localId);
+																}}
+															>
+																<i className="fa-solid fa-trash" />
+															</button>
+														</div>
+
+														{draftItem.actions.length === 0 && !isAddingAction && (
+															<div className="lab-draft-mobile-action-row">
+																<span>—</span>
+															</div>
+														)}
+
+														{draftItem.actions.map((action) => (
+															<div className="lab-draft-mobile-action-row" key={action.id}>
+																<span>{action.name}</span>
+																<button
+																	type="button"
+																	className="lab-delete-action-btn"
+																	title="Remover esta ação"
+																	onClick={() => handleLabDeleteAction(draftItem, action.id)}
+																>
+																	<i className="fa-solid fa-xmark" />
+																</button>
+															</div>
+														))}
+
+														{isAddingAction ? (
+															<div className="lab-draft-mobile-inline-add-action">
+																<select
+																	value={labInlineActionId}
+																	onChange={(e) => setLabInlineActionId(e.target.value)}
+																>
+																	<option value="">Selecionar ação...</option>
+																	{labInlineActions.map((action) => (
+																		<option key={action.id} value={action.id}>{action.name}</option>
+																	))}
+																</select>
+																<button
+																	type="button"
+																	className="confirm"
+																	title="Confirmar ação"
+																	disabled={!labInlineActionId}
+																	onClick={() => handleLabConfirmAddAction(draftItem)}
+																>
+																	<i className="fa-solid fa-check" />
+																</button>
+																<button
+																	type="button"
+																	className="cancel"
+																	title="Cancelar"
+																	onClick={() => handleLabToggleAddAction(draftItem)}
+																>
+																	<i className="fa-solid fa-xmark" />
+																</button>
+															</div>
+														) : (
+															<div
+																className="lab-draft-mobile-add-action-row"
+																title="Adicionar ação a este item"
+																onClick={() => handleLabToggleAddAction(draftItem)}
+															>
+																<i className="fa-solid fa-plus" />
+															</div>
+														)}
+													</div>
+												);
+											})}
+
+											{!labAdding ? (
+												<div className="lab-draft-mobile-add-item-row" title="Adicionar item" onClick={handleLabStart}>
+													<i className="fa-solid fa-plus" /> Adicionar Item
+												</div>
+											) : (
+												<div className="lab-draft-mobile-picker">
+													<div className="lab-draft-mobile-picker-section">
+														<label>Item</label>
+														<div className="lab-draft-mobile-picker-list">
+															{labCatalogItems.map((item) => (
+																<div
+																	key={item.id}
+																	className={`lab-draft-picker-row ${labSelectedItemId === item.id ? "selected" : ""}`}
+																	onClick={() => toggleLabSelectedItem(item.id)}
+																>
+																	{item.name}
+																</div>
+															))}
+														</div>
+													</div>
+
+													{labSelectedItemId && (
+														<div className="lab-draft-mobile-picker-section">
+															<label>Ação</label>
+															<div className="lab-draft-mobile-picker-list">
+																{labCatalogActions.map((action) => (
+																	<div
+																		key={action.id}
+																		className={`lab-draft-picker-row ${labSelectedActionIds.includes(action.id) ? "selected" : ""}`}
+																		onClick={() => toggleLabSelectedAction(action.id)}
+																	>
+																		{action.name}
+																	</div>
+																))}
+															</div>
+														</div>
+													)}
+
+													{labSelectedItemId && (
+														<div className="lab-draft-confirm-controls">
+															<label>Quantidade:</label>
+															<input
+																type="number"
+																min="1"
+																value={labQuantity}
+																onChange={(e) => setLabQuantity(e.target.value)}
+															/>
+															<button type="button" className="confirm" title="Confirmar" onClick={handleLabConfirm}>
+																<i className="fa-solid fa-check" />
+															</button>
+														</div>
+													)}
+
+													<div className="lab-draft-mobile-add-item-row" title="Cancelar" onClick={handleLabCancel}>
+														<i className="fa-solid fa-xmark" />
+													</div>
+												</div>
+											)}
+										</div>
+									) : (
 									<table className="lab-draft-table">
 										<thead>
 											<tr>
@@ -770,6 +944,7 @@ export default function ServicesNew() {
 											)}
 										</tbody>
 									</table>
+									)}
 								</div>
 							</div>
 							{editingLabItem && (

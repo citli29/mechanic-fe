@@ -247,15 +247,24 @@
 	cursor: pointer;
 }
 
-.lab-draft-picker-row:hover{
-	background: var(--bg-page-dark) !important;
+/* hover-capable devices only — touchscreens fake a persistent :hover on
+   whatever was last tapped (until something else is tapped), which made
+   the last-selected row look darker than the others instead of just
+   showing the same blue .selected outline as the rest. */
+@media (hover: hover){
+	.lab-draft-picker-row:hover{
+		background: var(--bg-page-dark) !important;
+	}
 }
 
 .lab-draft-picker-column .lab-draft-picker-row:not(:first-child){
 	border-top: 1px solid var(--border);
 }
 
-.lab-draft-picker-column .lab-draft-picker-row.selected{
+/* Not scoped under .lab-draft-picker-column — the mobile picker
+   (.lab-draft-mobile-picker-list) reuses .lab-draft-picker-row/.selected
+   too, and a column-scoped selector left it selectable but invisible there. */
+.lab-draft-picker-row.selected{
 	outline: 2px solid var(--primary);
 	outline-offset: -2px;
 	position: relative;
@@ -396,5 +405,135 @@
 		border: 1px solid var(--border);
 		border-radius: 5px;
 		background: var(--bg-page);
+	}
+}
+
+/* Stacked-card layout used below 650px instead of .lab-draft-table — the
+   table relies on rowSpan to merge an item's name/delete across its action
+   rows, which display:grid (the mobile reflow trick other tables use) can't
+   express, so this is a genuinely separate markup rather than a media query. */
+.lab-draft-mobile-list{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+}
+
+.lab-draft-mobile-item{
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	overflow: hidden;
+}
+
+.lab-draft-mobile-item-header{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--padding);
+	padding: var(--padding) var(--big-padding);
+	background: var(--bg-page);
+	cursor: pointer;
+
+	&:hover{
+		background: var(--bg-page-dark);
+	}
+}
+
+.lab-draft-mobile-action-row{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--padding);
+	padding: var(--padding) var(--big-padding);
+	border-top: 1px solid var(--border);
+
+	.lab-delete-action-btn{
+		cursor: pointer;
+		color: var(--txt-muted);
+		background: none;
+		border: none;
+		padding: var(--padding);
+
+		&:hover{ color: var(--danger); }
+	}
+}
+
+.lab-draft-mobile-add-action-row{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: calc(var(--padding) / 2) var(--big-padding);
+	border-top: 1px solid var(--border);
+	color: var(--txt-muted);
+	cursor: pointer;
+
+	&:hover{ color: var(--txt-light); background: var(--bg-page-dark); }
+}
+
+.lab-draft-mobile-inline-add-action{
+	display: flex;
+	align-items: stretch;
+	gap: var(--padding);
+	padding: var(--padding) var(--big-padding);
+	border-top: 1px solid var(--border);
+
+	select{
+		flex: 1;
+		min-width: 0;
+		padding: var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-page);
+	}
+
+	button{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		width: 39px;
+	}
+}
+
+.lab-draft-mobile-add-item-row{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--padding);
+	padding: var(--padding);
+	border: 1px dashed var(--border);
+	border-radius: 5px;
+	color: var(--txt-muted);
+	cursor: pointer;
+
+	&:hover{ color: var(--txt-light); background: var(--bg-page-dark); }
+}
+
+.lab-draft-mobile-picker{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	padding: var(--padding);
+}
+
+.lab-draft-mobile-picker-section{
+	label{
+		display: block;
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+		margin-bottom: calc(var(--padding) / 2);
+	}
+}
+
+.lab-draft-mobile-picker-list{
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	overflow: hidden;
+
+	.lab-draft-picker-row:not(:first-child){
+		border-top: 1px solid var(--border);
 	}
 }

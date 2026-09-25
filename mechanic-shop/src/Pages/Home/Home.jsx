@@ -162,7 +162,7 @@ export default function Home() {
 								{group.context}
 							</span>
 
-							<Link className="options" to={`/service/${group.service_id}`}>
+							<Link className="options" to={`/services/${group.service_id}`}>
 								<i className="fa-solid fa-arrow-up-right-from-square" />
 							</Link>
 						</div>
@@ -295,7 +295,7 @@ export default function Home() {
 											<Link
 												className="today-schedule-open-service"
 												title="Abrir Serviço"
-												to={`/service/${schedule.service_id}`}
+												to={`/services/${schedule.service_id}`}
 											>
 												<i className="fa-solid fa-arrow-up-right-from-square" />
 											</Link>
@@ -336,7 +336,7 @@ export default function Home() {
 											<td data-label="Utilizador">
 												<Link
 													className="row-link-overlay"
-													to={`/service/${punch.service_id}#section-times`}
+													to={`/services/${punch.service_id}#section-times`}
 													aria-hidden="true"
 													tabIndex={-1}
 												/>
@@ -351,7 +351,7 @@ export default function Home() {
 											<td data-label="Data">{punch.date || "-"}</td>
 
 											<td className="actions">
-												<Link className="options" to={`/service/${punch.service_id}#section-times`}>
+												<Link className="options" to={`/services/${punch.service_id}#section-times`}>
 													<i className="fa-solid fa-arrow-up-right-from-square" />
 												</Link>
 											</td>

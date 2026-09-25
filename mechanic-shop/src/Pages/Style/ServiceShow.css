@@ -624,8 +624,14 @@
 		cursor: pointer;
 	}
 
-	.lab-row:hover{
-		background: var(--bg-page-dark);
+	/* hover-capable devices only — touchscreens fake a persistent :hover on
+	   whatever was last tapped (until something else is tapped), which made
+	   the last-selected row look darker than the others instead of just
+	   showing the same blue .selected outline as the rest. */
+	@media (hover: hover){
+		.lab-row:hover{
+			background: var(--bg-page-dark);
+		}
 	}
 
 	.lab-add-row,
@@ -669,7 +675,10 @@
 		border-top: 1px solid var(--border);
 	}
 
-	.lab-actions-column .lab-row.selected{
+	/* Not scoped under .lab-actions-column — the mobile picker
+	   (.lab-mobile-picker-list) reuses .lab-row/.selected too, and a
+	   column-scoped selector left it selectable but invisible there. */
+	.lab-row.selected{
 		outline: 2px solid var(--primary);
 		outline-offset: -2px;
 		position: relative;
@@ -717,6 +726,152 @@
 
 		button:hover{
 			background: var(--bg-page-dark);
+		}
+	}
+
+	/* Stacked-card layout used below 650px instead of .lab-actions-table —
+	   the table relies on rowSpan to merge an item's name/delete across its
+	   action rows, which display:grid (the mobile reflow trick other tables
+	   use) can't express, so this is a genuinely separate markup rather than
+	   a media query. */
+	.lab-mobile-list{
+		display: flex;
+		flex-direction: column;
+		gap: var(--padding);
+	}
+
+	.lab-mobile-item{
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		overflow: hidden;
+	}
+
+	.lab-mobile-item-header{
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--padding);
+		padding: var(--padding) var(--big-padding);
+		background: var(--bg-page);
+		cursor: pointer;
+
+		&:hover{
+			background: var(--bg-page-dark);
+		}
+	}
+
+	.lab-mobile-action-row{
+		padding: var(--padding) var(--big-padding);
+		border-top: 1px solid var(--border);
+	}
+
+	.lab-mobile-action-row-main{
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--padding);
+
+		.lab-delete-action-btn{
+			cursor: pointer;
+			color: var(--txt-muted);
+			background: none;
+			border: none;
+			padding: var(--padding);
+
+			&:hover{ color: var(--danger); }
+		}
+	}
+
+	.lab-mobile-action-value{
+		margin-top: calc(var(--padding) / 2);
+
+		select{
+			width: 100%;
+			padding: var(--padding);
+			border: 1px solid var(--border);
+			border-radius: 5px;
+			background: var(--bg-page);
+		}
+	}
+
+	.lab-mobile-add-action-row{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: calc(var(--padding) / 2) var(--big-padding);
+		border-top: 1px solid var(--border);
+		color: var(--txt-muted);
+		cursor: pointer;
+
+		&:hover{ color: var(--txt-light); background: var(--bg-page-dark); }
+	}
+
+	.lab-mobile-inline-add-action{
+		display: flex;
+		align-items: stretch;
+		gap: var(--padding);
+		padding: var(--padding) var(--big-padding);
+		border-top: 1px solid var(--border);
+
+		select{
+			flex: 1;
+			min-width: 0;
+			padding: var(--padding);
+			border: 1px solid var(--border);
+			border-radius: 5px;
+			background: var(--bg-page);
+		}
+
+		button{
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0;
+			border: 1px solid var(--border);
+			border-radius: 5px;
+			width: 39px;
+		}
+	}
+
+	.lab-mobile-add-item-row{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--padding);
+		padding: var(--padding);
+		border: 1px dashed var(--border);
+		border-radius: 5px;
+		color: var(--txt-muted);
+		cursor: pointer;
+
+		&:hover{ color: var(--txt-light); background: var(--bg-page-dark); }
+	}
+
+	.lab-mobile-picker{
+		display: flex;
+		flex-direction: column;
+		gap: var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		padding: var(--padding);
+	}
+
+	.lab-mobile-picker-section{
+		label{
+			display: block;
+			font-size: var(--font-size-small);
+			color: var(--txt-muted);
+			margin-bottom: calc(var(--padding) / 2);
+		}
+	}
+
+	.lab-mobile-picker-list{
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		overflow: hidden;
+
+		.lab-row:not(:first-child){
+			border-top: 1px solid var(--border);
 		}
 	}
 }

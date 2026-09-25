@@ -306,7 +306,7 @@ export default function ServicesList() {
 									<td data-label="Entrada">
 										<Link
 											className="row-link-overlay"
-											to={`/service/${service.id}`}
+											to={`/services/${service.id}`}
 											aria-hidden="true"
 											tabIndex={-1}
 										/>
@@ -399,7 +399,7 @@ export default function ServicesList() {
 								<ServiceTypeBadge serviceTypeId={service.service_type_id} label={service.service_type_name} />
 							</div>
 
-							<Link className="service-card-summary" to={`/service/${service.id}`}>
+							<Link className="service-card-summary" to={`/services/${service.id}`}>
 								<div className="service-card-field f-matricula">
 									<span className="field-label">Matrícula</span>
 									<span>{service.car_plate || "-"}</span>
@@ -442,7 +442,7 @@ export default function ServicesList() {
 							</Link>
 
 							{isExpanded && (
-								<Link className="service-card-details" to={`/service/${service.id}`}>
+								<Link className="service-card-details" to={`/services/${service.id}`}>
 									<div className="service-card-field">
 										<span className="field-label">Telemóvel</span>
 										<span>{service.client_phone || "-"}</span>

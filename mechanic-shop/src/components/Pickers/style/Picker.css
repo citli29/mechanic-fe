@@ -240,13 +240,21 @@
 @media (max-width: 650px) {
 	.selected-item{
 		.item-header{
+			/* Flex items default to min-width:auto, so without this the row
+			   refuses to shrink below its spans' combined intrinsic width —
+			   it blows out past the header instead of using its own
+			   overflow-x:auto, which pushes .card-buttons off-screen too. */
+			min-width: 0;
+
 			.item-input{
-			width: 100%;
+				width: 100%;
+				min-width: 0;
 				overflow-x: auto;
 				gap: 0;
 				span{
 					border: none;
 					padding: var(--small-padding);
+					white-space: nowrap;
 				}
 				span:nth-child(2){
 					padding-left: var(--big-padding);
@@ -257,6 +265,7 @@
 				}
 			}
 			.card-buttons{
+				flex-shrink: 0;
 				flex-direction: column-reverse;
 				button{
 					height: calc(2 * var(--padding) + var(--font-size-big));
@@ -264,6 +273,21 @@
 			}
 		}
 	}
+
+	/* Same shrink-to-content overflow as .item-header above: the row's
+	   spans (name, phone, tax id) each refuse to shrink below their own
+	   min-width, so on a narrow dropdown the row overflows sideways
+	   instead of wrapping. Force the name onto its own line and let the
+	   rest wrap underneath it. */
+	.dropdown button{
+		flex-wrap: wrap;
+
+		span:first-child{
+			min-width: 0;
+			flex-basis: 100%;
+		}
+	}
+
 	.item-info { grid-template-columns: minmax(0, 1fr); }
 
 	#car-plate {grid-row:1;grid-column:1;}

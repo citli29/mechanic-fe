@@ -30,6 +30,20 @@ export const ServiceLab = ({ id, disabled }) => {
 	const [inlineActions, setInlineActions] = useState([]);
 	const [inlineActionId, setInlineActionId] = useState("");
 
+	const [isMobile, setIsMobile] = useState(
+		window.matchMedia("(max-width: 650px)").matches
+	);
+
+	useEffect(() => {
+		const media = window.matchMedia("(max-width: 650px)");
+
+		const handleChange = (e) => setIsMobile(e.matches);
+
+		media.addEventListener("change", handleChange);
+
+		return () => media.removeEventListener("change", handleChange);
+	}, []);
+
 	useEffect(() => { loadSummary(); }, [id]);
 
 	async function loadSummary() {
@@ -363,6 +377,216 @@ export const ServiceLab = ({ id, disabled }) => {
 
 	return (
 		<>
+			{isMobile ? (
+				<div className="lab-mobile-list">
+					{labItems.map((labItem) => {
+						const itemActionValues = actionValuesByLabItem[labItem.id] || [];
+						const isAddingAction = addingActionItemId === labItem.id;
+
+						const itemProperties = tabledPropertiesByItem[labItem.t_item_id] || [];
+						const itemPropertyValues = labPropertyValuesByLabItem[labItem.id] || [];
+						const itemPrimaryProperties = itemProperties.filter((property) => property.is_primary);
+
+						return (
+							<div className="lab-mobile-item" key={labItem.id}>
+								<div
+									className="lab-mobile-item-header"
+									title="Ver/editar propriedades do item"
+									onClick={() => handleOpenPropertiesModal(labItem)}
+								>
+									<div>
+										<div className="lab-item-name">{labItem.item_name}</div>
+										{itemPrimaryProperties.length > 0 && (
+											<div className="lab-item-properties-summary">
+												{itemPrimaryProperties.map((property) => {
+													const lpv = itemPropertyValues.find((v) => v.property_id === property.id);
+													return `${property.name}: ${lpv?.value || "—"}`;
+												}).join(" · ")}
+											</div>
+										)}
+									</div>
+								</div>
+
+								{itemActionValues.length === 0 && !isAddingAction && (
+									<div className="lab-mobile-action-row">
+										<span>—</span>
+									</div>
+								)}
+
+								{itemActionValues.map((lav) => {
+									const isCustomValue = customValueIds[lav.slav_id] !== undefined
+										? customValueIds[lav.slav_id]
+										: !!lav.value;
+									const isEditingCustomValue = !!customEditingIds[lav.slav_id];
+									const customInputValue = customInputs[lav.slav_id] !== undefined
+										? customInputs[lav.slav_id]
+										: (lav.value || "");
+
+									return (
+										<div className="lab-mobile-action-row" key={lav.id}>
+											<div className="lab-mobile-action-row-main">
+												<span>{lav.action_name}</span>
+												<button type="button" className="lab-delete-action-btn" title="Remover esta ação" onClick={() => handleDeleteActionValue(lav)}>
+													<i className="fa-solid fa-trash" />
+												</button>
+											</div>
+
+											<div className="lab-mobile-action-value">
+												{isCustomValue ? (
+													<div className="lab-custom-value">
+														<input
+															type="text"
+															autoFocus={isEditingCustomValue}
+															disabled={!isEditingCustomValue}
+															value={customInputValue}
+															onChange={(e) => handleCustomInputChange(lav, e.target.value)}
+														/>
+														{isEditingCustomValue ? (
+															<button
+																type="button"
+																className="confirm lab-custom-value-save"
+																title="Guardar valor"
+																onClick={() => handleSaveCustomValueClick(lav)}
+															>
+																<i className="fa-solid fa-check" />
+															</button>
+														) : (
+															<button
+																type="button"
+																className="lab-custom-value-edit"
+																title="Editar valor"
+																onClick={() => handleStartEditCustomValue(lav)}
+															>
+																<i className="fa-solid fa-pen" />
+															</button>
+														)}
+														<button
+															type="button"
+															className="lab-custom-value-cancel"
+															title="Remover valor personalizado"
+															onClick={() => handleCancelCustomValue(lav)}
+														>
+															<i className="fa-solid fa-xmark" />
+														</button>
+													</div>
+												) : (
+													<select
+														value={lav.t_action_value_id || ""}
+														onChange={(e) => handleSelectChange(lav, e.target.value)}
+													>
+														<option value="">—</option>
+														{(tabledValuesByAction[lav.t_action_id] || []).map((tv) => (
+															<option key={tv.id} value={tv.id}>{tv.value}</option>
+														))}
+														<option value="__outro__">Outro</option>
+													</select>
+												)}
+											</div>
+										</div>
+									);
+								})}
+
+								{isAddingAction ? (
+									<div className="lab-mobile-inline-add-action">
+										<select value={inlineActionId} onChange={(e) => setInlineActionId(e.target.value)}>
+											<option value="">Selecionar ação...</option>
+											{inlineActions.map((action) => (
+												<option key={action.id} value={action.id}>{action.name}</option>
+											))}
+										</select>
+										<button
+											type="button"
+											className="confirm"
+											title="Confirmar ação"
+											disabled={!inlineActionId}
+											onClick={() => handleConfirmAddAction(labItem)}
+										>
+											<i className="fa-solid fa-check" />
+										</button>
+										<button
+											type="button"
+											className="cancel"
+											title="Cancelar"
+											onClick={() => handleToggleAddAction(labItem)}
+										>
+											<i className="fa-solid fa-xmark" />
+										</button>
+									</div>
+								) : (
+									<div
+										className="lab-mobile-add-action-row"
+										title="Adicionar ação a este item"
+										onClick={() => handleToggleAddAction(labItem)}
+									>
+										<i className="fa-solid fa-plus" />
+									</div>
+								)}
+							</div>
+						);
+					})}
+
+					{!adding ? (
+						!disabled && (
+							<div className="lab-mobile-add-item-row" title="Adicionar item" onClick={handleStart}>
+								<i className="fa-solid fa-plus" /> Adicionar Item
+							</div>
+						)
+					) : (
+						<div className="lab-mobile-picker">
+							<div className="lab-mobile-picker-section">
+								<label>Item</label>
+								<div className="lab-mobile-picker-list">
+									{items.map((item) => (
+										<div
+											key={item.id}
+											className={`lab-row ${selectedItemId === item.id ? "selected" : ""}`}
+											onClick={() => toggleSelectedItem(item.id)}
+										>
+											{item.name}
+										</div>
+									))}
+								</div>
+							</div>
+
+							{selectedItemId && (
+								<div className="lab-mobile-picker-section">
+									<label>Ação</label>
+									<div className="lab-mobile-picker-list">
+										{actions.map((action) => (
+											<div
+												key={action.id}
+												className={`lab-row ${selectedActionIds.includes(action.id) ? "selected" : ""}`}
+												onClick={() => toggleSelectedAction(action.id)}
+											>
+												{action.name}
+											</div>
+										))}
+									</div>
+								</div>
+							)}
+
+							{selectedItemId && (
+								<div className="lab-row-confirm-controls">
+									<label>Quantidade:</label>
+									<input
+										type="number"
+										min="1"
+										value={quantity}
+										onChange={(e) => setQuantity(e.target.value)}
+									/>
+									<button type="button" className="confirm" title="Confirmar" disabled={submitting} onClick={handleConfirm}>
+										<i className="fa-solid fa-check" />
+									</button>
+								</div>
+							)}
+
+							<div className="lab-mobile-add-item-row" title="Cancelar" onClick={handleCancel}>
+								<i className="fa-solid fa-xmark" />
+							</div>
+						</div>
+					)}
+				</div>
+			) : (
 			<table className="lab-actions-table">
 				<thead>
 					<tr>
@@ -606,6 +830,7 @@ export const ServiceLab = ({ id, disabled }) => {
 					)}
 				</tbody>
 			</table>
+			)}
 
 			{editingLabItem && (
 				<div className="lab-properties-backdrop" onClick={handleClosePropertiesModal}>

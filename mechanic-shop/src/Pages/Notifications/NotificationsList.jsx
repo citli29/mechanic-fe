@@ -637,7 +637,7 @@ export default function NotificationsList() {
 											<Link
 												key={s.id}
 												className="notif-service-preview-card"
-												to={`/service/${s.id}`}
+												to={`/services/${s.id}`}
 												onClick={() => setViewingNotification(null)}
 											>
 												<i className="fa-solid fa-arrow-up-right-from-square" />

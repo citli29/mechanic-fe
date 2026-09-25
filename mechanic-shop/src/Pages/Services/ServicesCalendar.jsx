@@ -187,7 +187,7 @@ export default function ServicesCalendar() {
 			<Link
 				key={service.id}
 				className={`appointment ${getServiceStatusClass(service)}`}
-				to={`/service/${service.id}`}
+				to={`/services/${service.id}`}
 			>
 				<div className="appointment-plate">
 					{service.car_plate

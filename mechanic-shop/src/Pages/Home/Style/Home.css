@@ -9,8 +9,20 @@
 		align-items: center;
 		gap: var(--padding);
 		padding: var(--padding) calc(2 * var(--big-padding));
+		border: 1px solid var(--border-light);
 		border-radius: 5px;
 		font-weight: 700;
+	}
+}
+
+@media (max-width: 650px){
+	.home-page .quick-actions{
+		flex-direction: column;
+
+		button, a{
+			width: 100%;
+			justify-content: center;
+		}
 	}
 }
 

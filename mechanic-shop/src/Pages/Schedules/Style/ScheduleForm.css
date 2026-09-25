@@ -82,6 +82,12 @@
 
 .schedule-form-page .picker-row{
 	grid-column: 1 / -1;
+
+	/* Same fix as .field above: a grid item defaults to min-width:auto, so
+	   without this the picker refuses to shrink below its content's
+	   intrinsic width (the client/car header's unwrapped spans) and blows
+	   out past the grid track instead of using its own internal scroll. */
+	min-width: 0;
 }
 
 .schedule-form-page .details-actions{
@@ -106,6 +112,15 @@
 
 	.schedule-form-page .field-full{
 		grid-column: auto;
+	}
+
+	.schedule-form-page .details-actions{
+		flex-direction: column;
+
+		button, a{
+			width: 100%;
+			justify-content: center;
+		}
 	}
 }
 

@@ -209,7 +209,7 @@ export default function SchedulesCalendar() {
 					<Link
 						className="appointment-open-service"
 						title="Abrir Serviço"
-						to={`/service/${schedule.service_id}`}
+						to={`/services/${schedule.service_id}`}
 					>
 						<i className="fa-solid fa-arrow-up-right-from-square" />
 					</Link>

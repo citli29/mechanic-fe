@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -446,6 +447,9 @@ export default function ProductsList() {
 											<td data-label="Tipo de Produto"><span className="cell-truncate" title={product.product_type_name}>{product.product_type_name}</span></td>
 
 											<td className="actions">
+												<Link className="options" to={`/products/${product.id}`}>
+													<i className="fa-solid fa-arrow-up-right-from-square" />
+												</Link>
 												<button className="options" onClick={() => editProduct(product)}>
 													<i className="fa-solid fa-pencil" />
 												</button>

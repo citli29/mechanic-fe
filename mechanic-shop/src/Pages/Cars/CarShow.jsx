@@ -154,7 +154,7 @@ export default function CarShow() {
 										<Link
 											key={service.id}
 											className="car-history-item"
-											to={`/service/${service.id}`}
+											to={`/services/${service.id}`}
 										>
 											<div className="car-history-item-header">
 												<span className="car-history-id">#{service.id}</span>

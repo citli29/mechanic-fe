@@ -313,7 +313,7 @@ export default function ServicesManageList() {
 												<td data-label="Telemóvel"><span className="cell-truncate" title={service.client_phone || "-"}>{service.client_phone || "-"}</span></td>
 
 												<td className="actions">
-													<Link className="options" to={`/service/${service.id}`}>
+													<Link className="options" to={`/services/${service.id}`}>
 														<i className="fa-solid fa-arrow-up-right-from-square" />
 													</Link>
 
