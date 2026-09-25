@@ -9,6 +9,8 @@ import ModelsList from "./Pages/Models/ModelsList";
 import ClientsList from "./Pages/Clients/ClientsList";
 import ProductsList from "./Pages/Products/ProductsList";
 import ProductShow from "./Pages/Products/ProductShow";
+import UsersList from "./Pages/Users/UsersList";
+import UserShow from "./Pages/Users/UserShow";
 import CarsList from "./Pages/Cars/CarsList";
 import CarShow from "./Pages/Cars/CarShow";
 import SchedulesCalendar from "./Pages/Schedules/SchedulesCalendar";
@@ -66,6 +68,8 @@ function App() {
 					<Route path="/services_manage" element={<ServicesManageList/>} />
 					<Route path="/lab_management" element={<LabManagement/>} />
 				<Route path="/user_times_stats" element={<UserTimeStats/>} />
+					<Route path="/users" element={<UsersList/>} />
+					<Route path="/users/:id" element={<UserShow/>} />
 					<Route path="/services_calendar" element={<ServicesCalendar/>} />
 					<Route path="/services/new" element={<ServicesNew/>} />
 					<Route path="/products_requested" element={<ProductRequestsDashboard/>} />

@@ -463,6 +463,14 @@ export default function Navbar() {
 							<div className="navbar-dropdown-divider" />
 
 							<NavLink
+								to="/users"
+								className={linkClass}
+								onClick={closeDropdown}
+							>
+								Utilizadores
+							</NavLink>
+
+							<NavLink
 								to="/user_times_stats"
 								className={linkClass}
 								onClick={closeDropdown}

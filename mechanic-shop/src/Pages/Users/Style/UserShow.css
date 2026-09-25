@@ -1,0 +1,152 @@
+.users-show-page .details-actions{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+
+	button, a{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+		padding: var(--padding) calc(2 * var(--big-padding));
+		border-radius: 5px;
+		font-weight: 700;
+	}
+}
+
+.users-show-page .user-day-picker{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--padding);
+	margin-bottom: var(--big-padding);
+
+	button{
+		aspect-ratio: 1;
+		height: calc(var(--line-height) + 2 * var(--padding));
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 5px;
+	}
+
+	input{
+		padding: var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-card);
+		font-weight: 600;
+		text-align: center;
+	}
+}
+
+.users-show-page .user-day-empty{
+	padding: var(--big-padding);
+	text-align: center;
+	color: var(--txt-muted);
+}
+
+.users-show-page .user-day-list{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+}
+
+.users-show-page .user-day-item{
+	display: flex;
+	flex-direction: column;
+	gap: var(--small-padding);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: var(--padding) var(--big-padding);
+	cursor: pointer;
+
+	&:hover{
+		background: var(--bg-page);
+	}
+}
+
+.users-show-page .user-day-item-header{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--padding);
+	font-weight: 600;
+
+	.user-day-item-id{
+		color: var(--txt-muted);
+		font-weight: 700;
+	}
+
+	.user-day-item-car{
+		font-weight: 400;
+		color: var(--txt-light);
+		font-size: var(--font-size-small);
+	}
+
+	.user-day-item-dates{
+		margin-left: auto;
+		font-weight: 400;
+		color: var(--txt-muted);
+		font-size: var(--font-size-small);
+	}
+}
+
+.users-show-page .user-day-item-status{
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 10px;
+	border-radius: 999px;
+	color: #fff;
+	font-size: var(--font-size-small);
+	font-weight: 700;
+}
+
+.users-show-page .user-day-item-minutes{
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+.users-show-page .user-day-item-label{
+	display: block;
+	font-size: var(--font-size-small);
+	font-weight: 700;
+	color: var(--txt-muted);
+	text-transform: uppercase;
+	letter-spacing: .02em;
+}
+
+.users-show-page .user-day-item-subcards{
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--padding);
+}
+
+.users-show-page .user-day-item-subcard{
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: var(--padding);
+	background: var(--bg-page);
+
+	p{
+		white-space: pre-wrap;
+		margin: var(--small-padding) 0 0;
+		font-size: var(--font-size-small);
+	}
+}
+
+@media(max-width: 650px){
+	.users-show-page .user-day-item-subcards{
+		grid-template-columns: 1fr;
+	}
+}
+
+.users-show-page .user-day-total{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: var(--big-padding);
+	padding: var(--padding) var(--big-padding);
+	border-top: 2px solid var(--border);
+	font-weight: 700;
+	font-size: var(--font-size-big);
+}
