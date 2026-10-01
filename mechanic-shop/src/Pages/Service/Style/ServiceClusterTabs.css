@@ -1,0 +1,84 @@
+/* Pulls the tab row down onto the header card below, cancelling out
+   .content's flex `gap` for this one pair so the tabs sit flush against
+   it — like a browser's tab strip attached to its content pane — instead
+   of floating as a separate card with a visible gap underneath. */
+.service-cluster-tabs{
+	display: flex;
+	align-items: flex-end;
+	gap: 3px;
+
+	padding: 0 var(--padding);
+	/* The extra 1px here (beyond cancelling .content's gap) is the header
+	   overlap that used to live on .active's own negative margin — moved
+	   up to the row itself so no child's box extends past this
+	   container's own bounds (see note on .service-cluster-tab below). */
+	margin-bottom: calc(-1 * var(--big-padding) - 1px);
+
+	overflow-x: auto;
+}
+
+.service-cluster-tab{
+	display: flex;
+	align-items: center;
+	gap: var(--small-padding);
+	flex: 0 0 auto;
+
+	/* All tabs sit flush against the header (margin-bottom: 0) — only the
+	   active one stands taller, via its own extra padding-top below. */
+	margin-bottom: 0;
+
+	padding: var(--padding) var(--big-padding);
+	border: 1px solid var(--border);
+	border-radius: 8px 8px 0 0;
+	border-left: 4px solid var(--tab-type-color, transparent);
+
+	background: color-mix(in srgb, var(--tab-type-color, var(--border)) 15%, white);
+	color: var(--txt-dark);
+	text-decoration: none;
+	white-space: nowrap;
+	cursor: pointer;
+
+	&:hover{
+		filter: brightness(0.94);
+	}
+
+	/* Taller (extra top padding) so it visibly sits higher than the rest,
+	   and the only one whose margin dips below the shared baseline to
+	   overlap the header card's own 1px top border — its background
+	   paints right over that seam, the same way a browser's selected tab
+	   erases the line between it and the page. */
+	&.active{
+		z-index: 1;
+		margin-bottom: 0;
+
+		padding-top: calc(var(--padding) + 6px);
+		border-bottom: none;
+		background: var(--tab-type-color);
+		border-color: color-mix(in srgb, var(--tab-type-color) 65%, black);
+		color: #fff;
+		font-weight: 700;
+	}
+}
+
+.service-cluster-tab-dot{
+	width: 14px;
+	height: 14px;
+	border-radius: 999px;
+	flex: 0 0 auto;
+}
+
+.service-cluster-tab-id{
+	font-weight: 700;
+}
+
+.service-cluster-tab-sub{
+	font-size: var(--font-size-small);
+	color: inherit;
+	opacity: 0.75;
+}
+
+@media(max-width: 650px){
+	.service-cluster-tab-sub{
+		display: none;
+	}
+}

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import api from "./../api/axios";
 
 import { ServiceHeader } from "./Service/ServiceHeader";
+import { ServiceClusterTabs } from "./Service/ServiceClusterTabs";
 import { CarPicker } from "../components/Pickers/CarPicker";
 
 import "./Style/ServiceShow.css";
@@ -68,7 +69,26 @@ export default function ServiceShow2() {
 		loadService(() => cancelled);
 
 		return () => { cancelled = true; };
-	}, []);
+	}, [id]);
+
+	const [clusterMates, setClusterMates] = useState([]);
+
+	useEffect(() => {
+		let cancelled = false;
+
+		async function loadClusterMates() {
+			try {
+				const response = await api.get(`/services/${id}/associations`);
+				if (!cancelled) setClusterMates(response.data.cluster_mate_list || []);
+			} catch (error) {
+				if (!cancelled) console.error(error);
+			}
+		}
+
+		loadClusterMates();
+
+		return () => { cancelled = true; };
+	}, [id]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -382,6 +402,11 @@ export default function ServiceShow2() {
 					))}
 				</nav>
 				<div className="content">
+					<ServiceClusterTabs
+						currentId={id}
+						currentService={service}
+						clusterMates={clusterMates}
+					/>
 					<ServiceHeader
 						service={service}
 						onServiceChange={
@@ -534,7 +559,7 @@ export default function ServiceShow2() {
 						<h1>Pedido de Produtos</h1>
 					</div>	
 					<div className="body">
-						<ProductsRequested id={id} onProductForwarded={()=>setApReload(true)} disabled={isFinished}/>
+						<ProductsRequested key={id} id={id} onProductForwarded={()=>setApReload(true)} disabled={isFinished}/>
 					</div>
 				</div>
 				<div className="service-applied-products-card" id="section-applied">
@@ -543,7 +568,7 @@ export default function ServiceShow2() {
 						<h1>Produtos Aplicados</h1>
 					</div>	
 					<div className="body">
-						<AppliedProducts id={id} apReload={apReload} onApReloaded={()=>setApReload(false)} copy_aps={setAps} disabled={isFinished}/>
+						<AppliedProducts key={id} id={id} apReload={apReload} onApReloaded={()=>setApReload(false)} copy_aps={setAps} disabled={isFinished}/>
 					</div>
 				</div>
 				<div className="service-user-times-card" id="section-times">
@@ -568,8 +593,8 @@ export default function ServiceShow2() {
 								))}
 							</tbody>
 						</table>
-						<UserTimes id={id} copy_uts={setUts} disabled={isFinished}/>
-						<UserTimePunches id={id} copy_uts={setUtps} disabled={isFinished}/>
+						<UserTimes key={`ut-${id}`} id={id} copy_uts={setUts} disabled={isFinished}/>
+						<UserTimePunches key={`utp-${id}`} id={id} copy_uts={setUtps} disabled={isFinished}/>
 					</div>
 				</div>
 				<div className="service-is-finished-card" id="section-finished">
