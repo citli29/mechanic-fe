@@ -41,7 +41,7 @@ function extractProductName(message, title) {
 }
 
 function extractServiceIdFromUrl(url) {
-	const match = url?.match(/^service\/(\d+)$/);
+	const match = url?.match(/^services\/(\d+)$/);
 	return match ? match[1] : null;
 }
 

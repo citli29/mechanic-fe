@@ -6,7 +6,10 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/SchedulesCalendar.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
+import EventModal from "../../components/EventModal/EventModal";
 import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
+import { layoutWeekEvents } from "../../utils/eventLanes";
+import { useCalendarEvents, DayEventLanes, DayEventStrip } from "../../components/CalendarEvents/CalendarEvents";
 
 function formatDate(date) {
 	const y = date.getFullYear();
@@ -81,6 +84,20 @@ export default function SchedulesCalendar() {
 	const lastDayIndex = lastDayWeekday === 0 ? 6 : lastDayWeekday - 1;
 	const trailingPad = 6 - lastDayIndex;
 
+	// Events overlapping the same padded grid range the cells show.
+	const {
+		events,
+		reload: reloadEvents,
+		selectedEvent,
+		setSelectedEvent,
+		hoveredEventId,
+		setHoveredEventId,
+	} = useCalendarEvents(
+		formatDate(new Date(year, month, 1 - startDay)),
+		formatDate(new Date(year, month, daysInMonth + trailingPad)),
+		handleApiError
+	);
+
 	function handleApiError(err) {
 		console.error(err);
 	}
@@ -124,6 +141,8 @@ export default function SchedulesCalendar() {
 			handleApiError(err);
 		}
 	}
+
+
 
 
 	useEffect(() => { loadServiceTypes(); }, []);
@@ -301,6 +320,10 @@ export default function SchedulesCalendar() {
 			key,
 			isOtherMonth: date.getMonth() !== month,
 			schedules: groupedSchedules[key] || [],
+			// An event can span several days, so membership isn't a simple
+			// key lookup like schedules above — a day belongs to an event
+			// whenever it falls within that event's own range.
+			events: events.filter((event) => event.start_date <= key && key <= event.end_date),
 		});
 	}
 
@@ -316,6 +339,10 @@ export default function SchedulesCalendar() {
 	for (let i = 0; i < calendarDays.length; i += 7) {
 		weeksOfMonth.push(calendarDays.slice(i, i + 7));
 	}
+
+	// Lane layout per week row, flattened back so it lines up index for
+	// index with calendarDays (the desktop grid renders calendarDays flat).
+	const dayEventLanes = weeksOfMonth.flatMap(layoutWeekEvents);
 
 	// Same real-week convention as the "Semanal" tab on Estatísticas de
 	// Utilizadores: label a week by its actual Monday-Sunday day range
@@ -354,6 +381,13 @@ export default function SchedulesCalendar() {
 						key={index}
 						className={`calendar-day ${day.isOtherMonth ? "other-month" : ""}`}
 					>
+						<DayEventLanes
+							lanes={dayEventLanes[index]}
+							hoveredEventId={hoveredEventId}
+							onHover={setHoveredEventId}
+							onSelect={setSelectedEvent}
+						/>
+
 						<div className="day-number">{day.day}</div>
 
 						{renderDayHalves(day.schedules)}
@@ -389,6 +423,8 @@ export default function SchedulesCalendar() {
 				<div className="calendar calendar-vertical">
 					{week.map((day, index) => (
 						<div key={day.key} className={`calendar-day ${day.isOtherMonth ? "other-month" : ""}`}>
+							<DayEventStrip events={day.events} dayKey={day.key} onSelect={setSelectedEvent} />
+
 							<div className="day-label">
 								<span className="weekday-name">{WEEKDAY_NAMES[index]}</span>
 								<span className="day-number">{day.day}</span>
@@ -485,6 +521,17 @@ export default function SchedulesCalendar() {
 				</div>
 
 			</div>
+
+			{selectedEvent && (
+				<EventModal
+					event={selectedEvent}
+					onClose={() => setSelectedEvent(null)}
+					onSaved={() => {
+						setSelectedEvent(null);
+						reloadEvents();
+					}}
+				/>
+			)}
 		</div>
 	);
 }

@@ -9,6 +9,40 @@
 	text-align: center;
 }
 
+.services-page table tr th.sortable-split:first-child{
+	gap: 2px;
+	/* Beats Card.css's first-column padding — this header needs the room. */
+	padding-left: 4px;
+	user-select: none;
+
+	.sort-part{
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		padding: 2px 3px;
+		border-radius: 4px;
+		cursor: pointer;
+
+		i{
+			font-size: var(--font-size-small);
+			color: var(--txt-muted);
+		}
+
+		&:hover{
+			background: var(--bg-page-dark);
+		}
+
+		&.active i{
+			color: var(--txt-dark);
+		}
+
+		/* The association toggle's label is an icon, not text. */
+		i.sort-part-icon{
+			color: var(--txt-dark);
+		}
+	}
+}
+
 .services-page table th.sortable{
 	cursor: pointer;
 	gap: var(--small-padding);
@@ -154,135 +188,194 @@
 	color: var(--txt-muted);
 }
 
+/* Phone list: one bordered list of compact two-line rows (see
+   renderMobileRow) instead of a stack of labelled cards. */
 .services-page .services-list-mobile{
 	display: flex;
 	flex-direction: column;
-	gap: var(--padding);
-}
-
-.services-page .service-card{
 	border: 1px solid var(--border);
 	border-radius: 8px;
 	background: var(--bg-card);
 	overflow: hidden;
-}
 
-.services-page .service-card.service-finished-row{
-	background: #dcfce7;
-}
-
-.services-page .service-card.service-delivered-row{
-	background: #bfdbfe;
-}
-
-.services-page .service-card-type-label{
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: var(--small-padding) var(--padding);
-	background: var(--bg-page);
-	border-bottom: 1px solid var(--border);
-}
-
-.services-page .cluster-toggle-mobile{
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-
-	padding: 2px var(--small-padding);
-	border: 1px solid var(--border);
-	border-radius: 999px;
-	background: var(--bg-card);
-	color: var(--txt-muted);
-	font-size: var(--font-size-small);
-	font-weight: 600;
-
-	&:hover{
-		background: var(--bg-page-dark);
-		color: var(--txt-dark);
+	> * + *{
+		border-top: 1px solid var(--border-light);
 	}
 }
 
-.services-page .service-cluster-group{
+.services-page .service-row{
 	display: flex;
-	flex-direction: column;
-	gap: var(--small-padding);
+	align-items: stretch;
+	/* Service type as a stripe down the left edge. */
+	box-shadow: inset 4px 0 0 var(--type-color, var(--border));
 }
 
-.services-page .cluster-member-cards{
-	display: flex;
-	flex-direction: column;
-	gap: var(--small-padding);
-	margin-left: var(--big-padding);
+.services-page .service-row.service-finished-row{
+	background: #f0fdf4;
 }
 
-.services-page .cluster-member-card{
-	border-color: var(--border-light);
-
-	.service-card-type-label{
-		padding-top: 4px;
-		padding-bottom: 4px;
-	}
+.services-page .service-row.service-delivered-row{
+	background: #eff6ff;
 }
 
-.services-page .service-card-summary{
-	display: grid;
-	grid-template-columns: 1fr 1fr auto;
-	grid-template-areas:
-		"matricula estado toggle"
-		"marca modelo toggle"
-		"cliente entrada toggle";
-	gap: var(--small-padding) var(--padding);
-	align-items: center;
-	padding: var(--padding);
-	cursor: pointer;
-}
-
-.services-page .f-matricula{ grid-area: matricula; }
-.services-page .f-estado{ grid-area: estado; }
-.services-page .f-marca{ grid-area: marca; }
-.services-page .f-modelo{ grid-area: modelo; }
-.services-page .f-cliente{ grid-area: cliente; }
-.services-page .f-entrada{ grid-area: entrada; }
-
-.services-page .service-card-field{
+.services-page .service-row-main{
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
+	flex: 1;
 	min-width: 0;
+	padding: var(--padding) var(--padding) var(--padding) calc(var(--padding) + 4px);
+	color: inherit;
+	text-decoration: none;
 
-	.field-label{
-		font-size: var(--font-size-small);
-		font-weight: 600;
-		color: var(--txt-muted);
-		text-transform: uppercase;
-		letter-spacing: 0.02em;
+	&:active{
+		background: var(--bg-page-dark);
 	}
 
-	span:not(.field-label){
+	.service-status{
+		min-width: 0;
+		margin-left: auto;
+		padding: 2px var(--padding);
+		font-size: 11px;
+	}
+}
+
+.services-page .service-row-line{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	min-width: 0;
+}
+
+.services-page .service-row-plate{
+	flex: 0 0 auto;
+	font-weight: 800;
+	color: var(--txt-dark);
+	white-space: nowrap;
+
+	&.empty{
+		font-weight: 600;
+		color: var(--txt-muted);
+	}
+}
+
+.services-page .service-row-car{
+	flex: 0 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--txt-light);
+}
+
+.services-page .service-row-sub{
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+}
+
+.services-page .service-row-client{
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.services-page .service-row-type-label{
+	flex: 0 1 auto;
+	min-width: 0;
+	padding: 1px 6px;
+	border-radius: 999px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	/* Tinted with the row's own type colour (--type-color on .service-row). */
+	background: color-mix(in srgb, var(--type-color) 14%, transparent);
+	color: var(--txt-dark);
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.services-page .service-row-id{
+	flex: 0 0 auto;
+	font-size: var(--font-size-small);
+	font-weight: 600;
+	color: var(--txt-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.services-page .service-row-cluster-toggle{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+	flex: 0 0 auto;
+	width: 44px;
+	border: none;
+	border-left: 1px solid var(--border-light);
+	border-radius: 0;
+	background: transparent;
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+	font-weight: 700;
+
+	&:active{
+		background: var(--bg-page-dark);
+	}
+}
+
+/* An expanded association: its member services listed under its row. */
+.services-page .service-row-members{
+	display: flex;
+	flex-direction: column;
+	padding: 0 0 var(--small-padding) calc(var(--big-padding) + 4px);
+	background: var(--bg-page);
+	box-shadow: inset 4px 0 0 var(--type-color, #0d9488);
+
+	.services-empty{
+		padding: var(--padding);
+	}
+}
+
+.services-page .service-row-member{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	padding: var(--small-padding) var(--padding);
+	border-left: 2px solid var(--border);
+	color: inherit;
+	text-decoration: none;
+
+	&:active{
+		background: var(--bg-page-dark);
+	}
+
+	.service-row-type{
+		flex: 1;
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		color: var(--txt-dark);
+
+		/* Small dot in the member's own type colour. */
+		&::before{
+			content: "";
+			display: inline-block;
+			width: 8px;
+			height: 8px;
+			margin-right: 6px;
+			border-radius: 50%;
+			background: var(--type-color);
+		}
 	}
-}
 
-.services-page .expand-toggle{
-	grid-area: toggle;
-	align-self: center;
-	aspect-ratio: 1;
-	height: var(--line-height);
-	border-radius: 5px;
-	background: transparent;
-	border: none;
-
-	&:hover{ background: var(--bg-page-dark); }
-}
-
-.services-page .service-card-details{
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: var(--small-padding) var(--padding);
-	padding: var(--padding);
-	border-top: 1px dashed var(--border);
-	cursor: pointer;
+	.service-status{
+		min-width: 0;
+		padding: 2px var(--padding);
+		font-size: 11px;
+	}
 }

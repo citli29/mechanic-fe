@@ -90,12 +90,18 @@
 	justify-content: center;
 	width: 28px;
 	height: 28px;
-	margin-bottom: var(--padding);
 	border-radius: 50%;
 	color: var(--txt-light);
 	font-size: var(--font-size-small);
 	font-weight: 800;
+	flex: 0 0 auto;
 }
+
+.schedules-calendar-page .calendar-day > .day-number{
+	margin-bottom: var(--small-padding);
+}
+
+/* Event strips: see components/CalendarEvents/CalendarEvents.css. */
 
 .schedules-calendar-page .day-halves{
 	display: flex;
@@ -296,7 +302,8 @@
 
 .schedules-calendar-page .day-label{
 	display: flex;
-	align-items: baseline;
+	align-items: center;
+	flex-wrap: wrap;
 	gap: var(--padding);
 	margin-bottom: var(--padding);
 

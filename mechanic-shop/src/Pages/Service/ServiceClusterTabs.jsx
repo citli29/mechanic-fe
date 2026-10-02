@@ -146,6 +146,7 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 
 	const [newClientId, setNewClientId] = useState("");
 	const [newCarId, setNewCarId] = useState("");
+	const [isCurrentClientCarLoaded, setIsCurrentClientCarLoaded] = useState(false);
 	const [newKms, setNewKms] = useState("");
 	const [newCheckin, setNewCheckin] = useState(() => formatDate(new Date()));
 	const [newCheckoutPredict, setNewCheckoutPredict] = useState("");
@@ -195,6 +196,31 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 
 		return () => { isCurrent = false; };
 	}, []);
+
+	// A new service in the association must share the current service's
+	// client and car (the database rejects anything else), so the manual
+	// entry form starts with them and doesn't let them be changed.
+	useEffect(() => {
+		let isCurrent = true;
+
+		async function loadCurrentClientAndCar() {
+			try {
+				const response = await api.get(`/services/${currentId}`);
+				if (!isCurrent) return;
+
+				const service = response.data.service;
+				setNewClientId(service?.client_id ?? "");
+				setNewCarId(service?.car_id ?? "");
+				setIsCurrentClientCarLoaded(true);
+			} catch (err) {
+				console.error(err, err?.response?.data?.error);
+			}
+		}
+
+		loadCurrentClientAndCar();
+
+		return () => { isCurrent = false; };
+	}, [currentId]);
 
 	useEffect(() => {
 		const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -625,17 +651,26 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 
 				{mode === "create" && manualEntry && (
 					<div className="service-cluster-add-create">
+						{/* Read-only: fixed to the association's client and car. */}
 						<ClientPicker
 							client_id={newClientId}
-							onClientIdChange={setNewClientId}
-							isAllowedEditing={!creating}
+							onClientIdChange={() => {}}
+							isAllowedEditing={false}
 						/>
 
-						<CarPicker
-							car_id={newCarId}
-							onCarIdChange={setNewCarId}
-							isAllowedEditing={!creating}
-						/>
+						{newCarId ? (
+							<CarPicker
+								car_id={newCarId}
+								onCarIdChange={() => {}}
+								isAllowedEditing={false}
+							/>
+						) : isCurrentClientCarLoaded && (
+							// A disabled "Pesquisar Viatura..." box would suggest a car
+							// could be picked here — say plainly there isn't one.
+							<p className="service-cluster-add-no-car">
+								<i className="fa-solid fa-car" /> Sem viatura
+							</p>
+						)}
 
 						<div className="service-cluster-add-fields-grid">
 							<div className="service-cluster-add-textfield">

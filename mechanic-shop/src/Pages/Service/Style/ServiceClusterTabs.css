@@ -390,6 +390,17 @@
 	}
 }
 
+.service-cluster-add-no-car{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	padding: var(--padding) var(--big-padding);
+	border: 1px dashed var(--border);
+	border-radius: 5px;
+	color: var(--txt-muted);
+	font-weight: 600;
+}
+
 .service-cluster-add-create{
 	display: flex;
 	flex-direction: column;

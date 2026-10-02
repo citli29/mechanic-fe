@@ -8,6 +8,7 @@ import ProductTypesList from "./Pages/ProductTypes/ProductTypesList";
 import ModelsList from "./Pages/Models/ModelsList";
 import ClientsList from "./Pages/Clients/ClientsList";
 import ProductsList from "./Pages/Products/ProductsList";
+import EventsList from "./Pages/Events/EventsList";
 import ProductShow from "./Pages/Products/ProductShow";
 import UsersList from "./Pages/Users/UsersList";
 import UserShow from "./Pages/Users/UserShow";
@@ -57,6 +58,7 @@ function App() {
 					<Route path="/models" element={<ModelsList/>} />
 					<Route path="/clients" element={<ClientsList/>} />
 					<Route path="/products" element={<ProductsList/>} />
+					<Route path="/events" element={<EventsList/>} />
 					<Route path="/products/:id" element={<ProductShow/>} />
 					<Route path="/cars" element={<CarsList/>} />
 					<Route path="/cars/:id" element={<CarShow/>} />

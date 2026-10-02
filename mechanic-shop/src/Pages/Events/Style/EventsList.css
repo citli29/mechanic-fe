@@ -1,0 +1,25 @@
+.events-page table tr{
+	grid-template-columns: 1.4fr 1fr 1fr 60px 1fr 90px;
+}
+
+.events-page table tr.editing td{
+	height: auto;
+	min-height: calc(var(--line-height) + 1px + 2 * var(--padding));
+	flex-direction: column;
+	gap: var(--small-padding);
+	padding-top: var(--small-padding);
+	padding-bottom: var(--small-padding);
+
+	input, select{
+		height: calc(var(--line-height) + 2 * var(--small-padding));
+		flex: none;
+	}
+}
+
+.events-page .event-color-swatch{
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	border-radius: 999px;
+	border: 1px solid var(--border);
+}

@@ -237,44 +237,123 @@
 #car-color-code {grid-row:4;grid-column:2;}
 
 
-@media (max-width: 650px) {
+/* The picked car/client header switches to its compact layout by the
+   picker's own width, not the screen's — so it also kicks in wherever a
+   picker sits in a narrow spot on a desktop screen (e.g. the "Adicionar
+   Serviço" modal), not only on phones. */
+.client-picker, .car-picker{
+	container: picker / inline-size;
+}
+
+@container picker (max-width: 600px) {
+	/* Compact layout for a picked car/client: the icon on the left, the main
+	   value (plate / name) as a title with the rest stacked underneath it,
+	   and the action buttons in one compact row on the right — instead of
+	   the desktop single line, which here turned into a sideways-scrolling
+	   strip with the buttons piled up in a column. */
 	.selected-item{
 		.item-header{
-			/* Flex items default to min-width:auto, so without this the row
-			   refuses to shrink below its spans' combined intrinsic width —
-			   it blows out past the header instead of using its own
-			   overflow-x:auto, which pushes .card-buttons off-screen too. */
+			align-items: flex-start;
+			gap: var(--padding);
 			min-width: 0;
+			padding: var(--padding) var(--big-padding);
 
 			.item-input{
-				width: 100%;
+				display: grid;
+				grid-template-columns: auto minmax(0, 1fr);
+				column-gap: var(--padding);
+				row-gap: 2px;
+				flex: 1;
 				min-width: 0;
-				overflow-x: auto;
-				gap: 0;
+				padding: var(--small-padding) 0;
+
 				span{
+					min-width: 0;
+					padding: 0;
 					border: none;
-					padding: var(--small-padding);
+					overflow: hidden;
+					text-overflow: ellipsis;
 					white-space: nowrap;
+					font-size: var(--font-size-small);
+					color: var(--txt-light);
 				}
+
+				span:empty{ display: none; }
+
+				span:first-child{
+					grid-column: 1;
+					grid-row: 1 / span 3;
+					align-self: center;
+					justify-content: center;
+					width: 40px;
+					height: 40px;
+					border-radius: 50%;
+					background: var(--bg-card);
+					color: var(--txt-dark);
+
+					i{
+						margin: 0;
+						padding: 0;
+						font-size: var(--font-size-big);
+						line-height: 1;
+					}
+				}
+
+				span:nth-child(n + 2){
+					grid-column: 2;
+					display: block;
+				}
+
 				span:nth-child(2){
-					padding-left: var(--big-padding);
+					font-size: var(--font-size-big);
+					font-weight: 700;
+					color: var(--txt-dark);
 				}
-				span:nth-child(4),
-				span:nth-child(3){
-					font-size: var(--font-size);
+
+				span:nth-child(n + 2) i{
+					width: 1.2em;
+					margin-right: var(--small-padding);
+					color: var(--txt-muted);
 				}
 			}
+
+			/* Buttons run the full height of the header, icon centred, instead
+			   of small squares stuck to its top edge. */
 			.card-buttons{
 				flex-shrink: 0;
-				flex-direction: column-reverse;
+				align-self: stretch;
+				gap: 4px;
+
 				button{
-					height: calc(2 * var(--padding) + var(--font-size-big));
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					width: 40px;
+					height: auto;
+					min-height: 34px;
+					aspect-ratio: auto;
+					padding: 0;
+					border-radius: 6px;
+
+					i{ font-size: var(--font-size); }
 				}
 			}
 		}
 	}
 
-	/* Same shrink-to-content overflow as .item-header above: the row's
+	/* A car's make and model read as one line ("Opel Corsa") under the plate. */
+	.car-picker .selected-item .item-header .item-input{
+		grid-template-columns: auto auto minmax(0, 1fr);
+
+		span:first-child{ grid-row: 1 / span 2; }
+		span:nth-child(2){ grid-column: 2 / span 2; }
+		span:nth-child(3){ grid-column: 2; grid-row: 2; }
+		span:nth-child(4){ grid-column: 3; grid-row: 2; }
+	}
+}
+
+@media (max-width: 650px) {
+	/* Same shrink-to-content overflow as the picked item header: the row's
 	   spans (name, phone, tax id) each refuse to shrink below their own
 	   min-width, so on a narrow dropdown the row overflows sideways
 	   instead of wrapping. Force the name onto its own line and let the

@@ -9,6 +9,9 @@ const SERVICE_TYPE_COLORS = ["#2563eb", "#e8aa2e", "#ba2323", "#22c55e", "#a3540
 // the one override everyone agreed looks better than the generic cycle.
 const NAMED_OVERRIDES = {
 	"Deslocações": "#4c1d95",
+	// Not a real service type — the label the services list gives a
+	// collapsed association of several services.
+	"Associação": "#0d9488",
 };
 
 export function getServiceTypeAccent(serviceTypeId, serviceTypeName) {

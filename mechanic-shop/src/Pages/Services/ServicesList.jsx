@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import api from "../../api/axios";
 
 import "../Style/Page.css";
@@ -7,44 +7,111 @@ import "../Style/Card.css";
 import "./Style/ServicesList.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
 import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
+import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
 
 const PER_PAGE = 30;
 
+const SHORT_MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+// "2026-09-08" -> "08 Set" (plus the year when it isn't this year) — the
+// phone rows have room for a short date, not the full ISO one.
+function formatShortDate(isoDate) {
+	if (!isoDate) return null;
+
+	const [year, month, day] = isoDate.split("-");
+	if (!day) return isoDate;
+
+	const label = `${day} ${SHORT_MONTHS[Number(month) - 1]}`;
+	return Number(year) === new Date().getFullYear() ? label : `${label} ${year}`;
+}
+
 const SORTABLE_COLUMNS = [
+	{ column: "id", label: "ID" },
+	{ column: "cluster_nr", label: "Nr. Associação" },
 	{ column: "checkin", label: "Entrada" },
 	{ column: "checkout", label: "Saída" },
 	{ column: "client_name", label: "Cliente" },
+	{ column: "client_phone", label: "Telemóvel" },
 	{ column: "car_plate", label: "Matrícula" },
+	{ column: "car_make_name", label: "Marca" },
+	{ column: "car_model_name", label: "Modelo" },
+	{ column: "service_type_name", label: "Tipo de Serviço" },
 	{ column: "kms", label: "Kms" },
+	{ column: "status", label: "Estado" },
 ];
 
+const DEFAULT_FILTERS = {
+	day: "",
+	month: "",
+	year: "",
+	client_name: "",
+	car_plate: "",
+	car_make: "",
+	car_model: "",
+	service_type_id: "",
+	status: "unfinished",
+};
+
+// The list's view (filters, sort, page) lives in the URL too, so reloading,
+// going back from a service, or sharing the link keeps it — only values
+// that differ from the defaults are written, to keep the URL short.
+function readViewFromUrl(searchParams) {
+	const filters = { ...DEFAULT_FILTERS };
+
+	for (const key of Object.keys(DEFAULT_FILTERS)) {
+		if (searchParams.has(key)) filters[key] = searchParams.get(key);
+	}
+
+	const sort = searchParams.get("sort");
+
+	return {
+		filters,
+		page: Math.max(1, Number(searchParams.get("p")) || 1),
+		sortColumn: SORTABLE_COLUMNS.some(({ column }) => column === sort) ? sort : null,
+		sortDirection: searchParams.get("dir") === "desc" ? "desc" : "asc",
+	};
+}
+
+function writeViewToUrl({ filters, page, sortColumn, sortDirection }) {
+	const params = new URLSearchParams();
+
+	for (const [key, value] of Object.entries(filters)) {
+		if (value !== DEFAULT_FILTERS[key]) params.set(key, value);
+	}
+
+	if (sortColumn) {
+		params.set("sort", sortColumn);
+		params.set("dir", sortDirection);
+	}
+
+	if (page > 1) params.set("p", page);
+
+	return params;
+}
+
 export default function ServicesList() {
+
+	const [searchParams, setSearchParams] = useSearchParams();
+	const [initialView] = useState(() => readViewFromUrl(searchParams));
 
 	const [services, setServices] = useState([]);
 	const [serviceTypes, setServiceTypes] = useState([]);
 
-	const [filters, setFilters] = useState({
-		day: "",
-		month: "",
-		year: "",
-		client_name: "",
-		car_plate: "",
-		car_make: "",
-		car_model: "",
-		service_type_id: "",
-		status: "unfinished",
-	});
+	const [filters, setFilters] = useState(initialView.filters);
+	// What the list is actually loaded with — trails `filters` by a short
+	// pause so typing in a filter box doesn't fire a request per keystroke.
+	const [debouncedFilters, setDebouncedFilters] = useState(initialView.filters);
 
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useState(initialView.page);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
-	const [sortColumn, setSortColumn] = useState(null);
-	const [sortDirection, setSortDirection] = useState("asc");
+	const [sortColumn, setSortColumn] = useState(initialView.sortColumn);
+	const [sortDirection, setSortDirection] = useState(initialView.sortDirection);
 
 	const [loading, setLoading] = useState(true);
+	const requestIdRef = useRef(0);
 
-	const [expandedIds, setExpandedIds] = useState(new Set());
 
 	// Associated services collapse into one row/card. Expanding one is
 	// lazy — the current page's own data only has whichever members
@@ -74,7 +141,7 @@ export default function ServicesList() {
 	}
 
 
-	function buildDateFilter() {
+	function buildDateFilter(filters) {
 		if (!filters.year) return "";
 
 		let date = filters.year;
@@ -98,12 +165,20 @@ export default function ServicesList() {
 
 
 	async function loadServices() {
+		// Only the latest request may update the list — a slow, older one
+		// (e.g. the previous page) must not overwrite a newer result.
+		const requestId = ++requestIdRef.current;
+		const filters = debouncedFilters;
+
 		try {
 			setLoading(true);
 
-			const params = {};
+			// Whole associations: if a filter matches any service of an
+			// association, the backend returns all of its services, so the
+			// list never shows just part of one.
+			const params = { group_associations: 1 };
 
-			const date = buildDateFilter();
+			const date = buildDateFilter(filters);
 
 			if (date) params.checkin = date;
 			if (filters.client_name) params.client_name = filters.client_name;
@@ -124,44 +199,43 @@ export default function ServicesList() {
 
 			const res = await api.get("/services", { params });
 
+			if (requestId !== requestIdRef.current) return;
+
 			setServices(res.data.service_list || []);
 			setTotalPages(res.data.pagination?.total_pages || 1);
 			setTotal(res.data.pagination?.total ?? (res.data.service_list || []).length);
 		} catch (err) {
-			handleApiError(err);
+			if (requestId === requestIdRef.current) handleApiError(err);
 		} finally {
-			setLoading(false);
+			if (requestId === requestIdRef.current) setLoading(false);
 		}
 	}
 
 
 	useEffect(() => { loadServiceTypes(); }, []);
 
-
-	useEffect(() => { loadServices(); }, [page]);
-
 	useEffect(() => {
-		if (page !== 1) {
-			setPage(1);
-		} else {
-			loadServices();
-		}
-	}, [sortColumn, sortDirection]);
+		if (filters === debouncedFilters) return;
 
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			if (page !== 1) {
-				setPage(1);
-			} else {
-				loadServices();
-			}
-		}, 400);
-
+		const timer = setTimeout(() => setDebouncedFilters(filters), 400);
 		return () => clearTimeout(timer);
 	}, [filters]);
 
+	useEffect(() => {
+		loadServices();
+		setSearchParams(
+			writeViewToUrl({ filters: debouncedFilters, page, sortColumn, sortDirection }),
+			{ replace: true }
+		);
+	}, [page, sortColumn, sortDirection, debouncedFilters]);
 
+
+	// A new sort or filter starts back on page 1 — done right where the
+	// user changes it (not in an effect), so a page number that came from
+	// the URL on load isn't thrown away.
 	function handleSort(column) {
+		setPage(1);
+
 		if (sortColumn === column) {
 			setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
 		} else {
@@ -184,6 +258,7 @@ export default function ServicesList() {
 			if (name === "year") updatedValue = updatedValue.slice(0, 4);
 		}
 
+		setPage(1);
 		setFilters((prev) => {
 			const updated = { ...prev, [name]: updatedValue };
 
@@ -252,6 +327,21 @@ export default function ServicesList() {
 	}
 
 
+	// An association's size and status come from the backend (every member
+	// counted, not just the ones on this page) — falling back to the page's
+	// own members if a response ever lacks them.
+	function getClusterSize(group) {
+		return group.representative.cluster_size || group.pageMembers.length;
+	}
+
+	function getClusterStatusInfo(group) {
+		const rank = group.representative.cluster_status_rank;
+		if (rank == null) return getGroupStatusInfo(group.pageMembers);
+
+		return getStatusInfo({ checkout: rank >= 2, is_finished: rank >= 1 });
+	}
+
+
 	// Groups whatever cluster members happen to be on this page together —
 	// may be incomplete (other members could be on another page, or hidden
 	// by the current filters), which is exactly why expanding a group
@@ -307,6 +397,17 @@ export default function ServicesList() {
 	}
 
 
+	// The associations endpoint returns the *other* members only — the
+	// collapsed row's own service (the representative) is added back in, so
+	// the expanded list shows every service that makes up the association.
+	function getClusterMembers(group, mates) {
+		const representative = { ...group.representative, service_id: group.representative.id };
+		const others = mates.filter((mate) => mate.service_id !== representative.service_id);
+
+		return [representative, ...others].sort((a, b) => a.service_id - b.service_id);
+	}
+
+
 	function toggleCluster(group) {
 		const isCurrentlyExpanded = expandedClusters.has(group.clusterNr);
 
@@ -328,21 +429,6 @@ export default function ServicesList() {
 	}
 
 
-	function toggleExpanded(id) {
-		setExpandedIds((prev) => {
-			const next = new Set(prev);
-
-			if (next.has(id)) {
-				next.delete(id);
-			} else {
-				next.add(id);
-			}
-
-			return next;
-		});
-	}
-
-
 	function renderSortableHeader(column, label) {
 		const isActive = sortColumn === column;
 
@@ -357,18 +443,37 @@ export default function ServicesList() {
 	}
 
 
+	// The ID column holds both kinds of number — a service id, or an
+	// association nr on a collapsed association row — so its header has
+	// one sort toggle for each.
+	function renderIdHeader() {
+		function renderPart(column, label, title) {
+			const isActive = sortColumn === column;
+
+			return (
+				<span
+					className={`sort-part ${isActive ? "active" : ""}`}
+					title={title}
+					onClick={() => handleSort(column)}
+				>
+					{label}
+					<i className={`fa-solid ${isActive && sortDirection === "desc" ? "fa-sort-down" : isActive ? "fa-sort-up" : "fa-sort"}`} />
+				</span>
+			);
+		}
+
+		return (
+			<th className="sortable-split">
+				{renderPart("id", "ID", "Ordenar por nº de serviço")}
+				{renderPart("cluster_nr", <i className="fa-solid fa-link sort-part-icon" />, "Ordenar por nº de associação")}
+			</th>
+		);
+	}
+
+
 	function clearFilters() {
-		setFilters({
-			day: "",
-			month: "",
-			year: "",
-			client_name: "",
-			car_plate: "",
-			car_make: "",
-			car_model: "",
-			service_type_id: "",
-			status: "unfinished",
-		});
+		setPage(1);
+		setFilters(DEFAULT_FILTERS);
 	}
 
 
@@ -409,17 +514,17 @@ export default function ServicesList() {
 			<table>
 				<thead>
 					<tr>
-						<th>ID</th>
+						{renderIdHeader()}
 						{renderSortableHeader("checkin", "Entrada")}
 						{renderSortableHeader("checkout", "Saída")}
 						{renderSortableHeader("client_name", "Cliente")}
-						<th>Telemóvel</th>
+						{renderSortableHeader("client_phone", "Telemóvel")}
 						{renderSortableHeader("car_plate", "Matrícula")}
-						<th>Marca</th>
-						<th>Modelo</th>
-						<th>Tipo de Serviço</th>
+						{renderSortableHeader("car_make_name", "Marca")}
+						{renderSortableHeader("car_model_name", "Modelo")}
+						{renderSortableHeader("service_type_name", "Tipo de Serviço")}
 						{renderSortableHeader("kms", "Kms")}
-						<th>Estado</th>
+						{renderSortableHeader("status", "Estado")}
 					</tr>
 				</thead>
 
@@ -434,8 +539,8 @@ export default function ServicesList() {
 						</tr>
 					) : (
 						groups.flatMap((group) => {
-							const isCluster = group.clusterNr != null && group.pageMembers.length > 1;
-							const status = isCluster ? getGroupStatusInfo(group.pageMembers) : getStatusInfo(group.representative);
+							const isCluster = group.clusterNr != null && getClusterSize(group) > 1;
+							const status = isCluster ? getClusterStatusInfo(group) : getStatusInfo(group.representative);
 							const isExpanded = expandedClusters.has(group.clusterNr);
 
 							const groupRow = renderServiceRow({
@@ -444,11 +549,14 @@ export default function ServicesList() {
 								data: group.representative,
 								status,
 								className: `${status.rowClass} ${isCluster ? "cluster-row" : ""}`,
+								// The collapsed row stands for the whole association, not
+								// for the one service whose data fills its other cells.
+								typeContent: isCluster ? <ServiceTypeBadge label="Associação" /> : undefined,
 								idContent: isCluster ? (
 									<button
 										type="button"
 										className="cluster-toggle"
-										title={`Associação #${group.clusterNr} — ${group.pageMembers.length} serviços`}
+										title={`Associação #${group.clusterNr} — ${getClusterSize(group)} serviços`}
 										onClick={(e) => {
 											e.preventDefault();
 											e.stopPropagation();
@@ -456,7 +564,7 @@ export default function ServicesList() {
 										}}
 									>
 										<i className={`fa-solid fa-chevron-${isExpanded ? "down" : "right"}`} />
-										<span>{group.pageMembers.length} - #{group.clusterNr}</span>
+										<span>{getClusterSize(group)} - #{group.clusterNr}</span>
 									</button>
 								) : (
 									<span className="cell-truncate">#{group.representative.id}</span>
@@ -478,9 +586,7 @@ export default function ServicesList() {
 								];
 							}
 
-							const memberRows = mates
-								.slice()
-								.sort((a, b) => a.service_id - b.service_id)
+							const memberRows = getClusterMembers(group, mates)
 								.map((member) => {
 									const memberStatus = getStatusInfo(member);
 
@@ -508,7 +614,10 @@ export default function ServicesList() {
 			<div className="mobile-sort-bar">
 				<select
 					value={sortColumn || ""}
-					onChange={(e) => setSortColumn(e.target.value || null)}
+					onChange={(e) => {
+						setPage(1);
+						setSortColumn(e.target.value || null);
+					}}
 				>
 					<option value="">Ordenar por...</option>
 					{SORTABLE_COLUMNS.map(({ column, label }) => (
@@ -519,7 +628,10 @@ export default function ServicesList() {
 				<button
 					className="options"
 					disabled={!sortColumn}
-					onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
+					onClick={() => {
+						setPage(1);
+						setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+					}}
 				>
 					<i className={`fa-solid fa-arrow-${sortDirection === "asc" ? "up" : "down"}-wide-short`} />
 				</button>
@@ -528,79 +640,32 @@ export default function ServicesList() {
 	}
 
 
-	// Shared by the representative card and the nested member cards — same
-	// layout either way, just different data/status and an optional cluster
-	// toggle injected next to the type badge.
-	function renderMobileCard({ id, data, status, className = "", clusterToggle }) {
-		const isExpanded = expandedIds.has(id);
+	// Phone list: compact two-line rows instead of cards — plate and car on
+	// top, client and date underneath, status on the right, and the service
+	// type as a coloured stripe down the left edge. Tapping opens the service.
+	function renderMobileRow({ key, id, data, status, accent, idLabel, typeLabel, clusterToggle }) {
+		const car = [data.car_make_name, data.car_model_name].filter(Boolean).join(" ");
+		const subtitle = [data.client_name, formatShortDate(data.checkin)].filter(Boolean).join(" · ");
 
 		return (
-			<div key={id} className={`service-card ${status.rowClass} ${className}`}>
-				<div className="service-card-type-label">
-					<ServiceTypeBadge serviceTypeId={data.service_type_id} label={data.service_type_name} />
-					{clusterToggle}
-				</div>
-
-				<Link className="service-card-summary" to={`/services/${id}`}>
-					<div className="service-card-field f-matricula">
-						<span className="field-label">Matrícula</span>
-						<span>{data.car_plate || "-"}</span>
-					</div>
-
-					<div className="service-card-field f-estado">
-						<span className="field-label">Estado</span>
+			<div key={key} className={`service-row ${status.rowClass}`} style={{ "--type-color": accent }}>
+				<Link className="service-row-main" to={`/services/${id}`}>
+					<div className="service-row-line">
+						<span className={`service-row-plate ${data.car_plate ? "" : "empty"}`}>
+							{data.car_plate || "Sem viatura"}
+						</span>
+						{car && <span className="service-row-car">{car}</span>}
 						<span className={`service-status ${status.badgeClass}`}>{status.label}</span>
 					</div>
 
-					<div className="service-card-field f-marca">
-						<span className="field-label">Marca</span>
-						<span>{data.car_make_name || "-"}</span>
+					<div className="service-row-line service-row-sub">
+						<span className="service-row-client">{subtitle || "Sem cliente"}</span>
+						{typeLabel && <span className="service-row-type-label">{typeLabel}</span>}
+						<span className="service-row-id">{idLabel}</span>
 					</div>
-
-					<div className="service-card-field f-modelo">
-						<span className="field-label">Modelo</span>
-						<span>{data.car_model_name || "-"}</span>
-					</div>
-
-					<div className="service-card-field f-cliente">
-						<span className="field-label">Cliente</span>
-						<span>{data.client_name || "-"}</span>
-					</div>
-
-					<div className="service-card-field f-entrada">
-						<span className="field-label">Entrada</span>
-						<span>{data.checkin || "-"}</span>
-					</div>
-
-					<button
-						className="expand-toggle"
-						onClick={(e) => {
-							e.stopPropagation();
-							toggleExpanded(id);
-						}}
-					>
-						<i className={`fa-solid fa-chevron-${isExpanded ? "up" : "down"}`} />
-					</button>
 				</Link>
 
-				{isExpanded && (
-					<Link className="service-card-details" to={`/services/${id}`}>
-						<div className="service-card-field">
-							<span className="field-label">Telemóvel</span>
-							<span>{data.client_phone || "-"}</span>
-						</div>
-
-						<div className="service-card-field">
-							<span className="field-label">Saída</span>
-							<span>{data.checkout || "-"}</span>
-						</div>
-
-						<div className="service-card-field">
-							<span className="field-label">Kms</span>
-							<span>{data.kms ?? "-"}</span>
-						</div>
-					</Link>
-				)}
+				{clusterToggle}
 			</div>
 		);
 	}
@@ -630,52 +695,69 @@ export default function ServicesList() {
 			{renderMobileSortBar()}
 			<div className="services-list-mobile">
 				{groupServices(services).map((group) => {
-					const isCluster = group.clusterNr != null && group.pageMembers.length > 1;
-					const status = isCluster ? getGroupStatusInfo(group.pageMembers) : getStatusInfo(group.representative);
+					const isCluster = group.clusterNr != null && getClusterSize(group) > 1;
+					const representative = group.representative;
+					const status = isCluster ? getClusterStatusInfo(group) : getStatusInfo(representative);
 					const isExpanded = expandedClusters.has(group.clusterNr);
 					const mates = isCluster ? clusterMembersCache[group.clusterNr] : null;
 
-					return (
-						<div key={group.key} className="service-cluster-group">
-							{renderMobileCard({
-								id: group.representative.id,
-								data: group.representative,
-								status,
-								clusterToggle: isCluster && (
-									<button
-										type="button"
-										className="cluster-toggle-mobile"
-										onClick={(e) => {
-											e.preventDefault();
-											e.stopPropagation();
-											toggleCluster(group);
-										}}
-									>
-										<i className={`fa-solid fa-chevron-${isExpanded ? "up" : "down"}`} />
-										{group.pageMembers.length} associados
-									</button>
-								),
-							})}
+					const row = renderMobileRow({
+						key: group.key,
+						id: representative.id,
+						data: representative,
+						status,
+						accent: isCluster
+							? getServiceTypeAccent(null, "Associação")
+							: getServiceTypeAccent(representative.service_type_id, representative.service_type_name),
+						idLabel: isCluster ? `Associação #${group.clusterNr}` : `#${representative.id}`,
+						// Single services also name their type, so the stripe's colour
+						// doesn't have to be remembered.
+						typeLabel: isCluster ? null : (representative.service_type_name || "Sem Tipo"),
+						clusterToggle: isCluster && (
+							<button
+								type="button"
+								className="service-row-cluster-toggle"
+								aria-label={isExpanded ? "Esconder serviços associados" : "Mostrar serviços associados"}
+								onClick={() => toggleCluster(group)}
+							>
+								<i className={`fa-solid fa-chevron-${isExpanded ? "up" : "down"}`} />
+								<span>{getClusterSize(group)}</span>
+							</button>
+						),
+					});
 
-							{isCluster && isExpanded && (
-								<div className="cluster-member-cards">
-									{!mates ? (
-										<p className="services-empty">
-											<i className="fa-solid fa-spinner fa-spin" /> A carregar serviços associados...
-										</p>
-									) : (
-										mates
-											.slice()
-											.sort((a, b) => a.service_id - b.service_id)
-											.map((member) => renderMobileCard({
-												id: member.service_id,
-												data: member,
-												status: getStatusInfo(member),
-												className: "cluster-member-card",
-											}))
-									)}
-								</div>
-							)}
+					if (!isCluster || !isExpanded) return row;
+
+					return (
+						<div key={group.key} className="service-row-group">
+							{row}
+
+							<div className="service-row-members">
+								{!mates ? (
+									<p className="services-empty">
+										<i className="fa-solid fa-spinner fa-spin" /> A carregar serviços associados...
+									</p>
+								) : (
+									getClusterMembers(group, mates).map((member) => {
+										const memberStatus = getStatusInfo(member);
+										const accent = getServiceTypeAccent(member.service_type_id, member.service_type_name);
+
+										return (
+											<Link
+												key={member.service_id}
+												className={`service-row-member ${memberStatus.rowClass}`}
+												to={`/services/${member.service_id}`}
+											>
+												<span className="service-row-id">#{member.service_id}</span>
+												<span className="service-row-type" style={{ "--type-color": accent }}>
+													{member.service_type_name || "Sem Tipo"}
+												</span>
+												<span className={`service-status ${memberStatus.badgeClass}`}>{memberStatus.label}</span>
+											</Link>
+										);
+									})
+								)}
+							</div>
 						</div>
 					);
 				})}
