@@ -356,10 +356,6 @@
 			border-top: 2px solid var(--border);
 		}
 
-		.lab-value-cell:hover{
-			background: var(--bg-page-dark);
-		}
-
 		.lab-value-cell select{
 			width: 100%;
 			padding: var(--padding);
@@ -369,6 +365,12 @@
 			cursor: pointer;
 			text-align: center;
 			text-align-last: center;
+
+			&:disabled{
+				color: var(--txt-light);
+				border-color: var(--border-light);
+				cursor: default;
+			}
 		}
 
 		.lab-custom-value{
@@ -412,6 +414,15 @@
 			&:hover{
 				color: var(--txt-light);
 			}
+
+			&:disabled{
+				cursor: default;
+				opacity: 0.5;
+
+				&:hover{
+					color: var(--txt-muted);
+				}
+			}
 		}
 
 		.lab-add-action-cell{
@@ -428,6 +439,15 @@
 			&:hover{
 				color: var(--txt-light);
 			}
+
+			&:disabled{
+				cursor: default;
+				opacity: 0.5;
+
+				&:hover{
+					color: var(--txt-muted);
+				}
+			}
 		}
 
 		.lab-delete-action-cell{
@@ -443,6 +463,15 @@
 
 			&:hover{
 				color: var(--danger);
+			}
+
+			&:disabled{
+				cursor: default;
+				opacity: 0.5;
+
+				&:hover{
+					color: var(--txt-muted);
+				}
 			}
 		}
 
@@ -779,6 +808,15 @@
 			padding: var(--padding);
 
 			&:hover{ color: var(--danger); }
+
+			&:disabled{
+				cursor: default;
+				opacity: 0.5;
+
+				&:hover{
+					color: var(--txt-muted);
+				}
+			}
 		}
 	}
 
@@ -791,6 +829,12 @@
 			border: 1px solid var(--border);
 			border-radius: 5px;
 			background: var(--bg-page);
+
+			&:disabled{
+				color: var(--txt-light);
+				border-color: var(--border-light);
+				cursor: default;
+			}
 		}
 	}
 
@@ -804,6 +848,12 @@
 		cursor: pointer;
 
 		&:hover{ color: var(--txt-light); background: var(--bg-page-dark); }
+
+		&.disabled{
+			opacity: 0.5;
+			cursor: default;
+			pointer-events: none;
+		}
 	}
 
 	.lab-mobile-inline-add-action{

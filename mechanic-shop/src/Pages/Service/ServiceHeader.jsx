@@ -2,16 +2,35 @@ import { useEffect, useState } from "react";
 import "./Style/ServiceHeader.css";
 import api from "./../../api/axios";
 import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
+import { pushErrorToast } from "../../utils/errorToast";
 
 function oneLine(text) {
 	return (text || "").replace(/\s+/g, " ").trim();
 }
 
-export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,lock, onLockChange}) => {
+export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,lock, onLockChange, clusterMates = []}) => {
 
 	const finished = !!service?.is_finished;
 	const fieldsLocked = lock || finished;
 	const checkoutLocked = lock && !finished;
+
+	// Checkout syncs across the whole service_associations cluster (DB
+	// trigger), so setting it here effectively checks out the car for
+	// every associated service at once — only allowed once they're all
+	// actually done.
+	function handleCheckoutChange(value) {
+		if (value && !finished) {
+			pushErrorToast("Tem de terminar este serviço antes de fazer o checkout da viatura.");
+			return;
+		}
+
+		if (value && clusterMates.some((mate) => !mate.is_finished)) {
+			pushErrorToast("Tem de terminar todos os serviços associados antes de fazer o checkout da viatura.");
+			return;
+		}
+
+		onServiceChange("checkout", value);
+	}
 
 	const [schedules, setSchedules] = useState([]);
 	const [showDetails, setShowDetails] = useState(false);
@@ -236,7 +255,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 						type="date"
 						id="service-checkout"
 						value={service.checkout??""}
-						onChange={(e) => onServiceChange( "checkout", e.target.value) }
+						onChange={(e) => handleCheckoutChange(e.target.value) }
 						disabled={checkoutLocked}
 					/>
 				</div>
@@ -383,7 +402,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 							type="date"
 							id="service-checkout"
 							value={service.checkout??""}
-							onChange={(e) => onServiceChange( "checkout", e.target.value) }
+							onChange={(e) => handleCheckoutChange(e.target.value) }
 							disabled={checkoutLocked}
 						/>
 					</div>

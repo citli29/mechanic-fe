@@ -72,22 +72,24 @@ export default function ServiceShow2() {
 	}, [id]);
 
 	const [clusterMates, setClusterMates] = useState([]);
+	const clusterMatesRequestIdRef = useRef(null);
+
+	async function loadClusterMates() {
+		const requestId = id;
+		clusterMatesRequestIdRef.current = requestId;
+
+		try {
+			const response = await api.get(`/services/${requestId}/associations`);
+			if (clusterMatesRequestIdRef.current === requestId) {
+				setClusterMates(response.data.cluster_mate_list || []);
+			}
+		} catch (error) {
+			if (clusterMatesRequestIdRef.current === requestId) console.error(error);
+		}
+	}
 
 	useEffect(() => {
-		let cancelled = false;
-
-		async function loadClusterMates() {
-			try {
-				const response = await api.get(`/services/${id}/associations`);
-				if (!cancelled) setClusterMates(response.data.cluster_mate_list || []);
-			} catch (error) {
-				if (!cancelled) console.error(error);
-			}
-		}
-
 		loadClusterMates();
-
-		return () => { cancelled = true; };
 	}, [id]);
 
 	useEffect(() => {
@@ -251,6 +253,12 @@ export default function ServiceShow2() {
 				} else {
 					setSaveStatus("saved");
 
+					// Header edits (checkout, kms, etc.) sync to the rest of
+					// the cluster server-side (DB trigger) — refresh the tab
+					// bar so their status/colors reflect that immediately,
+					// not just on the next full page load.
+					loadClusterMates();
+
 					setService(current => {
 						if (current === sentSnapshot) {
 							// Nothing changed while this save was in flight —
@@ -344,9 +352,13 @@ export default function ServiceShow2() {
 		}
 	}*/
 	const handleClickCheckIsFinished =async (checked) => {
-		const s = await putService({...service,is_finished: checked});
-		if(s){
-			setService(s);
+		try {
+			const s = await putService({...service,is_finished: checked});
+			if(s){
+				setService(s);
+			}
+		} catch (error) {
+			console.error(error, error?.response?.data?.error);
 		}
 	}
 
@@ -354,9 +366,13 @@ export default function ServiceShow2() {
 	// checking it" is common enough with this specific field that waiting
 	// out the debounce risks losing the change entirely.
 	const handleOfficeCheckChange = async (checked) => {
-		const s = await putService({...service, office_check: checked});
-		if(s){
-			setService(s);
+		try {
+			const s = await putService({...service, office_check: checked});
+			if(s){
+				setService(s);
+			}
+		} catch (error) {
+			console.error(error, error?.response?.data?.error);
 		}
 	}
 	const [apReload, setApReload] = useState(false);
@@ -406,6 +422,7 @@ export default function ServiceShow2() {
 						currentId={id}
 						currentService={service}
 						clusterMates={clusterMates}
+						onLinked={loadClusterMates}
 					/>
 					<ServiceHeader
 						service={service}
@@ -419,6 +436,7 @@ export default function ServiceShow2() {
 						onOfficeCheckChange={handleOfficeCheckChange}
 						lock={!isAllowedEditing}
 						onLockChange={()=>{setIsAllowedEditing(!isAllowedEditing)}}
+						clusterMates={clusterMates}
 					/>
 					<div className="service-section" id="section-car">
 						<h1 className="print-title">

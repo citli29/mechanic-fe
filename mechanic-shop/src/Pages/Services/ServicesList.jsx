@@ -46,6 +46,15 @@ export default function ServicesList() {
 
 	const [expandedIds, setExpandedIds] = useState(new Set());
 
+	// Associated services collapse into one row/card. Expanding one is
+	// lazy — the current page's own data only has whichever members
+	// happen to also be on this page (and can be missing fields like
+	// kms/phone the cluster-mates endpoint fills in), so the authoritative
+	// member list is fetched once per cluster on first expand and cached.
+	const [expandedClusters, setExpandedClusters] = useState(new Set());
+	const [clusterMembersCache, setClusterMembersCache] = useState({});
+	const [loadingClusters, setLoadingClusters] = useState(new Set());
+
 	const [isMobile, setIsMobile] = useState(
 		window.matchMedia("(max-width: 650px)").matches
 	);
@@ -223,6 +232,102 @@ export default function ServicesList() {
 	}
 
 
+	// Delivered > finished > pending — a cluster shows as advanced as its
+	// least-progressed member, since from the shop's point of view the car
+	// isn't really done until every associated job on it is.
+	function statusRank(service) {
+		if (service.checkout) return 2;
+		if (service.is_finished) return 1;
+		return 0;
+	}
+
+
+	function getGroupStatusInfo(members) {
+		const leastProgressed = members.reduce(
+			(worst, member) => (statusRank(member) < statusRank(worst) ? member : worst),
+			members[0]
+		);
+
+		return getStatusInfo(leastProgressed);
+	}
+
+
+	// Groups whatever cluster members happen to be on this page together —
+	// may be incomplete (other members could be on another page, or hidden
+	// by the current filters), which is exactly why expanding a group
+	// fetches the authoritative member list instead of trusting this.
+	function groupServices(list) {
+		const groups = [];
+		const seen = new Set();
+
+		for (const service of list) {
+			if (seen.has(service.id)) continue;
+			seen.add(service.id);
+
+			if (service.cluster_nr == null) {
+				groups.push({ key: `s-${service.id}`, clusterNr: null, representative: service, pageMembers: [service] });
+				continue;
+			}
+
+			const pageMembers = [service];
+
+			for (const other of list) {
+				if (other.id !== service.id && other.cluster_nr === service.cluster_nr && !seen.has(other.id)) {
+					pageMembers.push(other);
+					seen.add(other.id);
+				}
+			}
+
+			pageMembers.sort((a, b) => a.id - b.id);
+
+			groups.push({ key: `c-${service.cluster_nr}`, clusterNr: service.cluster_nr, representative: pageMembers[0], pageMembers });
+		}
+
+		return groups;
+	}
+
+
+	async function loadClusterMembers(representativeId, clusterNr) {
+		if (clusterMembersCache[clusterNr] || loadingClusters.has(clusterNr)) return;
+
+		setLoadingClusters((prev) => new Set(prev).add(clusterNr));
+
+		try {
+			const res = await api.get(`/services/${representativeId}/associations`);
+			setClusterMembersCache((prev) => ({ ...prev, [clusterNr]: res.data.cluster_mate_list || [] }));
+		} catch (err) {
+			console.error(err);
+		} finally {
+			setLoadingClusters((prev) => {
+				const next = new Set(prev);
+				next.delete(clusterNr);
+				return next;
+			});
+		}
+	}
+
+
+	function toggleCluster(group) {
+		const isCurrentlyExpanded = expandedClusters.has(group.clusterNr);
+
+		setExpandedClusters((prev) => {
+			const next = new Set(prev);
+
+			if (next.has(group.clusterNr)) {
+				next.delete(group.clusterNr);
+			} else {
+				next.add(group.clusterNr);
+			}
+
+			return next;
+		});
+
+		if (!isCurrentlyExpanded) {
+			loadClusterMembers(group.representative.id, group.clusterNr);
+		}
+	}
+
+
 	function toggleExpanded(id) {
 		setExpandedIds((prev) => {
 			const next = new Set(prev);
@@ -267,11 +372,44 @@ export default function ServicesList() {
 	}
 
 
+	// Shared by the normal/group row and the indented cluster-member rows —
+	// same 11 cells either way, just different data, status and whatever
+	// goes in the ID column (a plain id, or the cluster toggle + cluster
+	// number for a group row).
+	function renderServiceRow({ key, id, data, status, className, idContent, typeContent }) {
+		return (
+			<tr key={key} className={className}>
+				<td data-label="ID">
+					<Link className="row-link-overlay" to={`/services/${id}`} aria-hidden="true" tabIndex={-1} />
+					{idContent}
+				</td>
+				<td data-label="Entrada"><span className="cell-truncate" title={data.checkin || "-"}>{data.checkin || "-"}</span></td>
+				<td data-label="Saída"><span className="cell-truncate" title={data.checkout || "-"}>{data.checkout || "-"}</span></td>
+				<td data-label="Cliente"><span className="cell-truncate" title={data.client_name || "-"}>{data.client_name || "-"}</span></td>
+				<td data-label="Telemóvel"><span className="cell-truncate" title={data.client_phone || "-"}>{data.client_phone || "-"}</span></td>
+				<td data-label="Matrícula"><span className="cell-truncate" title={data.car_plate || "-"}>{data.car_plate || "-"}</span></td>
+				<td data-label="Marca"><span className="cell-truncate" title={data.car_make_name || "-"}>{data.car_make_name || "-"}</span></td>
+				<td data-label="Modelo"><span className="cell-truncate" title={data.car_model_name || "-"}>{data.car_model_name || "-"}</span></td>
+				<td data-label="Tipo de Serviço">
+					{typeContent ?? <ServiceTypeBadge serviceTypeId={data.service_type_id} label={data.service_type_name} />}
+				</td>
+				<td data-label="Kms"><span className="cell-truncate" title={data.kms ?? "-"}>{data.kms ?? "-"}</span></td>
+				<td data-label="Estado">
+					<span className={`service-status ${status.badgeClass}`}>{status.label}</span>
+				</td>
+			</tr>
+		);
+	}
+
+
 	function renderDesktopTable() {
+		const groups = groupServices(services);
+
 		return (
 			<table>
 				<thead>
 					<tr>
+						<th>ID</th>
 						{renderSortableHeader("checkin", "Entrada")}
 						{renderSortableHeader("checkout", "Saída")}
 						{renderSortableHeader("client_name", "Cliente")}
@@ -295,41 +433,68 @@ export default function ServicesList() {
 							<td data-label="" style={{ gridColumn: "1 / -1" }}>Sem Serviços.</td>
 						</tr>
 					) : (
-						services.map((service) => {
-							const status = getStatusInfo(service);
+						groups.flatMap((group) => {
+							const isCluster = group.clusterNr != null && group.pageMembers.length > 1;
+							const status = isCluster ? getGroupStatusInfo(group.pageMembers) : getStatusInfo(group.representative);
+							const isExpanded = expandedClusters.has(group.clusterNr);
 
-							return (
-								<tr
-									key={service.id}
-									className={status.rowClass}
-								>
-									<td data-label="Entrada">
-										<Link
-											className="row-link-overlay"
-											to={`/services/${service.id}`}
-											aria-hidden="true"
-											tabIndex={-1}
-										/>
-										<span className="cell-truncate" title={service.checkin || "-"}>{service.checkin || "-"}</span>
-									</td>
-									<td data-label="Saída"><span className="cell-truncate" title={service.checkout || "-"}>{service.checkout || "-"}</span></td>
-									<td data-label="Cliente"><span className="cell-truncate" title={service.client_name || "-"}>{service.client_name || "-"}</span></td>
-									<td data-label="Telemóvel"><span className="cell-truncate" title={service.client_phone || "-"}>{service.client_phone || "-"}</span></td>
-									<td data-label="Matrícula"><span className="cell-truncate" title={service.car_plate || "-"}>{service.car_plate || "-"}</span></td>
-									<td data-label="Marca"><span className="cell-truncate" title={service.car_make_name || "-"}>{service.car_make_name || "-"}</span></td>
-									<td data-label="Modelo"><span className="cell-truncate" title={service.car_model_name || "-"}>{service.car_model_name || "-"}</span></td>
-									<td data-label="Tipo de Serviço">
-										<ServiceTypeBadge serviceTypeId={service.service_type_id} label={service.service_type_name} />
-									</td>
-									<td data-label="Kms"><span className="cell-truncate" title={service.kms ?? "-"}>{service.kms ?? "-"}</span></td>
+							const groupRow = renderServiceRow({
+								key: group.key,
+								id: group.representative.id,
+								data: group.representative,
+								status,
+								className: `${status.rowClass} ${isCluster ? "cluster-row" : ""}`,
+								idContent: isCluster ? (
+									<button
+										type="button"
+										className="cluster-toggle"
+										title={`Associação #${group.clusterNr} — ${group.pageMembers.length} serviços`}
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											toggleCluster(group);
+										}}
+									>
+										<i className={`fa-solid fa-chevron-${isExpanded ? "down" : "right"}`} />
+										<span>{group.pageMembers.length} - #{group.clusterNr}</span>
+									</button>
+								) : (
+									<span className="cell-truncate">#{group.representative.id}</span>
+								),
+							});
 
-									<td data-label="Estado">
-										<span className={`service-status ${status.badgeClass}`}>
-											{status.label}
-										</span>
-									</td>
-								</tr>
-							);
+							if (!isCluster || !isExpanded) return [groupRow];
+
+							const mates = clusterMembersCache[group.clusterNr];
+
+							if (!mates) {
+								return [
+									groupRow,
+									<tr key={`${group.key}-loading`} className="cluster-member-row">
+										<td data-label="" style={{ gridColumn: "1 / -1" }}>
+											<i className="fa-solid fa-spinner fa-spin" /> A carregar serviços associados...
+										</td>
+									</tr>,
+								];
+							}
+
+							const memberRows = mates
+								.slice()
+								.sort((a, b) => a.service_id - b.service_id)
+								.map((member) => {
+									const memberStatus = getStatusInfo(member);
+
+									return renderServiceRow({
+										key: `${group.key}-${member.service_id}`,
+										id: member.service_id,
+										data: member,
+										status: memberStatus,
+										className: `cluster-member-row ${memberStatus.rowClass}`,
+										idContent: <span className="cluster-member-id">#{member.service_id}</span>,
+									});
+								});
+
+							return [groupRow, ...memberRows];
 						})
 					)}
 				</tbody>
@@ -363,6 +528,84 @@ export default function ServicesList() {
 	}
 
 
+	// Shared by the representative card and the nested member cards — same
+	// layout either way, just different data/status and an optional cluster
+	// toggle injected next to the type badge.
+	function renderMobileCard({ id, data, status, className = "", clusterToggle }) {
+		const isExpanded = expandedIds.has(id);
+
+		return (
+			<div key={id} className={`service-card ${status.rowClass} ${className}`}>
+				<div className="service-card-type-label">
+					<ServiceTypeBadge serviceTypeId={data.service_type_id} label={data.service_type_name} />
+					{clusterToggle}
+				</div>
+
+				<Link className="service-card-summary" to={`/services/${id}`}>
+					<div className="service-card-field f-matricula">
+						<span className="field-label">Matrícula</span>
+						<span>{data.car_plate || "-"}</span>
+					</div>
+
+					<div className="service-card-field f-estado">
+						<span className="field-label">Estado</span>
+						<span className={`service-status ${status.badgeClass}`}>{status.label}</span>
+					</div>
+
+					<div className="service-card-field f-marca">
+						<span className="field-label">Marca</span>
+						<span>{data.car_make_name || "-"}</span>
+					</div>
+
+					<div className="service-card-field f-modelo">
+						<span className="field-label">Modelo</span>
+						<span>{data.car_model_name || "-"}</span>
+					</div>
+
+					<div className="service-card-field f-cliente">
+						<span className="field-label">Cliente</span>
+						<span>{data.client_name || "-"}</span>
+					</div>
+
+					<div className="service-card-field f-entrada">
+						<span className="field-label">Entrada</span>
+						<span>{data.checkin || "-"}</span>
+					</div>
+
+					<button
+						className="expand-toggle"
+						onClick={(e) => {
+							e.stopPropagation();
+							toggleExpanded(id);
+						}}
+					>
+						<i className={`fa-solid fa-chevron-${isExpanded ? "up" : "down"}`} />
+					</button>
+				</Link>
+
+				{isExpanded && (
+					<Link className="service-card-details" to={`/services/${id}`}>
+						<div className="service-card-field">
+							<span className="field-label">Telemóvel</span>
+							<span>{data.client_phone || "-"}</span>
+						</div>
+
+						<div className="service-card-field">
+							<span className="field-label">Saída</span>
+							<span>{data.checkout || "-"}</span>
+						</div>
+
+						<div className="service-card-field">
+							<span className="field-label">Kms</span>
+							<span>{data.kms ?? "-"}</span>
+						</div>
+					</Link>
+				)}
+			</div>
+		);
+	}
+
+
 	function renderMobileList() {
 		if (loading && services.length === 0) {
 			return (
@@ -386,78 +629,52 @@ export default function ServicesList() {
 			<>
 			{renderMobileSortBar()}
 			<div className="services-list-mobile">
-				{services.map((service) => {
-					const status = getStatusInfo(service);
-					const isExpanded = expandedIds.has(service.id);
+				{groupServices(services).map((group) => {
+					const isCluster = group.clusterNr != null && group.pageMembers.length > 1;
+					const status = isCluster ? getGroupStatusInfo(group.pageMembers) : getStatusInfo(group.representative);
+					const isExpanded = expandedClusters.has(group.clusterNr);
+					const mates = isCluster ? clusterMembersCache[group.clusterNr] : null;
 
 					return (
-						<div
-							key={service.id}
-							className={`service-card ${status.rowClass}`}
-						>
-							<div className="service-card-type-label">
-								<ServiceTypeBadge serviceTypeId={service.service_type_id} label={service.service_type_name} />
-							</div>
+						<div key={group.key} className="service-cluster-group">
+							{renderMobileCard({
+								id: group.representative.id,
+								data: group.representative,
+								status,
+								clusterToggle: isCluster && (
+									<button
+										type="button"
+										className="cluster-toggle-mobile"
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											toggleCluster(group);
+										}}
+									>
+										<i className={`fa-solid fa-chevron-${isExpanded ? "up" : "down"}`} />
+										{group.pageMembers.length} associados
+									</button>
+								),
+							})}
 
-							<Link className="service-card-summary" to={`/services/${service.id}`}>
-								<div className="service-card-field f-matricula">
-									<span className="field-label">Matrícula</span>
-									<span>{service.car_plate || "-"}</span>
+							{isCluster && isExpanded && (
+								<div className="cluster-member-cards">
+									{!mates ? (
+										<p className="services-empty">
+											<i className="fa-solid fa-spinner fa-spin" /> A carregar serviços associados...
+										</p>
+									) : (
+										mates
+											.slice()
+											.sort((a, b) => a.service_id - b.service_id)
+											.map((member) => renderMobileCard({
+												id: member.service_id,
+												data: member,
+												status: getStatusInfo(member),
+												className: "cluster-member-card",
+											}))
+									)}
 								</div>
-
-								<div className="service-card-field f-estado">
-									<span className="field-label">Estado</span>
-									<span className={`service-status ${status.badgeClass}`}>{status.label}</span>
-								</div>
-
-								<div className="service-card-field f-marca">
-									<span className="field-label">Marca</span>
-									<span>{service.car_make_name || "-"}</span>
-								</div>
-
-								<div className="service-card-field f-modelo">
-									<span className="field-label">Modelo</span>
-									<span>{service.car_model_name || "-"}</span>
-								</div>
-
-								<div className="service-card-field f-cliente">
-									<span className="field-label">Cliente</span>
-									<span>{service.client_name || "-"}</span>
-								</div>
-
-								<div className="service-card-field f-entrada">
-									<span className="field-label">Entrada</span>
-									<span>{service.checkin || "-"}</span>
-								</div>
-
-								<button
-									className="expand-toggle"
-									onClick={(e) => {
-										e.stopPropagation();
-										toggleExpanded(service.id);
-									}}
-								>
-									<i className={`fa-solid fa-chevron-${isExpanded ? "up" : "down"}`} />
-								</button>
-							</Link>
-
-							{isExpanded && (
-								<Link className="service-card-details" to={`/services/${service.id}`}>
-									<div className="service-card-field">
-										<span className="field-label">Telemóvel</span>
-										<span>{service.client_phone || "-"}</span>
-									</div>
-
-									<div className="service-card-field">
-										<span className="field-label">Saída</span>
-										<span>{service.checkout || "-"}</span>
-									</div>
-
-									<div className="service-card-field">
-										<span className="field-label">Kms</span>
-										<span>{service.kms ?? "-"}</span>
-									</div>
-								</Link>
 							)}
 						</div>
 					);

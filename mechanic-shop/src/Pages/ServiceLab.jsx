@@ -154,7 +154,7 @@ export const ServiceLab = ({ id, disabled }) => {
 		.filter(Boolean);
 
 	const handleConfirm = async () => {
-		if (submitting || !selectedItemId) return;
+		if (disabled || submitting || !selectedItemId) return;
 
 		const qty = Math.max(1, parseInt(quantity, 10) || 1);
 
@@ -186,6 +186,7 @@ export const ServiceLab = ({ id, disabled }) => {
 	}
 
 	const handleSelectTabledValue = async (lav, tabledValueId) => {
+		if (disabled) return;
 		try {
 			await api.put(`/services/${id}/lab_action_values/${lav.slav_id}`, {
 				t_action_id: lav.t_action_id,
@@ -200,6 +201,7 @@ export const ServiceLab = ({ id, disabled }) => {
 	}
 
 	const handleSaveCustomValue = async (lav, value) => {
+		if (disabled) return;
 		try {
 			await api.put(`/services/${id}/lab_action_values/${lav.slav_id}`, {
 				t_action_id: lav.t_action_id,
@@ -214,6 +216,7 @@ export const ServiceLab = ({ id, disabled }) => {
 	}
 
 	const handleSelectChange = (lav, value) => {
+		if (disabled) return;
 		if (value === "__outro__") {
 			setCustomValueIds((prev) => ({ ...prev, [lav.slav_id]: true }));
 			setCustomInputs((prev) => ({ ...prev, [lav.slav_id]: lav.value || "" }));
@@ -229,15 +232,18 @@ export const ServiceLab = ({ id, disabled }) => {
 	}
 
 	const handleSaveCustomValueClick = async (lav) => {
+		if (disabled) return;
 		await handleSaveCustomValue(lav, customInputs[lav.slav_id] || "");
 		setCustomEditingIds((prev) => ({ ...prev, [lav.slav_id]: false }));
 	}
 
 	const handleStartEditCustomValue = (lav) => {
+		if (disabled) return;
 		setCustomEditingIds((prev) => ({ ...prev, [lav.slav_id]: true }));
 	}
 
 	const handleCancelCustomValue = async (lav) => {
+		if (disabled) return;
 		setCustomValueIds((prev) => ({ ...prev, [lav.slav_id]: false }));
 
 		setCustomEditingIds((prev) => {
@@ -262,6 +268,7 @@ export const ServiceLab = ({ id, disabled }) => {
 	}
 
 	const handleDeleteActionValue = async (lav) => {
+		if (disabled) return;
 		try {
 			await api.delete(`/services/${id}/lab_action_values/${lav.slav_id}`);
 			loadSummary();
@@ -275,6 +282,8 @@ export const ServiceLab = ({ id, disabled }) => {
 	}
 
 	const handleSavePropertyValue = async (labItem, property) => {
+		if (disabled) return;
+
 		const key = `${labItem.id}-${property.id}`;
 
 		if (propertyInputs[key] === undefined) return;
@@ -309,6 +318,7 @@ export const ServiceLab = ({ id, disabled }) => {
 	}
 
 	const handleDeleteLabItem = async (labItem) => {
+		if (disabled) return;
 		try {
 			await api.delete(`/services/${id}/lab_items/${labItem.id}`);
 
@@ -328,6 +338,7 @@ export const ServiceLab = ({ id, disabled }) => {
 	}
 
 	const handleToggleAddAction = async (labItem) => {
+		if (disabled) return;
 		if (addingActionItemId === labItem.id) {
 			setAddingActionItemId(null);
 			setInlineActions([]);
@@ -348,7 +359,7 @@ export const ServiceLab = ({ id, disabled }) => {
 	}
 
 	const handleConfirmAddAction = async (labItem) => {
-		if (!inlineActionId) return;
+		if (disabled || !inlineActionId) return;
 
 		try {
 			await api.post(`/services/${id}/lab_action_values`, {
@@ -426,7 +437,7 @@ export const ServiceLab = ({ id, disabled }) => {
 										<div className="lab-mobile-action-row" key={lav.id}>
 											<div className="lab-mobile-action-row-main">
 												<span>{lav.action_name}</span>
-												<button type="button" className="lab-delete-action-btn" title="Remover esta ação" onClick={() => handleDeleteActionValue(lav)}>
+												<button type="button" className="lab-delete-action-btn" title="Remover esta ação" disabled={disabled} onClick={() => handleDeleteActionValue(lav)}>
 													<i className="fa-solid fa-trash" />
 												</button>
 											</div>
@@ -437,7 +448,7 @@ export const ServiceLab = ({ id, disabled }) => {
 														<input
 															type="text"
 															autoFocus={isEditingCustomValue}
-															disabled={!isEditingCustomValue}
+															disabled={!isEditingCustomValue || disabled}
 															value={customInputValue}
 															onChange={(e) => handleCustomInputChange(lav, e.target.value)}
 														/>
@@ -446,6 +457,7 @@ export const ServiceLab = ({ id, disabled }) => {
 																type="button"
 																className="confirm lab-custom-value-save"
 																title="Guardar valor"
+																disabled={disabled}
 																onClick={() => handleSaveCustomValueClick(lav)}
 															>
 																<i className="fa-solid fa-check" />
@@ -455,6 +467,7 @@ export const ServiceLab = ({ id, disabled }) => {
 																type="button"
 																className="lab-custom-value-edit"
 																title="Editar valor"
+																disabled={disabled}
 																onClick={() => handleStartEditCustomValue(lav)}
 															>
 																<i className="fa-solid fa-pen" />
@@ -464,6 +477,7 @@ export const ServiceLab = ({ id, disabled }) => {
 															type="button"
 															className="lab-custom-value-cancel"
 															title="Remover valor personalizado"
+															disabled={disabled}
 															onClick={() => handleCancelCustomValue(lav)}
 														>
 															<i className="fa-solid fa-xmark" />
@@ -472,6 +486,7 @@ export const ServiceLab = ({ id, disabled }) => {
 												) : (
 													<select
 														value={lav.t_action_value_id || ""}
+														disabled={disabled}
 														onChange={(e) => handleSelectChange(lav, e.target.value)}
 													>
 														<option value="">—</option>
@@ -488,7 +503,7 @@ export const ServiceLab = ({ id, disabled }) => {
 
 								{isAddingAction ? (
 									<div className="lab-mobile-inline-add-action">
-										<select value={inlineActionId} onChange={(e) => setInlineActionId(e.target.value)}>
+										<select value={inlineActionId} disabled={disabled} onChange={(e) => setInlineActionId(e.target.value)}>
 											<option value="">Selecionar ação...</option>
 											{inlineActions.map((action) => (
 												<option key={action.id} value={action.id}>{action.name}</option>
@@ -498,7 +513,7 @@ export const ServiceLab = ({ id, disabled }) => {
 											type="button"
 											className="confirm"
 											title="Confirmar ação"
-											disabled={!inlineActionId}
+											disabled={!inlineActionId || disabled}
 											onClick={() => handleConfirmAddAction(labItem)}
 										>
 											<i className="fa-solid fa-check" />
@@ -507,6 +522,7 @@ export const ServiceLab = ({ id, disabled }) => {
 											type="button"
 											className="cancel"
 											title="Cancelar"
+											disabled={disabled}
 											onClick={() => handleToggleAddAction(labItem)}
 										>
 											<i className="fa-solid fa-xmark" />
@@ -514,7 +530,7 @@ export const ServiceLab = ({ id, disabled }) => {
 									</div>
 								) : (
 									<div
-										className="lab-mobile-add-action-row"
+										className={`lab-mobile-add-action-row${disabled ? " disabled" : ""}`}
 										title="Adicionar ação a este item"
 										onClick={() => handleToggleAddAction(labItem)}
 									>
@@ -636,7 +652,7 @@ export const ServiceLab = ({ id, disabled }) => {
 									{index === 0 && itemNameCell}
 									{index === 0 && (
 										<td rowSpan={totalRows} className="lab-add-action-cell">
-											<button type="button" className="lab-add-action-btn" title="Adicionar ação a este item" onClick={() => handleToggleAddAction(labItem)}>
+											<button type="button" className="lab-add-action-btn" title="Adicionar ação a este item" disabled={disabled} onClick={() => handleToggleAddAction(labItem)}>
 												<i className="fa-solid fa-plus" />
 											</button>
 										</td>
@@ -648,7 +664,7 @@ export const ServiceLab = ({ id, disabled }) => {
 												<input
 													type="text"
 													autoFocus={isEditingCustomValue}
-													disabled={!isEditingCustomValue}
+													disabled={!isEditingCustomValue || disabled}
 													value={customInputValue}
 													onChange={(e) => handleCustomInputChange(lav, e.target.value)}
 												/>
@@ -657,6 +673,7 @@ export const ServiceLab = ({ id, disabled }) => {
 														type="button"
 														className="confirm lab-custom-value-save"
 														title="Guardar valor"
+														disabled={disabled}
 														onClick={() => handleSaveCustomValueClick(lav)}
 													>
 														<i className="fa-solid fa-check" />
@@ -666,6 +683,7 @@ export const ServiceLab = ({ id, disabled }) => {
 														type="button"
 														className="lab-custom-value-edit"
 														title="Editar valor"
+														disabled={disabled}
 														onClick={() => handleStartEditCustomValue(lav)}
 													>
 														<i className="fa-solid fa-pen" />
@@ -675,6 +693,7 @@ export const ServiceLab = ({ id, disabled }) => {
 													type="button"
 													className="lab-custom-value-cancel"
 													title="Remover valor personalizado"
+													disabled={disabled}
 													onClick={() => handleCancelCustomValue(lav)}
 												>
 													<i className="fa-solid fa-xmark" />
@@ -683,6 +702,7 @@ export const ServiceLab = ({ id, disabled }) => {
 										) : (
 											<select
 												value={lav.t_action_value_id || ""}
+												disabled={disabled}
 												onChange={(e) => handleSelectChange(lav, e.target.value)}
 											>
 												<option value="">—</option>
@@ -694,7 +714,7 @@ export const ServiceLab = ({ id, disabled }) => {
 										)}
 									</td>
 									<td className="lab-delete-action-cell">
-										<button type="button" className="lab-delete-action-btn" title="Remover esta ação" onClick={() => handleDeleteActionValue(lav)}>
+										<button type="button" className="lab-delete-action-btn" title="Remover esta ação" disabled={disabled} onClick={() => handleDeleteActionValue(lav)}>
 											<i className="fa-solid fa-trash" />
 										</button>
 									</td>
@@ -707,7 +727,7 @@ export const ServiceLab = ({ id, disabled }) => {
 								<tr key={`${labItem.id}-empty`}>
 									{itemNameCell}
 									<td className="lab-add-action-cell">
-										<button type="button" className="lab-add-action-btn" title="Adicionar ação a este item" onClick={() => handleToggleAddAction(labItem)}>
+										<button type="button" className="lab-add-action-btn" title="Adicionar ação a este item" disabled={disabled} onClick={() => handleToggleAddAction(labItem)}>
 											<i className="fa-solid fa-plus" />
 										</button>
 									</td>
@@ -724,14 +744,14 @@ export const ServiceLab = ({ id, disabled }) => {
 									{itemActionValues.length === 0 && itemNameCell}
 									{itemActionValues.length === 0 && (
 										<td rowSpan={totalRows} className="lab-add-action-cell">
-											<button type="button" className="lab-add-action-btn" title="Adicionar ação a este item" onClick={() => handleToggleAddAction(labItem)}>
+											<button type="button" className="lab-add-action-btn" title="Adicionar ação a este item" disabled={disabled} onClick={() => handleToggleAddAction(labItem)}>
 												<i className="fa-solid fa-plus" />
 											</button>
 										</td>
 									)}
 									<td className="lab-inline-add-action">
 										<div className="lab-inline-add-action-controls">
-											<select value={inlineActionId} onChange={(e) => setInlineActionId(e.target.value)}>
+											<select value={inlineActionId} disabled={disabled} onChange={(e) => setInlineActionId(e.target.value)}>
 												<option value="">Selecionar ação...</option>
 												{inlineActions.map((action) => (
 													<option key={action.id} value={action.id}>{action.name}</option>
@@ -741,7 +761,7 @@ export const ServiceLab = ({ id, disabled }) => {
 												type="button"
 												className="confirm"
 												title="Confirmar ação"
-												disabled={!inlineActionId}
+												disabled={!inlineActionId || disabled}
 												onClick={() => handleConfirmAddAction(labItem)}
 											>
 												<i className="fa-solid fa-check" />
@@ -750,6 +770,7 @@ export const ServiceLab = ({ id, disabled }) => {
 												type="button"
 												className="cancel"
 												title="Cancelar"
+												disabled={disabled}
 												onClick={() => handleToggleAddAction(labItem)}
 											>
 												<i className="fa-solid fa-xmark" />
@@ -858,6 +879,7 @@ export const ServiceLab = ({ id, disabled }) => {
 										<input
 											type="text"
 											value={value}
+											disabled={disabled}
 											onChange={(e) => handlePropertyInputChange(editingLabItem, property, e.target.value)}
 											onBlur={() => handleSavePropertyValue(editingLabItem, property)}
 										/>
@@ -867,7 +889,7 @@ export const ServiceLab = ({ id, disabled }) => {
 						</div>
 
 						<div className="lab-properties-modal-actions">
-							<button type="button" className="cancel" title="Remover item, ações e propriedades associadas" onClick={() => handleDeleteLabItem(editingLabItem)}>
+							<button type="button" className="cancel" title="Remover item, ações e propriedades associadas" disabled={disabled} onClick={() => handleDeleteLabItem(editingLabItem)}>
 								<i className="fa-solid fa-trash" /> Remover Item
 							</button>
 						</div>

@@ -17,6 +17,48 @@
 	overflow-x: auto;
 }
 
+/* Pinned to the left so it stays visible even when the tab strip itself
+   scrolls horizontally — it's a summary of the whole association, not
+   another tab to scroll past. */
+.service-cluster-progress{
+	position: sticky;
+	left: 0;
+	z-index: 2;
+	align-self: center;
+	flex: 0 0 auto;
+
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+
+	padding: var(--small-padding) var(--big-padding);
+	margin-right: var(--small-padding);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--bg-card);
+	color: var(--txt-light);
+	font-size: var(--font-size-small);
+	font-weight: 800;
+	white-space: nowrap;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+	i{
+		font-size: 0.85em;
+	}
+
+	&.partial{
+		background: #fef3c7;
+		border-color: #f3d58a;
+		color: #92400e;
+	}
+
+	&.complete{
+		background: var(--success);
+		border-color: var(--success);
+		color: #fff;
+	}
+}
+
 .service-cluster-tab{
 	display: flex;
 	align-items: center;
@@ -60,6 +102,348 @@
 	}
 }
 
+.service-cluster-tab-add{
+	/* Cancels the row's gap just for this one pairing, so the add button
+	   sits flush against the last service tab instead of floating apart
+	   from it. */
+	margin-left: -3px;
+
+	/* The base rule's border-left is a 4px (invisible, since no type color
+	   is set here) accent stripe — that extra width alone still reads as
+	   a gap even with the margin above cancelling the row's gap. */
+	border-left: 1px solid var(--border);
+	border-style: solid;
+	border-top-left-radius: 0;
+	background: transparent;
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+
+	&:hover{
+		background: var(--bg-page);
+		color: var(--txt-dark);
+		filter: none;
+	}
+}
+
+/* More breathing room than the default schedule-import-modal — this one
+   holds a card grid, not a couple of lines of text, and a cramped grid
+   of cards reads worse than a cramped line of text does. */
+.service-cluster-add-modal{
+	max-width: 640px;
+	gap: var(--big-padding);
+
+	.schedule-import-header{
+		align-items: center;
+	}
+}
+
+.service-cluster-option-cards{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+	max-height: 50vh;
+	overflow-y: auto;
+	padding: 2px;
+}
+
+.service-cluster-option-card{
+	position: relative;
+	flex: 1 1 160px;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--padding);
+
+	padding: var(--big-padding) var(--padding);
+	border: 2px solid var(--border);
+	border-radius: 10px;
+	background: var(--bg-card);
+	color: var(--txt-dark);
+
+	cursor: pointer;
+
+	&:hover{
+		background: var(--bg-page);
+		border-color: var(--primary);
+	}
+
+	&:disabled{
+		cursor: default;
+	}
+
+	&:disabled:not(.selected){
+		opacity: 0.6;
+	}
+
+	&.selected{
+		border-color: var(--primary);
+		background: var(--primary-soft);
+	}
+}
+
+.service-cluster-option-card-check{
+	position: absolute;
+	top: var(--small-padding);
+	right: var(--small-padding);
+	color: var(--primary);
+}
+
+.service-cluster-option-card-top{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--padding);
+	width: 100%;
+}
+
+.service-cluster-option-card-id{
+	font-weight: 700;
+	font-size: var(--font-size-big);
+}
+
+.service-cluster-option-card-sub{
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+	text-align: center;
+}
+
+.service-cluster-add-type{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+
+	label{
+		font-weight: 600;
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+		white-space: nowrap;
+	}
+
+	select{
+		flex: 1;
+		min-width: 0;
+		padding-top: var(--small-padding);
+		padding-bottom: var(--small-padding);
+		/* The native dropdown arrow sits in its own reserved space to the
+		   right, on top of this padding — centering only the text box
+		   (ignoring that arrow) reads as off-center to the left. Shifting
+		   the extra padding onto the left side, by roughly the arrow's own
+		   width, balances it back out so the text lands on the true
+		   visual center of the whole control, arrow included. */
+		padding-left: calc(var(--padding) + 22px);
+		padding-right: var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-card);
+		color: var(--txt-dark);
+		text-align: center;
+		text-align-last: center;
+
+		/* Browser-rendered dropdown list, not page layout — most browsers
+		   ignore this on <option>, but it's honoured where it isn't
+		   (e.g. Firefox), so the open list matches the closed select. */
+		option{
+			text-align: center;
+		}
+	}
+}
+
+.service-cluster-add-import-label{
+	font-weight: 600;
+	color: var(--txt-muted);
+}
+
+.service-cluster-add-confirm{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--small-padding);
+
+	width: 100%;
+	margin-top: var(--padding);
+	height: calc(var(--line-height) + 2 * var(--padding));
+	border-radius: 5px;
+
+	&:disabled{
+		cursor: not-allowed;
+	}
+}
+
+.service-cluster-add-manual{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--small-padding);
+
+	width: 100%;
+	margin-top: var(--big-padding);
+	height: calc(var(--line-height) + 2 * var(--padding));
+	border: none;
+	border-radius: 5px;
+	background: none;
+	color: var(--txt-muted);
+
+	&:hover{
+		background: var(--bg-page);
+		color: var(--txt-dark);
+	}
+
+	&:disabled{
+		cursor: not-allowed;
+	}
+
+	&.cancel:hover{
+		background: var(--danger-soft);
+	}
+}
+
+.service-cluster-add-empty{
+	padding: var(--padding) var(--big-padding);
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+}
+
+.service-cluster-add-error{
+	margin-top: var(--padding);
+	padding: var(--padding);
+	border-radius: 6px;
+	background: var(--danger-soft);
+	color: var(--danger);
+	font-size: var(--font-size-small);
+}
+
+.service-cluster-add-switch-row{
+	display: flex;
+	align-items: stretch;
+	flex-wrap: wrap;
+	gap: var(--small-padding);
+}
+
+/* Small, secondary, deliberately washed-out — sits above the "Importar
+   Informações:" cards as a quick way out to the other flow, not a decision
+   the way the two big choice buttons used to be. Substituir Informações de
+   Serviço shares this same low-key styling deliberately — it's an escape
+   hatch for the rare case the imported/synced data genuinely needs
+   replacing, not something to invite everyday use. */
+.service-cluster-add-switch{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 0;
+	gap: var(--small-padding);
+
+	padding: var(--small-padding) var(--padding);
+	border: 1px solid var(--border-light);
+	border-radius: 999px;
+	background: none;
+	color: var(--txt-muted);
+	font-size: 12px;
+	white-space: nowrap;
+
+	&:hover{
+		background: var(--bg-page);
+		color: var(--txt-light);
+	}
+}
+
+.service-cluster-add-title{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+}
+
+/* The extra ".schedule-import-header" qualifier isn't just scoping —
+   .schedule-import-header's own shared "button{ height: ...; aspect-ratio:1 }"
+   rule has higher specificity than a single class and was winning the
+   height (though not width, since that rule never sets width itself). */
+.schedule-import-header .service-cluster-add-header-btn{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	aspect-ratio: unset;
+
+	/* Matches the rendered height of the "Tipo de Serviço" <select> below
+	   it (measured directly — a <select>'s actual box height doesn't
+	   track --line-height arithmetically the way a styled div does). */
+	width: 31px;
+	height: 31px;
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	background: var(--bg-card);
+	color: var(--txt-light);
+	font-size: var(--font-size-big);
+
+	&:hover{
+		background: var(--bg-page);
+		color: var(--txt-dark);
+	}
+}
+
+.schedule-import-header .service-cluster-add-header-btn-close{
+	color: var(--danger);
+
+	&:hover{
+		background: var(--danger-soft);
+		color: var(--danger);
+	}
+}
+
+.service-cluster-add-create{
+	display: flex;
+	flex-direction: column;
+	gap: var(--big-padding);
+
+	.confirm{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--small-padding);
+		width: 100%;
+		height: calc(var(--line-height) + 2 * var(--padding));
+		border-radius: 5px;
+	}
+}
+
+.service-cluster-add-fields-grid{
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--padding);
+}
+
+@media (max-width: 650px){
+	.service-cluster-add-fields-grid{
+		display: flex;
+		flex-direction: column;
+	}
+}
+
+.service-cluster-add-textfield{
+	display: flex;
+	flex-direction: column;
+	gap: var(--small-padding);
+
+	label{
+		font-weight: 600;
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+	}
+
+	textarea, input{
+		padding: var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-card);
+		color: var(--txt-dark);
+	}
+
+	textarea{
+		min-height: 80px;
+		resize: vertical;
+	}
+}
+
 .service-cluster-tab-dot{
 	width: 14px;
 	height: 14px;
@@ -71,14 +455,65 @@
 	font-weight: 700;
 }
 
-.service-cluster-tab-sub{
-	font-size: var(--font-size-small);
-	color: inherit;
-	opacity: 0.75;
-}
+.service-cluster-conflict{
+	display: flex;
+	flex-direction: column;
+	gap: var(--big-padding);
 
-@media(max-width: 650px){
-	.service-cluster-tab-sub{
-		display: none;
+	p{
+		color: var(--txt-muted);
+		font-size: var(--font-size-small);
 	}
 }
+
+.service-cluster-conflict-table{
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--font-size-small);
+
+	th, td{
+		padding: var(--small-padding) var(--padding);
+		border: 1px solid var(--border);
+		text-align: left;
+	}
+
+	th{
+		background: var(--bg-page);
+		font-weight: 600;
+	}
+
+	th:first-child, td:first-child{
+		color: var(--txt-muted);
+		font-weight: 600;
+	}
+
+	/* Every synced field is listed so nothing stays a surprise, but only
+	   the ones that actually differ between the two services are what's
+	   really at stake here — call those out, the rest is just context. */
+	tr.differs{
+		td:first-child{
+			color: var(--txt-dark);
+		}
+
+		td:not(:first-child){
+			background: #fef3c7;
+			font-weight: 600;
+		}
+	}
+
+	/* Client/car mismatches aren't a "pick a side" situation like the
+	   fields above — the association will be flatly rejected unless they
+	   already match, so this gets its own, more alarming color. */
+	tr.mismatch{
+		td:first-child{
+			color: var(--danger);
+		}
+
+		td:not(:first-child){
+			background: var(--danger-soft);
+			color: var(--danger);
+			font-weight: 600;
+		}
+	}
+}
+

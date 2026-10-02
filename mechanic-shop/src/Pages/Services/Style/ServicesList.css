@@ -1,5 +1,5 @@
 .services-page table tr{
-	grid-template-columns: repeat(8, minmax(0, 1fr)) minmax(0, 0.7fr) minmax(0, 1fr);
+	grid-template-columns: minmax(70px, 0.6fr) repeat(8, minmax(0, 1fr)) minmax(0, 0.7fr) minmax(0, 1fr);
 }
 
 .services-page .filters .date-field{
@@ -77,6 +77,51 @@
 	color: #fff;
 }
 
+.services-page table tr.cluster-row td:first-child{
+	font-weight: 700;
+}
+
+/* Sits in the same cell as the row-link-overlay (z-index:0, covers the
+   whole row) — needs its own stacking context to stay clickable. */
+.services-page .cluster-toggle{
+	position: relative;
+	z-index: 1;
+
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	white-space: nowrap;
+
+	padding: 2px var(--small-padding);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--bg-card);
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+	font-weight: 700;
+
+	&:hover{
+		background: var(--bg-page-dark);
+		color: var(--txt-dark);
+	}
+}
+
+.services-page table tr.cluster-member-row{
+	td:first-child{
+		padding-left: calc(var(--padding) + var(--big-padding));
+	}
+
+	td{
+		font-size: var(--font-size-small);
+		color: var(--txt-light);
+	}
+}
+
+.services-page .cluster-member-id{
+	color: var(--txt-muted);
+	font-weight: 600;
+}
+
 .services-page .mobile-sort-bar{
 	display: flex;
 	gap: var(--padding);
@@ -132,9 +177,52 @@
 
 .services-page .service-card-type-label{
 	display: flex;
+	align-items: center;
+	justify-content: space-between;
 	padding: var(--small-padding) var(--padding);
 	background: var(--bg-page);
 	border-bottom: 1px solid var(--border);
+}
+
+.services-page .cluster-toggle-mobile{
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+
+	padding: 2px var(--small-padding);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--bg-card);
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+	font-weight: 600;
+
+	&:hover{
+		background: var(--bg-page-dark);
+		color: var(--txt-dark);
+	}
+}
+
+.services-page .service-cluster-group{
+	display: flex;
+	flex-direction: column;
+	gap: var(--small-padding);
+}
+
+.services-page .cluster-member-cards{
+	display: flex;
+	flex-direction: column;
+	gap: var(--small-padding);
+	margin-left: var(--big-padding);
+}
+
+.services-page .cluster-member-card{
+	border-color: var(--border-light);
+
+	.service-card-type-label{
+		padding-top: 4px;
+		padding-bottom: 4px;
+	}
 }
 
 .services-page .service-card-summary{
