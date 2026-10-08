@@ -13,14 +13,6 @@ export default function Footer() {
 					<p>Sistema de Gestão - Reparação Automóvel</p>
 				</div>
 
-				<div className="footer-links">
-
-					<a href="/services">Serviços</a>
-					<a href="/schedules">Marcações</a>
-					<a href="/schedules_calendar">Calendário</a>
-
-				</div>
-
 				<div className="footer-copy">
 					© {new Date().getFullYear()} Oficina Lima
 				</div>

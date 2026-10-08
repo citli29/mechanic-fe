@@ -50,12 +50,14 @@ export default function SchedulesList() {
 
 	const [expandedIds, setExpandedIds] = useState(new Set());
 
+	// Card list below 900px, not just on phones — the 9-column table
+	// doesn't fit at tablet widths (headers overlap, Estado gets cut off).
 	const [isMobile, setIsMobile] = useState(
-		window.matchMedia("(max-width: 650px)").matches
+		window.matchMedia("(max-width: 900px)").matches
 	);
 
 	useEffect(() => {
-		const media = window.matchMedia("(max-width: 650px)");
+		const media = window.matchMedia("(max-width: 900px)");
 
 		const handleChange = (e) => setIsMobile(e.matches);
 
@@ -436,6 +438,9 @@ export default function SchedulesList() {
 								<button
 									className="expand-toggle"
 									onClick={(e) => {
+										// The button sits inside the card's <Link> — without
+										// preventDefault the click still follows the link.
+										e.preventDefault();
 										e.stopPropagation();
 										toggleExpanded(schedule.id);
 									}}
@@ -557,7 +562,7 @@ export default function SchedulesList() {
 								value={filters.status}
 								onChange={updateFilter}
 							>
-								<option value="all">Todos os Estados</option>
+								<option value="all">{isMobile ? "Todos" : "Todos os Estados"}</option>
 								<option value="without_service">Sem Serviço</option>
 								<option value="with_service">Com Serviço</option>
 								<option value="finished">Terminado</option>

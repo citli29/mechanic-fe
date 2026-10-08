@@ -13,14 +13,14 @@ export default function ViewToggle({ listPath, calendarPath }) {
 				className={!isCalendar ? "active" : ""}
 				to={listPath}
 			>
-				<i className="fa-solid fa-list" /> Lista
+				<i className="fa-solid fa-list" /> <span>Lista</span>
 			</Link>
 
 			<Link
 				className={isCalendar ? "active" : ""}
 				to={calendarPath}
 			>
-				<i className="fa-solid fa-calendar-days" /> Calendário
+				<i className="fa-solid fa-calendar-days" /> <span>Calendário</span>
 			</Link>
 		</div>
 	);

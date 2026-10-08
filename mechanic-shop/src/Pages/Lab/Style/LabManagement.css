@@ -104,9 +104,42 @@
 	color: var(--txt-muted);
 }
 
-@media(max-width: 650px){
+/* Stack the columns below 900px — side by side, each table is too narrow
+   at tablet widths (item names cut down to a single letter). stretch,
+   not the desktop flex-start: in a column flex, flex-start shrink-wraps
+   each column to its content instead of filling the width. */
+@media(max-width: 900px){
 	.lab-management-page .lab-management-columns{
 		flex-direction: column;
+		align-items: stretch;
+	}
+
+	/* Stacked, the four tables ran together — a divider line and extra
+	   space above every table but the first marks where each one starts. */
+	.lab-management-page .lab-management-column{
+		padding-top: var(--big-padding);
+		border-top: 2px solid var(--border);
+	}
+
+	.lab-management-page .body > .lab-management-columns:first-child > .lab-management-column:first-child{
+		padding-top: 0;
+		border-top: none;
 	}
 }
 
+
+/* Phone: Card.css hides every thead (its column headers become the
+   per-cell data-labels), but here each thead is just the table's title
+   ("Item", "Ação", …), so keep it. The "+" add row has no label, so
+   drop the empty ::before and center the "+" instead of pushing it right. */
+@media(max-width: 650px){
+	.lab-management-page.page .card table thead{
+		display: table-header-group;
+	}
+
+	.lab-management-page .card table .lab-item-add-row td{
+		justify-content: center;
+
+		&::before{ display: none; }
+	}
+}

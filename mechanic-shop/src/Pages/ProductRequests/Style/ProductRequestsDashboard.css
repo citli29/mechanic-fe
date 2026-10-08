@@ -390,4 +390,18 @@
 		justify-content: space-between;
 		text-align: left;
 	}
+
+	/* Line the values up on the right edge like every other row: the
+	   checkbox sits at the end of its (wider) click target instead of in
+	   its middle, and the qty input shrinks to its number instead of
+	   filling the row with the number centered in it. */
+	.product-requests-page .pr-checkbox-cell > label{
+		justify-content: flex-end;
+	}
+
+	.product-requests-page .pr-qty-cell input{
+		width: 5em;
+		padding-right: 0;
+		text-align: right;
+	}
 }

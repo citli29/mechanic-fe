@@ -1,3 +1,9 @@
+/* Weighted so the text-heavy columns (plate, make, model, codes) get the
+   room and the short numeric ones (month, year, cc) don't waste it. */
 .cars-page table tr{
-	grid-template-columns: repeat(9, minmax(0, 1fr)) calc(3 * 42.59px);
+	grid-template-columns:
+		minmax(0, 1.4fr) minmax(0, 1.2fr) minmax(0, 1.2fr)
+		minmax(0, 0.6fr) minmax(0, 0.7fr) minmax(0, 0.7fr)
+		minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr)
+		calc(3 * 42.59px);
 }

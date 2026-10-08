@@ -1,5 +1,7 @@
 .services-manage-page table tr{
-	grid-template-columns: 70px repeat(5, minmax(0, 1fr)) calc(3 * 42.59px);
+	grid-template-columns:
+		70px minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1fr)
+		minmax(0, 1.2fr) minmax(0, 1fr) calc(3 * 42.59px);
 }
 
 .services-manage-page table th.sortable{
@@ -34,6 +36,20 @@
 	opacity: 1;
 	color: var(--txt-light);
 	-webkit-text-fill-color: var(--txt-light);
+}
+
+/* Tablet widths: the selects' side padding is what clips "S/Marcação". */
+@media(min-width: 651px) and (max-width: 1000px){
+	.services-manage-page table tr{
+		grid-template-columns:
+			56px minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1fr)
+			minmax(0, 1.2fr) minmax(0, 1fr) calc(3 * 42.59px);
+	}
+
+	.services-manage-page table td select{
+		padding-left: var(--small-padding);
+		padding-right: var(--small-padding);
+	}
 }
 
 @media(min-width: 651px){

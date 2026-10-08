@@ -21,6 +21,10 @@
 		text-decoration: none;
 		cursor: pointer;
 
+		/* Beat .card .header i (1.5x big) — at that size the toggle
+		   doesn't fit next to longer titles like "Marcações". */
+		i{ font-size: var(--font-size-big) !important; }
+
 		&:hover{ color: var(--txt-dark); }
 
 		&.active{
@@ -32,5 +36,6 @@
 }
 
 @media(max-width: 650px){
+	.view-toggle{ flex: none; }
 	.view-toggle a span{ display: none; }
 }

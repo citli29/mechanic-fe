@@ -220,7 +220,13 @@ function UserTimeBarStats({ entries, sortedUsers, isMobile, totalLabel }) {
 
 						{e.userHours.map((u, idx) => (
 							<div className="user-time-stats-mobile-row" key={u.user.id}>
-								<span className="user-time-stats-mobile-row-label" title={u.user.name}>{u.user.name}</span>
+								{/* Focusable so a tap on a phone shows the full name too
+								    (names like "Antonio (Pai)"/"Antonio (Filho)" both truncate
+								    to "Antonio (…"), not just a mouse hover. */}
+								<span className="user-time-stats-mobile-row-label has-name-tip" tabIndex={0}>
+									<span className="user-time-stats-mobile-row-label-text">{u.user.name}</span>
+									<span className="user-time-stats-name-tip" role="tooltip">{u.user.name}</span>
+								</span>
 								<div className="user-time-stats-mobile-bar-track">
 									<div
 										className="user-time-stats-mobile-bar"

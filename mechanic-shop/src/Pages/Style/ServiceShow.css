@@ -154,12 +154,32 @@
 		width: 100%;
 		flex: none;
 
+		/* Wrap instead of scrolling sideways — as a scroll strip, the
+		   buttons past the edge just looked cut off. */
 		flex-direction: row;
+		flex-wrap: wrap;
+		gap: var(--small-padding);
 		max-height: none;
-		overflow-x: auto;
-		overflow-y: visible;
+		overflow: visible;
 
 		button{ flex: 0 0 auto; white-space: nowrap; }
+		.service-nav-print{ margin-bottom: 0; }
+
+		/* Not sticky here (it scrolls away with the page), so the section
+		   links only help from the very top — keep just the print buttons
+		   and save status. */
+		button:not(.service-nav-print){ display: none; }
+
+		/* Each print button, and the save status when shown, on its own
+		   full-width line. */
+		.service-nav-print{
+			flex: 1 0 100%;
+			justify-content: center;
+		}
+		.service-save-status{
+			flex: 1 0 100%;
+			margin-bottom: 0;
+		}
 	}
 }
 
@@ -1177,77 +1197,116 @@
 
 
 
+/* Name gets the room — at equal widths it was the one column cut off
+   ("Spray Lubrificant", "Óleo do Motor 0W") while the others had space. */
+.service-applied-products-card .body table tr{
+	grid-template-columns: minmax(0, 2.5fr) repeat(3, minmax(0, 1fr)) minmax(0px,100px) minmax(0px,42.59px);
+}
+.service-applied-products-card .body table td input{
+	text-overflow: ellipsis;
+}
+
+/* Phone: one compact block per product — name on top with ref and type
+   on small lines under it, and qty / applied / delete as three columns
+   on the right spanning all three lines (was a 3-row grid with labels
+   floating above each value, ~130px per product). */
 @media(max-width:750px){
-	.service-applied-products-card .body table tr{
-		display: grid;
-		grid-template-columns: 3fr 1fr;
-		grid-template-rows: repeat(3, 1fr);
-		th{
-			display: none;
-		}
-		td{ 
-			padding-top: calc(var(--padding) + var(--font-size-small) );
-			position: relative;
-			button {
-				aspect-ratio:unset;
-			}
+	.service-applied-products-card .body table thead{ display: none; }
 
-			.magic-label{
-				position: absolute;
-				top: var(--small-padding);
-				left: var(--small-padding);
-				display:unset;
-				font-size: var(--font-size-small);
-				background: transparent;
-			}
+	.service-applied-products-card .body table tbody tr{
+		grid-template-columns: minmax(0, 1fr) 56px 44px 44px;
+		grid-template-areas:
+			"name qty applied cancel"
+			"ref  qty applied cancel"
+			"type qty applied cancel";
 
-			border: none;
-			&.p-quantity,
-			&.p-applied{
-				border-bottom: 1px dashed var(--border);
-			}
-			&.p-cancel,
-			&.p-quantity,
-			&.p-applied{
-				border-left: 1px dashed var(--border);
-			}
-		}
-		td.p-quantity{
-			display: flex;
-			justify-content: center;
-			padding: var(--padding);
-			.magic-label{
-				position: relative;
-				justify-content: center;
-
-			}
-		}
-
-		
-
-		.p-name{grid-row: 1; grid-column: 1; }
-		.p-reference{grid-row: 2; grid-column: 1; }
-		.p-p-type{grid-row: 3; grid-column: 1; }
-		.p-quantity{grid-row: 1; grid-column: 2;}
-
-		.td-label-label.p-applied{
-			grid-row: 2; 
-			grid-column: 2;
+		td{
+			height: auto;
+			min-width: 0;
 			display: flex;
 			align-items: center;
-			justify-items: center;
+			border: none;
+		}
 
-			>label{
-				display: block;
-				position:relative;
-				top:0;
-				left:0;
-				height: 100%;
-				text-align: center;
+		.p-name{ grid-area: name; }
+		.p-reference{ grid-area: ref; }
+		.p-p-type{ grid-area: type; }
+		.p-quantity{ grid-area: qty; }
+		.p-applied{ grid-area: applied; }
+		.p-cancel{ grid-area: cancel; }
+
+		.p-quantity,
+		.p-applied,
+		.p-cancel{
+			border-left: 1px dashed var(--border);
+		}
+
+		/* :not(:last-child) only to out-rank the desktop
+		   "td:not(:nth-last-child(2)):not(:last-child) *" centering rule. */
+		td.p-name:not(:last-child) input{
+			height: auto;
+			padding: var(--padding) var(--padding) 0;
+			font-weight: 600;
+			text-align: left;
+		}
+
+		td.p-reference:not(:last-child),
+		td.p-p-type:not(:last-child){
+			padding: 0 var(--padding);
+			gap: var(--small-padding);
+
+			.magic-label{
+				display: inline;
+				flex-shrink: 0;
+				font-size: var(--font-size-small);
+				color: var(--txt-muted);
+			}
+
+			input{
+				height: auto;
+				padding: 0;
+				font-size: var(--font-size-small);
+				color: var(--txt-light);
+				text-align: left;
 			}
 		}
-		.p-cancel{
-			grid-row: 3; grid-column: 2;
+
+		td.p-quantity:not(:last-child){
+			flex-direction: column;
+			justify-content: center;
+
+			.magic-label{
+				display: block;
+				font-size: var(--font-size-small);
+				color: var(--txt-muted);
+			}
+
+			input{
+				height: auto;
+				padding: 0 var(--small-padding);
+			}
+		}
+
+		td.p-p-type:not(:last-child){
+			padding-bottom: var(--small-padding);
+		}
+
+		td.p-applied,
+		td.p-cancel{
+			justify-content: center;
+			padding: 0;
+		}
+
+		/* The label (the click target) fills the cell's full height, with
+		   the checkbox centered in it — not sitting at its top. */
+		td.p-applied label{
+			align-self: stretch;
+			align-items: center;
+		}
+
+		td.p-applied label input{
+			width: 22px;
+			height: 22px;
 		}
 	}
 }

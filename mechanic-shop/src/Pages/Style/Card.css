@@ -220,6 +220,12 @@
 	}
 }
 
+/* Tablet widths: the big header font makes multi-column tables' headers
+   run into each other (e.g. "MatrículaMarcaModelo"). */
+@media(max-width: 1000px){
+	.card table th{ font-size: var(--font-size); }
+}
+
 @media(max-width: 650px){
 	.card table thead{ display: none; }
 
@@ -230,10 +236,12 @@
 
 	.card table td{
 		justify-content: space-between;
+		gap: var(--padding);
 		padding: 0 var(--padding);
 
 		&::before{
 			content: attr(data-label);
+			flex-shrink: 0;
 			font-weight: 600;
 			color: var(--txt-muted);
 			font-size: var(--font-size-small);

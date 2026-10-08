@@ -497,7 +497,7 @@ export default function SchedulesCalendar() {
 								value={filters.status}
 								onChange={updateFilter}
 							>
-								<option value="all">Todos os Estados</option>
+								<option value="all">{isMobile ? "Todos" : "Todos os Estados"}</option>
 								<option value="without_service">Sem Serviço</option>
 								<option value="with_service">Com Serviço</option>
 								<option value="finished">Terminado</option>

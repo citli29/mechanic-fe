@@ -281,14 +281,65 @@
 	margin-bottom: 0;
 }
 
-.user-time-stats-mobile-row-label{
-	flex: 0 0 70px;
+.user-time-stats-mobile-row-label,
+.user-time-stats-mobile-row-label-text{
+	display: block;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.user-time-stats-mobile-row-label{
+	flex: 0 0 70px;
 
 	font-size: var(--font-size-small);
 	color: var(--txt-muted);
+}
+
+/* The user rows' label: the text truncates in its own inner span so the
+   outer one can drop overflow:hidden and let the full-name tip show
+   outside it, on hover (mouse) or focus (tap). */
+.user-time-stats-mobile-row-label.has-name-tip{
+	position: relative;
+	overflow: visible;
+	display: block;
+	/* Without overflow:hidden a flex item's min-width is its content —
+	   it'd grow to the full name instead of staying 70px. */
+	min-width: 0;
+	width: 70px;
+	cursor: pointer;
+	outline: none;
+}
+
+.user-time-stats-mobile-row-label-text{
+	font-size: inherit;
+	color: inherit;
+}
+
+.user-time-stats-name-tip{
+	display: none;
+	position: absolute;
+	left: 0;
+	bottom: calc(100% + 4px);
+	z-index: 10;
+
+	padding: var(--small-padding) var(--padding);
+	border-radius: 5px;
+	background: var(--txt-dark);
+	color: #fff;
+	font-weight: 600;
+	white-space: nowrap;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+	pointer-events: none;
+}
+
+.user-time-stats-mobile-row-label.has-name-tip:hover .user-time-stats-name-tip,
+.user-time-stats-mobile-row-label.has-name-tip:focus .user-time-stats-name-tip{
+	display: block;
+}
+
+.user-time-stats-mobile-row-label.has-name-tip:focus .user-time-stats-mobile-row-label-text{
+	color: var(--txt-dark);
 }
 
 .user-time-stats-mobile-bar-track{

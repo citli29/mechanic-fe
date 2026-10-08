@@ -23,3 +23,21 @@
 	border-radius: 999px;
 	border: 1px solid var(--border);
 }
+
+/* On small screens the editing row's actions cell would stack the check/x
+   buttons (column layout above); lay them side by side, 50/50 width, with
+   the same top/bottom padding and gap as the other editing cells. */
+@media(max-width: 650px){
+	.events-page table tr.editing td.actions{
+		flex-direction: row;
+		align-items: stretch;
+
+		&::before{ display: none; }
+
+		button{
+			flex: 1 1 0;
+			width: auto;
+			height: calc(var(--line-height) + 2 * var(--small-padding));
+		}
+	}
+}
