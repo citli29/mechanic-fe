@@ -140,7 +140,8 @@ export const ProductsRequested = ({
 
 			return response.data.spr;
 		} catch (error) {
-			console.error(error);
+			// console.error also shows the backend's message as a toast.
+			console.error(error, error?.response?.data?.error);
 			return null;
 		}
 	};
@@ -219,10 +220,11 @@ export const ProductsRequested = ({
 	}
 	const handleInputChangeBlur = async (pr) => {
 		if(disabled) return;
-		const newPr = await updatePR(pr);
-		if(newPr){
-			loadPRs();
-		}
+		// Reload either way: on success to show the saved row, on a refused
+		// value (e.g. a negative quantity) to put back what is really saved
+		// instead of leaving the rejected value on screen.
+		await updatePR(pr);
+		loadPRs();
 	}
 
 	const handleInputChange = (pr) => {

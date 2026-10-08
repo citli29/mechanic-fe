@@ -400,6 +400,11 @@
 	font-weight: 700;
 }
 
+.notif-service-preview-card-date{
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+}
+
 .notif-detail-actions{
 	display: flex;
 

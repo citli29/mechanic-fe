@@ -1,0 +1,153 @@
+/* Columns: Data, Serviço, Matrícula, Cliente, Funcionário, Minutos, actions */
+.time-records-page.tr-times table tr{
+	grid-template-columns:
+		minmax(0, 0.9fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.3fr)
+		minmax(0, 1.1fr) minmax(0, 0.8fr) calc(3 * 42.59px);
+}
+
+/* Punches: … Funcionário, Início, Fim, Minutos, actions */
+.time-records-page.tr-punches table tr{
+	grid-template-columns:
+		minmax(0, 0.9fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.2fr)
+		minmax(0, 1fr) minmax(0, 0.7fr) minmax(0, 0.8fr) minmax(0, 0.7fr) calc(3 * 42.59px);
+}
+
+/* Tabs — same look as Encomendas' */
+.time-records-page .tr-tabs{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+
+		padding: var(--padding) calc(1.5 * var(--padding));
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--bg-page);
+		color: var(--txt-light);
+
+		font-weight: 700;
+		font-size: var(--font-size-small);
+		cursor: pointer;
+
+		&:hover{ background: var(--bg-page-dark); }
+
+		&.tr-tab-warn:not(.active){
+			border-color: var(--danger, #dc2626);
+			color: var(--danger, #dc2626);
+		}
+
+		&.active{
+			background: var(--primary);
+			border-color: var(--primary);
+			color: #fff;
+
+			.tr-tab-count{ background: rgba(255, 255, 255, 0.25); color: #fff; }
+		}
+	}
+}
+
+.time-records-page .tr-tab-count{
+	padding: 2px 7px;
+	border-radius: 999px;
+	background: var(--bg-page-dark);
+	color: var(--txt-dark);
+	font-size: 11px;
+}
+
+.time-records-page .filters .tr-date-filter{
+	display: flex;
+	align-items: center;
+	gap: var(--small-padding);
+	flex: 1;
+	min-width: 170px;
+
+	color: var(--txt-light);
+	font-size: var(--font-size-small);
+
+	input{ min-width: 0; }
+}
+
+.time-records-page .filters button{
+	display: flex;
+	align-items: center;
+	gap: var(--small-padding);
+	white-space: nowrap;
+}
+
+.time-records-page table th.sortable{
+	cursor: pointer;
+	gap: var(--small-padding);
+	user-select: none;
+
+	i{
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+	}
+
+	&:hover{
+		background: var(--bg-page-dark);
+		i{ color: var(--txt-light); }
+	}
+}
+
+.time-records-page table td.actions button,
+.time-records-page table td.actions a{
+	width: 42.59px;
+	height: 42.59px;
+	aspect-ratio: 1;
+}
+
+.time-records-page table td input,
+.time-records-page table td select{
+	width: 100%;
+	min-width: 0;
+}
+
+.time-records-page .tr-service{
+	display: inline-flex;
+	align-items: center;
+	gap: var(--small-padding);
+	font-weight: 600;
+}
+
+.time-records-page .tr-muted{ color: var(--txt-muted); }
+
+/* A punch still running: easy to spot in the Pontos list. */
+.time-records-page tr.tr-open td{ background: #fff7ed; }
+
+.time-records-page .tr-open-badge{
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: #f59e0b;
+	color: #fff;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.time-records-page tr.tr-new td{ background: var(--bg-page); }
+
+@media(min-width: 651px){
+	.time-records-page table td,
+	.time-records-page table th{
+		text-align: center;
+		justify-content: center;
+	}
+}
+
+@media(max-width: 650px){
+	.time-records-page .tr-tabs button{
+		flex: 1 1 auto;
+		justify-content: center;
+	}
+
+	.time-records-page table td input,
+	.time-records-page table td select{
+		width: auto;
+		flex: 0 1 60%;
+		text-align: right;
+	}
+}

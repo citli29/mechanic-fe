@@ -478,6 +478,14 @@ export default function Navbar() {
 								Tempos dos Utilizadores
 							</NavLink>
 
+							<NavLink
+								to="/time_records"
+								className={linkClass}
+								onClick={closeDropdown}
+							>
+								Registos de Tempo
+							</NavLink>
+
 							<div className="navbar-dropdown-divider" />
 
 							<NavLink

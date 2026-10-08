@@ -25,6 +25,7 @@ import ServicesNew from "./Pages/Services/ServicesNew";
 import ProductRequestsDashboard from "./Pages/ProductRequests/ProductRequestsDashboard";
 import NotificationsList from "./Pages/Notifications/NotificationsList";
 import UserTimeStats from "./Pages/UserTimes/UserTimeStats";
+import TimeRecordsList from "./Pages/UserTimes/TimeRecordsList";
 import LabManagement from "./Pages/Lab/LabManagement";
 
 import "./style/variables.css";
@@ -70,6 +71,7 @@ function App() {
 					<Route path="/services_manage" element={<ServicesManageList/>} />
 					<Route path="/lab_management" element={<LabManagement/>} />
 				<Route path="/user_times_stats" element={<UserTimeStats/>} />
+				<Route path="/time_records" element={<TimeRecordsList/>} />
 					<Route path="/users" element={<UsersList/>} />
 					<Route path="/users/:id" element={<UserShow/>} />
 					<Route path="/services_calendar" element={<ServicesCalendar/>} />

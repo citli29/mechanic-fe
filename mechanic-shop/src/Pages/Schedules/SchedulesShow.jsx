@@ -396,7 +396,7 @@ export default function SchedulesShow() {
 
 			await api.put(`/schedules/${id}`, data);
 
-			pushSuccessToast("Schedule updated successfully.");
+			pushSuccessToast("Marcação atualizada com sucesso.");
 
 			setIsEditing(false);
 
@@ -413,7 +413,7 @@ export default function SchedulesShow() {
 		try {
 			await api.delete(`/schedules/${id}`);
 
-			pushSuccessToast("Schedule deleted successfully.");
+			pushSuccessToast("Marcação apagada com sucesso.");
 
 			navigate("/schedules");
 		} catch (err) {
@@ -424,7 +424,7 @@ export default function SchedulesShow() {
 
 	function beginCreateService() {
 		if (!editing?.client_id) {
-			pushErrorToast("A client is required before creating the service.");
+			pushErrorToast("A marcação precisa de um cliente para criar o serviço.");
 			return;
 		}
 
@@ -452,7 +452,7 @@ export default function SchedulesShow() {
 		const clientId = editing?.client_id;
 
 		if (!clientId) {
-			pushErrorToast("A client is required before creating the service.");
+			pushErrorToast("A marcação precisa de um cliente para criar o serviço.");
 			return;
 		}
 
@@ -652,6 +652,7 @@ export default function SchedulesShow() {
 
 									<input
 										type="number"
+										min="0"
 										value={serviceForm.kms}
 										onChange={(e) =>
 											setServiceForm((prev) => ({ ...prev, kms: e.target.value }))

@@ -29,6 +29,9 @@ export default function ServicesManageList() {
 	const [loading, setLoading] = useState(true);
 
 	const [editing, setEditing] = useState(null);
+	// The service as it was when editing started — saveEdit sends only what
+	// differs from it.
+	const editingOriginalRef = useRef(null);
 	const [editSchedules, setEditSchedules] = useState([]);
 	const [editLoading, setEditLoading] = useState(false);
 
@@ -158,6 +161,7 @@ export default function ServicesManageList() {
 			const res = await api.get(`/services/${service.id}`);
 
 			setEditing(res.data.service);
+			editingOriginalRef.current = res.data.service;
 
 			let list = await getFreeSchedules();
 
@@ -187,7 +191,24 @@ export default function ServicesManageList() {
 
 	async function saveEdit() {
 		try {
-			await api.put(`/services/${editing.id}`, editing);
+			// Only the fields this row edits, each with the value it had when
+			// editing started — so saving here can't overwrite anything else
+			// changed on the service meanwhile (and only a change to these
+			// same fields by someone else is a conflict).
+			const original = editingOriginalRef.current || {};
+			const changes = {};
+			const originalValues = {};
+
+			for (const field of ["service_type_id", "schedule_id"]) {
+				if (String(editing[field] ?? "") !== String(original[field] ?? "")) {
+					changes[field] = editing[field] || null;
+					originalValues[field] = original[field] ?? null;
+				}
+			}
+
+			if (Object.keys(changes).length > 0) {
+				await api.patch(`/services/${editing.id}`, { changes, original: originalValues });
+			}
 
 			pushSuccessToast("Serviço atualizado com sucesso.");
 

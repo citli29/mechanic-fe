@@ -146,7 +146,8 @@ export const AppliedProducts = ({
 
 			return response.data.sap;
 		} catch (error) {
-			console.error(error);
+			// console.error also shows the backend's message as a toast.
+			console.error(error, error?.response?.data?.error);
 			return null;
 		}
 	};
@@ -335,7 +336,8 @@ export const AppliedProducts = ({
 										_ap
 									));
 									if(quantity!==""){
-										await updateAP({...ap,quantity});
+										// Refused (e.g. negative): put back what is really saved.
+										if(!(await updateAP({...ap,quantity}))) loadAPs();
 									}}
 								}/>
 							</td>

@@ -113,15 +113,23 @@ async function findMatchingAppliedProduct(serviceId, message, title) {
 	}
 }
 
+// "2026-10-08" → "08/10/2026" (a plain date, no time zone involved).
+function formatDate(value) {
+	const [year, month, day] = String(value).slice(0, 10).split("-");
+	return year && month && day ? `${day}/${month}/${year}` : value;
+}
+
+// created_at comes from SQLite's CURRENT_TIMESTAMP, which is UTC
+// ("2026-10-08 14:13:00"). Shown as-is it was an hour behind in Portuguese
+// summer time — read it as UTC and show it in the device's local time.
 function formatDateTime(value) {
 	if (!value) return "-";
 
-	const [datePart, timePart] = String(value).split(" ");
-	const [year, month, day] = (datePart || "").split("-");
+	const date = new Date(String(value).replace(" ", "T") + "Z");
+	if (isNaN(date)) return value;
 
-	if (!year || !month || !day) return value;
-
-	return `${day}/${month}/${year}${timePart ? " " + timePart.slice(0, 5) : ""}`;
+	const pad = (n) => String(n).padStart(2, "0");
+	return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 export default function NotificationsList() {
@@ -285,7 +293,9 @@ export default function NotificationsList() {
 					if (isCurrent) setPreviewLoading(false);
 				}
 			} else if (title === SAME_CAR_TITLE) {
-				const existingId = viewingNotification.message?.match(/#(\d+)/)?.[1];
+				// The other open sheet is the one in parentheses — "(#73)". The
+				// message can also mention "associação #1", which isn't a service.
+				const existingId = viewingNotification.message?.match(/\(#(\d+)\)/)?.[1];
 				const ids = [...new Set([serviceId, existingId].filter(Boolean))];
 				if (ids.length === 0) return;
 
@@ -642,6 +652,11 @@ export default function NotificationsList() {
 											>
 												<i className="fa-solid fa-arrow-up-right-from-square" />
 												<span className="notif-service-preview-card-id">Serviço #{s.id}</span>
+												{/* Type + Entrada: enough to tell two open sheets for the
+												    same car apart (e.g. Mecânica + Laboratório on purpose)
+												    from a duplicate opened by mistake. */}
+												<ServiceTypeBadge serviceTypeId={s.service_type_id} label={s.service_type_name} />
+												{s.checkin && <span className="notif-service-preview-card-date">Entrada {formatDate(s.checkin)}</span>}
 												<span className={`notif-service-preview-state ${getServiceStatus(s).stateClass}`}>
 													{getServiceStatus(s).desc}
 												</span>

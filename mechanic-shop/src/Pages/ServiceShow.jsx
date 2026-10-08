@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "./../api/axios";
+import { pushErrorToast } from "../utils/errorToast";
 
 import { ServiceHeader } from "./Service/ServiceHeader";
 import { ServiceClusterTabs } from "./Service/ServiceClusterTabs";
@@ -28,6 +29,60 @@ const NAV_SECTIONS = [
 ];
 
 const LAB_SERVICE_TYPE_NAME = "Laboratório";
+
+// The service fields the page saves. A save sends only the ones that
+// changed since the last known server copy, each with the value it had
+// there (PATCH /services/{id}) — so a save never overwrites a field the
+// user didn't touch (e.g. kms changed meanwhile on another service of the
+// same association), and only a change to the *same* field by someone
+// else counts as a conflict.
+const SAVED_FIELDS = [
+	"client_id", "kms", "checkin", "checkout", "malfunction", "service",
+	"car_id", "schedule_id", "note", "is_finished", "office_check",
+	"service_type_id", "r_name", "r_phone", "checkout_predict", "signed_service",
+];
+
+// For the conflict toast.
+const FIELD_LABELS = {
+	client_id: "Cliente", kms: "Kms", checkin: "Entrada", checkout: "Saída",
+	malfunction: "Descrição de Avaria", service: "Serviço Realizado", car_id: "Viatura",
+	schedule_id: "Marcação", note: "Notas/Observações", is_finished: "Terminado",
+	office_check: "Validado", service_type_id: "Tipo de Serviço", r_name: "Nome",
+	r_phone: "Telemóvel", checkout_predict: "Prev. Saída", signed_service: "Serviço a Realizar",
+};
+
+// null / undefined / "" all mean "empty" (the backend stores them all as
+// NULL), numbers and their text are the same value (an input gives "999",
+// the server 999), and true/false match 1/0.
+// The save sent when leaving a service (switching association tab or
+// navigating away). Module-level so the next service page — this one with a
+// new id, or a fresh mount — waits for it before loading: otherwise it can
+// load the old values (the save also syncs shared fields to the rest of the
+// association) and its next edit gets a false conflict.
+let pendingLeaveSave = Promise.resolve();
+
+function sameFieldValue(a, b) {
+	const norm = (v) => {
+		if (v === null || v === undefined || v === "") return "";
+		if (typeof v === "boolean") return v ? "1" : "0";
+		return String(v);
+	};
+	return norm(a) === norm(b);
+}
+
+function diffService(base, next) {
+	const changes = {};
+	const original = {};
+
+	for (const field of SAVED_FIELDS) {
+		if (!sameFieldValue(base?.[field], next?.[field])) {
+			changes[field] = next[field];
+			original[field] = base?.[field] ?? null;
+		}
+	}
+
+	return { changes, original, isEmpty: Object.keys(changes).length === 0 };
+}
 
 export default function ServiceShow2() {
 	const { id } = useParams();
@@ -59,6 +114,21 @@ export default function ServiceShow2() {
 	const [service, setService] = useState(defaultService);
 	const [isAllowedEditing, setIsAllowedEditing] = useState(false);
 	const lastSavedServiceRef = useRef(null);
+
+	// Autosave bookkeeping, so leaving a service (another association tab,
+	// another page) never drops the last edits:
+	// - unsavedServiceRef: the latest edit still waiting on the debounce
+	//   timer (saveTimerRef) — flushed right away when leaving.
+	// - inFlightSaveRef / serverServiceRef: the save currently on its way
+	//   and the newest copy of the service the server returned, so that
+	//   flush waits for it and only sends what's still unsaved.
+	// - activeIdRef: the service this page is showing now — a save answer
+	//   for any other service is ignored instead of being applied here.
+	const unsavedServiceRef = useRef(null);
+	const saveTimerRef = useRef(null);
+	const inFlightSaveRef = useRef(null);
+	const serverServiceRef = useRef(null);
+	const activeIdRef = useRef(id);
 	const [activeSection, setActiveSection] = useState(NAV_SECTIONS[0].id);
 	const [saveStatus, setSaveStatus] = useState("idle"); // idle | pending | saving | saved | error | conflict
 	const [labServiceTypeId, setLabServiceTypeId] = useState(null);
@@ -72,6 +142,8 @@ export default function ServiceShow2() {
 	}, [id]);
 
 	const [clusterMates, setClusterMates] = useState([]);
+	const clusterMatesRef = useRef(clusterMates);
+	clusterMatesRef.current = clusterMates;
 	const clusterMatesRequestIdRef = useRef(null);
 
 	async function loadClusterMates() {
@@ -79,6 +151,7 @@ export default function ServiceShow2() {
 		clusterMatesRequestIdRef.current = requestId;
 
 		try {
+			await pendingLeaveSave;
 			const response = await api.get(`/services/${requestId}/associations`);
 			if (clusterMatesRequestIdRef.current === requestId) {
 				setClusterMates(response.data.cluster_mate_list || []);
@@ -210,6 +283,9 @@ export default function ServiceShow2() {
 
 	async function loadService(isCancelled = () => false) {
 		try {
+			await pendingLeaveSave;
+			if (isCancelled()) return;
+
 			const response = await api.get(`/services/${id}`);
 
 			if (isCancelled()) return;
@@ -223,66 +299,205 @@ export default function ServiceShow2() {
 			// reference, so the autosave effect below sees no real change
 			// to save for this load.
 			lastSavedServiceRef.current = merged;
+			serverServiceRef.current = merged;
 			setService(merged);
 		} catch (error) {
 			if (!isCancelled()) console.error(error);
 		}
 	}
 
-	const putService = async (service) =>{
-		if(service?.id){
-			const response = await api.put(`services/${service.id}`,service)
-			return typeof response.data.service !== "undefined" ? response.data.service : null;
+	// Sends only what differs between `base` (the last known server copy)
+	// and `next`. Returns the updated service, or null if nothing changed.
+	const patchService = async (base, next) => {
+		const { changes, original, isEmpty } = diffService(base, next);
+		if (isEmpty || !next?.id) return null;
+
+		const response = await api.patch(`services/${next.id}`, { changes, original });
+		const saved = response.data.service ? { ...defaultService, ...response.data.service } : null;
+		if (saved) serverServiceRef.current = saved;
+		return saved;
+	};
+
+	// After a save (or a failed one), the page takes the server's copy as
+	// its new baseline but keeps the user's own unsaved edits on top:
+	// anything typed after `sent` was sent. A field that was sent takes
+	// the server's value — what was stored, which can differ from what was
+	// typed (kms "0" is stored as empty); keeping the typed value there
+	// would look unsaved forever and resend it in a loop. The exception is
+	// a conflict, where nothing was written: pass `unsavedExcept` (the
+	// conflicting fields) to keep the other sent changes for the next save.
+	function rebaseOnServer(server, base, sent, current, unsavedExcept = null) {
+		const baseline = { ...defaultService, ...server };
+		const sentChanges = diffService(base, sent).changes;
+		let result = baseline;
+
+		for (const field of SAVED_FIELDS) {
+			const editedAfterSend = !sameFieldValue(current[field], sent[field]);
+			const sentAndKept = unsavedExcept !== null && field in sentChanges && !unsavedExcept.includes(field);
+
+			if ((editedAfterSend || sentAndKept) && !sameFieldValue(current[field], baseline[field])) {
+				if (result === baseline) result = { ...baseline };
+				result[field] = current[field];
+			}
 		}
-		return defaultService;
+
+		// If nothing of the user's is left on top, `result` IS the baseline,
+		// so the autosave effect sees nothing more to save.
+		return { baseline, result };
 	}
+
+	// Sends the edit still waiting on the debounce timer immediately (after
+	// any save already in flight). Its answer isn't applied to the page —
+	// by then it shows another service or is gone.
+	function flushUnsavedService() {
+		clearTimeout(saveTimerRef.current);
+
+		const pending = unsavedServiceRef.current;
+		unsavedServiceRef.current = null;
+		if (!pending?.id) return;
+
+		const baseAtFlush = lastSavedServiceRef.current;
+		const previous = inFlightSaveRef.current ?? Promise.resolve();
+
+		pendingLeaveSave = previous
+			.catch(() => {})
+			.then(() => {
+				const known = serverServiceRef.current;
+				const base = String(known?.id) === String(pending.id) ? known : baseAtFlush;
+				return patchService(base, pending);
+			})
+			.catch((error) => console.error(error, error?.response?.data?.error));
+	}
+
+	useEffect(() => {
+		activeIdRef.current = id;
+
+		return () => {
+			activeIdRef.current = null;
+			flushUnsavedService();
+			// The status belonged to the service being left.
+			setSaveStatus("idle");
+		};
+	}, [id]);
+
+	// Closing or reloading the tab inside the debounce window: ask first.
+	useEffect(() => {
+		function onBeforeUnload(e) {
+			if (!unsavedServiceRef.current) return;
+			e.preventDefault();
+			e.returnValue = "";
+		}
+
+		window.addEventListener("beforeunload", onBeforeUnload);
+		return () => window.removeEventListener("beforeunload", onBeforeUnload);
+	}, []);
 
 
 	useEffect(() => {
 		const sentSnapshot = service;
 
+		const isStale = () => String(sentSnapshot.id) !== String(activeIdRef.current);
+
 		const f = async () =>{
+			if (unsavedServiceRef.current === sentSnapshot) unsavedServiceRef.current = null;
+
+			const base = lastSavedServiceRef.current;
+			if (diffService(base, sentSnapshot).isEmpty) {
+				// Only fields the page doesn't save changed — nothing to send.
+				lastSavedServiceRef.current = sentSnapshot;
+				setSaveStatus("idle");
+				return;
+			}
+
 			setSaveStatus("saving");
 
+			const request = patchService(base, sentSnapshot);
+			inFlightSaveRef.current = request;
+
 			try {
-				const s = await putService(sentSnapshot);
+				const s = await request;
 
-				if(!s) {
-					setSaveStatus("error");
-					loadService();
-				} else {
-					setSaveStatus("saved");
+				// Answer for a service this page no longer shows (switched
+				// tab / left) — don't apply it here.
+				if (isStale()) return;
 
-					// Header edits (checkout, kms, etc.) sync to the rest of
-					// the cluster server-side (DB trigger) — refresh the tab
-					// bar so their status/colors reflect that immediately,
-					// not just on the next full page load.
+				setSaveStatus("saved");
+
+				// Saída syncs to the rest of the association server-side (DB
+				// trigger) and changes their status — refresh the tab bar so
+				// it shows straight away. Other fields don't change what the
+				// tabs show, so no extra request on every save.
+				if (clusterMatesRef.current.length > 0 && !sameFieldValue(base.checkout, sentSnapshot.checkout)) {
 					loadClusterMates();
-
-					setService(current => {
-						if (current === sentSnapshot) {
-							// Nothing changed while this save was in flight —
-							// safe to fully adopt the server's response.
-							lastSavedServiceRef.current = s;
-							return s;
-						}
-
-						// The user kept typing while this save was in
-						// flight — only bring the version number up to
-						// date, don't clobber their newer edits with the
-						// (now stale) snapshot we just sent. Since the ref
-						// below still won't match `current`, the debounce
-						// effect naturally schedules another save with the
-						// newer content and the now-correct version.
-						lastSavedServiceRef.current = { ...sentSnapshot, version: s.version };
-						return { ...current, version: s.version };
-					});
 				}
-			} catch (error) {
-				console.error(error, error?.response?.data?.error);
 
-				setSaveStatus(error?.response?.status === 409 ? "conflict" : "error");
-				loadService();
+				setService(current => {
+					const { baseline, result } = rebaseOnServer(s, base, sentSnapshot, current);
+					lastSavedServiceRef.current = baseline;
+					return result;
+				});
+			} catch (error) {
+				const data = error?.response?.data;
+				const isConflict = error?.response?.status === 409 && data?.service;
+
+				if (isConflict) {
+					const labels = (data.conflict_fields || []).map((f) => FIELD_LABELS[f] || f).join(", ");
+					pushErrorToast(`${labels || "Um campo"} foi alterado por outro utilizador entretanto — ficou o valor dele. As suas outras alterações foram guardadas.`);
+				} else {
+					console.error(error, error?.response?.data?.error);
+				}
+
+				if (isStale()) return;
+
+				if (isConflict) {
+					// Someone else changed one of these fields: theirs is
+					// kept for those fields only — the user's other edits
+					// stay and get saved on the next round.
+					setSaveStatus("conflict");
+					serverServiceRef.current = { ...defaultService, ...data.service };
+					setService(current => {
+						const { baseline, result } = rebaseOnServer(data.service, base, sentSnapshot, current, data.conflict_fields || []);
+						lastSavedServiceRef.current = baseline;
+						return result;
+					});
+					return;
+				}
+
+				// Rejected (e.g. a rule like kms required to finish). The server
+				// can't say which field broke the rule, so when the save had
+				// several, each is retried on its own: the ones that go
+				// through stay, only the failing ones go back to the server's
+				// value. Anything typed since is kept either way.
+				setSaveStatus("error");
+				const changedFields = Object.keys(diffService(base, sentSnapshot).changes);
+
+				if (changedFields.length > 1) {
+					let known = base;
+
+					for (const field of changedFields) {
+						try {
+							const saved = await patchService(known, { ...known, [field]: sentSnapshot[field] });
+							if (saved) known = saved;
+						} catch {
+							// This one broke the rule — it takes the server's value below.
+						}
+					}
+				}
+
+				try {
+					const fresh = (await api.get(`/services/${sentSnapshot.id}`)).data.service;
+					if (isStale()) return;
+					serverServiceRef.current = { ...defaultService, ...fresh };
+					setService(current => {
+						const { baseline, result } = rebaseOnServer(fresh, base, sentSnapshot, current);
+						lastSavedServiceRef.current = baseline;
+						return result;
+					});
+				} catch {
+					if (!isStale()) loadService();
+				}
+			} finally {
+				if (inFlightSaveRef.current === request) inFlightSaveRef.current = null;
 			}
 		}
 
@@ -291,13 +506,18 @@ export default function ServiceShow2() {
 		// No real change since the last load/save (covers the initial
 		// load and React StrictMode's extra dev-mode effect re-run) —
 		// nothing to save.
-		if (lastSavedServiceRef.current === service) return;
+		if (lastSavedServiceRef.current === service) {
+			unsavedServiceRef.current = null;
+			return;
+		}
 
 		setSaveStatus("pending");
+		unsavedServiceRef.current = service;
 
 		const timer = setTimeout(() => {
 			f();
 		}, 500);
+		saveTimerRef.current = timer;
 
 		return () => clearTimeout(timer);
 	}, [service]);
@@ -351,30 +571,34 @@ export default function ServiceShow2() {
 			default: return "";
 		}
 	}*/
-	const handleClickCheckIsFinished =async (checked) => {
+	// Saves one field right away (bypassing the debounce), keeping any other
+	// edit still waiting to be autosaved.
+	const saveFieldNow = async (field, value) => {
+		const base = lastSavedServiceRef.current;
+		if (!base?.id) return;
+
 		try {
-			const s = await putService({...service,is_finished: checked});
-			if(s){
-				setService(s);
-			}
+			const s = await patchService(base, { ...base, [field]: value });
+			if (!s || String(s.id) !== String(activeIdRef.current)) return;
+
+			setService(current => {
+				const { baseline, result } = rebaseOnServer(s, base, base, current);
+				lastSavedServiceRef.current = baseline;
+				return result;
+			});
+			loadClusterMates();
 		} catch (error) {
 			console.error(error, error?.response?.data?.error);
 		}
-	}
+	};
+
+	const handleClickCheckIsFinished = (checked) => saveFieldNow("is_finished", checked);
 
 	// Bypasses the debounced autosave — a quick "leave the page right after
 	// checking it" is common enough with this specific field that waiting
 	// out the debounce risks losing the change entirely.
-	const handleOfficeCheckChange = async (checked) => {
-		try {
-			const s = await putService({...service, office_check: checked});
-			if(s){
-				setService(s);
-			}
-		} catch (error) {
-			console.error(error, error?.response?.data?.error);
-		}
-	}
+	const handleOfficeCheckChange = (checked) => saveFieldNow("office_check", checked);
+
 	const [apReload, setApReload] = useState(false);
 	const [aps, setAps] = useState([]);
 
@@ -611,7 +835,7 @@ export default function ServiceShow2() {
 								))}
 							</tbody>
 						</table>
-						<UserTimes key={`ut-${id}`} id={id} copy_uts={setUts} disabled={isFinished}/>
+						<UserTimes key={`ut-${id}`} id={id} copy_uts={setUts} disabled={isFinished} checkin={service.checkin} checkout={service.checkout}/>
 						<UserTimePunches key={`utp-${id}`} id={id} copy_uts={setUtps} disabled={isFinished}/>
 					</div>
 				</div>

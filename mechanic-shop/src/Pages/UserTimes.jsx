@@ -4,7 +4,9 @@ import api from "./../api/axios";
 export const UserTimes = ({
 	id,
 	copy_uts,
-	disabled
+	disabled,
+	checkin,
+	checkout,
 }) =>{
 
 	const formatDate = (date) => {
@@ -104,9 +106,19 @@ export const UserTimes = ({
 		}catch(error){console.error(error, error.response.data.error)}
 	}
 
+	// Today, unless that's outside the service's dates (a time entry must be
+	// between Entrada and Saída, so today would only be refused): then the
+	// nearest date that is allowed.
+	const defaultDate = () => {
+		let date = formatDate(new Date());
+		if (checkin && date < checkin) date = checkin;
+		if (checkout && date > checkout) date = checkout;
+		return date;
+	}
+
 	const handleClickStartAddUT = () => {
 		if(disabled) return;
-		setNewUserTime(emptyUT);
+		setNewUserTime({ ...emptyUT, date: defaultDate() });
 		setIsAddingUT(true);
 	}
 	const handleClickStartAddUTCancel = () => {
@@ -187,7 +199,7 @@ export const UserTimes = ({
 							<td className="ut-minutes">
 									<span>Tempo</span>
 									<input 
-										type="number" 
+										type="number" min="1" max="1440" 
 										value={ut?.minutes??""} 
 										disabled={isEditing!==ut.sut_id}
 										onChange={(e) => {
@@ -265,7 +277,7 @@ export const UserTimes = ({
 							<td className="ut-minutes">
 								<span>Tempo</span>
 								<input 
-									type="number" 
+									type="number" min="1" max="1440" 
 									value={newUserTime?.minutes??""} 
 									onChange={(e) => {
 										const mins = e.target.value.trim()!==""?Number(e.target.value):"";

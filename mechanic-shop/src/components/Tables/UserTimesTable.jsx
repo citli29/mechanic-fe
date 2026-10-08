@@ -189,17 +189,17 @@ export default function UserTimesTable({
 
 	function validateUserTime(userTime) {
 		if (!userTime.user_id) {
-			showMessage?.("error", "Please select a user.");
+			showMessage?.("error", "Escolha um funcionário.");
 			return false;
 		}
 
 		if ( userTime.minutes === "" || Number(userTime.minutes) <= 0) {
-			showMessage?.( "error", "Minutes must be greater than 0.");
+			showMessage?.( "error", "Os minutos têm de ser maiores que 0.");
 			return false;
 		}
 
 		if (!userTime.date) {
-			showMessage?.( "error", "Date is required.");
+			showMessage?.( "error", "A data é obrigatória.");
 			return false;
 		}
 
@@ -208,12 +208,12 @@ export default function UserTimesTable({
 
 	function validateUserTimePunch(userTimePunch) {
 		if (!userTimePunch.user_id) {
-			showMessage?.( "error", "Please select a user.");
+			showMessage?.( "error", "Escolha um funcionário.");
 			return false;
 		}
 
 		if (!userTimePunch.date) {
-			showMessage?.( "error", "Date is required."); 
+			showMessage?.( "error", "A data é obrigatória."); 
 			return false;
 		}
 		return true;
@@ -232,7 +232,7 @@ export default function UserTimesTable({
 				}
 			);
 
-			showMessage?.( "success", "User time created successfully.");
+			showMessage?.( "success", "Tempo adicionado com sucesso.");
 			setCreating(false);
 			setNewUserTime(emptyUserTime);
 
@@ -259,7 +259,7 @@ export default function UserTimesTable({
 				}
 			);
 
-			showMessage?.( "success", "User time updated successfully.");
+			showMessage?.( "success", "Tempo atualizado com sucesso.");
 			setEditing(null);
 
 			await loadUserTimes();
@@ -274,7 +274,7 @@ export default function UserTimesTable({
 
 		try {
 			await api.delete( `/services/${serviceId}/user_times/${userTime.sut_id}`);
-			showMessage?.( "success", "User time deleted successfully.");
+			showMessage?.( "success", "Tempo apagado com sucesso.");
 
 			if (editing?.sut_id === userTime.sut_id) { setEditing(null); }
 

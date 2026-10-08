@@ -45,13 +45,15 @@
 		display: flex;
 
 		span{ text-align: left; }
-		span:not(:first-child){ font-weight:350; }
+		/* Phone / NIF never split across lines ("+351 912 345 / 678") */
+		span:not(:first-child){ font-weight:350; white-space: nowrap; }
+		span:not(:first-child) i{ margin-right: var(--small-padding); }
 		span:first-child{
 			font-weight: bold;
 			min-width: 150px;
 		}
 
-		gap: var(--small-padding);
+		gap: var(--big-padding);
 	}
 
 	li {
@@ -110,6 +112,12 @@
 
 			span:first-child i{
 				font-size: calc(1.5*var(--font-size-big));
+			}
+
+			/* Phone / NIF keep one line; a long name wraps instead */
+			span:nth-child(n+3){
+				white-space: nowrap;
+				flex-shrink: 0;
 			}
 		}
 

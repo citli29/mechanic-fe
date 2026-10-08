@@ -172,7 +172,7 @@ export default function SchedulesNew() {
 
 			const res = await api.post("/schedules", data);
 
-			pushSuccessToast("Schedule created successfully.");
+			pushSuccessToast("Marcação criada com sucesso.");
 
 			navigate(`/schedules/${res.data.schedule.id}`);
 		} catch (err) {

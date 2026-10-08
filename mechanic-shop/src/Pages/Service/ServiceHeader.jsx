@@ -199,6 +199,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 					<label htmlFor="service-kms">Kms.</label>
 					<input
 						type="number"
+						min="0"
 						id="service-kms"
 						value={service.kms??""}
 						onChange={(e) => onServiceChange("kms", e.target.value) }
@@ -277,7 +278,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 
 				<div className="lock-start no-border" id="lock-start">
 					<label htmlFor="lock-start"></label>
-					<button className="accent" disabled={finished} onClick={(e)=>{onLockChange()}}><i className={`fa-solid ${fieldsLocked?"fa-lock":"fa-unlock"}`} /></button>
+					<button className="accent" title={fieldsLocked?"Desbloquear campos":"Bloquear campos"} aria-label={fieldsLocked?"Desbloquear campos":"Bloquear campos"} disabled={finished} onClick={(e)=>{onLockChange()}}><i className={`fa-solid ${fieldsLocked?"fa-lock":"fa-unlock"}`} /></button>
 				</div>
 		</>
 		);
@@ -364,6 +365,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 						<label htmlFor="service-kms">Kms.</label>
 						<input
 							type="number"
+							min="0"
 							id="service-kms"
 							value={service.kms??""}
 							onChange={(e) => onServiceChange("kms", e.target.value) }
@@ -425,7 +427,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 
 						<div className="lock-start no-border" id="lock-start">
 							<label htmlFor="lock-start"></label>
-							<button className="accent" disabled={finished} onClick={(e)=>{onLockChange();}}><i className={`fa-solid ${fieldsLocked?"fa-lock":"fa-unlock"}`} /></button>
+							<button className="accent" title={fieldsLocked?"Desbloquear campos":"Bloquear campos"} aria-label={fieldsLocked?"Desbloquear campos":"Bloquear campos"} disabled={finished} onClick={(e)=>{onLockChange();}}><i className={`fa-solid ${fieldsLocked?"fa-lock":"fa-unlock"}`} /></button>
 						</div>
 					</div>
 				</div>

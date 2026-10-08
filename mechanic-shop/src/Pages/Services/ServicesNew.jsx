@@ -474,6 +474,7 @@ export default function ServicesNew() {
 								<input
 									id="kms"
 									type="number"
+									min="0"
 									name="kms"
 									value={editing.kms}
 									onChange={updateField}

@@ -28,8 +28,16 @@ const SYNCED_FIELDS = [
 	{ key: "schedule_id", label: "Marcação" },
 ];
 
-function conflictSideLabel(id, hasAssociation) {
-	return hasAssociation ? `Associação #${id}` : `Serviço #${id}`;
+// An association is shown by its own number (cluster_nr), a lone service by
+// its id — never "Associação #<service id>".
+function conflictSideLabel(id, clusterNr) {
+	return clusterNr ? `Associação #${clusterNr}` : `Serviço #${id}`;
+}
+
+// The association number of a service, from its mates' rows (each carries
+// cluster_nr); null when it isn't in one.
+function clusterNrOf(tabs) {
+	return (tabs || []).find((tab) => tab.cluster_nr != null)?.cluster_nr ?? null;
 }
 
 function formatDate(date) {
@@ -155,12 +163,11 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 	const [newMalfunction, setNewMalfunction] = useState("");
 	const [newSignedService, setNewSignedService] = useState("");
 	const [creating, setCreating] = useState(false);
-	// Once currentId already belongs to an association, every member shares
-	// the same synced fields, so there's nothing to choose between — default
-	// straight to it instead of making the user pick among identical cards.
-	const [selectedImportId, setSelectedImportId] = useState(() => (
-		clusterTabs.length > 1 ? currentId : null
-	));
+	// There is only ever one card to import from: this service (alone) or
+	// its association (every member shares the synced fields). Selected
+	// from the start so "Importar e Criar Serviço" isn't disabled until the
+	// user happens to click the only option.
+	const [selectedImportId, setSelectedImportId] = useState(currentId);
 	const [importing, setImporting] = useState(false);
 
 	const [serviceTypes, setServiceTypes] = useState([]);
@@ -267,7 +274,7 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 
 			const currentFull = currentResponse.data.service;
 			const selectedFull = selectedResponse.data.service;
-			const selectedHasAssociation = (selectedAssociationsResponse.data.cluster_mate_list || []).length > 0;
+			const selectedClusterNr = clusterNrOf(selectedAssociationsResponse.data.cluster_mate_list);
 
 			const differingFields = SYNCED_FIELDS.filter(
 				(f) => (currentFull[f.key] ?? "") !== (selectedFull[f.key] ?? "")
@@ -283,8 +290,8 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 					// (if any) — whichever side already belongs to an
 					// association affects every member there, not just the
 					// one service, so the chooser labels it accordingly.
-					currentHasAssociation: clusterTabs.length > 1,
-					selectedHasAssociation,
+					currentClusterNr: clusterTabs.length > 1 ? clusterNrOf(clusterTabs) : null,
+					selectedClusterNr,
 				});
 				setLinkingId(null);
 				return;
@@ -303,36 +310,14 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 		setError("");
 
 		try {
-			// clusterTabs (current service + its mates) already carries
-			// cluster_nr once there's at least one mate — only hit the
-			// endpoint when the page hasn't loaded that yet.
-			let clusterNr = clusterTabs.find((tab) => tab.service_id !== currentId && tab.cluster_nr != null)?.cluster_nr ?? null;
-
-			if (clusterNr == null) {
-				const matesResponse = await api.get(`/services/${currentId}/associations`);
-				const mates = matesResponse.data.cluster_mate_list || [];
-				clusterNr = mates[0]?.cluster_nr ?? null;
-			}
-
+			// One request, one transaction on the backend: link, then keep
+			// the chosen side's (sourceFull's) header values for the whole
+			// association — so a dropped connection can't leave it linked
+			// but holding the other side's values.
 			await api.post(`/services/${currentId}/associations`, {
 				service_id: service.id,
-				cluster_nr: clusterNr,
+				source_service_id: sourceFull.id,
 			});
-
-			// The insert trigger syncs the shared fields from whichever
-			// cluster member has the lowest id, which isn't necessarily the
-			// side the user chose above — force it explicitly by re-saving
-			// the chosen source's own (pre-association) values, which the
-			// update trigger then cascades to every member, including the
-			// one we just joined. That same insert-time sync just touched
-			// sourceFull's own row too (even when it's the one "winning"),
-			// bumping its optimistic-lock version — re-fetch first so this
-			// PUT doesn't get rejected as a stale write.
-			const freshSourceResponse = await api.get(`/services/${sourceFull.id}`);
-			const freshSource = freshSourceResponse.data.service;
-			const syncedValues = Object.fromEntries(SYNCED_FIELDS.map((f) => [f.key, sourceFull[f.key]]));
-
-			await api.put(`/services/${sourceFull.id}`, { ...freshSource, ...syncedValues });
 
 			setPendingAssociate(null);
 			onLinked();
@@ -349,21 +334,24 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 		client_id, car_id, malfunction, signed_service,
 		kms, checkin, checkout_predict, r_name, r_phone,
 	}) {
-		const createResponse = await api.post("/services", {
-			client_id,
-			car_id: car_id || null,
-			service_type_id: newTypeId,
-			checkin: checkin || formatDate(new Date()),
-			malfunction,
-			signed_service,
-			kms: kms || null,
-			checkout_predict: checkout_predict || null,
-			r_name: r_name || null,
-			r_phone: r_phone || null,
+		// Created and linked in one request (one transaction on the
+		// backend) — a failed link can't leave a loose new service behind,
+		// so retrying can't create a duplicate.
+		const response = await api.post(`/services/${currentId}/associations`, {
+			new_service: {
+				client_id,
+				car_id: car_id || null,
+				service_type_id: newTypeId,
+				checkin: checkin || formatDate(new Date()),
+				malfunction,
+				signed_service,
+				kms: kms || null,
+				checkout_predict: checkout_predict || null,
+				r_name: r_name || null,
+				r_phone: r_phone || null,
+			},
 		});
-		const newService = createResponse.data.service;
-
-		await api.post(`/services/${currentId}/associations`, { service_id: newService.id });
+		const newService = response.data.service;
 
 		onLinked();
 		onClose();
@@ -507,8 +495,8 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 				)}
 
 				{mode === "associate" && pendingAssociate && (() => {
-					const currentLabel = conflictSideLabel(currentId, pendingAssociate.currentHasAssociation);
-					const selectedLabel = conflictSideLabel(pendingAssociate.service.id, pendingAssociate.selectedHasAssociation);
+					const currentLabel = conflictSideLabel(currentId, pendingAssociate.currentClusterNr);
+					const selectedLabel = conflictSideLabel(pendingAssociate.service.id, pendingAssociate.selectedClusterNr);
 					const hasVehicleMismatch = VEHICLE_FIELDS.some(
 						(field) => pendingAssociate.currentFull[field.key] !== pendingAssociate.selectedFull[field.key]
 					);
@@ -610,7 +598,7 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 							{clusterTabs.length > 1 ? (
 								<ServiceOptionCard
 									service={clusterTabs.find((tab) => tab.service_id === currentId) ?? clusterTabs[0]}
-									idLabel={`Associação #${currentId}`}
+									idLabel={conflictSideLabel(currentId, clusterNrOf(clusterTabs))}
 									disabled={importing}
 									selected={selectedImportId === currentId}
 									onClick={() => setSelectedImportId(currentId)}
@@ -620,6 +608,7 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 									<ServiceOptionCard
 										key={tab.service_id}
 										service={tab}
+										idLabel={conflictSideLabel(tab.service_id, null)}
 										disabled={importing}
 										selected={selectedImportId === tab.service_id}
 										onClick={() => setSelectedImportId((prev) => (prev === tab.service_id ? null : tab.service_id))}
@@ -678,6 +667,7 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 								<input
 									id="service-cluster-add-kms"
 									type="number"
+									min="0"
 									value={newKms}
 									disabled={creating}
 									onChange={(e) => setNewKms(e.target.value)}

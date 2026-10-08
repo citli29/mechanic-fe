@@ -1833,7 +1833,7 @@
 .service-products-requested-card{
 	table{
 		tr{
-			grid-template-columns: repeat(3, 3fr) repeat(3, 2fr) repeat(2,42.59px)!important;
+			grid-template-columns: repeat(3, minmax(0, 3fr)) repeat(3, minmax(max-content, 2fr)) repeat(2,42.59px)!important;
 			td{
 				padding: var(--padding);
 			}
