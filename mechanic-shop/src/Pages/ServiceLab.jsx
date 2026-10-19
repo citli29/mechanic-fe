@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "./../api/axios";
+import { buildLabSummary } from "../utils/labSummary";
 
-export const ServiceLab = ({ id, disabled }) => {
+export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 
 	const [labItems, setLabItems] = useState([]);
 	const [labActionValues, setLabActionValues] = useState([]);
@@ -45,6 +46,12 @@ export const ServiceLab = ({ id, disabled }) => {
 	}, []);
 
 	useEffect(() => { loadSummary(); }, [id]);
+
+	// Every lab change reloads these two lists, so the service page's
+	// generated text (above Descrição de Avaria) stays in sync.
+	useEffect(() => {
+		onSummaryChange?.(buildLabSummary(labItems, labActionValues, labPropertyValuesByLabItem, tabledValuesByAction));
+	}, [labItems, labActionValues, labPropertyValuesByLabItem, tabledValuesByAction, onSummaryChange]);
 
 	async function loadSummary() {
 		try {

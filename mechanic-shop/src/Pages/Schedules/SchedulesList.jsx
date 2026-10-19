@@ -6,15 +6,9 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/SchedulesList.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
+import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
 
 const PER_PAGE = 10;
-
-const SERVICE_TYPE_COLORS = ["#2563eb", "#e8aa2e", "#ba2323", "#22c55e", "#a3540a", "#e823d1"];
-
-function getServiceTypeAccent(serviceTypeId) {
-	if (!serviceTypeId) return "#cbd5e1";
-	return SERVICE_TYPE_COLORS[serviceTypeId % SERVICE_TYPE_COLORS.length];
-}
 
 const SORTABLE_COLUMNS = [
 	{ column: "date", label: "Data" },
@@ -392,7 +386,7 @@ export default function SchedulesList() {
 				{schedules.map((schedule) => {
 					const status = getStatusInfo(schedule);
 					const isExpanded = expandedIds.has(schedule.id);
-					const typeAccent = getServiceTypeAccent(schedule.service_type_id);
+					const typeAccent = getServiceTypeAccent(schedule.service_type_id, schedule.service_type_name);
 
 					return (
 						<div

@@ -1126,6 +1126,12 @@
 						height: calc(100% - 2px);
 						background: var(--bg-page);
 					}
+					/* The whole cell darkens on hover, so a button has to
+					   fill all of it — the 2px left by the rule above was a
+					   dead strip that looked clickable but wasn't. */
+					button{
+						height: 100%;
+					}
 					input{
 						outline: none;
 					}
@@ -1204,6 +1210,11 @@
 }
 .service-applied-products-card .body table td input{
 	text-overflow: ellipsis;
+}
+/* Delete button fills its cell — with the last-column padding it sat
+   inside an 8px border that highlighted on hover but didn't click. */
+.service-applied-products-card .body table tr td.p-cancel{
+	padding: 0;
 }
 
 /* Phone: one compact block per product — name on top with ref and type
@@ -1348,7 +1359,7 @@
 			}
 		}
 
-		.p-cancel, .p-edit, .p-edit-confirm, .utp-cancel, .utp-edit, .utp-edit-confirm{
+		.p-cancel, .p-edit, .p-edit-confirm, .p-confirm, .utp-cancel, .utp-edit, .utp-edit-confirm{
 			padding: 0;
 		}
 	}
@@ -1922,4 +1933,68 @@
 			}
 		}
 	}
+}
+
+/* Generated from the lab items/actions/properties — read-only, sits
+   above Descrição de Avaria so the lab work is visible at a glance. */
+.lab-summary{
+	margin: 0;
+	padding: var(--padding) var(--padding) var(--padding) calc(var(--big-padding) + var(--padding));
+	border: 1px solid var(--border);
+	border-bottom: none;
+	border-radius: 5px 5px 0 0;
+	background: var(--bg-page);
+	color: var(--txt-light);
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: calc(var(--padding) / 2);
+
+	/* Joined to the Descrição de Avaria field right under it — cancels
+	   the card body's flex gap. Not in the print summary, which has none. */
+	.service-signed-info-card &{
+		margin-bottom: calc(-1 * var(--big-padding));
+	}
+
+	/* Same look as the floating labels on the text fields. */
+	.lab-summary-title{
+		margin-left: calc(-1 * var(--big-padding));
+		margin-bottom: calc(var(--padding) / 2);
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		color: var(--txt-dark);
+	}
+
+	.lab-summary-item{
+		font-weight: 600;
+		margin-left: calc(-1 * var(--big-padding));
+
+		i{
+			width: 1.2em;
+			text-align: center;
+		}
+	}
+	.lab-summary-properties{
+		margin-left: var(--padding);
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+	}
+	ul{
+		margin: 2px 0 0;
+		padding-left: var(--big-padding);
+
+		li{
+			display: list-item;
+			list-style: disc;
+		}
+	}
+	.lab-summary-value{
+		color: var(--txt-muted);
+	}
+}
+
+/* The lab summary above holds the "Descrição de Avaria" title, so the
+   field drops its label and the room left at the top for it. */
+.service-signed-info-card .text-entry.no-label textarea{
+	padding-top: var(--padding);
 }

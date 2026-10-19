@@ -132,6 +132,7 @@ export default function ServiceShow2() {
 	const [activeSection, setActiveSection] = useState(NAV_SECTIONS[0].id);
 	const [saveStatus, setSaveStatus] = useState("idle"); // idle | pending | saving | saved | error | conflict
 	const [labServiceTypeId, setLabServiceTypeId] = useState(null);
+	const [labSummary, setLabSummary] = useState([]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -608,6 +609,7 @@ export default function ServiceShow2() {
 	const isLabService = labServiceTypeId != null
 		&& Number(service.service_type_id) === Number(labServiceTypeId);
 
+	const showLabSummary = isLabService && labSummary.length > 0;
 	const visibleNavSections = NAV_SECTIONS.filter((section) => !section.labOnly || isLabService);
 
 	return(
@@ -696,8 +698,13 @@ export default function ServiceShow2() {
 						<h1>Serviço Acordado</h1>
 					</div>
 					<div className="body">
-						<div className="text-entry">
-							<label htmlFor=""disabled={!isAllowedEditing || isFinished}>Descrição de Avaria</label>
+						{showLabSummary && (
+							<LabSummaryList items={labSummary} title="Descrição de Avaria" />
+						)}
+						<div className={`text-entry ${showLabSummary ? "no-label" : ""}`}>
+							{!showLabSummary && (
+								<label htmlFor=""disabled={!isAllowedEditing || isFinished}>Descrição de Avaria</label>
+							)}
 							<textarea
 								type="text"
 								value={service.malfunction??""}
@@ -791,7 +798,7 @@ export default function ServiceShow2() {
 							<h1>Laboratório</h1>
 						</div>
 						<div className="body">
-							<ServiceLab id={id} disabled={isFinished} />
+							<ServiceLab id={id} disabled={isFinished} onSummaryChange={setLabSummary} />
 						</div>
 					</div>
 				)}
@@ -867,6 +874,7 @@ export default function ServiceShow2() {
 					</div>
 
 					<h2>Descrição de Avaria</h2>
+					{showLabSummary && <LabSummaryList items={labSummary} />}
 					<p>{service.malfunction || "-"}</p>
 
 					<h2>Serviço Realizado</h2>
@@ -933,5 +941,38 @@ export default function ServiceShow2() {
 			</div>
 		</div>
 
+	);
+}
+
+// Generated from the Laboratório section (see utils/labSummary.js) —
+// read-only, shown above Descrição de Avaria and in the print summary.
+// With a title it takes over the label of the field under it.
+function LabSummaryList({ items, title }) {
+	return (
+		<ul className="lab-summary" title="Gerado a partir do Laboratório">
+			{title && <li className="lab-summary-title">{title}</li>}
+			{items.map((item) => (
+				<li key={item.id}>
+					<span className="lab-summary-item">
+						<i className={item.iClass || "fa-solid fa-flask"}/> {item.count > 1 && `${item.count}x `}{item.name}
+					</span>
+					{item.properties.length > 0 && (
+						<span className="lab-summary-properties">
+							{item.properties.map((p) => `${p.name}: ${p.value}`).join(" · ")}
+						</span>
+					)}
+					{item.actions.length > 0 && (
+						<ul>
+							{item.actions.map((action, index) => (
+								<li key={index}>
+									{action.name}
+									{action.value && <span className="lab-summary-value">: {action.value}</span>}
+								</li>
+							))}
+						</ul>
+					)}
+				</li>
+			))}
+		</ul>
 	);
 }

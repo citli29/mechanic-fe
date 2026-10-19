@@ -23,6 +23,7 @@ const WEEKDAY_NAMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
 const LAB_ACCENT = getServiceTypeAccent(2);
 const MECHANIC_ACCENT = getServiceTypeAccent(1);
 const DESLOCACOES_ACCENT = getServiceTypeAccent(null, "Deslocações");
+const ELETRICIDADE_ACCENT = getServiceTypeAccent(4);
 
 export default function SchedulesCalendar() {
 
@@ -244,8 +245,9 @@ export default function SchedulesCalendar() {
 		const deslocacoesSchedules = daySchedules.filter(
 			(s) => s.service_id !== null && s.service_type_id === deslocacoesId
 		);
+		const eletricidadeSchedules = daySchedules.filter((s) => s.service_id !== null && s.service_type_id === 4);
 		const mechanicSchedules = daySchedules.filter(
-			(s) => s.service_id !== null && s.service_type_id !== 2 && s.service_type_id !== deslocacoesId
+			(s) => s.service_id !== null && s.service_type_id !== 2 && s.service_type_id !== 4 && s.service_type_id !== deslocacoesId
 		);
 
 		return (
@@ -274,6 +276,16 @@ export default function SchedulesCalendar() {
 
 						<div className="appointments">
 							{mechanicSchedules.map((schedule) => renderAppointment(schedule))}
+						</div>
+					</div>
+				)}
+
+				{eletricidadeSchedules.length > 0 && (
+					<div className="day-half day-half-top" style={{ borderLeftColor: ELETRICIDADE_ACCENT }}>
+						<div className="day-half-label">Eletricidade</div>
+
+						<div className="appointments">
+							{eletricidadeSchedules.map((schedule) => renderAppointment(schedule))}
 						</div>
 					</div>
 				)}
