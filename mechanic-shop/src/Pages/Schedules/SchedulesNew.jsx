@@ -39,17 +39,24 @@ export default function SchedulesNew() {
 	}
 
 
-	async function loadSchedules() {
-		try {
-			const res = await api.get("/schedules");
-			setSchedules(res.data.schedule_list || []);
-		} catch {
-			setSchedules([]);
-		}
-	}
+	// Only the month on screen — the calendar just counts marcações per day,
+	// and loading every one ever made grows forever.
+	useEffect(() => {
+		let isCurrent = true;
 
+		const year = calendarMonth.getFullYear();
+		const month = calendarMonth.getMonth();
+		const params = {
+			start_date: formatDateKey(new Date(year, month, 1)),
+			end_date: formatDateKey(new Date(year, month + 1, 0)),
+		};
 
-	useEffect(() => { loadSchedules(); }, []);
+		api.get("/schedules", { params })
+			.then((res) => { if (isCurrent) setSchedules(res.data.schedule_list || []); })
+			.catch(() => { if (isCurrent) setSchedules([]); });
+
+		return () => { isCurrent = false; };
+	}, [calendarMonth]);
 
 
 	function formatDateKey(date) {

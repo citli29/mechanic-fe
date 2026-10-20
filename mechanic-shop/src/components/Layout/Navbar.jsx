@@ -3,6 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import api from "../../api/axios";
 import { getDefaultViewTypeId, getStoredViewTypeId, onNotificationsUpdated, onViewTypeChanged } from "../../utils/notificationView";
 import { claimNotificationDing, isNotificationSoundMuted, playNotificationSound, setNotificationSoundMuted, unlockNotificationSound } from "../../utils/notificationSound";
+import { onPollResult, publishPollResult, usePollLeader } from "../../utils/pollLeader";
 import "./Navbar.css";
 
 // Each view cares about a different stage of the same Encomendas pipeline:
@@ -37,6 +38,11 @@ export default function Navbar() {
 	// "most recent" notification id jumps when the filter changes) and never
 	// suppresses a real one for the other view.
 	const prevTopIdByScopeRef = useRef({});
+
+	// Only one tab per browser keeps polling every 5 s (see pollLeader.js);
+	// the others fetch once when opened/navigated and then take the
+	// leader's results.
+	const isPollLeader = usePollLeader();
 
 	// Browsers require a real user gesture before an AudioContext can play
 	// audible sound — a background notification poll doesn't count. This
@@ -108,19 +114,27 @@ export default function Navbar() {
 		function loadProductCount() {
 			api.get("/services_products_requested", { params: { ...relatedProductInfo.filters, p: 1, u: 1 } })
 				.then((res) => {
-					if (isCurrent) setProductCount(res.data.pagination?.total ?? 0);
+					if (!isCurrent) return;
+					const count = res.data.pagination?.total ?? 0;
+					setProductCount(count);
+					publishPollResult("product-count", { viewTypeName, count });
 				})
 				.catch(() => {});
 		}
 
 		loadProductCount();
-		const pollId = setInterval(loadProductCount, 5000);
+		const pollId = isPollLeader ? setInterval(loadProductCount, 5000) : null;
+
+		const unsubscribe = onPollResult("product-count", (data) => {
+			if (isCurrent && data.viewTypeName === viewTypeName) setProductCount(data.count);
+		});
 
 		return () => {
 			isCurrent = false;
 			clearInterval(pollId);
+			unsubscribe();
 		};
-	}, [viewTypeName]);
+	}, [viewTypeName, isPollLeader]);
 
 	useEffect(() => {
 		if (notificationTypes.length === 0) return;
@@ -188,6 +202,7 @@ export default function Navbar() {
 					}
 
 					setUnreadCount(newCount);
+					publishPollResult("unread-count", { scopeKey, count: newCount, latestId });
 				})
 				.catch(() => {})
 				.finally(() => {
@@ -199,11 +214,30 @@ export default function Navbar() {
 		loadUnreadCount();
 
 		// Same-tab actions refresh instantly via the events below; this poll
-		// is what picks up changes made by other users/devices/tabs.
-		const pollId = setInterval(loadUnreadCount, 5000);
+		// is what picks up changes made by other users/devices/tabs. Only
+		// the leader tab runs it (and so plays the sound).
+		const pollId = isPollLeader ? setInterval(loadUnreadCount, 5000) : null;
 
 		const unsubscribeView = onViewTypeChanged(loadUnreadCount);
 		const unsubscribeUpdated = onNotificationsUpdated(loadUnreadCount);
+
+		// Another tab's result. Also remembers its latest id, so if this tab
+		// becomes the leader later it neither re-dings an old notification
+		// nor misses the next one.
+		const unsubscribeShared = onPollResult("unread-count", (data) => {
+			if (!isCurrent) return;
+			if (data.latestId !== null) prevTopIdByScopeRef.current[data.scopeKey] = data.latestId;
+
+			const storedId = getStoredViewTypeId();
+			const selectableTypes = notificationTypes.filter((t) => t.name !== "Geral");
+			const viewTypeId = selectableTypes.some((t) => String(t.id) === String(storedId))
+				? storedId
+				: getDefaultViewTypeId(selectableTypes);
+			const generalId = notificationTypes.find((t) => t.name === "Geral")?.id;
+			const scopeKey = [generalId, viewTypeId].filter(Boolean).join(",");
+
+			if (data.scopeKey === scopeKey) setUnreadCount(data.count);
+		});
 
 		return () => {
 			isCurrent = false;
@@ -211,8 +245,9 @@ export default function Navbar() {
 			clearTimeout(stuckFetchTimeoutId);
 			unsubscribeView();
 			unsubscribeUpdated();
+			unsubscribeShared();
 		};
-	}, [location.pathname, notificationTypes]);
+	}, [location.pathname, notificationTypes, isPollLeader]);
 
 	useEffect(() => {
 		document.title = unreadCount > 0 ? `(${unreadCount}) Oficina Lima` : "Oficina Lima";

@@ -225,11 +225,21 @@ export default function NotificationsList() {
 	const isViewingNotification = Boolean(viewingNotification);
 
 	useEffect(() => {
-		const pollId = setInterval(loadNotifications, 5000);
+		// Only while this tab is on screen: a hidden tab's list isn't being
+		// read (the navbar's poll still keeps the badge and sound going).
+		// Catches up as soon as the tab is shown again.
+		const pollId = setInterval(() => {
+			if (!document.hidden) loadNotifications();
+		}, 5000);
+		const handleVisibility = () => {
+			if (!document.hidden) loadNotifications();
+		};
+		document.addEventListener("visibilitychange", handleVisibility);
 		const unsubscribeUpdated = onNotificationsUpdated(loadNotifications);
 
 		return () => {
 			clearInterval(pollId);
+			document.removeEventListener("visibilitychange", handleVisibility);
 			unsubscribeUpdated();
 		};
 		// isViewingNotification (not viewingNotification itself) so this only
