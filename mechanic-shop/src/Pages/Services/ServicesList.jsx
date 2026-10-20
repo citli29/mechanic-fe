@@ -7,7 +7,22 @@ import "../Style/Card.css";
 import "./Style/ServicesList.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
 import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
+import LabItemsLabel, { LabSummaryButton } from "../../components/LabSummary/LabItemsLabel";
 import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
+
+const LAB_SERVICE_TYPE_NAME = "Laboratório";
+
+// Laboratório services show their item type in the plate column instead
+// ("Variado" for more than one type, "3x Injetor" for several of one
+// type), with the lab summary on hover.
+function hasLabItems(data) {
+	return data.service_type_name === LAB_SERVICE_TYPE_NAME && data.lab_item_type_count > 0;
+}
+
+function labItemsText(data) {
+	if (data.lab_item_type_count > 1) return "Variado";
+	return `${data.lab_item_count > 1 ? `${data.lab_item_count}x ` : ""}${data.lab_item_name}`;
+}
 
 const PER_PAGE = 30;
 
@@ -32,7 +47,7 @@ const SORTABLE_COLUMNS = [
 	{ column: "checkout", label: "Saída" },
 	{ column: "client_name", label: "Cliente" },
 	{ column: "client_phone", label: "Telemóvel" },
-	{ column: "car_plate", label: "Matrícula" },
+	{ column: "car_plate", label: "Matrícula/Item" },
 	{ column: "car_make_name", label: "Marca" },
 	{ column: "car_model_name", label: "Modelo" },
 	{ column: "service_type_name", label: "Tipo de Serviço" },
@@ -492,7 +507,11 @@ export default function ServicesList() {
 				<td data-label="Saída"><span className="cell-truncate" title={data.checkout || "-"}>{data.checkout || "-"}</span></td>
 				<td data-label="Cliente"><span className="cell-truncate" title={data.client_name || "-"}>{data.client_name || "-"}</span></td>
 				<td data-label="Telemóvel"><span className="cell-truncate" title={data.client_phone || "-"}>{data.client_phone || "-"}</span></td>
-				<td data-label="Matrícula"><span className="cell-truncate" title={data.car_plate || "-"}>{data.car_plate || "-"}</span></td>
+				<td data-label="Matrícula/Item">
+					{hasLabItems(data)
+						? <LabItemsLabel serviceId={id} label={labItemsText(data)} to={`/services/${id}`} />
+						: <span className="cell-truncate" title={data.car_plate || "-"}>{data.car_plate || "-"}</span>}
+				</td>
 				<td data-label="Marca"><span className="cell-truncate" title={data.car_make_name || "-"}>{data.car_make_name || "-"}</span></td>
 				<td data-label="Modelo"><span className="cell-truncate" title={data.car_model_name || "-"}>{data.car_model_name || "-"}</span></td>
 				<td data-label="Tipo de Serviço">
@@ -519,7 +538,7 @@ export default function ServicesList() {
 						{renderSortableHeader("checkout", "Saída")}
 						{renderSortableHeader("client_name", "Cliente")}
 						{renderSortableHeader("client_phone", "Telemóvel")}
-						{renderSortableHeader("car_plate", "Matrícula")}
+						{renderSortableHeader("car_plate", "Matrícula/Item")}
 						{renderSortableHeader("car_make_name", "Marca")}
 						{renderSortableHeader("car_model_name", "Modelo")}
 						{renderSortableHeader("service_type_name", "Tipo de Serviço")}
@@ -651,9 +670,16 @@ export default function ServicesList() {
 			<div key={key} className={`service-row ${status.rowClass}`} style={{ "--type-color": accent }}>
 				<Link className="service-row-main" to={`/services/${id}`}>
 					<div className="service-row-line">
-						<span className={`service-row-plate ${data.car_plate ? "" : "empty"}`}>
-							{data.car_plate || "Sem viatura"}
-						</span>
+						{hasLabItems(data) ? (
+							<>
+								<span className="service-row-plate">{labItemsText(data)}</span>
+								<LabSummaryButton serviceId={id} />
+							</>
+						) : (
+							<span className={`service-row-plate ${data.car_plate ? "" : "empty"}`}>
+								{data.car_plate || "Sem viatura"}
+							</span>
+						)}
 						{car && <span className="service-row-car">{car}</span>}
 						<span className={`service-status ${status.badgeClass}`}>{status.label}</span>
 					</div>

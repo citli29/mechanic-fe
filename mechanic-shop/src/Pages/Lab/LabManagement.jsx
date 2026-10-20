@@ -5,6 +5,7 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/LabManagement.css";
 import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
+import LabInstanceSearch from "./LabInstanceSearch";
 
 const PER_PAGE = 10;
 const ICON_CLASS_PLACEHOLDER = "fa-solid fa-flask";
@@ -787,6 +788,8 @@ export default function LabManagement() {
 
 					</div>
 				</div>
+
+				<LabInstanceSearch />
 
 			</div>
 		</div>

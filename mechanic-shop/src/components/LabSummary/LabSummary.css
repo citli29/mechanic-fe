@@ -1,0 +1,164 @@
+.lab-summary{
+	margin: 0;
+	padding: var(--padding) var(--padding) var(--padding) calc(var(--big-padding) + var(--padding));
+	border: 1px solid var(--border);
+	border-bottom: none;
+	border-radius: 5px 5px 0 0;
+	background: var(--bg-page);
+	color: var(--txt-light);
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: calc(var(--padding) / 2);
+
+	/* Top one jumps to the Laboratório card. */
+	&.is-clickable{
+		cursor: pointer;
+		&:hover{ background: var(--bg-page-dark); }
+	}
+
+	/* Joined to the Descrição de Avaria field right under it — cancels
+	   the card body's flex gap. Not in the print summary, which has none. */
+	.service-signed-info-card &{
+		margin-bottom: calc(-1 * var(--big-padding));
+	}
+
+	/* Same look as the floating labels on the text fields. */
+	.lab-summary-title{
+		margin-left: calc(-1 * var(--big-padding));
+		margin-bottom: calc(var(--padding) / 2);
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		color: var(--txt-dark);
+	}
+
+	.lab-summary-item{
+		font-weight: 600;
+		margin-left: calc(-1 * var(--big-padding));
+
+		i{
+			width: 1.2em;
+			text-align: center;
+		}
+	}
+	.lab-summary-properties{
+		margin-left: var(--padding);
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+	}
+	ul{
+		margin: 2px 0 0;
+		padding-left: var(--big-padding);
+
+		li.is-done i{
+			color: #16a34a;
+		}
+	}
+	.lab-summary-value{
+		color: var(--txt-muted);
+	}
+}
+
+/* Lists: item type shown in place of the plate, summary on hover. */
+.lab-items-label{
+	position: relative;
+	z-index: 1; /* above .row-link-overlay, so it gets the hover */
+	display: inline-flex;
+	max-width: 100%;
+	min-width: 0;
+	color: inherit;
+	text-decoration: none;
+	cursor: pointer;
+
+	> .cell-truncate{
+		border-bottom: 1px dotted var(--txt-muted);
+	}
+}
+
+.lab-items-popup{
+	position: fixed;
+	z-index: 1000;
+	width: max-content;
+	max-width: 400px;
+	text-align: left;
+	white-space: normal;
+	pointer-events: none;
+
+	.lab-summary{
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: var(--bg-card);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
+}
+
+.lab-items-popup-loading{
+	display: block;
+	padding: var(--padding) var(--big-padding);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	background: var(--bg-card);
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+}
+
+/* Phone: flask button next to the item name, summary in a centred popup. */
+.lab-summary-btn{
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	margin-left: calc(var(--padding) / 2);
+	border: 1px solid #0ea5e9;
+	border-radius: 6px;
+	background: var(--bg-card);
+	color: #0ea5e9;
+	font-size: var(--font-size-small);
+	cursor: pointer;
+}
+
+.lab-summary-sheet-backdrop{
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--big-padding);
+	background: rgba(0, 0, 0, 0.4);
+}
+
+.lab-summary-sheet{
+	position: relative;
+	width: 100%;
+	max-width: 420px;
+	max-height: 80vh;
+	overflow-y: auto;
+	border-radius: 8px;
+	background: var(--bg-card);
+	text-align: left;
+
+	.lab-summary{
+		border: none;
+		border-radius: 8px;
+		background: var(--bg-card);
+		padding-top: var(--big-padding);
+		padding-bottom: var(--big-padding);
+	}
+
+	.lab-items-popup-loading{ border: none; }
+}
+
+.lab-summary-sheet-close{
+	position: absolute;
+	top: var(--padding);
+	right: var(--padding);
+	width: 32px;
+	height: 32px;
+	border: none;
+	background: none;
+	color: var(--txt-muted);
+	cursor: pointer;
+}

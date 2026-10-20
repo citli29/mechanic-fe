@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
+import { applyIdSearch } from "../../utils/idSearch";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -63,6 +64,7 @@ export default function ModelsList() {
 				Object.entries(filters).filter(([_, value]) => value !== "")
 			);
 
+			applyIdSearch(params);
 			params.p = page;
 			params.u = PER_PAGE;
 

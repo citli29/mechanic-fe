@@ -143,3 +143,42 @@
 		&::before{ display: none; }
 	}
 }
+
+
+/* Pesquisar Itens (LabInstanceSearch): item instances on services. */
+.lab-management-page .lab-instance-search{
+	margin-top: var(--big-padding);
+
+	.body{
+		display: flex;
+		flex-direction: column;
+		gap: var(--padding);
+	}
+
+	table.lab-instances-table tr{
+		grid-template-columns: 90px 110px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) 130px;
+	}
+
+	table.lab-instances-table tbody tr:hover td{
+		background: var(--bg-page-dark);
+	}
+
+	td.lab-instance-item{
+		gap: var(--small-padding);
+	}
+
+	.service-status{
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 90px;
+		padding: var(--small-padding) var(--padding);
+		border-radius: 999px;
+		font-size: var(--font-size-small);
+		font-weight: 800;
+		white-space: nowrap;
+	}
+	.service-status-finished{ background: var(--success); color: #fff; }
+	.service-status-pending{ background: #fef3c7; color: #92400e; }
+	.service-status-delivered{ background: var(--primary); color: #fff; }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { applyIdSearch } from "../../utils/idSearch";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -81,7 +82,7 @@ export default function TimeRecordsList() {
 		Object.entries(debouncedFilters).forEach(([key, value]) => {
 			if (value !== "") params[key] = value;
 		});
-		return params;
+		return applyIdSearch(params);
 	}
 
 

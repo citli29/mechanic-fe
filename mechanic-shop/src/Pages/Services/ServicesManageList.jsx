@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { applyIdSearch } from "../../utils/idSearch";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -59,6 +60,7 @@ export default function ServicesManageList() {
 			const params = { p: page, u: PER_PAGE };
 
 			if (search) params.q = search;
+			applyIdSearch(params);
 
 			if (sortColumn) {
 				params.sort = sortColumn;

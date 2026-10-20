@@ -1,8 +1,97 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "./../api/axios";
 import { buildLabSummary } from "../utils/labSummary";
+import "./Style/ServiceLab.css";
 
-export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
+// Left-edge stripe colour per item type (by tabled item id).
+const LAB_TYPE_COLORS = ["#0ea5e9", "#f59e0b", "#8b5cf6", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#6366f1"];
+
+// Where the lab's records live. A real service talks to the API; a draft
+// (Novo Serviço, before the service exists) keeps them in memory with
+// made-up ids, in the same shape the API returns, and hands them to
+// onDraftChange — the page creates them for real once the service is saved.
+function createApiStore(serviceId) {
+	const base = `/services/${serviceId}`;
+	return {
+		async list() {
+			const [labItemsResponse, labActionValuesResponse, labPropertyValuesResponse] = await Promise.all([
+				api.get(`${base}/lab_items`),
+				api.get(`${base}/lab_action_values`),
+				api.get(`${base}/lab_property_values`),
+			]);
+			return {
+				labItems: labItemsResponse.data.lab_item_list || [],
+				labActionValues: labActionValuesResponse.data.slav_list || [],
+				labPropertyValues: labPropertyValuesResponse.data.slpv_list || [],
+			};
+		},
+		async addItem(item) {
+			const response = await api.post(`${base}/lab_items`, { t_item_id: item.id });
+			return response.data.lab_item;
+		},
+		addActionValue: (labItem, action) => api.post(`${base}/lab_action_values`, { l_item_id: labItem.id, t_action_id: action.id }),
+		// Only the changed field is sent — the API leaves the others alone.
+		updateActionValue: (lav, changes) => api.put(`${base}/lab_action_values/${lav.slav_id}`, changes),
+		deleteActionValue: (lav) => api.delete(`${base}/lab_action_values/${lav.slav_id}`),
+		savePropertyValue: (labItem, property, existing, value) => (existing
+			? api.put(`${base}/lab_property_values/${existing.id}`, { value })
+			: api.post(`${base}/lab_property_values`, { l_item_id: labItem.id, property_id: property.id, value })),
+		deleteItem: (labItem) => api.delete(`${base}/lab_items/${labItem.id}`),
+	};
+}
+
+function createDraftStore() {
+	const data = { labItems: [], labActionValues: [], labPropertyValues: [] };
+	let nextId = 1;
+	return {
+		async list() {
+			return {
+				labItems: [...data.labItems],
+				labActionValues: [...data.labActionValues],
+				labPropertyValues: [...data.labPropertyValues],
+			};
+		},
+		async addItem(item) {
+			const labItem = { id: nextId++, t_item_id: item.id, item_name: item.name, item_i_class: item.i_class };
+			data.labItems.push(labItem);
+			return labItem;
+		},
+		async addActionValue(labItem, action) {
+			const id = nextId++;
+			data.labActionValues.push({
+				id, slav_id: id, l_item_id: labItem.id, t_action_id: action.id,
+				action_name: action.name, action_i_class: action.i_class, note: null, is_done: 0,
+			});
+		},
+		async updateActionValue(lav, changes) {
+			data.labActionValues = data.labActionValues.map((v) => (v.id === lav.id ? { ...v, ...changes } : v));
+		},
+		async deleteActionValue(lav) {
+			data.labActionValues = data.labActionValues.filter((v) => v.id !== lav.id);
+		},
+		async savePropertyValue(labItem, property, existing, value) {
+			if (existing) {
+				data.labPropertyValues = data.labPropertyValues.map((v) => (v.id === existing.id ? { ...v, value } : v));
+			} else {
+				data.labPropertyValues.push({ id: nextId++, l_item_id: labItem.id, property_id: property.id, property_name: property.name, value });
+			}
+		},
+		async deleteItem(labItem) {
+			data.labItems = data.labItems.filter((li) => li.id !== labItem.id);
+			data.labActionValues = data.labActionValues.filter((v) => v.l_item_id !== labItem.id);
+			data.labPropertyValues = data.labPropertyValues.filter((v) => v.l_item_id !== labItem.id);
+		},
+	};
+}
+
+// `draft`: Novo Serviço — nothing is saved yet (see createDraftStore), and
+// actions have no done check since nothing can be done before the service exists.
+export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDraftChange }) => {
+
+	const [draftStore] = useState(createDraftStore);
+	const apiStore = useMemo(() => createApiStore(id), [id]);
+	const store = draft ? draftStore : apiStore;
 
 	const [labItems, setLabItems] = useState([]);
 	const [labActionValues, setLabActionValues] = useState([]);
@@ -18,6 +107,12 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 	const [selectedItemId, setSelectedItemId] = useState(null);
 
 	const [quantity, setQuantity] = useState(1);
+	// Actions of the picked item type, and the ones ticked to be added to
+	// every new item straight away ("4x Injetor" with "Teste").
+	const [pickerActions, setPickerActions] = useState([]);
+	const [pickerActionIds, setPickerActionIds] = useState([]);
+	// null = not creating; otherwise the name typed for a new action there.
+	const [pickerNewActionName, setPickerNewActionName] = useState(null);
 	const [submitting, setSubmitting] = useState(false);
 
 	const [addingActionItemId, setAddingActionItemId] = useState(null);
@@ -25,7 +120,40 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 	// null = not creating; otherwise the name being typed for a new action.
 	const [newActionName, setNewActionName] = useState(null);
 
+	// The item / card the actions are being fetched for right now, so a slow
+	// response for an earlier pick can't fill the list with another type's actions.
+	const pickerItemIdRef = useRef(null);
+	const addingActionItemIdRef = useRef(null);
+
 	useEffect(() => { loadSummary(); }, [id]);
+
+	// ?lab_item=<id> (from Gestão de Laboratório's search): once the items
+	// are in, scroll to that card and flash it. The param is then dropped,
+	// so a refresh doesn't flash it again.
+	const [searchParams, setSearchParams] = useSearchParams();
+	const targetLabItemId = draft ? null : Number(searchParams.get("lab_item")) || null;
+	const [highlightedItemId, setHighlightedItemId] = useState(null);
+
+	useEffect(() => {
+		if (!targetLabItemId || !labItems.some((li) => li.id === targetLabItemId)) return;
+
+		// After the rest of the page has laid out, or the scroll lands short.
+		setTimeout(() => {
+			document.getElementById(`lab-item-${targetLabItemId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+		}, 300);
+		setHighlightedItemId(targetLabItemId);
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			next.delete("lab_item");
+			return next;
+		}, { replace: true });
+	}, [targetLabItemId, labItems]);
+
+	useEffect(() => {
+		if (!highlightedItemId) return;
+		const timer = setTimeout(() => setHighlightedItemId(null), 5000);
+		return () => clearTimeout(timer);
+	}, [highlightedItemId]);
 
 	// Every lab change reloads these two lists, so the service page's
 	// generated text (above Descrição de Avaria) stays in sync.
@@ -34,22 +162,20 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 	}, [labItems, labActionValues, labPropertyValuesByLabItem, onSummaryChange]);
 
 	async function loadSummary() {
+		if (!draft && !id) return;
 		try {
-			const [labItemsResponse, labActionValuesResponse, labPropertyValuesResponse] = await Promise.all([
-				api.get(`/services/${id}/lab_items`),
-				api.get(`/services/${id}/lab_action_values`),
-				api.get(`/services/${id}/lab_property_values`),
-			]);
+			const lab = await store.list();
+			if (draft) onDraftChange?.(lab);
 
 			// Grouped by item type (tabled item), oldest first within each.
-			const labItemList = (labItemsResponse.data.lab_item_list || [])
+			const labItemList = lab.labItems
 				.slice()
 				.sort((a, b) => a.t_item_id - b.t_item_id || a.id - b.id);
 			setLabItems(labItemList);
-			setLabActionValues(labActionValuesResponse.data.slav_list || []);
+			setLabActionValues(lab.labActionValues);
 
 			const propertyValuesGrouped = {};
-			(labPropertyValuesResponse.data.slpv_list || []).forEach((lpv) => {
+			lab.labPropertyValues.forEach((lpv) => {
 				if (!propertyValuesGrouped[lpv.l_item_id]) propertyValuesGrouped[lpv.l_item_id] = [];
 				propertyValuesGrouped[lpv.l_item_id].push(lpv);
 			});
@@ -92,13 +218,58 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 
 	const handleCancel = () => {
 		setAdding(false);
+		pickerItemIdRef.current = null;
 		setSelectedItemId(null);
 		setQuantity(1);
+		setPickerActions([]);
+		setPickerActionIds([]);
+		setPickerNewActionName(null);
 	}
 
-	const toggleSelectedItem = (itemId) => {
-		setSelectedItemId((prev) => (prev === itemId ? null : itemId));
+	const toggleSelectedItem = async (itemId) => {
+		const nextId = selectedItemId === itemId ? null : itemId;
+		pickerItemIdRef.current = nextId;
+		setSelectedItemId(nextId);
 		setQuantity(1);
+		setPickerActions([]);
+		setPickerActionIds([]);
+		setPickerNewActionName(null);
+		if (!nextId) return;
+
+		try {
+			const response = await api.get("/actions", { params: { t_item_id: nextId } });
+			// Another item was picked meanwhile — these actions aren't its.
+			if (pickerItemIdRef.current !== nextId) return;
+			setPickerActions(response.data.action_list || []);
+		} catch (error) {
+			console.error(error);
+		}
+	}
+
+	const togglePickerAction = (actionId) => {
+		setPickerActionIds((prev) => (
+			prev.includes(actionId) ? prev.filter((x) => x !== actionId) : [...prev, actionId]
+		));
+	}
+
+	// Only creates the action for the item type (every item of that type
+	// gets it) and leaves it ticked — it's added to the new items on confirm.
+	const handleCreatePickerAction = async () => {
+		const name = (pickerNewActionName || "").trim();
+		if (disabled || submitting || !name || !selectedItemId) return;
+
+		setSubmitting(true);
+		try {
+			const response = await api.post("/actions", { t_item_id: selectedItemId, name });
+			const action = response.data.action;
+			setPickerActions((prev) => [...prev, action]);
+			setPickerActionIds((prev) => [...prev, action.id]);
+			setPickerNewActionName(null);
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setSubmitting(false);
+		}
 	}
 
 	const handleConfirm = async () => {
@@ -108,12 +279,16 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 
 		setSubmitting(true);
 
+		const item = items.find((i) => i.id === selectedItemId);
+		const actions = pickerActions.filter((action) => pickerActionIds.includes(action.id));
+
 		try {
-			// Just the item(s) — actions are added afterwards from each card.
+			// Each item gets the ticked actions; more can be added later from its card.
 			for (let i = 0; i < qty; i++) {
-				await api.post(`/services/${id}/lab_items`, {
-					t_item_id: selectedItemId,
-				});
+				const labItem = await store.addItem(item);
+				for (const action of actions) {
+					await store.addActionValue(labItem, action);
+				}
 			}
 
 			handleCancel();
@@ -125,11 +300,10 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 		}
 	}
 
-	// Only the changed field is sent — the API leaves the others alone.
 	const updateActionValue = async (lav, changes) => {
 		if (disabled) return;
 		try {
-			await api.put(`/services/${id}/lab_action_values/${lav.slav_id}`, changes);
+			await store.updateActionValue(lav, changes);
 			loadSummary();
 		} catch (error) {
 			console.error(error);
@@ -146,7 +320,7 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 	const handleDeleteActionValue = async (lav) => {
 		if (disabled) return;
 		try {
-			await api.delete(`/services/${id}/lab_action_values/${lav.slav_id}`);
+			await store.deleteActionValue(lav);
 			loadSummary();
 		} catch (error) {
 			console.error(error);
@@ -167,17 +341,7 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 		const existing = (labPropertyValuesByLabItem[labItem.id] || []).find((lpv) => lpv.property_id === property.id);
 
 		try {
-			if (existing) {
-				await api.put(`/services/${id}/lab_property_values/${existing.id}`, {
-					value: propertyInputs[key] || null,
-				});
-			} else {
-				await api.post(`/services/${id}/lab_property_values`, {
-					l_item_id: labItem.id,
-					property_id: property.id,
-					value: propertyInputs[key] || null,
-				});
-			}
+			await store.savePropertyValue(labItem, property, existing, propertyInputs[key] || null);
 
 			loadSummary();
 		} catch (error) {
@@ -193,10 +357,23 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 		setEditingPropertiesItemId(null);
 	}
 
+	// Esc closes the properties modal. The field being typed in is blurred
+	// first, so its value is saved like when clicking outside.
+	useEffect(() => {
+		if (editingPropertiesItemId === null) return;
+		const handleKeyDown = (e) => {
+			if (e.key !== "Escape") return;
+			document.activeElement?.blur();
+			handleClosePropertiesModal();
+		};
+		document.addEventListener("keydown", handleKeyDown);
+		return () => document.removeEventListener("keydown", handleKeyDown);
+	}, [editingPropertiesItemId]);
+
 	const handleDeleteLabItem = async (labItem) => {
 		if (disabled) return;
 		try {
-			await api.delete(`/services/${id}/lab_items/${labItem.id}`);
+			await store.deleteItem(labItem);
 
 			setPropertyInputs((prev) => {
 				const next = { ...prev };
@@ -217,32 +394,35 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 		if (disabled) return;
 		setNewActionName(null);
 		if (addingActionItemId === labItem.id) {
+			addingActionItemIdRef.current = null;
 			setAddingActionItemId(null);
 			setInlineActions([]);
 			return;
 		}
 
 		setAddingActionItemId(labItem.id);
+		addingActionItemIdRef.current = labItem.id;
+		setInlineActions([]);
 
 		try {
 			const response = await api.get("/actions", { params: { t_item_id: labItem.t_item_id } });
+			// Another card's "+ Ação" was opened meanwhile — these aren't its actions.
+			if (addingActionItemIdRef.current !== labItem.id) return;
 			setInlineActions(response.data.action_list || []);
 		} catch (error) {
 			console.error(error);
-			setInlineActions([]);
+			if (addingActionItemIdRef.current === labItem.id) setInlineActions([]);
 		}
 	}
 
 	// Tapping an action tile adds it straight away — no separate confirm.
-	const handleConfirmAddAction = async (labItem, actionId) => {
-		if (disabled || !actionId) return;
+	const handleConfirmAddAction = async (labItem, action) => {
+		if (disabled || !action) return;
 
 		try {
-			await api.post(`/services/${id}/lab_action_values`, {
-				l_item_id: labItem.id,
-				t_action_id: actionId,
-			});
+			await store.addActionValue(labItem, action);
 
+			addingActionItemIdRef.current = null;
 			setAddingActionItemId(null);
 			setInlineActions([]);
 			setNewActionName(null);
@@ -264,7 +444,7 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 				t_item_id: labItem.t_item_id,
 				name,
 			});
-			await handleConfirmAddAction(labItem, response.data.action.id);
+			await handleConfirmAddAction(labItem, response.data.action);
 		} catch (error) {
 			console.error(error);
 		} finally {
@@ -328,7 +508,7 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 							className="lab-action-tile"
 							title={alreadyAdded ? "Já adicionada — adicionar outra vez" : "Adicionar ação"}
 							disabled={disabled}
-							onClick={() => handleConfirmAddAction(labItem, action.id)}
+							onClick={() => handleConfirmAddAction(labItem, action)}
 						>
 							{action.i_class && <i className={action.i_class} />}
 							{action.name}
@@ -348,66 +528,78 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 		</div>
 	);
 
-	return (
-		<>
-			{/* One card ("area") per item, its actions listed inside it. */}
-			<div className="lab-items">
-				{labItems.map((labItem) => {
-					const itemActionValues = actionValuesByLabItem[labItem.id] || [];
-					const isAddingAction = addingActionItemId === labItem.id;
+	// One card per item: its header (opens the properties), actions and
+	// "+ Ação". A stripe down its left edge is coloured by item type, so
+	// items of the same type read as a group.
+	const renderLabItem = (labItem) => {
+		const itemActionValues = actionValuesByLabItem[labItem.id] || [];
+		const isAddingAction = addingActionItemId === labItem.id;
 
-					const itemProperties = tabledPropertiesByItem[labItem.t_item_id] || [];
-					const itemPropertyValues = labPropertyValuesByLabItem[labItem.id] || [];
-					const itemPrimaryProperties = itemProperties.filter((property) => property.is_primary);
+		const itemProperties = tabledPropertiesByItem[labItem.t_item_id] || [];
+		const itemPropertyValues = labPropertyValuesByLabItem[labItem.id] || [];
+		const itemPrimaryProperties = itemProperties.filter((property) => property.is_primary);
 
-					return (
-						<div className="lab-item-card" key={labItem.id}>
-							<div
-								className="lab-item-card-header"
-								title="Ver/editar propriedades do item"
-								onClick={() => handleOpenPropertiesModal(labItem)}
-							>
-								<i className={`lab-item-card-icon ${labItem.item_i_class || "fa-solid fa-flask"}`} />
-								<div className="lab-item-card-title">
-									<div className="lab-item-name">{labItem.item_name}</div>
-									{itemPrimaryProperties.length > 0 && (
-										<div className="lab-item-properties-summary">
-											{itemPrimaryProperties.map((property) => {
-												const lpv = itemPropertyValues.find((v) => v.property_id === property.id);
-												return `${property.name}: ${lpv?.value || "—"}`;
-											}).join(" · ")}
-										</div>
-									)}
-								</div>
-								{!disabled && (
-									<button
-										type="button"
-										className={`lab-item-card-add-action ${isAddingAction ? "is-active" : ""}`}
-										title="Adicionar ação a este item"
-										onClick={(e) => { e.stopPropagation(); handleToggleAddAction(labItem); }}
-									>
-										<i className="fa-solid fa-plus" /> Ação
-									</button>
-								)}
+		return (
+			<div
+				className={`lab-item-card ${highlightedItemId === labItem.id ? "is-highlighted" : ""}`}
+				id={`lab-item-${labItem.id}`}
+				key={labItem.id}
+				style={{ "--lab-type-color": LAB_TYPE_COLORS[labItem.t_item_id % LAB_TYPE_COLORS.length] }}
+			>
+				<div
+					className="lab-item-card-header"
+					title="Ver/editar propriedades do item"
+					onClick={() => handleOpenPropertiesModal(labItem)}
+				>
+					<i className={`lab-item-card-icon ${labItem.item_i_class || "fa-solid fa-flask"}`} />
+					<div className="lab-item-card-title">
+						<div className="lab-item-name">{labItem.item_name}</div>
+						{itemPrimaryProperties.length > 0 && (
+							<div className="lab-item-properties-summary">
+								{itemPrimaryProperties.map((property) => {
+									const lpv = itemPropertyValues.find((v) => v.property_id === property.id);
+									return `${property.name}: ${lpv?.value || "—"}`;
+								}).join(" · ")}
 							</div>
+						)}
+					</div>
+					{!disabled && (
+						<button
+							type="button"
+							className={`lab-item-card-add-action ${isAddingAction ? "is-active" : ""}`}
+							title="Adicionar ação a este item"
+							onClick={(e) => { e.stopPropagation(); handleToggleAddAction(labItem); }}
+						>
+							<i className="fa-solid fa-plus" /><span className="lab-add-action-label">Ação</span>
+						</button>
+					)}
+				</div>
 
-							<div className="lab-item-card-actions">
-								{itemActionValues.length === 0 && !isAddingAction && (
-									<div className="lab-item-card-empty">Sem ações</div>
-								)}
+				<div className="lab-item-card-actions">
+					{itemActionValues.length === 0 && !isAddingAction && (
+						<div className="lab-item-card-empty">Sem ações</div>
+					)}
 
-								{itemActionValues.map((lav) => (
-									<div className={`lab-action-row ${lav.is_done ? "is-done" : ""}`} key={lav.id}>
-										<LabDoneCheck lav={lav} disabled={disabled} onToggle={handleToggleDone} />
-										<LabNote lav={lav} disabled={disabled} onSave={handleSaveNote} onDeleteAction={handleDeleteActionValue} />
-									</div>
-								))}
-							</div>
-
-							{isAddingAction && inlineAddAction(labItem, itemActionValues)}
+					{itemActionValues.map((lav) => (
+						<div className={`lab-action-row ${lav.is_done ? "is-done" : ""}`} key={lav.id}>
+							{draft
+								? <span className="lab-action-name">{lav.action_name}</span>
+								: <LabDoneCheck lav={lav} disabled={disabled} onToggle={handleToggleDone} />}
+							<LabNote lav={lav} disabled={disabled} onSave={handleSaveNote} onDeleteAction={handleDeleteActionValue} />
 						</div>
-					);
-				})}
+					))}
+				</div>
+
+				{isAddingAction && inlineAddAction(labItem, itemActionValues)}
+			</div>
+		);
+	};
+
+	return (
+		<div className="service-lab">
+			{/* One card per item, its actions listed inside it. */}
+			<div className="lab-items">
+				{labItems.map(renderLabItem)}
 			</div>
 
 			{!adding ? (
@@ -430,6 +622,72 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 									{item.name}
 								</div>
 							))}
+						</div>
+					</div>
+
+					{/* Always shown so the panel doesn't jump; empty until an item is picked. */}
+					<div className="lab-picker-section lab-picker-actions">
+						<label>Ações (opcional)</label>
+						<div className="lab-inline-add-action lab-picker-action-strip">
+							{!selectedItemId ? (
+								<span className="lab-picker-actions-empty">Selecione um item</span>
+							) : pickerNewActionName !== null ? (
+								<>
+									<input
+										type="text"
+										className="lab-new-action-input"
+										placeholder="Nova ação..."
+										maxLength={60}
+										autoFocus
+										value={pickerNewActionName}
+										disabled={submitting}
+										onChange={(e) => setPickerNewActionName(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter") handleCreatePickerAction();
+											if (e.key === "Escape") setPickerNewActionName(null);
+										}}
+									/>
+									<button
+										type="button"
+										className="lab-action-tiles-confirm"
+										title="Criar ação para este tipo de item e selecioná-la"
+										disabled={submitting || !pickerNewActionName.trim()}
+										onClick={handleCreatePickerAction}
+									>
+										<i className="fa-solid fa-check" />
+									</button>
+									<button
+										type="button"
+										className="lab-action-tiles-cancel"
+										title="Cancelar"
+										onClick={() => setPickerNewActionName(null)}
+									>
+										<i className="fa-solid fa-xmark" />
+									</button>
+								</>
+							) : (
+								<div className="lab-action-tiles">
+									{pickerActions.map((action) => (
+										<button
+											type="button"
+											key={action.id}
+											className={`lab-action-tile ${pickerActionIds.includes(action.id) ? "selected" : ""}`}
+											onClick={() => togglePickerAction(action.id)}
+										>
+											{action.i_class && <i className={action.i_class} />}
+											{action.name}
+										</button>
+									))}
+									<button
+										type="button"
+										className="lab-action-tile is-new"
+										title="Criar uma nova ação para este tipo de item"
+										onClick={() => setPickerNewActionName("")}
+									>
+										<i className="fa-solid fa-plus" />
+									</button>
+								</div>
+							)}
 						</div>
 					</div>
 
@@ -499,7 +757,7 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 					</div>
 				</div>
 			)}
-		</>
+		</div>
 	);
 }
 
