@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "./../api/axios";
 import { buildLabSummary } from "../utils/labSummary";
 
@@ -6,7 +6,6 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 
 	const [labItems, setLabItems] = useState([]);
 	const [labActionValues, setLabActionValues] = useState([]);
-	const [tabledValuesByAction, setTabledValuesByAction] = useState({});
 
 	const [tabledPropertiesByItem, setTabledPropertiesByItem] = useState({});
 	const [labPropertyValuesByLabItem, setLabPropertyValuesByLabItem] = useState({});
@@ -18,60 +17,36 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 	const [items, setItems] = useState([]);
 	const [selectedItemId, setSelectedItemId] = useState(null);
 
-	const [actions, setActions] = useState([]);
-	const [selectedActionIds, setSelectedActionIds] = useState([]);
 	const [quantity, setQuantity] = useState(1);
 	const [submitting, setSubmitting] = useState(false);
 
-	const [customValueIds, setCustomValueIds] = useState({});
-	const [customInputs, setCustomInputs] = useState({});
-	const [customEditingIds, setCustomEditingIds] = useState({});
-
 	const [addingActionItemId, setAddingActionItemId] = useState(null);
 	const [inlineActions, setInlineActions] = useState([]);
-	const [inlineActionId, setInlineActionId] = useState("");
-
-	const [isMobile, setIsMobile] = useState(
-		window.matchMedia("(max-width: 650px)").matches
-	);
-
-	useEffect(() => {
-		const media = window.matchMedia("(max-width: 650px)");
-
-		const handleChange = (e) => setIsMobile(e.matches);
-
-		media.addEventListener("change", handleChange);
-
-		return () => media.removeEventListener("change", handleChange);
-	}, []);
+	// null = not creating; otherwise the name being typed for a new action.
+	const [newActionName, setNewActionName] = useState(null);
 
 	useEffect(() => { loadSummary(); }, [id]);
 
 	// Every lab change reloads these two lists, so the service page's
 	// generated text (above Descrição de Avaria) stays in sync.
 	useEffect(() => {
-		onSummaryChange?.(buildLabSummary(labItems, labActionValues, labPropertyValuesByLabItem, tabledValuesByAction));
-	}, [labItems, labActionValues, labPropertyValuesByLabItem, tabledValuesByAction, onSummaryChange]);
+		onSummaryChange?.(buildLabSummary(labItems, labActionValues, labPropertyValuesByLabItem));
+	}, [labItems, labActionValues, labPropertyValuesByLabItem, onSummaryChange]);
 
 	async function loadSummary() {
 		try {
-			const [labItemsResponse, labActionValuesResponse, tabledValuesResponse, labPropertyValuesResponse] = await Promise.all([
+			const [labItemsResponse, labActionValuesResponse, labPropertyValuesResponse] = await Promise.all([
 				api.get(`/services/${id}/lab_items`),
 				api.get(`/services/${id}/lab_action_values`),
-				api.get("/action_tabled_values"),
 				api.get(`/services/${id}/lab_property_values`),
 			]);
 
-			const labItemList = labItemsResponse.data.lab_item_list || [];
+			// Grouped by item type (tabled item), oldest first within each.
+			const labItemList = (labItemsResponse.data.lab_item_list || [])
+				.slice()
+				.sort((a, b) => a.t_item_id - b.t_item_id || a.id - b.id);
 			setLabItems(labItemList);
 			setLabActionValues(labActionValuesResponse.data.slav_list || []);
-
-			const grouped = {};
-			(tabledValuesResponse.data.action_tabled_value_list || []).forEach((tv) => {
-				if (!grouped[tv.t_action_id]) grouped[tv.t_action_id] = [];
-				grouped[tv.t_action_id].push(tv);
-			});
-			setTabledValuesByAction(grouped);
 
 			const propertyValuesGrouped = {};
 			(labPropertyValuesResponse.data.slpv_list || []).forEach((lpv) => {
@@ -94,7 +69,6 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 			console.error(error);
 			setLabItems([]);
 			setLabActionValues([]);
-			setTabledValuesByAction({});
 			setLabPropertyValuesByLabItem({});
 			setTabledPropertiesByItem({});
 		}
@@ -110,16 +84,6 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 		}
 	}
 
-	const loadActions = async (itemId) => {
-		try {
-			const response = await api.get("/actions", { params: { t_item_id: itemId } });
-			setActions(response.data.action_list || []);
-		} catch (error) {
-			console.error(error);
-			setActions([]);
-		}
-	}
-
 	const handleStart = () => {
 		if (disabled) return;
 		loadItems();
@@ -129,36 +93,13 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 	const handleCancel = () => {
 		setAdding(false);
 		setSelectedItemId(null);
-		setSelectedActionIds([]);
-		setActions([]);
 		setQuantity(1);
 	}
 
 	const toggleSelectedItem = (itemId) => {
-		const alreadySelected = selectedItemId === itemId;
-
-		setSelectedItemId(alreadySelected ? null : itemId);
-		setSelectedActionIds([]);
+		setSelectedItemId((prev) => (prev === itemId ? null : itemId));
 		setQuantity(1);
-
-		if (alreadySelected) {
-			setActions([]);
-		} else {
-			loadActions(itemId);
-		}
 	}
-
-	const toggleSelectedAction = (actionId) => {
-		setSelectedActionIds((prev) => (
-			prev.includes(actionId)
-				? prev.filter((id) => id !== actionId)
-				: [...prev, actionId]
-		));
-	}
-
-	const selectedActions = selectedActionIds
-		.map((actionId) => actions.find((action) => action.id === actionId))
-		.filter(Boolean);
 
 	const handleConfirm = async () => {
 		if (disabled || submitting || !selectedItemId) return;
@@ -168,19 +109,11 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 		setSubmitting(true);
 
 		try {
+			// Just the item(s) — actions are added afterwards from each card.
 			for (let i = 0; i < qty; i++) {
-				const itemResponse = await api.post(`/services/${id}/lab_items`, {
+				await api.post(`/services/${id}/lab_items`, {
 					t_item_id: selectedItemId,
 				});
-
-				const labItemId = itemResponse.data.lab_item.id;
-
-				for (const action of selectedActions) {
-					await api.post(`/services/${id}/lab_action_values`, {
-						l_item_id: labItemId,
-						t_action_id: action.id,
-					});
-				}
 			}
 
 			handleCancel();
@@ -192,87 +125,23 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 		}
 	}
 
-	const handleSelectTabledValue = async (lav, tabledValueId) => {
+	// Only the changed field is sent — the API leaves the others alone.
+	const updateActionValue = async (lav, changes) => {
 		if (disabled) return;
 		try {
-			await api.put(`/services/${id}/lab_action_values/${lav.slav_id}`, {
-				t_action_id: lav.t_action_id,
-				t_action_value_id: tabledValueId || null,
-				value: null,
-			});
-
+			await api.put(`/services/${id}/lab_action_values/${lav.slav_id}`, changes);
 			loadSummary();
 		} catch (error) {
 			console.error(error);
 		}
 	}
 
-	const handleSaveCustomValue = async (lav, value) => {
-		if (disabled) return;
-		try {
-			await api.put(`/services/${id}/lab_action_values/${lav.slav_id}`, {
-				t_action_id: lav.t_action_id,
-				t_action_value_id: null,
-				value: value || null,
-			});
-
-			loadSummary();
-		} catch (error) {
-			console.error(error);
-		}
+	const handleSaveNote = (lav, note) => {
+		if ((note.trim() || null) === (lav.note || null)) return;
+		updateActionValue(lav, { note });
 	}
 
-	const handleSelectChange = (lav, value) => {
-		if (disabled) return;
-		if (value === "__outro__") {
-			setCustomValueIds((prev) => ({ ...prev, [lav.slav_id]: true }));
-			setCustomInputs((prev) => ({ ...prev, [lav.slav_id]: lav.value || "" }));
-			setCustomEditingIds((prev) => ({ ...prev, [lav.slav_id]: true }));
-			return;
-		}
-
-		handleSelectTabledValue(lav, value);
-	}
-
-	const handleCustomInputChange = (lav, text) => {
-		setCustomInputs((prev) => ({ ...prev, [lav.slav_id]: text }));
-	}
-
-	const handleSaveCustomValueClick = async (lav) => {
-		if (disabled) return;
-		await handleSaveCustomValue(lav, customInputs[lav.slav_id] || "");
-		setCustomEditingIds((prev) => ({ ...prev, [lav.slav_id]: false }));
-	}
-
-	const handleStartEditCustomValue = (lav) => {
-		if (disabled) return;
-		setCustomEditingIds((prev) => ({ ...prev, [lav.slav_id]: true }));
-	}
-
-	const handleCancelCustomValue = async (lav) => {
-		if (disabled) return;
-		setCustomValueIds((prev) => ({ ...prev, [lav.slav_id]: false }));
-
-		setCustomEditingIds((prev) => {
-			const next = { ...prev };
-			delete next[lav.slav_id];
-			return next;
-		});
-
-		if (!lav.value) return;
-
-		try {
-			await api.put(`/services/${id}/lab_action_values/${lav.slav_id}`, {
-				t_action_id: lav.t_action_id,
-				t_action_value_id: null,
-				value: null,
-			});
-
-			loadSummary();
-		} catch (error) {
-			console.error(error);
-		}
-	}
+	const handleToggleDone = (lav) => updateActionValue(lav, { is_done: !lav.is_done });
 
 	const handleDeleteActionValue = async (lav) => {
 		if (disabled) return;
@@ -346,15 +215,14 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 
 	const handleToggleAddAction = async (labItem) => {
 		if (disabled) return;
+		setNewActionName(null);
 		if (addingActionItemId === labItem.id) {
 			setAddingActionItemId(null);
 			setInlineActions([]);
-			setInlineActionId("");
 			return;
 		}
 
 		setAddingActionItemId(labItem.id);
-		setInlineActionId("");
 
 		try {
 			const response = await api.get("/actions", { params: { t_item_id: labItem.t_item_id } });
@@ -365,21 +233,42 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 		}
 	}
 
-	const handleConfirmAddAction = async (labItem) => {
-		if (disabled || !inlineActionId) return;
+	// Tapping an action tile adds it straight away — no separate confirm.
+	const handleConfirmAddAction = async (labItem, actionId) => {
+		if (disabled || !actionId) return;
 
 		try {
 			await api.post(`/services/${id}/lab_action_values`, {
 				l_item_id: labItem.id,
-				t_action_id: inlineActionId,
+				t_action_id: actionId,
 			});
 
 			setAddingActionItemId(null);
 			setInlineActions([]);
-			setInlineActionId("");
+			setNewActionName(null);
 			loadSummary();
 		} catch (error) {
 			console.error(error);
+		}
+	}
+
+	// Creates the action for the item type (so every item of that type gets
+	// it, same as in Gestão de Laboratório) and adds it to this item.
+	const handleCreateAction = async (labItem) => {
+		const name = (newActionName || "").trim();
+		if (disabled || submitting || !name) return;
+
+		setSubmitting(true);
+		try {
+			const response = await api.post("/actions", {
+				t_item_id: labItem.t_item_id,
+				name,
+			});
+			await handleConfirmAddAction(labItem, response.data.action.id);
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setSubmitting(false);
 		}
 	}
 
@@ -393,471 +282,178 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 	const editingProperties = editingLabItem ? (tabledPropertiesByItem[editingLabItem.t_item_id] || []) : [];
 	const editingPropertyValues = editingLabItem ? (labPropertyValuesByLabItem[editingLabItem.id] || []) : [];
 
+	const inlineAddAction = (labItem, itemActionValues) => newActionName !== null ? (
+		<div className="lab-inline-add-action">
+			<input
+				type="text"
+				className="lab-new-action-input"
+				placeholder="Nova ação..."
+				maxLength={60}
+				autoFocus
+				value={newActionName}
+				disabled={submitting}
+				onChange={(e) => setNewActionName(e.target.value)}
+				onKeyDown={(e) => {
+					if (e.key === "Enter") handleCreateAction(labItem);
+					if (e.key === "Escape") setNewActionName(null);
+				}}
+			/>
+			<button
+				type="button"
+				className="lab-action-tiles-confirm"
+				title={`Criar ação para todos os itens "${labItem.item_name}" e adicionar`}
+				disabled={submitting || !newActionName.trim()}
+				onClick={() => handleCreateAction(labItem)}
+			>
+				<i className="fa-solid fa-check" />
+			</button>
+			<button
+				type="button"
+				className="lab-action-tiles-cancel"
+				title="Cancelar"
+				onClick={() => setNewActionName(null)}
+			>
+				<i className="fa-solid fa-xmark" />
+			</button>
+		</div>
+	) : (
+		<div className="lab-inline-add-action">
+			<div className="lab-action-tiles">
+				{inlineActions.map((action) => {
+					const alreadyAdded = itemActionValues.some((lav) => lav.t_action_id === action.id);
+					return (
+						<button
+							type="button"
+							key={action.id}
+							className="lab-action-tile"
+							title={alreadyAdded ? "Já adicionada — adicionar outra vez" : "Adicionar ação"}
+							disabled={disabled}
+							onClick={() => handleConfirmAddAction(labItem, action.id)}
+						>
+							{action.i_class && <i className={action.i_class} />}
+							{action.name}
+						</button>
+					);
+				})}
+				<button
+					type="button"
+					className="lab-action-tile is-new"
+					title={`Criar uma nova ação para os itens "${labItem.item_name}"`}
+					disabled={disabled}
+					onClick={() => setNewActionName("")}
+				>
+					<i className="fa-solid fa-plus" />
+				</button>
+			</div>
+		</div>
+	);
+
 	return (
 		<>
-			{isMobile ? (
-				<div className="lab-mobile-list">
-					{labItems.map((labItem) => {
-						const itemActionValues = actionValuesByLabItem[labItem.id] || [];
-						const isAddingAction = addingActionItemId === labItem.id;
+			{/* One card ("area") per item, its actions listed inside it. */}
+			<div className="lab-items">
+				{labItems.map((labItem) => {
+					const itemActionValues = actionValuesByLabItem[labItem.id] || [];
+					const isAddingAction = addingActionItemId === labItem.id;
 
-						const itemProperties = tabledPropertiesByItem[labItem.t_item_id] || [];
-						const itemPropertyValues = labPropertyValuesByLabItem[labItem.id] || [];
-						const itemPrimaryProperties = itemProperties.filter((property) => property.is_primary);
+					const itemProperties = tabledPropertiesByItem[labItem.t_item_id] || [];
+					const itemPropertyValues = labPropertyValuesByLabItem[labItem.id] || [];
+					const itemPrimaryProperties = itemProperties.filter((property) => property.is_primary);
 
-						return (
-							<div className="lab-mobile-item" key={labItem.id}>
-								<div
-									className="lab-mobile-item-header"
-									title="Ver/editar propriedades do item"
-									onClick={() => handleOpenPropertiesModal(labItem)}
-								>
-									<div>
-										<div className="lab-item-name">{labItem.item_name}</div>
-										{itemPrimaryProperties.length > 0 && (
-											<div className="lab-item-properties-summary">
-												{itemPrimaryProperties.map((property) => {
-													const lpv = itemPropertyValues.find((v) => v.property_id === property.id);
-													return `${property.name}: ${lpv?.value || "—"}`;
-												}).join(" · ")}
-											</div>
-										)}
-									</div>
-								</div>
-
-								{itemActionValues.length === 0 && !isAddingAction && (
-									<div className="lab-mobile-action-row">
-										<span>—</span>
-									</div>
-								)}
-
-								{itemActionValues.map((lav) => {
-									const isCustomValue = customValueIds[lav.slav_id] !== undefined
-										? customValueIds[lav.slav_id]
-										: !!lav.value;
-									const isEditingCustomValue = !!customEditingIds[lav.slav_id];
-									const customInputValue = customInputs[lav.slav_id] !== undefined
-										? customInputs[lav.slav_id]
-										: (lav.value || "");
-
-									return (
-										<div className="lab-mobile-action-row" key={lav.id}>
-											<div className="lab-mobile-action-row-main">
-												<span>{lav.action_name}</span>
-												<button type="button" className="lab-delete-action-btn" title="Remover esta ação" disabled={disabled} onClick={() => handleDeleteActionValue(lav)}>
-													<i className="fa-solid fa-trash" />
-												</button>
-											</div>
-
-											<div className="lab-mobile-action-value">
-												{isCustomValue ? (
-													<div className="lab-custom-value">
-														<input
-															type="text"
-															autoFocus={isEditingCustomValue}
-															disabled={!isEditingCustomValue || disabled}
-															value={customInputValue}
-															onChange={(e) => handleCustomInputChange(lav, e.target.value)}
-														/>
-														{isEditingCustomValue ? (
-															<button
-																type="button"
-																className="confirm lab-custom-value-save"
-																title="Guardar valor"
-																disabled={disabled}
-																onClick={() => handleSaveCustomValueClick(lav)}
-															>
-																<i className="fa-solid fa-check" />
-															</button>
-														) : (
-															<button
-																type="button"
-																className="lab-custom-value-edit"
-																title="Editar valor"
-																disabled={disabled}
-																onClick={() => handleStartEditCustomValue(lav)}
-															>
-																<i className="fa-solid fa-pen" />
-															</button>
-														)}
-														<button
-															type="button"
-															className="lab-custom-value-cancel"
-															title="Remover valor personalizado"
-															disabled={disabled}
-															onClick={() => handleCancelCustomValue(lav)}
-														>
-															<i className="fa-solid fa-xmark" />
-														</button>
-													</div>
-												) : (
-													<select
-														value={lav.t_action_value_id || ""}
-														disabled={disabled}
-														onChange={(e) => handleSelectChange(lav, e.target.value)}
-													>
-														<option value="">—</option>
-														{(tabledValuesByAction[lav.t_action_id] || []).map((tv) => (
-															<option key={tv.id} value={tv.id}>{tv.value}</option>
-														))}
-														<option value="__outro__">Outro</option>
-													</select>
-												)}
-											</div>
+					return (
+						<div className="lab-item-card" key={labItem.id}>
+							<div
+								className="lab-item-card-header"
+								title="Ver/editar propriedades do item"
+								onClick={() => handleOpenPropertiesModal(labItem)}
+							>
+								<i className={`lab-item-card-icon ${labItem.item_i_class || "fa-solid fa-flask"}`} />
+								<div className="lab-item-card-title">
+									<div className="lab-item-name">{labItem.item_name}</div>
+									{itemPrimaryProperties.length > 0 && (
+										<div className="lab-item-properties-summary">
+											{itemPrimaryProperties.map((property) => {
+												const lpv = itemPropertyValues.find((v) => v.property_id === property.id);
+												return `${property.name}: ${lpv?.value || "—"}`;
+											}).join(" · ")}
 										</div>
-									);
-								})}
-
-								{isAddingAction ? (
-									<div className="lab-mobile-inline-add-action">
-										<select value={inlineActionId} disabled={disabled} onChange={(e) => setInlineActionId(e.target.value)}>
-											<option value="">Selecionar ação...</option>
-											{inlineActions.map((action) => (
-												<option key={action.id} value={action.id}>{action.name}</option>
-											))}
-										</select>
-										<button
-											type="button"
-											className="confirm"
-											title="Confirmar ação"
-											disabled={!inlineActionId || disabled}
-											onClick={() => handleConfirmAddAction(labItem)}
-										>
-											<i className="fa-solid fa-check" />
-										</button>
-										<button
-											type="button"
-											className="cancel"
-											title="Cancelar"
-											disabled={disabled}
-											onClick={() => handleToggleAddAction(labItem)}
-										>
-											<i className="fa-solid fa-xmark" />
-										</button>
-									</div>
-								) : (
-									<div
-										className={`lab-mobile-add-action-row${disabled ? " disabled" : ""}`}
+									)}
+								</div>
+								{!disabled && (
+									<button
+										type="button"
+										className={`lab-item-card-add-action ${isAddingAction ? "is-active" : ""}`}
 										title="Adicionar ação a este item"
-										onClick={() => handleToggleAddAction(labItem)}
+										onClick={(e) => { e.stopPropagation(); handleToggleAddAction(labItem); }}
 									>
-										<i className="fa-solid fa-plus" />
-									</div>
-								)}
-							</div>
-						);
-					})}
-
-					{!adding ? (
-						!disabled && (
-							<div className="lab-mobile-add-item-row" title="Adicionar item" onClick={handleStart}>
-								<i className="fa-solid fa-plus" /> Adicionar Item
-							</div>
-						)
-					) : (
-						<div className="lab-mobile-picker">
-							<div className="lab-mobile-picker-section">
-								<label>Item</label>
-								<div className="lab-mobile-picker-list">
-									{items.map((item) => (
-										<div
-											key={item.id}
-											className={`lab-row ${selectedItemId === item.id ? "selected" : ""}`}
-											onClick={() => toggleSelectedItem(item.id)}
-										>
-											{item.name}
-										</div>
-									))}
-								</div>
-							</div>
-
-							{selectedItemId && (
-								<div className="lab-mobile-picker-section">
-									<label>Ação</label>
-									<div className="lab-mobile-picker-list">
-										{actions.map((action) => (
-											<div
-												key={action.id}
-												className={`lab-row ${selectedActionIds.includes(action.id) ? "selected" : ""}`}
-												onClick={() => toggleSelectedAction(action.id)}
-											>
-												{action.name}
-											</div>
-										))}
-									</div>
-								</div>
-							)}
-
-							{selectedItemId && (
-								<div className="lab-row-confirm-controls">
-									<label>Quantidade:</label>
-									<input
-										type="number"
-										min="1"
-										value={quantity}
-										onChange={(e) => setQuantity(e.target.value)}
-									/>
-									<button type="button" className="confirm" title="Confirmar" disabled={submitting} onClick={handleConfirm}>
-										<i className="fa-solid fa-check" />
+										<i className="fa-solid fa-plus" /> Ação
 									</button>
-								</div>
-							)}
-
-							<div className="lab-mobile-add-item-row" title="Cancelar" onClick={handleCancel}>
-								<i className="fa-solid fa-xmark" />
-							</div>
-						</div>
-					)}
-				</div>
-			) : (
-			<table className="lab-actions-table">
-				<thead>
-					<tr>
-						<th>Item</th>
-						<th></th>
-						<th>Ação</th>
-						<th>Valor</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					{labItems.map((labItem) => {
-						const itemActionValues = actionValuesByLabItem[labItem.id] || [];
-						const isAddingAction = addingActionItemId === labItem.id;
-						const totalRows = itemActionValues.length + (isAddingAction ? 1 : (itemActionValues.length === 0 ? 1 : 0));
-						const rows = [];
-
-						const itemProperties = tabledPropertiesByItem[labItem.t_item_id] || [];
-						const itemPropertyValues = labPropertyValuesByLabItem[labItem.id] || [];
-						const itemPrimaryProperties = itemProperties.filter((property) => property.is_primary);
-
-						const itemNameCell = (
-							<td rowSpan={totalRows} className="lab-item-name-cell" title="Ver/editar propriedades do item" onClick={() => handleOpenPropertiesModal(labItem)}>
-								<div className="lab-item-name">{labItem.item_name}</div>
-								{itemPrimaryProperties.length > 0 && (
-									<div className="lab-item-properties-summary">
-										{itemPrimaryProperties.map((property) => {
-											const lpv = itemPropertyValues.find((v) => v.property_id === property.id);
-											return `${property.name}: ${lpv?.value || "—"}`;
-										}).join(" · ")}
-									</div>
 								)}
-							</td>
-						);
+							</div>
 
-						itemActionValues.forEach((lav, index) => {
-							const isCustomValue = customValueIds[lav.slav_id] !== undefined
-								? customValueIds[lav.slav_id]
-								: !!lav.value;
-							const isEditingCustomValue = !!customEditingIds[lav.slav_id];
-							const customInputValue = customInputs[lav.slav_id] !== undefined
-								? customInputs[lav.slav_id]
-								: (lav.value || "");
+							<div className="lab-item-card-actions">
+								{itemActionValues.length === 0 && !isAddingAction && (
+									<div className="lab-item-card-empty">Sem ações</div>
+								)}
 
-							rows.push(
-								<tr key={lav.id}>
-									{index === 0 && itemNameCell}
-									{index === 0 && (
-										<td rowSpan={totalRows} className="lab-add-action-cell">
-											<button type="button" className="lab-add-action-btn" title="Adicionar ação a este item" disabled={disabled} onClick={() => handleToggleAddAction(labItem)}>
-												<i className="fa-solid fa-plus" />
-											</button>
-										</td>
-									)}
-									<td>{lav.action_name}</td>
-									<td className="lab-value-cell">
-										{isCustomValue ? (
-											<div className="lab-custom-value">
-												<input
-													type="text"
-													autoFocus={isEditingCustomValue}
-													disabled={!isEditingCustomValue || disabled}
-													value={customInputValue}
-													onChange={(e) => handleCustomInputChange(lav, e.target.value)}
-												/>
-												{isEditingCustomValue ? (
-													<button
-														type="button"
-														className="confirm lab-custom-value-save"
-														title="Guardar valor"
-														disabled={disabled}
-														onClick={() => handleSaveCustomValueClick(lav)}
-													>
-														<i className="fa-solid fa-check" />
-													</button>
-												) : (
-													<button
-														type="button"
-														className="lab-custom-value-edit"
-														title="Editar valor"
-														disabled={disabled}
-														onClick={() => handleStartEditCustomValue(lav)}
-													>
-														<i className="fa-solid fa-pen" />
-													</button>
-												)}
-												<button
-													type="button"
-													className="lab-custom-value-cancel"
-													title="Remover valor personalizado"
-													disabled={disabled}
-													onClick={() => handleCancelCustomValue(lav)}
-												>
-													<i className="fa-solid fa-xmark" />
-												</button>
-											</div>
-										) : (
-											<select
-												value={lav.t_action_value_id || ""}
-												disabled={disabled}
-												onChange={(e) => handleSelectChange(lav, e.target.value)}
-											>
-												<option value="">—</option>
-												{(tabledValuesByAction[lav.t_action_id] || []).map((tv) => (
-													<option key={tv.id} value={tv.id}>{tv.value}</option>
-												))}
-												<option value="__outro__">Outro</option>
-											</select>
-										)}
-									</td>
-									<td className="lab-delete-action-cell">
-										<button type="button" className="lab-delete-action-btn" title="Remover esta ação" disabled={disabled} onClick={() => handleDeleteActionValue(lav)}>
-											<i className="fa-solid fa-trash" />
-										</button>
-									</td>
-								</tr>
-							);
-						});
-
-						if (itemActionValues.length === 0 && !isAddingAction) {
-							rows.push(
-								<tr key={`${labItem.id}-empty`}>
-									{itemNameCell}
-									<td className="lab-add-action-cell">
-										<button type="button" className="lab-add-action-btn" title="Adicionar ação a este item" disabled={disabled} onClick={() => handleToggleAddAction(labItem)}>
-											<i className="fa-solid fa-plus" />
-										</button>
-									</td>
-									<td>—</td>
-									<td>—</td>
-									<td></td>
-								</tr>
-							);
-						}
-
-						if (isAddingAction) {
-							rows.push(
-								<tr key={`${labItem.id}-add-action`}>
-									{itemActionValues.length === 0 && itemNameCell}
-									{itemActionValues.length === 0 && (
-										<td rowSpan={totalRows} className="lab-add-action-cell">
-											<button type="button" className="lab-add-action-btn" title="Adicionar ação a este item" disabled={disabled} onClick={() => handleToggleAddAction(labItem)}>
-												<i className="fa-solid fa-plus" />
-											</button>
-										</td>
-									)}
-									<td className="lab-inline-add-action">
-										<div className="lab-inline-add-action-controls">
-											<select value={inlineActionId} disabled={disabled} onChange={(e) => setInlineActionId(e.target.value)}>
-												<option value="">Selecionar ação...</option>
-												{inlineActions.map((action) => (
-													<option key={action.id} value={action.id}>{action.name}</option>
-												))}
-											</select>
-											<button
-												type="button"
-												className="confirm"
-												title="Confirmar ação"
-												disabled={!inlineActionId || disabled}
-												onClick={() => handleConfirmAddAction(labItem)}
-											>
-												<i className="fa-solid fa-check" />
-											</button>
-											<button
-												type="button"
-												className="cancel"
-												title="Cancelar"
-												disabled={disabled}
-												onClick={() => handleToggleAddAction(labItem)}
-											>
-												<i className="fa-solid fa-xmark" />
-											</button>
-										</div>
-									</td>
-									<td>—</td>
-									<td></td>
-								</tr>
-							);
-						}
-
-						return rows;
-					})}
-
-					{!adding ? (
-						!disabled && (
-							<tr className="add-row" title="Adicionar item" onClick={handleStart}>
-								<td colSpan={5}>
-									<i className="fa-solid fa-plus" />
-								</td>
-							</tr>
-						)
-					) : (
-						<>
-							<tr>
-								<td colSpan={5} className="lab-picker-cell" style={{ padding: "0" }}>
-									<div className="lab-actions-columns">
-										<div className="lab-actions-column">
-											{items.map((item) => (
-												<div
-													key={item.id}
-													className={`lab-row ${selectedItemId === item.id ? "selected" : ""}`}
-													onClick={() => toggleSelectedItem(item.id)}
-												>
-													{item.name}
-												</div>
-											))}
-										</div>
-
-										<div className="lab-actions-column">
-											{actions.map((action) => (
-												<div
-													key={action.id}
-													className={`lab-row ${selectedActionIds.includes(action.id) ? "selected" : ""}`}
-													onClick={() => toggleSelectedAction(action.id)}
-												>
-													{action.name}
-												</div>
-											))}
-										</div>
-
-										<div className="lab-actions-column lab-actions-column-confirm">
-											{selectedItemId && (
-												<div className="lab-row-confirm-controls">
-													<label>Quantidade:</label>
-													<input
-														type="number"
-														min="1"
-														value={quantity}
-														onChange={(e) => setQuantity(e.target.value)}
-													/>
-													<button type="button" className="confirm" title="Confirmar" disabled={submitting} onClick={handleConfirm}>
-														<i className="fa-solid fa-check" />
-													</button>
-												</div>
-											)}
-										</div>
+								{itemActionValues.map((lav) => (
+									<div className={`lab-action-row ${lav.is_done ? "is-done" : ""}`} key={lav.id}>
+										<LabDoneCheck lav={lav} disabled={disabled} onToggle={handleToggleDone} />
+										<LabNote lav={lav} disabled={disabled} onSave={handleSaveNote} onDeleteAction={handleDeleteActionValue} />
 									</div>
-								</td>
-							</tr>
-							<tr className="add-row" title="Cancelar" onClick={handleCancel}>
-								<td colSpan={5}>
-									<i className="fa-solid fa-xmark" />
-								</td>
-							</tr>
-						</>
-					)}
-				</tbody>
-			</table>
+								))}
+							</div>
+
+							{isAddingAction && inlineAddAction(labItem, itemActionValues)}
+						</div>
+					);
+				})}
+			</div>
+
+			{!adding ? (
+				!disabled && (
+					<div className="lab-add-item-row" title="Adicionar item" onClick={handleStart}>
+						<i className="fa-solid fa-plus" /> Adicionar Item
+					</div>
+				)
+			) : (
+				<div className="lab-picker">
+					<div className="lab-picker-section">
+						<label>Item</label>
+						<div className="lab-picker-list">
+							{items.map((item) => (
+								<div
+									key={item.id}
+									className={`lab-row ${selectedItemId === item.id ? "selected" : ""}`}
+									onClick={() => toggleSelectedItem(item.id)}
+								>
+									{item.name}
+								</div>
+							))}
+						</div>
+					</div>
+
+					<div className="lab-picker-side">
+						{selectedItemId && (
+							<div className="lab-row-confirm-controls">
+								<label>Quantidade:</label>
+								<input
+									type="number"
+									min="1"
+									value={quantity}
+									onChange={(e) => setQuantity(e.target.value)}
+								/>
+								<button type="button" className="confirm" title="Confirmar" disabled={submitting} onClick={handleConfirm}>
+									<i className="fa-solid fa-check" />
+								</button>
+							</div>
+						)}
+
+						<div className="lab-add-item-row" title="Cancelar" onClick={handleCancel}>
+							<i className="fa-solid fa-xmark" /> Cancelar
+						</div>
+					</div>
+				</div>
 			)}
 
 			{editingLabItem && (
@@ -904,5 +500,165 @@ export const ServiceLab = ({ id, disabled, onSummaryChange }) => {
 				</div>
 			)}
 		</>
+	);
+}
+
+function LabDoneCheck({ lav, disabled, onToggle }) {
+	return (
+		<label className={`lab-done-check ${lav.is_done ? "is-done" : ""}`} title={lav.is_done ? "Concluída" : "Por fazer"}>
+			<input type="checkbox" checked={!!lav.is_done} disabled={disabled} onChange={() => onToggle(lav)} />
+			<span>{lav.action_name}</span>
+		</label>
+	);
+}
+
+// The note row only shows when there's a note (or one is being written).
+// With no note, the button next to the trash adds one; once there is a note,
+// edit / confirm / cancel / delete sit inside the note field.
+// Renders the button and the note row as separate grid cells of the action row.
+function LabNote({ lav, disabled, onSave, onDeleteAction }) {
+	const [note, setNote] = useState(lav.note || "");
+	const [prevNote, setPrevNote] = useState(lav.note);
+	const [editing, setEditing] = useState(false);
+	const inputRef = useRef(null);
+
+	// Picks up the saved value after a reload, without an effect.
+	if (lav.note !== prevNote) {
+		setPrevNote(lav.note);
+		setNote(lav.note || "");
+	}
+
+	useEffect(() => {
+		if (editing) inputRef.current?.focus();
+	}, [editing]);
+
+	const hasNote = !!lav.note;
+
+	const handleConfirm = () => {
+		onSave(lav, note);
+		setEditing(false);
+	}
+
+	const handleCancel = () => {
+		setNote(lav.note || "");
+		setEditing(false);
+	}
+
+	const handleDelete = () => {
+		setNote("");
+		onSave(lav, "");
+		setEditing(false);
+	}
+
+	const showAddNote = !disabled && !hasNote && !editing;
+
+	return (
+		<>
+			{showAddNote && (
+				<button type="button" className="lab-note-btn lab-collapsible" title="Adicionar nota" onClick={() => setEditing(true)}>
+					<i className="fa-solid fa-note-sticky" />
+				</button>
+			)}
+			<button
+				type="button"
+				className={`lab-delete-action-btn ${showAddNote ? "lab-collapsible" : ""}`}
+				title="Remover esta ação"
+				disabled={disabled}
+				onClick={() => onDeleteAction(lav)}
+			>
+				<i className="fa-solid fa-trash" />
+			</button>
+			{showAddNote && (
+				<LabMoreMenu items={[
+					{ label: "Adicionar nota", icon: "fa-solid fa-note-sticky", onClick: () => setEditing(true) },
+					{ label: "Remover ação", icon: "fa-solid fa-trash", onClick: () => onDeleteAction(lav), danger: true },
+				]} />
+			)}
+
+			{(hasNote || editing) && (
+				<div className="lab-note-field">
+					<input
+						ref={inputRef}
+						type="text"
+						className={`lab-note-input ${editing ? "" : "is-locked"}`}
+						placeholder="Nota..."
+						maxLength={255}
+						value={note}
+						readOnly={!editing}
+						onChange={(e) => setNote(e.target.value)}
+						onKeyDown={(e) => {
+							if (!editing) return;
+							if (e.key === "Enter") handleConfirm();
+							if (e.key === "Escape") handleCancel();
+						}}
+					/>
+					{!disabled && (
+						<span className="lab-note-btns">
+							{editing ? (
+								<>
+									<button type="button" className="lab-note-btn is-confirm" title="Confirmar nota" onClick={handleConfirm}>
+										<i className="fa-solid fa-check" />
+									</button>
+									<button type="button" className="lab-note-btn is-cancel" title="Cancelar edição" onClick={handleCancel}>
+										<i className="fa-solid fa-xmark" />
+									</button>
+								</>
+							) : (
+								<>
+									<button type="button" className="lab-note-btn lab-collapsible" title="Editar nota" onClick={() => setEditing(true)}>
+										<i className="fa-solid fa-pen" />
+									</button>
+									<button type="button" className="lab-note-btn is-delete lab-collapsible" title="Apagar nota" onClick={handleDelete}>
+										<i className="fa-solid fa-xmark" />
+									</button>
+									<LabMoreMenu items={[
+										{ label: "Editar nota", icon: "fa-solid fa-pen", onClick: () => setEditing(true) },
+										{ label: "Apagar nota", icon: "fa-solid fa-xmark", onClick: handleDelete, danger: true },
+									]} />
+								</>
+							)}
+						</span>
+					)}
+				</div>
+			)}
+		</>
+	);
+}
+
+// Phone only (see CSS): a vertical "..." that stands in for a group of
+// buttons marked lab-collapsible, listing them in a small popup.
+function LabMoreMenu({ items }) {
+	const [open, setOpen] = useState(false);
+	const menuRef = useRef(null);
+
+	useEffect(() => {
+		if (!open) return;
+		const close = (e) => {
+			if (!menuRef.current?.contains(e.target)) setOpen(false);
+		};
+		document.addEventListener("pointerdown", close);
+		return () => document.removeEventListener("pointerdown", close);
+	}, [open]);
+
+	return (
+		<span className="lab-more-menu" ref={menuRef}>
+			<button type="button" className="lab-more-btn" title="Mais opções" onClick={() => setOpen((prev) => !prev)}>
+				<i className="fa-solid fa-ellipsis-vertical" />
+			</button>
+			{open && (
+				<span className="lab-more-popup">
+					{items.map((item) => (
+						<button
+							type="button"
+							key={item.label}
+							className={item.danger ? "is-danger" : ""}
+							onClick={() => { setOpen(false); item.onClick(); }}
+						>
+							<i className={item.icon} /> {item.label}
+						</button>
+					))}
+				</span>
+			)}
+		</span>
 	);
 }

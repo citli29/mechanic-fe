@@ -327,237 +327,6 @@
 		gap: var(--big-padding);
 	}
 
-	.lab-actions-table{
-		width: 100%;
-		table-layout: fixed;
-		background: var(--bg-page);
-		border-collapse: separate;
-		border-spacing: 0;
-		overflow: hidden;
-		border-radius: 0 0 10px 10px;
-		border: 2px solid var(--border);
-
-		th:nth-child(1), td:nth-child(1){
-			width: 28%;
-		}
-
-		th:nth-child(2), td:nth-child(2){
-			width: 48px;
-		}
-
-		th:nth-child(3), td:nth-child(3){
-			width: 27%;
-		}
-
-		th:nth-child(5), td:nth-child(5){
-			width: 48px;
-		}
-
-		th, td{
-			padding: var(--padding) var(--big-padding);
-			text-align: left;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			height: calc(var(--line-height) + 1px + 2 * var(--padding));
-		}
-
-		th{
-			background: var(--bg-page);
-			text-align: center;
-			font-size: var(--font-size-big);
-			border-bottom: 5px solid var(--border);
-		}
-
-		td{
-			vertical-align: middle;
-		}
-
-		tbody tr:not(:first-child) td{
-			border-top: 2px solid var(--border);
-		}
-
-		.lab-value-cell select{
-			width: 100%;
-			padding: var(--padding);
-			border: 1px solid var(--border);
-			border-radius: 5px;
-			background: var(--bg-page);
-			cursor: pointer;
-			text-align: center;
-			text-align-last: center;
-
-			&:disabled{
-				color: var(--txt-light);
-				border-color: var(--border-light);
-				cursor: default;
-			}
-		}
-
-		.lab-custom-value{
-			display: flex;
-			align-items: stretch;
-			gap: var(--padding);
-
-			input{
-				flex: 1;
-				min-width: 0;
-				padding: var(--padding);
-				border: 1px solid var(--border);
-				border-radius: 5px;
-				background: var(--bg-page);
-
-				&:disabled{
-					background: var(--bg-page);
-					color: var(--txt-light);
-					border-color: var(--border-light);
-					cursor: not-allowed;
-				}
-			}
-
-			button{
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				padding: 0;
-				border: 1px solid var(--border);
-				border-radius: 5px;
-				width: 37px;
-			}
-		}
-
-		.lab-custom-value-edit,
-		.lab-custom-value-cancel{
-			cursor: pointer;
-			color: var(--txt-muted);
-			background: none;
-
-			&:hover{
-				color: var(--txt-light);
-			}
-
-			&:disabled{
-				cursor: default;
-				opacity: 0.5;
-
-				&:hover{
-					color: var(--txt-muted);
-				}
-			}
-		}
-
-		.lab-add-action-cell{
-			text-align: center;
-		}
-
-		.lab-add-action-btn{
-			cursor: pointer;
-			color: var(--txt-muted);
-			background: none;
-			border: none;
-			padding: var(--padding);
-
-			&:hover{
-				color: var(--txt-light);
-			}
-
-			&:disabled{
-				cursor: default;
-				opacity: 0.5;
-
-				&:hover{
-					color: var(--txt-muted);
-				}
-			}
-		}
-
-		.lab-delete-action-cell{
-			text-align: center;
-		}
-
-		.lab-delete-action-btn{
-			cursor: pointer;
-			color: var(--txt-muted);
-			background: none;
-			border: none;
-			padding: var(--padding);
-
-			&:hover{
-				color: var(--danger);
-			}
-
-			&:disabled{
-				cursor: default;
-				opacity: 0.5;
-
-				&:hover{
-					color: var(--txt-muted);
-				}
-			}
-		}
-
-		.lab-item-name-cell{
-			cursor: pointer;
-
-			&:hover{
-				background: var(--bg-page-dark);
-			}
-		}
-
-		.lab-item-properties-summary{
-			margin-top: calc(var(--padding) / 4);
-			color: var(--txt-muted);
-			font-size: var(--font-size-small);
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-
-		.lab-inline-add-action-controls{
-			display: flex;
-			align-items: stretch;
-			gap: var(--padding);
-
-			select{
-				flex: 1;
-				min-width: 0;
-				padding: var(--padding);
-				border: 1px solid var(--border);
-				border-radius: 5px;
-				background: var(--bg-page);
-			}
-
-			button{
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				padding: 0;
-				border: 1px solid var(--border);
-				border-radius: 5px;
-				width:39px;
-			}
-		}
-
-		.add-row{
-			cursor: pointer;
-			color: var(--txt-muted);
-
-			td{
-				padding: calc(var(--padding) / 2) var(--big-padding);
-				text-align: center;
-				font-size: var(--font-size-big);
-				height: auto;
-			}
-
-			&:hover{
-				color: var(--txt-light);
-			}
-
-			&:hover td{
-				background: var(--bg-page-dark);
-			}
-		}
-	}
-
 	.lab-properties-backdrop{
 		position: fixed;
 		inset: 0;
@@ -652,20 +421,6 @@
 		}
 	}
 
-	.lab-actions-list{
-		width: 100%;
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		overflow: hidden;
-	}
-
-	.lab-actions-list-header{
-		padding: var(--padding) var(--big-padding);
-		font-weight: 600;
-		background: var(--bg-page);
-		border-bottom: 1px solid var(--border);
-	}
-
 	.lab-row{
 		display: flex;
 		align-items: center;
@@ -683,61 +438,11 @@
 		}
 	}
 
-	.lab-add-row,
-	.lab-cancel-row{
-		justify-content: center;
-		color: var(--txt-muted);
-	}
-
-	.lab-add-row:hover,
-	.lab-cancel-row:hover{
-		color: var(--txt-light);
-	}
-
-	.lab-add-row{
-		padding: var(--big-padding);
-		font-size: calc(2 * var(--font-size-big));
-	}
-
-	.lab-cancel-row{
-		padding: var(--big-padding);
-		border-top: 1px solid var(--border);
-		font-size: var(--font-size-big);
-	}
-
-	.lab-actions-columns{
-		display: flex;
-	}
-
-	.lab-actions-column{
-		flex: 1;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.lab-actions-column + .lab-actions-column{
-		border-left: 1px solid var(--border);
-	}
-
-	.lab-actions-column .lab-row:not(:first-child){
-		border-top: 1px solid var(--border);
-	}
-
-	/* Not scoped under .lab-actions-column — the mobile picker
-	   (.lab-mobile-picker-list) reuses .lab-row/.selected too, and a
-	   column-scoped selector left it selectable but invisible there. */
 	.lab-row.selected{
 		outline: 2px solid var(--primary);
 		outline-offset: -2px;
 		position: relative;
 		z-index: 1;
-	}
-
-	.lab-actions-column-confirm{
-		align-items: center;
-		justify-content: center;
-		padding: var(--padding) var(--big-padding);
 	}
 
 	.lab-row-confirm-controls{
@@ -778,132 +483,126 @@
 		}
 	}
 
-	/* Stacked-card layout used below 650px instead of .lab-actions-table —
-	   the table relies on rowSpan to merge an item's name/delete across its
-	   action rows, which display:grid (the mobile reflow trick other tables
-	   use) can't express, so this is a genuinely separate markup rather than
-	   a media query. */
-	.lab-mobile-list{
-		display: flex;
-		flex-direction: column;
-		gap: var(--padding);
-	}
-
-	.lab-mobile-item{
+	/* Table and phone layout both. */
+	.lab-note-input{
+		width: 100%;
+		padding: var(--padding);
 		border: 1px solid var(--border);
 		border-radius: 5px;
-		overflow: hidden;
-	}
-
-	.lab-mobile-item-header{
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--padding);
-		padding: var(--padding) var(--big-padding);
 		background: var(--bg-page);
-		cursor: pointer;
 
-		&:hover{
-			background: var(--bg-page-dark);
+		&:disabled{
+			color: var(--txt-light);
+			border-color: var(--border-light);
+			cursor: default;
 		}
 	}
 
-	.lab-mobile-action-row{
-		padding: var(--padding) var(--big-padding);
+	/* Done check + action name; the whole label toggles it. */
+	.lab-done-check{
+		display: inline-flex;
+		align-items: center;
+		gap: var(--padding);
+		cursor: pointer;
+
+		input{
+			width: 18px;
+			height: 18px;
+			margin: 0;
+			cursor: pointer;
+			accent-color: #16a34a;
+		}
+
+		&:has(input:disabled){
+			cursor: default;
+			input{ cursor: default; }
+		}
+	}
+
+	.lab-inline-add-action{
+		height: calc(var(--line-height) + var(--padding));
+	}
+
+	/* "+" open: the item's actions as flat tap areas in one strip
+	   (scrolls sideways if there are many), tapping one adds it. Actions
+	   the item already has can be added again. */
+	.lab-inline-add-action{
+		display: flex;
+		align-items: stretch;
 		border-top: 1px solid var(--border);
 	}
 
-	.lab-mobile-action-row-main{
+	.lab-action-tiles{
+		flex: 1;
+		min-width: 0;
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--padding);
-
-		.lab-delete-action-btn{
-			cursor: pointer;
-			color: var(--txt-muted);
-			background: none;
-			border: none;
-			padding: var(--padding);
-
-			&:hover{ color: var(--danger); }
-
-			&:disabled{
-				cursor: default;
-				opacity: 0.5;
-
-				&:hover{
-					color: var(--txt-muted);
-				}
-			}
-		}
+		overflow-x: auto;
+		scrollbar-width: thin;
 	}
 
-	.lab-mobile-action-value{
-		margin-top: calc(var(--padding) / 2);
-
-		select{
-			width: 100%;
-			padding: var(--padding);
-			border: 1px solid var(--border);
-			border-radius: 5px;
-			background: var(--bg-page);
-
-			&:disabled{
-				color: var(--txt-light);
-				border-color: var(--border-light);
-				cursor: default;
-			}
-		}
-	}
-
-	.lab-mobile-add-action-row{
+	.lab-action-tile{
+		flex: 1 0 auto;
+		min-width: 110px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: calc(var(--padding) / 2) var(--big-padding);
-		border-top: 1px solid var(--border);
+		gap: var(--padding);
+		padding: 0 var(--big-padding);
+		border: none;
+		border-right: 1px solid var(--border);
+		background: var(--bg-card);
+		color: var(--txt-dark);
+		white-space: nowrap;
+		cursor: pointer;
+		transition: background 0.12s;
+
+		&:hover{ background: var(--bg-page-dark); }
+		&:active{ background: var(--border); }
+
+		&.is-new{
+			flex-grow: 0;
+			min-width: 0;
+			color: #0ea5e9;
+		}
+	}
+
+	/* "Nova" open: a name field in place of the tiles. */
+	.lab-new-action-input{
+		flex: 1;
+		min-width: 0;
+		padding: 0 var(--big-padding);
+		border: none;
+		background: var(--bg-card);
+		color: var(--txt-dark);
+	}
+
+	.lab-action-tiles-confirm{
+		flex: 0 0 auto;
+		width: 48px;
+		border: none;
+		background: none;
+		color: #16a34a;
+		cursor: pointer;
+
+		&:hover{ background: var(--bg-page-dark); }
+		&:disabled{ color: var(--txt-muted); cursor: default; background: none; }
+	}
+
+	.lab-action-tiles-cancel{
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 48px;
+		border: none;
+		background: none;
 		color: var(--txt-muted);
 		cursor: pointer;
 
-		&:hover{ color: var(--txt-light); background: var(--bg-page-dark); }
-
-		&.disabled{
-			opacity: 0.5;
-			cursor: default;
-			pointer-events: none;
-		}
+		&:hover{ color: var(--danger); background: var(--bg-page-dark); }
 	}
 
-	.lab-mobile-inline-add-action{
-		display: flex;
-		align-items: stretch;
-		gap: var(--padding);
-		padding: var(--padding) var(--big-padding);
-		border-top: 1px solid var(--border);
-
-		select{
-			flex: 1;
-			min-width: 0;
-			padding: var(--padding);
-			border: 1px solid var(--border);
-			border-radius: 5px;
-			background: var(--bg-page);
-		}
-
-		button{
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			padding: 0;
-			border: 1px solid var(--border);
-			border-radius: 5px;
-			width: 39px;
-		}
-	}
-
-	.lab-mobile-add-item-row{
+	.lab-add-item-row{
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -917,7 +616,7 @@
 		&:hover{ color: var(--txt-light); background: var(--bg-page-dark); }
 	}
 
-	.lab-mobile-picker{
+	.lab-picker{
 		display: flex;
 		flex-direction: column;
 		gap: var(--padding);
@@ -926,7 +625,41 @@
 		padding: var(--padding);
 	}
 
-	.lab-mobile-picker-section{
+	/* Quantidade + Cancelar. Phone: under the list. */
+	.lab-picker-side{
+		display: flex;
+		flex-direction: column;
+		gap: var(--padding);
+	}
+
+	/* Bigger screens: items on the left; on the right, Quantidade centred
+	   on the list and Cancelar level with the last item row. The top margin
+	   (= the label's height) lines the column up with the list itself. */
+	@media (min-width: 651px){
+		.lab-picker{
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			column-gap: var(--big-padding);
+		}
+
+		.lab-picker-side{
+			align-self: stretch;
+			margin-top: calc(var(--font-size-small) * 1.5 + var(--padding) / 2);
+
+			.lab-row-confirm-controls{ margin-block: auto; }
+			.lab-add-item-row{ margin-top: auto; }
+		}
+	}
+
+	/* Phone: the Quantidade field stretches across the row. */
+	@media (max-width: 650px){
+		.lab-picker-side .lab-row-confirm-controls input{
+			flex: 1;
+			min-width: 0;
+		}
+	}
+
+	.lab-picker-section{
 		label{
 			display: block;
 			font-size: var(--font-size-small);
@@ -935,13 +668,252 @@
 		}
 	}
 
-	.lab-mobile-picker-list{
+	.lab-picker-list{
 		border: 1px solid var(--border);
 		border-radius: 5px;
 		overflow: hidden;
 
 		.lab-row:not(:first-child){
 			border-top: 1px solid var(--border);
+		}
+	}
+
+	/* One card per lab item ("area"), its actions listed inside. Cards
+	   sit side by side when there's room, one per row on a phone. */
+	/* One full-width card per row, stacked. */
+	.lab-items{
+		display: flex;
+		flex-direction: column;
+		gap: var(--big-padding);
+
+		&:empty{ display: none; }
+	}
+
+	.lab-item-card{
+		container-type: inline-size;
+		border: 2px solid var(--border);
+		background: var(--bg-page);
+	}
+
+	/* The right-hand icons (header +, action trash/note, note-field
+	   buttons) sit in fixed-width slots with the same right padding and gap,
+	   so they line up in two columns down the card. */
+	.lab-item-card{
+		--lab-icon-slot: 2rem;
+	}
+
+	.lab-item-card-header{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+		padding: var(--padding) var(--padding) var(--padding) var(--big-padding);
+		border-bottom: 2px solid var(--border);
+		background: var(--bg-card);
+		cursor: pointer;
+
+		&:hover{ background: var(--bg-page-dark); }
+	}
+
+	.lab-item-card-icon{
+		width: 1.4em;
+		text-align: center;
+		font-size: var(--font-size-big);
+		color: #0ea5e9; /* the Laboratório card's accent */
+	}
+
+	.lab-item-card-title{
+		flex: 1;
+		min-width: 0;
+	}
+
+	.lab-item-name{
+		font-weight: 600;
+		font-size: var(--font-size-big);
+	}
+
+	.lab-item-properties-summary{
+		margin-top: calc(var(--padding) / 4);
+		color: var(--txt-muted);
+		font-size: var(--font-size-small);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	/* "+ Ação" in the header: opens the action tiles at the bottom of the
+	   card. Bordered and roomy so it's easy to spot and hit. */
+	.lab-item-card-add-action{
+		display: inline-flex;
+		align-items: center;
+		gap: var(--padding);
+		cursor: pointer;
+		padding: var(--padding) var(--big-padding);
+		border: 2px solid #0ea5e9;
+		border-radius: 6px;
+		background: var(--bg-card);
+		color: #0ea5e9;
+		font-weight: 600;
+		white-space: nowrap;
+
+		&:hover{ background: #e0f2fe; }
+
+		&.is-active{
+			background: #0ea5e9;
+			color: #fff;
+		}
+	}
+
+	.lab-item-card-empty{
+		padding: var(--padding) var(--big-padding);
+		color: var(--txt-muted);
+		font-size: var(--font-size-small);
+		text-align: center;
+	}
+
+	/* done check + name | note button | delete, the note on its own line below */
+	.lab-action-row{
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto auto;
+		align-items: center;
+		gap: 0 var(--padding);
+		padding: calc(var(--padding) / 2) var(--padding) calc(var(--padding) / 2) var(--big-padding);
+
+		& + &{ border-top: 1px solid var(--border); }
+
+		.lab-done-check{ min-width: 0; }
+
+		/* Fixed columns: the note button is often hidden, and the trash
+		   must stay in the last slot. */
+		> .lab-note-btn{ grid-column: 2; grid-row: 1; }
+		> .lab-delete-action-btn,
+		> .lab-more-menu{ grid-column: 3; grid-row: 1; }
+
+		.lab-note-field{
+			grid-column: 1 / -1;
+			grid-row: 2;
+			margin-bottom: calc(var(--padding) / 2);
+		}
+	}
+
+	/* Confirm / cancel / delete overlaid on the right end of the note input. */
+	.lab-note-field{
+		position: relative;
+
+		.lab-note-input{ padding-right: calc(2 * var(--lab-icon-slot) + 2 * var(--padding)); }
+
+		.lab-note-btns{
+			position: absolute;
+			top: 50%;
+			right: 0;
+			transform: translateY(-50%);
+		}
+	}
+
+	.lab-note-input.is-locked{
+		color: var(--txt-dark);
+		cursor: default;
+		&:focus{ outline: none; }
+	}
+
+	.lab-note-btn{
+		cursor: pointer;
+		color: var(--txt-muted);
+		background: none;
+		border: none;
+		width: var(--lab-icon-slot);
+		padding: var(--padding) 0;
+		text-align: center;
+
+		&:hover{ color: var(--txt-dark); }
+
+		&.is-confirm{
+			color: #16a34a;
+		}
+
+		&.is-cancel:hover,
+		&.is-delete:hover{
+			color: var(--danger);
+		}
+	}
+
+	.lab-note-btns{
+		display: inline-flex;
+		gap: var(--padding);
+	}
+
+	/* Phone: groups of buttons collapse into a "⋮" menu. */
+	.lab-more-menu{
+		display: none;
+		position: relative;
+	}
+
+	@media (max-width: 650px){
+		.lab-collapsible{ display: none; }
+		.lab-more-menu{ display: inline-block; }
+		.lab-note-field .lab-note-input{ padding-right: calc(2 * var(--lab-icon-slot)); }
+	}
+
+	.lab-more-btn{
+		width: var(--lab-icon-slot);
+		padding: var(--padding) 0;
+		border: none;
+		background: none;
+		color: var(--txt-muted);
+		cursor: pointer;
+	}
+
+	.lab-more-popup{
+		position: absolute;
+		top: 100%;
+		right: 0;
+		z-index: 20;
+		display: flex;
+		flex-direction: column;
+		min-width: 170px;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: var(--bg-card);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		overflow: hidden;
+
+		button{
+			display: flex;
+			align-items: center;
+			gap: var(--padding);
+			padding: var(--big-padding);
+			border: none;
+			background: none;
+			color: var(--txt-dark);
+			text-align: left;
+			white-space: nowrap;
+			cursor: pointer;
+
+			& + button{ border-top: 1px solid var(--border); }
+			&:active{ background: var(--bg-page-dark); }
+			&.is-danger{ color: var(--danger); }
+		}
+	}
+
+	.lab-delete-action-btn{
+		cursor: pointer;
+		color: var(--txt-muted);
+		background: none;
+		border: none;
+		width: var(--lab-icon-slot);
+		padding: var(--padding) 0;
+		text-align: center;
+
+		&:hover{
+			color: var(--danger);
+		}
+
+		&:disabled{
+			cursor: default;
+			opacity: 0.5;
+
+			&:hover{
+				color: var(--txt-muted);
+			}
 		}
 	}
 }
@@ -1950,6 +1922,12 @@
 	flex-direction: column;
 	gap: calc(var(--padding) / 2);
 
+	/* Top one jumps to the Laboratório card. */
+	&.is-clickable{
+		cursor: pointer;
+		&:hover{ background: var(--bg-page-dark); }
+	}
+
 	/* Joined to the Descrição de Avaria field right under it — cancels
 	   the card body's flex gap. Not in the print summary, which has none. */
 	.service-signed-info-card &{
@@ -1983,9 +1961,8 @@
 		margin: 2px 0 0;
 		padding-left: var(--big-padding);
 
-		li{
-			display: list-item;
-			list-style: disc;
+		li.is-done i{
+			color: #16a34a;
 		}
 	}
 	.lab-summary-value{

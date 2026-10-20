@@ -1,12 +1,11 @@
 // What the lab is doing on a service, as a nested list: one entry per
-// lab item, grouped by item type, with its filled-in
-// properties and its actions, each action with its chosen value when
-// there is one — e.g.
+// lab item, grouped by item type, with its filled-in properties and its
+// actions — each with its done state and note — e.g.
 //   Injetor — Referencia: um um · Marca: Bosch
-//     Reparação: Reparado
-//     Teste
+//     ☑ Reparação: com fuga
+//     ☐ Teste
 // Identical items are merged and counted (see the end of the function).
-export function buildLabSummary(labItems, labActionValues, labPropertyValuesByLabItem, tabledValuesByAction) {
+export function buildLabSummary(labItems, labActionValues, labPropertyValuesByLabItem) {
 	// Items of the same type sit together (all Injetores, then all
 	// Turbos…), types in the order their first item was added.
 	const typeOrder = new Map();
@@ -24,7 +23,11 @@ export function buildLabSummary(labItems, labActionValues, labPropertyValuesByLa
 		const actions = labActionValues
 			.filter((lav) => lav.l_item_id === labItem.id)
 			.sort((a, b) => a.t_action_id - b.t_action_id)
-			.map((lav) => ({ name: lav.action_name, value: getActionValueText(lav, tabledValuesByAction) }));
+			.map((lav) => ({
+				name: lav.action_name,
+				note: lav.note ? String(lav.note).trim() || null : null,
+				isDone: !!lav.is_done,
+			}));
 
 		return {
 			id: labItem.id,
@@ -49,12 +52,3 @@ export function buildLabSummary(labItems, labActionValues, labPropertyValuesByLa
 	return [...merged.values()];
 }
 
-function getActionValueText(lav, tabledValuesByAction) {
-	if (lav.t_action_value_id != null) {
-		const tabled = (tabledValuesByAction[lav.t_action_id] || [])
-			.find((tv) => tv.id === lav.t_action_value_id);
-		if (tabled) return tabled.value;
-	}
-	const custom = lav.value != null ? String(lav.value).trim() : "";
-	return custom || null;
-}
