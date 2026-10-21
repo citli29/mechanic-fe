@@ -6,6 +6,11 @@
 	grid-template-columns: minmax(0, 1fr) 70px 160px 56px 110px;
 }
 
+/* Valores are plain text — no class/icon columns. */
+.lab-management-page .lab-values-table tr{
+	grid-template-columns: minmax(0, 1fr) 110px;
+}
+
 .lab-management-page table td.lab-primary-cell{
 	display: flex;
 	align-items: center;

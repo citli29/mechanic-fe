@@ -104,6 +104,13 @@
 			padding: 0 var(--big-padding);
 			border-radius: 5px;
 			white-space: nowrap;
+
+			/* Locked (finished service): gray like the fields above, not red. */
+			&:disabled{
+				color: var(--txt-muted);
+				cursor: default;
+				background: none;
+			}
 		}
 	}
 
@@ -472,13 +479,19 @@
 		font-size: var(--font-size-big);
 	}
 
+	/* Primary properties: label light, value bold, wrapping instead of
+	   being cut off with "…". */
 	.lab-item-properties-summary{
-		margin-top: calc(var(--padding) / 4);
-		color: var(--txt-muted);
-		font-size: var(--font-size-small);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		margin-top: calc(var(--padding) / 2);
+		display: flex;
+		flex-wrap: wrap;
+		gap: calc(var(--padding) / 2) var(--big-padding);
+		color: var(--txt-light);
+
+		strong{
+			color: var(--txt-dark);
+			font-weight: 600;
+		}
 	}
 
 	/* "+ Ação" in the header: opens the action tiles at the bottom of the
@@ -517,10 +530,10 @@
 		text-align: center;
 	}
 
-	/* done check + name | note button | delete, the note on its own line below */
+	/* done check + name | presets | note button | delete, the note on its own line below */
 	.lab-action-row{
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto auto;
+		grid-template-columns: minmax(0, 1fr) auto auto auto;
 		align-items: center;
 		gap: 0 var(--padding);
 		padding: calc(var(--padding) / 2) var(--padding) calc(var(--padding) / 2) var(--big-padding);
@@ -531,15 +544,25 @@
 
 		/* Fixed columns: the note button is often hidden, and the trash
 		   must stay in the last slot. */
-		> .lab-note-btn{ grid-column: 2; grid-row: 1; }
+		> .lab-preset-menu{ grid-column: 2; grid-row: 1; }
+		> .lab-note-btn{ grid-column: 3; grid-row: 1; }
 		> .lab-delete-action-btn,
-		> .lab-more-menu{ grid-column: 3; grid-row: 1; }
+		> .lab-more-menu{ grid-column: 4; grid-row: 1; }
 
 		.lab-note-field{
 			grid-column: 1 / -1;
 			grid-row: 2;
 			margin-bottom: calc(var(--padding) / 2);
 		}
+
+		/* Presets beside the note: last column, lined up under the trash,
+		   the note giving up that column. */
+		> .lab-preset-menu.is-beside-note{
+			grid-column: 4;
+			grid-row: 2;
+			align-self: start;
+		}
+		.lab-note-field.has-presets{ grid-column: 1 / 4; }
 	}
 
 	/* Confirm / cancel / delete overlaid on the right end of the note input. */
@@ -548,11 +571,36 @@
 
 		.lab-note-input{ padding-right: calc(2 * var(--lab-icon-slot) + 2 * var(--padding)); }
 
+		/* Pinned to the first line — the note can grow to several. */
 		.lab-note-btns{
 			position: absolute;
-			top: 50%;
+			top: 1px;
 			right: 0;
-			transform: translateY(-50%);
+		}
+	}
+
+	/* Height is set from its content in LabNote. */
+	textarea.lab-note-input{
+		display: block;
+		box-sizing: border-box;
+		font: inherit;
+		color: inherit;
+		resize: none;
+		overflow: hidden;
+	}
+
+	.lab-preset-menu{
+		position: relative;
+	}
+
+	/* Presets can be long sentences — wrap instead of a very wide popup. */
+	.lab-more-popup.lab-preset-popup{
+		min-width: 200px;
+		max-width: min(320px, 80vw);
+
+		button{
+			white-space: normal;
+			&:hover{ background: var(--bg-page-dark); }
 		}
 	}
 

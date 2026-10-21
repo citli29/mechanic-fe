@@ -208,7 +208,10 @@ export const AppliedProducts = ({
 		if(disabled) return;
 		setIsSearchSelected(false);
 		const ap = await postAP(p.id);
-		if(ap) pushSuccessToast("Produto aplicado adicionado com sucesso");
+		if(ap){
+			pushSuccessToast("Produto aplicado adicionado com sucesso");
+			setSearchProduct("");
+		}
 		loadAPs();
 	}
 

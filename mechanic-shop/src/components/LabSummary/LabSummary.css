@@ -56,6 +56,8 @@
 	}
 	.lab-summary-value{
 		color: var(--txt-muted);
+		/* Notes built from presets are one per line. */
+		white-space: pre-line;
 	}
 }
 

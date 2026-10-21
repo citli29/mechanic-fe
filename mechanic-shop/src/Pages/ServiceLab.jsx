@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "./../api/axios";
 import { buildLabSummary } from "../utils/labSummary";
@@ -115,6 +115,10 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 	const [pickerNewActionName, setPickerNewActionName] = useState(null);
 	const [submitting, setSubmitting] = useState(false);
 
+	// Preset note texts per action (Gestão de Laboratório → Valores). Only
+	// copied into the note when picked, never referenced.
+	const [presetsByAction, setPresetsByAction] = useState({});
+
 	const [addingActionItemId, setAddingActionItemId] = useState(null);
 	const [inlineActions, setInlineActions] = useState([]);
 	// null = not creating; otherwise the name being typed for a new action.
@@ -126,6 +130,20 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 	const addingActionItemIdRef = useRef(null);
 
 	useEffect(() => { loadSummary(); }, [id]);
+
+	useEffect(() => {
+		if (disabled) return;
+		api.get("/action_tabled_values")
+			.then((response) => {
+				const grouped = {};
+				(response.data.action_tabled_value_list || []).forEach((preset) => {
+					if (!grouped[preset.t_action_id]) grouped[preset.t_action_id] = [];
+					grouped[preset.t_action_id].push(preset);
+				});
+				setPresetsByAction(grouped);
+			})
+			.catch((error) => console.error(error));
+	}, [disabled]);
 
 	// ?lab_item=<id> (from Gestão de Laboratório's search): once the items
 	// are in, scroll to that card and flash it. The param is then dropped,
@@ -558,8 +576,12 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 							<div className="lab-item-properties-summary">
 								{itemPrimaryProperties.map((property) => {
 									const lpv = itemPropertyValues.find((v) => v.property_id === property.id);
-									return `${property.name}: ${lpv?.value || "—"}`;
-								}).join(" · ")}
+									return (
+										<span className="lab-item-property" key={property.id}>
+											{property.name}: <strong>{lpv?.value || "—"}</strong>
+										</span>
+									);
+								})}
 							</div>
 						)}
 					</div>
@@ -585,7 +607,7 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 							{draft
 								? <span className="lab-action-name">{lav.action_name}</span>
 								: <LabDoneCheck lav={lav} disabled={disabled} onToggle={handleToggleDone} />}
-							<LabNote lav={lav} disabled={disabled} onSave={handleSaveNote} onDeleteAction={handleDeleteActionValue} />
+							<LabNote lav={lav} disabled={disabled} presets={presetsByAction[lav.t_action_id] || []} onSave={handleSaveNote} onDeleteAction={handleDeleteActionValue} />
 						</div>
 					))}
 				</div>
@@ -774,7 +796,9 @@ function LabDoneCheck({ lav, disabled, onToggle }) {
 // With no note, the button next to the trash adds one; once there is a note,
 // edit / confirm / cancel / delete sit inside the note field.
 // Renders the button and the note row as separate grid cells of the action row.
-function LabNote({ lav, disabled, onSave, onDeleteAction }) {
+// A picked preset goes on a new line of the note (or starts it): while
+// editing it lands in the input to confirm, otherwise it's saved straight away.
+function LabNote({ lav, disabled, presets, onSave, onDeleteAction }) {
 	const [note, setNote] = useState(lav.note || "");
 	const [prevNote, setPrevNote] = useState(lav.note);
 	const [editing, setEditing] = useState(false);
@@ -789,6 +813,23 @@ function LabNote({ lav, disabled, onSave, onDeleteAction }) {
 	useEffect(() => {
 		if (editing) inputRef.current?.focus();
 	}, [editing]);
+
+	// The note box grows to fit its text, wrapped lines included (on a
+	// phone a single line can wrap several times), and again when the
+	// width changes (rotating the phone, resizing the window).
+	const hasNoteField = !!lav.note || editing;
+	useLayoutEffect(() => {
+		const el = inputRef.current;
+		if (!el) return;
+		const fit = () => {
+			el.style.height = "auto";
+			el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
+		};
+		fit();
+		const observer = new ResizeObserver(fit);
+		observer.observe(el.parentElement);
+		return () => observer.disconnect();
+	}, [note, hasNoteField]);
 
 	const hasNote = !!lav.note;
 
@@ -808,10 +849,27 @@ function LabNote({ lav, disabled, onSave, onDeleteAction }) {
 		setEditing(false);
 	}
 
+	const handlePickPreset = (preset) => {
+		if (editing) {
+			setNote((prev) => appendNoteLine(prev, preset.value));
+			inputRef.current?.focus();
+			return;
+		}
+		onSave(lav, appendNoteLine(lav.note || "", preset.value));
+	}
+
 	const showAddNote = !disabled && !hasNote && !editing;
+	const showPresets = !disabled && presets.length > 0;
+	const showNoteField = hasNote || editing;
 
 	return (
 		<>
+			{/* With no note yet the presets sit in the action's line (picking one
+			    starts the note); once the note shows they move to the note's line,
+			    under the trash. */}
+			{showPresets && (
+				<LabPresetMenu presets={presets} onPick={handlePickPreset} besideNote={showNoteField} />
+			)}
 			{showAddNote && (
 				<button type="button" className="lab-note-btn lab-collapsible" title="Adicionar nota" onClick={() => setEditing(true)}>
 					<i className="fa-solid fa-note-sticky" />
@@ -833,21 +891,21 @@ function LabNote({ lav, disabled, onSave, onDeleteAction }) {
 				]} />
 			)}
 
-			{(hasNote || editing) && (
-				<div className="lab-note-field">
-					<input
+			{showNoteField && (
+				<div className={`lab-note-field ${showPresets ? "has-presets" : ""}`}>
+					{/* A textarea so presets can stack on their own lines; Enter
+					    breaks the line too — confirm with the check button. */}
+					<textarea
 						ref={inputRef}
-						type="text"
 						className={`lab-note-input ${editing ? "" : "is-locked"}`}
 						placeholder="Nota..."
 						maxLength={255}
+						rows={1}
 						value={note}
 						readOnly={!editing}
 						onChange={(e) => setNote(e.target.value)}
 						onKeyDown={(e) => {
-							if (!editing) return;
-							if (e.key === "Enter") handleConfirm();
-							if (e.key === "Escape") handleCancel();
+							if (editing && e.key === "Escape") handleCancel();
 						}}
 					/>
 					{!disabled && (
@@ -880,6 +938,49 @@ function LabNote({ lav, disabled, onSave, onDeleteAction }) {
 				</div>
 			)}
 		</>
+	);
+}
+
+function appendNoteLine(text, line) {
+	const trimmed = text.replace(/\s+$/, "");
+	return trimmed ? `${trimmed}\n${line}` : line;
+}
+
+// The action's preset notes, listed in a small popup under their button.
+function LabPresetMenu({ presets, onPick, besideNote }) {
+	const [open, setOpen] = useState(false);
+	const menuRef = useRef(null);
+
+	useEffect(() => {
+		if (!open) return;
+		const close = (e) => {
+			if (!menuRef.current?.contains(e.target)) setOpen(false);
+		};
+		document.addEventListener("pointerdown", close);
+		return () => document.removeEventListener("pointerdown", close);
+	}, [open]);
+
+	return (
+		<span className={`lab-preset-menu ${besideNote ? "is-beside-note" : ""}`} ref={menuRef}>
+			<button type="button" className="lab-note-btn" title="Respostas predefinidas" onClick={() => setOpen((prev) => !prev)}>
+				<i className="fa-solid fa-list-ul" />
+			</button>
+			{open && (
+				<span className="lab-more-popup lab-preset-popup">
+					{presets.map((preset) => (
+						<button
+							type="button"
+							key={preset.id}
+							// Keeps the note input focused (and editing) while picking.
+							onMouseDown={(e) => e.preventDefault()}
+							onClick={() => { setOpen(false); onPick(preset); }}
+						>
+							{preset.value}
+						</button>
+					))}
+				</span>
+			)}
+		</span>
 	);
 }
 

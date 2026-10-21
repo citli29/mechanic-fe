@@ -45,10 +45,18 @@ export default function LabManagement() {
 		setNewActionIcon("");
 	}
 
+	function resetValueEditing() {
+		setEditingValue(null);
+		setCreatingValue(false);
+		setNewValueName("");
+	}
+
 	function toggleSelected(id) {
 		setSelectedItemId((prev) => (prev === id ? null : id));
+		setSelectedActionId(null);
 		resetPropertyEditing();
 		resetActionEditing();
+		resetValueEditing();
 	}
 
 	const selectedItem = items.find((item) => item.id === selectedItemId) || null;
@@ -71,6 +79,25 @@ export default function LabManagement() {
 	const [newPropertyName, setNewPropertyName] = useState("");
 	const [newPropertyIcon, setNewPropertyIcon] = useState("");
 	const [newPropertyIsPrimary, setNewPropertyIsPrimary] = useState(false);
+
+	// Selecting an action shows its own "Valores" beside it — same
+	// selection/properties idea as items → actions, one level deeper.
+	const [selectedActionId, setSelectedActionId] = useState(null);
+
+	function toggleSelectedAction(id) {
+		setSelectedActionId((prev) => (prev === id ? null : id));
+		resetValueEditing();
+	}
+
+	const selectedAction = actions.find((action) => action.id === selectedActionId) || null;
+
+	// "Valores" are an action's preset notes (action_tabled_values): picking
+	// one on a service only copies its text into the note, nothing links back.
+	const [values, setValues] = useState([]);
+
+	const [editingValue, setEditingValue] = useState(null);
+	const [creatingValue, setCreatingValue] = useState(false);
+	const [newValueName, setNewValueName] = useState("");
 
 	function handleApiError(err) {
 		console.error(err);
@@ -166,8 +193,10 @@ export default function LabManagement() {
 
 			if (selectedItemId === id) {
 				setSelectedItemId(null);
+				setSelectedActionId(null);
 				resetPropertyEditing();
 				resetActionEditing();
+				resetValueEditing();
 			}
 
 			loadItems();
@@ -365,7 +394,107 @@ export default function LabManagement() {
 
 			pushSuccessToast("Ação apagada com sucesso.");
 
+			if (selectedActionId === id) {
+				setSelectedActionId(null);
+				resetValueEditing();
+			}
+
 			loadActions(selectedItemId);
+		} catch (err) {
+			handleApiError(err);
+		}
+	}
+
+
+	useEffect(() => {
+		loadActionTabledValues(selectedActionId);
+	}, [selectedActionId]);
+
+
+	async function loadActionTabledValues(actionId) {
+		if (!actionId) {
+			setValues([]);
+			return;
+		}
+
+		try {
+			const res = await api.get("/action_tabled_values", { params: { t_action_id: actionId } });
+			setValues(res.data.action_tabled_value_list || []);
+		} catch (err) {
+			console.error(err);
+			setValues([]);
+		}
+	}
+
+
+	async function createValue() {
+		if (!newValueName.trim()) {
+			pushErrorToast("Valor é obrigatório.");
+			return;
+		}
+
+		try {
+			await api.post("/action_tabled_values", {
+				t_action_id: selectedActionId,
+				value: newValueName,
+			});
+
+			pushSuccessToast("Valor criado com sucesso.");
+
+			setNewValueName("");
+			setCreatingValue(false);
+
+			loadActionTabledValues(selectedActionId);
+		} catch (err) {
+			handleApiError(err);
+		}
+	}
+
+
+	function editValue(value) {
+		setEditingValue({ ...value });
+	}
+
+
+	function updateEditValue(e) {
+		const { name, value } = e.target;
+		setEditingValue({ ...editingValue, [name]: value });
+	}
+
+
+	async function saveValue() {
+		if (!editingValue.value.trim()) {
+			pushErrorToast("Valor é obrigatório.");
+			return;
+		}
+
+		try {
+			await api.put(`/action_tabled_values/${editingValue.id}`, {
+				t_action_id: selectedActionId,
+				value: editingValue.value,
+			});
+
+			pushSuccessToast("Valor atualizado com sucesso.");
+
+			setEditingValue(null);
+
+			loadActionTabledValues(selectedActionId);
+		} catch (err) {
+			handleApiError(err);
+		}
+	}
+
+
+	async function deleteValue(id) {
+		const confirmed = window.confirm("Apagar este valor?");
+		if (!confirmed) return;
+
+		try {
+			await api.delete(`/action_tabled_values/${id}`);
+
+			pushSuccessToast("Valor apagado com sucesso.");
+
+			loadActionTabledValues(selectedActionId);
 		} catch (err) {
 			handleApiError(err);
 		}
@@ -708,7 +837,11 @@ export default function LabManagement() {
 														</td>
 													</tr>
 												) : (
-													<tr key={action.id}>
+													<tr
+														key={action.id}
+														className={selectedActionId === action.id ? "selected" : ""}
+														onClick={() => toggleSelectedAction(action.id)}
+													>
 														<td data-label="Ação"><span className="cell-truncate" title={action.name}>{action.name}</span></td>
 
 														<td data-label="Classe"><span className="cell-truncate" title={action.i_class}>{action.i_class}</span></td>
@@ -783,6 +916,94 @@ export default function LabManagement() {
 								)}
 							</div>
 
+							<div className="lab-management-column">
+								{selectedAction ? (
+									<table className="lab-item-actions-table lab-values-table">
+										<thead>
+										<tr>
+												<th style={{ gridColumn: "1 / -1" }}>Valor</th>
+											</tr>
+										</thead>
+
+										<tbody>
+											{values.map((value) => (
+												editingValue?.id === value.id ? (
+													<tr key={value.id} className="editing">
+														<td data-label="Valor">
+															<input
+																name="value"
+																value={editingValue.value || ""}
+																onChange={updateEditValue}
+															/>
+														</td>
+
+														<td className="actions">
+															<button className="confirm" onClick={saveValue}>
+																<i className="fa-solid fa-check" />
+															</button>
+															<button className="cancel" onClick={() => setEditingValue(null)}>
+																<i className="fa-solid fa-x" />
+															</button>
+														</td>
+													</tr>
+												) : (
+													<tr key={value.id}>
+														<td data-label="Valor"><span className="cell-truncate" title={value.value}>{value.value}</span></td>
+
+														<td className="actions">
+															<button className="options" onClick={() => editValue(value)}>
+																<i className="fa-solid fa-pencil" />
+															</button>
+															<button
+																className="cancel"
+																onClick={() => deleteValue(value.id)}
+															>
+																<i className="fa-solid fa-trash" />
+															</button>
+														</td>
+													</tr>
+												)
+											))}
+
+											{creatingValue ? (
+												<tr className="editing">
+													<td data-label="Valor">
+														<input
+															placeholder="Valor"
+															value={newValueName}
+															onChange={(e) => setNewValueName(e.target.value)}
+															autoFocus
+														/>
+													</td>
+
+													<td className="actions">
+														<button className="confirm" onClick={createValue}>
+															<i className="fa-solid fa-check" />
+														</button>
+														<button
+															className="cancel"
+															onClick={() => {
+																setCreatingValue(false);
+																setNewValueName("");
+															}}
+														>
+															<i className="fa-solid fa-x" />
+														</button>
+													</td>
+												</tr>
+											) : (
+												<tr className="lab-item-add-row" onClick={() => setCreatingValue(true)}>
+													<td data-label="" style={{ gridColumn: "1 / -1" }}>
+														<i className="fa-solid fa-plus" />
+													</td>
+												</tr>
+											)}
+										</tbody>
+									</table>
+								) : (
+									<p className="lab-management-empty">Selecione uma ação para ver os valores.</p>
+								)}
+							</div>
 
 						</div>
 
