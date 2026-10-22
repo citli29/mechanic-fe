@@ -269,7 +269,7 @@ export default function UserTimesTable({
 
 	async function deleteUserTime(userTime) {
 
-		const confirmed = window.confirm( `Delete the time entry for "${userTime.user_name}"?`);
+		const confirmed = window.confirm( `Apagar o registo de tempo de "${userTime.user_name}"?`);
 		if (!confirmed) {return;}
 
 		try {

@@ -97,7 +97,7 @@ export default function LabItemsLabel({ serviceId, label, to }) {
 // Phone (no hover): a small flask button that opens the summary in a
 // centred popup; tapping outside or the X closes it. It lives inside the
 // row's link, so it stops the tap from also opening the service.
-export function LabSummaryButton({ serviceId }) {
+export function LabSummaryButton({ serviceId, className = "" }) {
 	const [summary, loadSummary] = useLabSummary(serviceId);
 	const [open, setOpen] = useState(false);
 
@@ -116,7 +116,7 @@ export function LabSummaryButton({ serviceId }) {
 
 	return (
 		<>
-			<button type="button" className="lab-summary-btn" title="Ver resumo do Laboratório" onClick={handleOpen}>
+			<button type="button" className={`lab-summary-btn ${className}`} title="Ver resumo do Laboratório" onClick={handleOpen}>
 				<i className="fa-solid fa-flask" />
 			</button>
 			{open && createPortal(

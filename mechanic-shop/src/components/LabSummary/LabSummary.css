@@ -121,6 +121,15 @@
 	cursor: pointer;
 }
 
+/* History cards: pinned to the top-right corner of the Serviço Realizado
+   box (the box is position: relative). */
+.lab-summary-btn.is-corner{
+	position: absolute;
+	top: var(--small-padding);
+	right: var(--small-padding);
+	margin-left: 0;
+}
+
 .lab-summary-sheet-backdrop{
 	position: fixed;
 	inset: 0;

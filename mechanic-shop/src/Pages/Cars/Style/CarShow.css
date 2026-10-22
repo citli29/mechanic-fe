@@ -98,6 +98,7 @@
 }
 
 .cars-show-page .car-history-subcard{
+	position: relative;
 	border: 1px solid var(--border);
 	border-radius: 8px;
 	padding: var(--padding);

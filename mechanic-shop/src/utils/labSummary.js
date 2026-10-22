@@ -5,6 +5,12 @@
 //     ☑ Reparação: com fuga
 //     ☐ Teste
 // Identical items are merged and counted (see the end of the function).
+// A Laboratório service with lab items has a summary to show (the flask
+// button in the lists and history cards).
+export function hasLabSummary(service) {
+	return service?.service_type_name === "Laboratório" && Number(service.lab_item_count) > 0;
+}
+
 export function buildLabSummary(labItems, labActionValues, labPropertyValuesByLabItem) {
 	// Items of the same type sit together (all Injetores, then all
 	// Turbos…), types in the order their first item was added.

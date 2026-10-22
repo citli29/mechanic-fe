@@ -460,6 +460,12 @@
 		cursor: pointer;
 
 		&:hover{ background: color-mix(in srgb, var(--bg-page-dark), #000 5%); }
+
+		/* Marcação plan: no properties to open. */
+		&.is-plan{
+			cursor: default;
+			&:hover{ background: var(--bg-page-dark); }
+		}
 	}
 
 	.lab-item-card-icon{

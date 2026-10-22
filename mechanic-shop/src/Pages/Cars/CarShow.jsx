@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../../api/axios";
+import { LabSummaryButton } from "../../components/LabSummary/LabItemsLabel";
+import { hasLabSummary } from "../../utils/labSummary";
 
 import { CarPicker } from "../../components/Pickers/CarPicker";
 
@@ -172,6 +174,7 @@ export default function CarShow() {
 
 											<div className="car-history-subcards">
 												<div className="car-history-subcard">
+													{hasLabSummary(service) && <LabSummaryButton className="is-corner" serviceId={service.id} />}
 													<span className="car-history-label">Serviço Realizado</span>
 													<p>{service.service || "-"}</p>
 												</div>

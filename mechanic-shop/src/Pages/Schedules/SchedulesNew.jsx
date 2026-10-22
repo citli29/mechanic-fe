@@ -6,11 +6,14 @@ import { CarPicker } from "../../components/Pickers/CarPicker";
 import { ClientPicker } from "../../components/Pickers/ClientPicker";
 import { MakePicker } from "../../components/Pickers/MakePicker";
 import { ModelPicker } from "../../components/Pickers/ModelPicker";
+import { ServiceLab } from "../ServiceLab";
+import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ScheduleForm.css";
 import "./Style/SchedulesNew.css";
+import "../Services/Style/ServicesNewLab.css";
 import { pushSuccessToast } from "../../utils/errorToast";
 
 export default function SchedulesNew() {
@@ -24,9 +27,21 @@ export default function SchedulesNew() {
 		car_id: "",
 		make_id: "",
 		model_id: "",
+		service_type_id: "",
 	};
 
 	const [editing, setEditing] = useState(emptySchedule);
+
+	const [serviceTypes, setServiceTypes] = useState([]);
+	// Laboratório: the items/actions planned before the marcação exists
+	// (ServiceLab draft), created on it once it's saved.
+	const [labDraft, setLabDraft] = useState(null);
+
+	useEffect(() => {
+		api.get("/service_types")
+			.then((res) => setServiceTypes(res.data.service_type_list || []))
+			.catch((err) => console.error(err));
+	}, []);
 
 	const today = new Date();
 	const [calendarMonth, setCalendarMonth] = useState(
@@ -170,6 +185,18 @@ export default function SchedulesNew() {
 			};
 
 			if (editing.client_id) data.client_id = editing.client_id;
+			if (editing.service_type_id) data.service_type_id = editing.service_type_id;
+
+			// Sent with the marcação (one transaction): with items that all
+			// have actions, the description can be left empty.
+			if (isLabSchedule && labDraft?.labItems.length > 0) {
+				data.lab_items = labDraft.labItems.map((labItem) => ({
+					t_item_id: labItem.t_item_id,
+					action_ids: labDraft.labActionValues
+						.filter((lav) => lav.l_item_id === labItem.id)
+						.map((lav) => lav.t_action_id),
+				}));
+			}
 
 			if (editing.car_id) {
 				data.car_id = editing.car_id;
@@ -187,6 +214,10 @@ export default function SchedulesNew() {
 		}
 	}
 
+
+	const laboratorioType = serviceTypes.find((t) => t.name === "Laboratório");
+	const isLabSchedule = !!laboratorioType && String(editing.service_type_id) === String(laboratorioType.id);
+	const typeAccent = getServiceTypeAccent(editing.service_type_id, serviceTypes.find((t) => String(t.id) === String(editing.service_type_id))?.name);
 
 	return (
 		<div className="page schedules-new-page schedule-form-page">
@@ -270,8 +301,32 @@ export default function SchedulesNew() {
 										/>
 									</div>
 
+									<div className="field">
+										<label>Tipo de Serviço</label>
+
+										<select
+											name="service_type_id"
+											value={editing.service_type_id}
+											onChange={(e) => setEditing((prev) => ({ ...prev, service_type_id: e.target.value }))}
+											style={editing.service_type_id ? {
+												borderColor: typeAccent,
+												background: `${typeAccent}1a`,
+											} : undefined}
+										>
+											<option value="">Sem tipo</option>
+											{serviceTypes.map((type) => (
+												<option key={type.id} value={type.id}>
+													{type.name}
+												</option>
+											))}
+										</select>
+									</div>
+
 									<div className="field field-full">
-										<label>Descrição</label>
+										<label>
+											Descrição{" "}
+											{isLabSchedule && <span className="field-hint">(opcional se todos os itens tiverem ações)</span>}
+										</label>
 
 										<textarea
 											name="description"
@@ -318,6 +373,15 @@ export default function SchedulesNew() {
 											</div>
 										</>
 									)}
+
+									{/* Hidden rather than unmounted when another type is picked, so
+									    switching back doesn't lose the items (the draft lives inside it). */}
+									<div className="lab-draft-section field-full" hidden={!isLabSchedule}>
+										<span className="lab-draft-label">Itens de Laboratório</span>
+										<div className="lab-draft-body">
+											<ServiceLab draft plan onDraftChange={setLabDraft} />
+										</div>
+									</div>
 
 								</div>
 

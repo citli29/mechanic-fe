@@ -155,7 +155,7 @@ export default function ServicesNew() {
 			});
 			// Created without a note — the note goes in afterwards.
 			if (lav.note) {
-				await api.put(`/services/${serviceId}/lab_action_values/${lavRes.data.slav.slav_id}`, { note: lav.note });
+				await api.put(`/services/${serviceId}/lab_action_values/${lavRes.data.slav.id}`, { note: lav.note });
 			}
 		}
 

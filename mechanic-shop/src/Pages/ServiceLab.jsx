@@ -32,8 +32,8 @@ function createApiStore(serviceId) {
 		},
 		addActionValue: (labItem, action) => api.post(`${base}/lab_action_values`, { l_item_id: labItem.id, t_action_id: action.id }),
 		// Only the changed field is sent — the API leaves the others alone.
-		updateActionValue: (lav, changes) => api.put(`${base}/lab_action_values/${lav.slav_id}`, changes),
-		deleteActionValue: (lav) => api.delete(`${base}/lab_action_values/${lav.slav_id}`),
+		updateActionValue: (lav, changes) => api.put(`${base}/lab_action_values/${lav.id}`, changes),
+		deleteActionValue: (lav) => api.delete(`${base}/lab_action_values/${lav.id}`),
 		savePropertyValue: (labItem, property, existing, value) => (existing
 			? api.put(`${base}/lab_property_values/${existing.id}`, { value })
 			: api.post(`${base}/lab_property_values`, { l_item_id: labItem.id, property_id: property.id, value })),
@@ -60,7 +60,7 @@ function createDraftStore() {
 		async addActionValue(labItem, action) {
 			const id = nextId++;
 			data.labActionValues.push({
-				id, slav_id: id, l_item_id: labItem.id, t_action_id: action.id,
+				id, l_item_id: labItem.id, t_action_id: action.id,
 				action_name: action.name, action_i_class: action.i_class, note: null, is_done: 0,
 			});
 		},
@@ -85,12 +85,45 @@ function createDraftStore() {
 	};
 }
 
-// `draft`: Novo Serviço — nothing is saved yet (see createDraftStore), and
-// actions have no done check since nothing can be done before the service exists.
-export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDraftChange }) => {
+// A marcação's planned items and actions (no properties, notes or done
+// check). "Criar Serviço" copies them into the new service's lab draft.
+function createScheduleStore(scheduleId) {
+	const base = `/schedules/${scheduleId}`;
+	return {
+		async list() {
+			const [labItemsResponse, labActionValuesResponse] = await Promise.all([
+				api.get(`${base}/lab_items`),
+				api.get(`${base}/lab_action_values`),
+			]);
+			return {
+				labItems: labItemsResponse.data.lab_item_list || [],
+				labActionValues: labActionValuesResponse.data.lab_action_value_list || [],
+				labPropertyValues: [],
+			};
+		},
+		async addItem(item) {
+			const response = await api.post(`${base}/lab_items`, { t_item_id: item.id });
+			return response.data.lab_item;
+		},
+		// In one request, so the item never exists without its actions (a
+		// marcação without description needs every item to have one).
+		addItemWithActions: (item, actions) => api.post(`${base}/lab_items`, { t_item_id: item.id, action_ids: actions.map((action) => action.id) }),
+		addActionValue: (labItem, action) => api.post(`${base}/lab_action_values`, { l_item_id: labItem.id, t_action_id: action.id }),
+		deleteActionValue: (lav) => api.delete(`${base}/lab_action_values/${lav.id}`),
+		deleteItem: (labItem) => api.delete(`${base}/lab_items/${labItem.id}`),
+	};
+}
 
+// `draft`: Novo Serviço / Nova Marcação — nothing is saved yet (see
+// createDraftStore), and actions have no done check since nothing can be
+// done before the service exists.
+// `plan` (or `scheduleId`, a marcação): items and actions only — no
+// properties, notes or done check; items are removed from their header.
+export const ServiceLab = ({ id, scheduleId, disabled, onSummaryChange, draft = false, plan = false, onDraftChange }) => {
+
+	const isPlan = plan || !!scheduleId;
 	const [draftStore] = useState(createDraftStore);
-	const apiStore = useMemo(() => createApiStore(id), [id]);
+	const apiStore = useMemo(() => (scheduleId ? createScheduleStore(scheduleId) : createApiStore(id)), [id, scheduleId]);
 	const store = draft ? draftStore : apiStore;
 
 	const [labItems, setLabItems] = useState([]);
@@ -129,10 +162,10 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 	const pickerItemIdRef = useRef(null);
 	const addingActionItemIdRef = useRef(null);
 
-	useEffect(() => { loadSummary(); }, [id]);
+	useEffect(() => { loadSummary(); }, [id, scheduleId]);
 
 	useEffect(() => {
-		if (disabled) return;
+		if (disabled || isPlan) return;
 		api.get("/action_tabled_values")
 			.then((response) => {
 				const grouped = {};
@@ -143,13 +176,13 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 				setPresetsByAction(grouped);
 			})
 			.catch((error) => console.error(error));
-	}, [disabled]);
+	}, [disabled, isPlan]);
 
 	// ?lab_item=<id> (from Gestão de Laboratório's search): once the items
 	// are in, scroll to that card and flash it. The param is then dropped,
 	// so a refresh doesn't flash it again.
 	const [searchParams, setSearchParams] = useSearchParams();
-	const targetLabItemId = draft ? null : Number(searchParams.get("lab_item")) || null;
+	const targetLabItemId = draft || isPlan ? null : Number(searchParams.get("lab_item")) || null;
 	const [highlightedItemId, setHighlightedItemId] = useState(null);
 
 	useEffect(() => {
@@ -180,7 +213,7 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 	}, [labItems, labActionValues, labPropertyValuesByLabItem, onSummaryChange]);
 
 	async function loadSummary() {
-		if (!draft && !id) return;
+		if (!draft && !id && !scheduleId) return;
 		try {
 			const lab = await store.list();
 			if (draft) onDraftChange?.(lab);
@@ -198,6 +231,8 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 				propertyValuesGrouped[lpv.l_item_id].push(lpv);
 			});
 			setLabPropertyValuesByLabItem(propertyValuesGrouped);
+
+			if (isPlan) return;
 
 			const uniqueItemIds = [...new Set(labItemList.map((li) => li.t_item_id).filter(Boolean))];
 			const propertyResponses = await Promise.all(
@@ -303,6 +338,10 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 		try {
 			// Each item gets the ticked actions; more can be added later from its card.
 			for (let i = 0; i < qty; i++) {
+				if (store.addItemWithActions) {
+					await store.addItemWithActions(item, actions);
+					continue;
+				}
 				const labItem = await store.addItem(item);
 				for (const action of actions) {
 					await store.addActionValue(labItem, action);
@@ -470,6 +509,12 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 		}
 	}
 
+	// Read-only plan (marcação not in Editar): its buttons stay in the layout
+	// but hidden and inert, so the rows keep the same height as while editing.
+	const placeholderProps = isPlan && disabled
+		? { disabled: true, tabIndex: -1, "aria-hidden": true, style: { visibility: "hidden" } }
+		: {};
+
 	const actionValuesByLabItem = {};
 	labActionValues.forEach((lav) => {
 		if (!actionValuesByLabItem[lav.l_item_id]) actionValuesByLabItem[lav.l_item_id] = [];
@@ -565,9 +610,9 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 				style={{ "--lab-type-color": LAB_TYPE_COLORS[labItem.t_item_id % LAB_TYPE_COLORS.length] }}
 			>
 				<div
-					className="lab-item-card-header"
-					title="Ver/editar propriedades do item"
-					onClick={() => handleOpenPropertiesModal(labItem)}
+					className={`lab-item-card-header ${isPlan ? "is-plan" : ""}`}
+					title={isPlan ? undefined : "Ver/editar propriedades do item"}
+					onClick={isPlan ? undefined : () => handleOpenPropertiesModal(labItem)}
 				>
 					<i className={`lab-item-card-icon ${labItem.item_i_class || "fa-solid fa-flask"}`} />
 					<div className="lab-item-card-title">
@@ -585,14 +630,29 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 							</div>
 						)}
 					</div>
-					{!disabled && (
+					{/* A read-only plan keeps its buttons, invisible (placeholderProps),
+					    so the item and its actions are as tall as while editing. */}
+					{(!disabled || isPlan) && (
 						<button
 							type="button"
 							className={`lab-item-card-add-action ${isAddingAction ? "is-active" : ""}`}
 							title="Adicionar ação a este item"
 							onClick={(e) => { e.stopPropagation(); handleToggleAddAction(labItem); }}
+							{...placeholderProps}
 						>
 							<i className="fa-solid fa-plus" /><span className="lab-add-action-label">Ação</span>
+						</button>
+					)}
+					{/* No properties modal in a plan, so the item is removed from here. */}
+					{isPlan && (
+						<button
+							type="button"
+							className="lab-delete-action-btn"
+							title="Remover item e as suas ações"
+							onClick={() => handleDeleteLabItem(labItem)}
+							{...placeholderProps}
+						>
+							<i className="fa-solid fa-trash" />
 						</button>
 					)}
 				</div>
@@ -604,10 +664,22 @@ export const ServiceLab = ({ id, disabled, onSummaryChange, draft = false, onDra
 
 					{itemActionValues.map((lav) => (
 						<div className={`lab-action-row ${lav.is_done ? "is-done" : ""}`} key={lav.id}>
-							{draft
+							{draft || isPlan
 								? <span className="lab-action-name">{lav.action_name}</span>
 								: <LabDoneCheck lav={lav} disabled={disabled} onToggle={handleToggleDone} />}
-							<LabNote lav={lav} disabled={disabled} presets={presetsByAction[lav.t_action_id] || []} onSave={handleSaveNote} onDeleteAction={handleDeleteActionValue} />
+							{isPlan ? (
+								<button
+									type="button"
+									className="lab-delete-action-btn"
+									title="Remover esta ação"
+									onClick={() => handleDeleteActionValue(lav)}
+									{...placeholderProps}
+								>
+									<i className="fa-solid fa-trash" />
+								</button>
+							) : (
+								<LabNote lav={lav} disabled={disabled} presets={presetsByAction[lav.t_action_id] || []} onSave={handleSaveNote} onDeleteAction={handleDeleteActionValue} />
+							)}
 						</div>
 					))}
 				</div>

@@ -1,6 +1,6 @@
-/* Novo Serviço's Laboratório: a small label like the form's other fields
-   (no card header), its contents are ServiceLab (draft). Not named
-   .lab-draft-card — SchedulesShowLab.css boxes that class in. */
+/* Laboratório items in Novo Serviço, Nova Marcação and the marcação page:
+   a small label like the form's other fields (no card header), its
+   contents are ServiceLab. */
 .lab-draft-section{
 	display: flex;
 	flex-direction: column;

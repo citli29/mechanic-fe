@@ -122,6 +122,7 @@
 }
 
 .users-show-page .user-day-item-subcard{
+	position: relative;
 	border: 1px solid var(--border);
 	border-radius: 8px;
 	padding: var(--padding);

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../../api/axios";
+import { LabSummaryButton } from "../../components/LabSummary/LabItemsLabel";
+import { hasLabSummary } from "../../utils/labSummary";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -236,6 +238,7 @@ export default function UserShow() {
 
 												<div className="user-day-item-subcards">
 													<div className="user-day-item-subcard">
+														{hasLabSummary(info) && <LabSummaryButton className="is-corner" serviceId={group.service_id} />}
 														<span className="user-day-item-label">Serviço Realizado</span>
 														<p>{info.service || "-"}</p>
 													</div>
