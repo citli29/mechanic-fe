@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useUrlParam, useUrlState } from "../../utils/useUrlState";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ServicesCalendar.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
 import EventModal from "../../components/EventModal/EventModal";
-import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
+import { getServiceTypeAccent, getServiceTypeSelectStyle } from "../../utils/serviceTypeColor";
+import { formatWeekRange, initialWeekIndex } from "../../utils/weekRange";
 import { layoutWeekEvents } from "../../utils/eventLanes";
 import { useCalendarEvents, DayEventLanes, DayEventStrip } from "../../components/CalendarEvents/CalendarEvents";
 
@@ -38,7 +40,9 @@ export default function ServicesCalendar() {
 		[serviceTypes]
 	);
 
-	const [filters, setFilters] = useState({
+	// Filters, month and (phone) week live in the URL, so ← back from a
+	// serviço lands on the same view.
+	const [filters, setFilters] = useUrlState({
 		car_plate: "",
 		client_name: "",
 		service_type_id: "",
@@ -46,11 +50,18 @@ export default function ServicesCalendar() {
 	});
 
 	const now = new Date();
-	const [year, setYear] = useState(now.getFullYear());
-	const [month, setMonth] = useState(now.getMonth());
+	const [year, setYear] = useUrlParam("y", now.getFullYear());
+	// month is 0-based in here, 1-based in the URL (?m=11 = Novembro).
+	const [monthNr, setMonthNr] = useUrlParam("m", now.getMonth() + 1);
+	const month = monthNr - 1;
+	const setMonth = (next) => setMonthNr((prevNr) =>
+		(typeof next === "function" ? next(prevNr - 1) : next) + 1
+	);
 
-	const [weekIndex, setWeekIndex] = useState(0);
-	const [weekIndexMonthKey, setWeekIndexMonthKey] = useState(`${now.getFullYear()}-${now.getMonth()}`);
+	// Phone week view: opens on the week with today in it (current month),
+	// or on the week from the URL.
+	const [weekIndex, setWeekIndex] = useUrlParam("w", initialWeekIndex(now.getFullYear(), now.getMonth()));
+	const [weekIndexMonthKey, setWeekIndexMonthKey] = useState(`${year}-${month}`);
 
 	const [isMobile, setIsMobile] = useState(
 		window.matchMedia("(max-width: 650px)").matches
@@ -71,7 +82,8 @@ export default function ServicesCalendar() {
 
 	if (currentMonthKey !== weekIndexMonthKey) {
 		setWeekIndexMonthKey(currentMonthKey);
-		setWeekIndex(0);
+		// Back on the current month → today's week; any other → its first.
+		setWeekIndex(initialWeekIndex(year, month));
 	}
 
 	// The calendar grid always shows whole weeks — the first/last row
@@ -343,7 +355,8 @@ export default function ServicesCalendar() {
 	const weekMonday = new Date(year, month, 1 - startDay + weekIndex * 7);
 	const weekSunday = new Date(weekMonday);
 	weekSunday.setDate(weekMonday.getDate() + 6);
-	const weekLabel = `${weekMonday.getDate()}-${weekSunday.getDate()}`;
+	// "28 Out - 3 Nov", or "3 - 9 Nov" inside one month.
+	const weekLabel = formatWeekRange(weekMonday, weekSunday);
 
 	function previousWeek() {
 		setWeekIndex((prev) => Math.max(0, prev - 1));
@@ -437,22 +450,15 @@ export default function ServicesCalendar() {
 						<i className="fa-solid fa-clipboard-list" />
 						<h1>Serviços</h1>
 
+						{/* Desktop only (CSS); phones have it in the filters. */}
+						<Link className="header-add" to="/services/new">
+							<i className="fa-solid fa-plus" /> <span>Adicionar Serviço</span>
+						</Link>
+
 						<ViewToggle listPath="/services" calendarPath="/services_calendar" />
 					</div>
 
 					<div className="body">
-
-						<div className="month-navigation">
-							<button className="accent" onClick={previousMonth}>
-								<i className="fa-solid fa-chevron-left" />
-							</button>
-
-							<h2>{monthName}</h2>
-
-							<button className="accent" onClick={nextMonth}>
-								<i className="fa-solid fa-chevron-right" />
-							</button>
-						</div>
 
 						<div className="filters">
 							<input
@@ -473,6 +479,7 @@ export default function ServicesCalendar() {
 								name="service_type_id"
 								value={filters.service_type_id}
 								onChange={updateFilter}
+								style={getServiceTypeSelectStyle(filters.service_type_id, serviceTypes)}
 							>
 								<option value="">Tipo de Serviço</option>
 								{serviceTypes.map((type) => (
@@ -497,9 +504,22 @@ export default function ServicesCalendar() {
 								<i className="fa-solid fa-broom" /> Limpar
 							</button>
 
-							<Link className="confirm" to="/services/new">
+							{/* Phone only (CSS); desktop has it in the header. */}
+							<Link className="confirm filters-add" to="/services/new">
 								<i className="fa-solid fa-plus" /> Adicionar Serviço
 							</Link>
+						</div>
+
+						<div className="month-navigation">
+							<button className="accent" onClick={previousMonth}>
+								<i className="fa-solid fa-chevron-left" />
+							</button>
+
+							<h2>{monthName}</h2>
+
+							<button className="accent" onClick={nextMonth}>
+								<i className="fa-solid fa-chevron-right" />
+							</button>
 						</div>
 
 						<div className="calendar-wrapper">

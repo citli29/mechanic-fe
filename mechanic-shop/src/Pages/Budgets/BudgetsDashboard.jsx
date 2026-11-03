@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../../api/axios";
+import { useFilterChange, useUrlParam } from "../../utils/useUrlState";
 import { useVisiblePoll } from "../../utils/useVisiblePoll";
 
 import "../Style/Page.css";
@@ -103,12 +104,13 @@ function budgetContext(budget) {
 
 export default function BudgetsDashboard() {
 
-	const [searchParams, setSearchParams] = useSearchParams();
+	const [searchParams] = useSearchParams();
 	const requestIdRef = useRef(0);
 
-	const [statusFilter, setStatusFilter] = useState("");
-	const [periodFilter, setPeriodFilter] = useState("");
-	const [serviceFilter, setServiceFilter] = useState("");
+	// Filters, search and page live in the URL: ← back keeps them.
+	const [statusFilter, setStatusFilter] = useUrlParam("status", "");
+	const [periodFilter, setPeriodFilter] = useUrlParam("period", "");
+	const [serviceFilter, setServiceFilter] = useUrlParam("service", "");
 	const [toQuoteCount, setToQuoteCount] = useState(null);
 
 	// ?highlight={budget id} (the orçamento notification's link): briefly
@@ -116,10 +118,10 @@ export default function BudgetsDashboard() {
 	const [highlightId, setHighlightId] = useState(() => Number(searchParams.get("highlight")) || null);
 
 	const [items, setItems] = useState([]);
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
-	const [search, setSearch] = useState("");
+	const [search, setSearch] = useUrlParam("q", "");
 	const [loading, setLoading] = useState(true);
 
 	const [savingId, setSavingId] = useState(null);
@@ -134,7 +136,13 @@ export default function BudgetsDashboard() {
 	useEffect(() => {
 		if (!highlightId) return;
 
-		if (searchParams.has("highlight")) setSearchParams({}, { replace: true });
+		// Drop just ?highlight (the filters in the URL stay).
+		const params = new URLSearchParams(window.location.search);
+		if (params.has("highlight")) {
+			params.delete("highlight");
+			const rest = params.toString();
+			window.history.replaceState(window.history.state, "", `${window.location.pathname}${rest ? `?${rest}` : ""}`);
+		}
 
 		const timer = setTimeout(() => setHighlightId(null), 4000);
 		return () => clearTimeout(timer);
@@ -193,18 +201,10 @@ export default function BudgetsDashboard() {
 		else loadItems();
 	}
 
-	const isFirstFilterRun = useRef(true);
-	useEffect(() => {
-		if (isFirstFilterRun.current) { isFirstFilterRun.current = false; return; }
-		reloadFromFirstPage();
-	}, [statusFilter, periodFilter, serviceFilter]);
+	// Only on a real change (not on load): what came from the URL stays.
+	useFilterChange({ statusFilter, periodFilter, serviceFilter }, reloadFromFirstPage, 0);
 
-	const isFirstSearchRun = useRef(true);
-	useEffect(() => {
-		if (isFirstSearchRun.current) { isFirstSearchRun.current = false; return; }
-		const timer = setTimeout(reloadFromFirstPage, 400);
-		return () => clearTimeout(timer);
-	}, [search]);
+	useFilterChange(search, reloadFromFirstPage);
 
 	useEffect(() => {
 		if (!budgetToUnmark) return;
@@ -524,7 +524,7 @@ export default function BudgetsDashboard() {
 									onChange={(e) => setStatusFilter(e.target.checked ? "false" : "")}
 								/>
 								<span className="budget-switch" aria-hidden="true" />
-								<span className="budget-waiting-text">Só por orçamentar</span>
+								<span className="budget-waiting-text">Por orçamentar</span>
 								{toQuoteCount != null && (
 									<span className={`budget-waiting-count ${toQuoteCount > 0 ? "has-waiting" : ""}`}>{toQuoteCount}</span>
 								)}

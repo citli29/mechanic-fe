@@ -47,9 +47,11 @@
 		color: var(--txt-dark);
 	}
 
+	/* Descrição: fixed height, long text scrolls inside it. */
 	textarea{
-		resize: vertical;
-		min-height: 5rem;
+		resize: none;
+		height: 8rem;
+		overflow-y: auto;
 	}
 
 	select:disabled, input:disabled{

@@ -1,48 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios";
-import { LabSummaryButton } from "../../components/LabSummary/LabItemsLabel";
-import { hasLabSummary } from "../../utils/labSummary";
+import BackButton from "../../components/BackButton/BackButton";
+import ServiceHistory from "../../components/ServiceHistory/ServiceHistory";
 
-import { CarPicker } from "../../components/Pickers/CarPicker";
+import { CarCard, CarDetails, CarForm } from "./CarCard";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/CarShow.css";
-
-function getStatusInfo(service) {
-	if (service.checkout) return { badgeClass: "state-delivered", label: "Entregue" };
-	if (service.is_finished) return { badgeClass: "state-finished", label: "Terminado" };
-	return { badgeClass: "state-not-finished", label: "Por Terminar" };
-}
-
-const NOTE_SEPARATOR = "\u001E";
-
-function extractPlainNote(raw) {
-	if (typeof raw !== "string") return "";
-	const i = raw.indexOf(NOTE_SEPARATOR);
-	return i === -1 ? raw : raw.slice(i + NOTE_SEPARATOR.length);
-}
-
-function normalizeSearch(text) {
-	return (text ?? "")
-		.toString()
-		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.toLowerCase()
-		.replace(/[^a-z0-9\s]/g, " ")
-		.replace(/\s+/g, " ")
-		.trim();
-}
+import { pushSuccessToast } from "../../utils/errorToast";
 
 export default function CarShow() {
 
 	const { id } = useParams();
+	const navigate = useNavigate();
 
+	const [car, setCar] = useState(null);
+	const [editingCar, setEditingCar] = useState(false);
 	const [services, setServices] = useState([]);
 	const [appliedByService, setAppliedByService] = useState({});
 	const [loadingHistory, setLoadingHistory] = useState(true);
-	const [search, setSearch] = useState("");
 
 
 	async function loadHistory() {
@@ -72,35 +50,39 @@ export default function CarShow() {
 	}
 
 
-	useEffect(() => { loadHistory(); }, [id]);
+	async function loadCar() {
+		try {
+			const res = await api.get(`/cars/${id}`);
+			setCar(res.data.car || null);
+		} catch (err) {
+			console.error(err);
+			setCar(null);
+		}
+	}
 
 
-	const filteredServices = useMemo(() => {
-		const term = normalizeSearch(search);
+	useEffect(() => {
+		setEditingCar(false);
+		loadCar();
+		loadHistory();
+	}, [id]);
 
-		if (!term) return services;
 
-		return services.filter((service) => {
-			const applied = appliedByService[service.id] || [];
+	// Moved here from the Viaturas list. The DB also refuses a car with
+	// services, so the button is off while the history isn't empty.
+	async function deleteCar() {
+		if (!window.confirm("Apagar esta viatura?")) return;
 
-			const haystack = normalizeSearch(
-				[
-					service.id,
-					service.service_type_name,
-					service.service,
-					extractPlainNote(service.note),
-					service.checkin,
-					service.checkout,
-					service.kms,
-					...applied.map((ap) => ap.product_name),
-				]
-					.filter(Boolean)
-					.join(" ")
-			);
+		try {
+			await api.delete(`/cars/${id}`);
+			pushSuccessToast("Viatura apagada com sucesso.");
+			navigate("/cars");
+		} catch (err) {
+			console.error(err);
+		}
+	}
 
-			return haystack.includes(term);
-		});
-	}, [services, appliedByService, search]);
+	const hasServices = services.length > 0;
 
 
 	return (
@@ -108,103 +90,55 @@ export default function CarShow() {
 			<div className="content">
 
 				<div className="details-actions">
-					<Link className="options" to="/cars">
-						<i className="fa-solid fa-arrow-left" /> Voltar
-					</Link>
+					<BackButton fallback="/cars" />
+
+					<button
+						className="cancel detail-delete"
+						onClick={deleteCar}
+						disabled={loadingHistory || hasServices}
+						title={hasServices ? "Não é possível apagar uma viatura com serviços." : "Apagar viatura"}
+					>
+						<i className="fa-solid fa-trash" /> Apagar
+					</button>
 				</div>
 
-				<CarPicker
-					car_id={id}
-					onCarIdChange={() => {}}
-					isAllowedEditing={true}
-					allowDeselect={false}
-					defaultInfoShowing={true}
+				{/* Same card as the Viaturas list, always open (no ⌄). Services
+				   come from the history below (newest first). */}
+				{car && (editingCar ? (
+					<CarForm
+						car={car}
+						title={`Editar ${car.plate}`}
+						onSaved={() => { setEditingCar(false); loadCar(); }}
+						onCancel={() => setEditingCar(false)}
+					/>
+				) : (
+					<CarCard
+						car={car}
+						className="is-expanded is-page"
+						history={loadingHistory ? null : {
+							count: services.length,
+							lastDate: services[0]?.checkin,
+							lastClient: services[0]?.client_name,
+						}}
+					>
+						<CarDetails
+							car={car}
+							actions={
+								<button className="options" onClick={() => setEditingCar(true)}>
+									<i className="fa-solid fa-pencil" /> Editar
+								</button>
+							}
+						/>
+					</CarCard>
+				))}
+
+				<ServiceHistory
+					services={services}
+					appliedByService={appliedByService}
+					loading={loadingHistory}
+					emptyText="Sem serviços associados a esta viatura."
+					showClient
 				/>
-
-				<div className="card">
-					<div className="header">
-						<i className="fa-solid fa-clock-rotate-left" />
-						<h1>Histórico de Serviços</h1>
-					</div>
-
-					<div className="body">
-						{!loadingHistory && services.length > 0 && (
-							<div className="filters">
-								<input
-									type="text"
-									placeholder="Pesquisar no histórico..."
-									value={search}
-									onChange={(e) => setSearch(e.target.value)}
-								/>
-							</div>
-						)}
-
-						{loadingHistory ? (
-							<p className="car-history-empty">A Carregar...</p>
-						) : services.length === 0 ? (
-							<p className="car-history-empty">Sem serviços associados a esta viatura.</p>
-						) : filteredServices.length === 0 ? (
-							<p className="car-history-empty">Sem resultados para "{search}".</p>
-						) : (
-							<div className="car-history-list">
-								{filteredServices.map((service) => {
-									const status = getStatusInfo(service);
-									const applied = (appliedByService[service.id] || []).filter((ap) => ap.is_applied);
-									const plainNote = extractPlainNote(service.note);
-
-									return (
-										<Link
-											key={service.id}
-											className="car-history-item"
-											to={`/services/${service.id}`}
-										>
-											<div className="car-history-item-header">
-												<span className="car-history-id">#{service.id}</span>
-												<span className="car-history-type">{service.service_type_name}</span>
-												<span className="car-history-kms">
-													{service.kms ? `${service.kms} kms` : "S/ Kms"}
-												</span>
-												<span className="car-history-dates">
-													{service.checkin || "-"} → {service.checkout || "Em curso"}
-												</span>
-												<span className={`car-history-status ${status.badgeClass}`}>
-													{status.label}
-												</span>
-											</div>
-
-											<div className="car-history-subcards">
-												<div className="car-history-subcard">
-													{hasLabSummary(service) && <LabSummaryButton className="is-corner" serviceId={service.id} />}
-													<span className="car-history-label">Serviço Realizado</span>
-													<p>{service.service || "-"}</p>
-												</div>
-
-												<div className="car-history-subcard">
-													<span className="car-history-label">Notas/Observações</span>
-													<p>{plainNote || "-"}</p>
-												</div>
-											</div>
-
-											{applied.length > 0 && (
-												<div className="car-history-products">
-													<span className="car-history-label">Produtos Aplicados</span>
-													<ul>
-														{applied.map((ap) => (
-															<li key={ap.id}>
-																<i className="fa-solid fa-check" />
-																{ap.product_name} {ap.quantity ? `× ${ap.quantity}` : ""}
-															</li>
-														))}
-													</ul>
-												</div>
-											)}
-										</Link>
-									);
-								})}
-							</div>
-						)}
-					</div>
-				</div>
 
 			</div>
 		</div>

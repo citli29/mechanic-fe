@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useFilterChange, useUrlParam, useUrlState } from "../../utils/useUrlState";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/SchedulesList.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
-import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
+import { getServiceTypeAccent, getServiceTypeSelectStyle } from "../../utils/serviceTypeColor";
 
 const PER_PAGE = 10;
 
@@ -21,7 +22,11 @@ export default function SchedulesList() {
 	const [schedules, setSchedules] = useState([]);
 	const [serviceTypes, setServiceTypes] = useState([]);
 
-	const [filters, setFilters] = useState({
+	// Phone: date / client / make / model are folded behind "Filtros"
+	// (same as the services list).
+	const [showMoreFilters, setShowMoreFilters] = useState(false);
+
+	const [filters, setFilters] = useUrlState({
 		day: "",
 		month: "",
 		year: "",
@@ -33,12 +38,12 @@ export default function SchedulesList() {
 		status: "all",
 	});
 
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
-	const [sortColumn, setSortColumn] = useState(null);
-	const [sortDirection, setSortDirection] = useState("asc");
+	const [sortColumn, setSortColumn] = useUrlParam("sort", null);
+	const [sortDirection, setSortDirection] = useUrlParam("dir", "asc");
 
 	const [loading, setLoading] = useState(true);
 
@@ -46,6 +51,9 @@ export default function SchedulesList() {
 
 	// Card list below 900px, not just on phones — the 9-column table
 	// doesn't fit at tablet widths (headers overlap, Estado gets cut off).
+	const MORE_FILTER_KEYS = ["year", "month", "day", "client_name", "car_make", "car_model"];
+	const moreFiltersInUse = MORE_FILTER_KEYS.filter((key) => String(filters[key] ?? "").trim() !== "").length;
+
 	const [isMobile, setIsMobile] = useState(
 		window.matchMedia("(max-width: 900px)").matches
 	);
@@ -131,25 +139,16 @@ export default function SchedulesList() {
 
 	useEffect(() => { loadSchedules(); }, [page]);
 
-	useEffect(() => {
-		if (page !== 1) {
-			setPage(1);
-		} else {
-			loadSchedules();
-		}
-	}, [sortColumn, sortDirection]);
+	// Only on a real change (not on load): a page / sort / filters restored
+	// from the URL stay as they were.
+	function reloadFromFirstPage() {
+		if (page !== 1) setPage(1);
+		else loadSchedules();
+	}
 
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			if (page !== 1) {
-				setPage(1);
-			} else {
-				loadSchedules();
-			}
-		}, 400);
+	useFilterChange({ sortColumn, sortDirection }, reloadFromFirstPage, 0);
 
-		return () => clearTimeout(timer);
-	}, [filters]);
+	useFilterChange(filters, reloadFromFirstPage);
 
 
 	function handleSort(column) {
@@ -473,14 +472,34 @@ export default function SchedulesList() {
 						<i className="fa-solid fa-calendar-days" />
 						<h1>Marcações</h1>
 
+						{/* Desktop only (CSS); phones have it on top of the filters. */}
+						<Link className="header-add" to="/schedules/new">
+							<i className="fa-solid fa-plus" /> <span>Adicionar Marcação</span>
+						</Link>
+
 						<ViewToggle listPath="/schedules" calendarPath="/schedules_calendar" />
 					</div>
 
 					<div className="body">
 
-						<div className="filters">
+						<div className={`filters ${isMobile && !showMoreFilters ? "more-collapsed" : ""}`}>
+							{/* Phone only: shows / hides the less used filters. */}
+							{isMobile && (
+								<button
+									type="button"
+									className={`more-filters-toggle ${showMoreFilters ? "is-open" : ""} ${moreFiltersInUse > 0 ? "in-use" : ""}`}
+									aria-expanded={showMoreFilters}
+									onClick={() => setShowMoreFilters((prev) => !prev)}
+								>
+									<i className="fa-solid fa-sliders" />
+									Filtros
+									{moreFiltersInUse > 0 && <span className="more-filters-count">{moreFiltersInUse}</span>}
+									<i className={`fa-solid fa-chevron-${showMoreFilters ? "up" : "down"} more-filters-chevron`} />
+								</button>
+							)}
+
 							<input
-								className="date-field"
+								className="date-field more-filter"
 								name="year"
 								placeholder="AAAA"
 								maxLength={4}
@@ -489,7 +508,7 @@ export default function SchedulesList() {
 							/>
 
 							<input
-								className="date-field"
+								className="date-field more-filter"
 								name="month"
 								placeholder="MM"
 								maxLength={2}
@@ -500,7 +519,7 @@ export default function SchedulesList() {
 							/>
 
 							<input
-								className="date-field"
+								className="date-field more-filter"
 								name="day"
 								placeholder="DD"
 								maxLength={2}
@@ -511,6 +530,7 @@ export default function SchedulesList() {
 							/>
 
 							<input
+								className="more-filter"
 								name="client_name"
 								placeholder="Cliente"
 								value={filters.client_name}
@@ -518,6 +538,7 @@ export default function SchedulesList() {
 							/>
 
 							<input
+								className="plate-filter"
 								name="car_plate"
 								placeholder="Matrícula"
 								value={filters.car_plate}
@@ -525,6 +546,7 @@ export default function SchedulesList() {
 							/>
 
 							<input
+								className="more-filter"
 								name="car_make"
 								placeholder="Marca"
 								value={filters.car_make}
@@ -532,6 +554,7 @@ export default function SchedulesList() {
 							/>
 
 							<input
+								className="more-filter"
 								name="car_model"
 								placeholder="Modelo"
 								value={filters.car_model}
@@ -539,9 +562,11 @@ export default function SchedulesList() {
 							/>
 
 							<select
+								className="type-filter"
 								name="service_type_id"
 								value={filters.service_type_id}
 								onChange={updateFilter}
+								style={getServiceTypeSelectStyle(filters.service_type_id, serviceTypes)}
 							>
 								<option value="">Tipo de Serviço</option>
 								{serviceTypes.map((type) => (
@@ -552,6 +577,7 @@ export default function SchedulesList() {
 							</select>
 
 							<select
+								className="status-filter"
 								name="status"
 								value={filters.status}
 								onChange={updateFilter}
@@ -563,11 +589,12 @@ export default function SchedulesList() {
 								<option value="delivered">Entregue</option>
 							</select>
 
-							<button className="options" onClick={clearFilters}>
-								<i className="fa-solid fa-broom" /> Limpar
+							<button className="options clear-filters" title="Limpar filtros" aria-label="Limpar filtros" onClick={clearFilters}>
+								<i className="fa-solid fa-broom" /> <span className="clear-filters-label">Limpar</span>
 							</button>
 
-							<Link className="confirm" to="/schedules/new">
+							{/* Phone only (CSS); desktop has it in the header. */}
+							<Link className="confirm filters-add" to="/schedules/new">
 								<i className="fa-solid fa-plus" /> Adicionar Marcação
 							</Link>
 						</div>

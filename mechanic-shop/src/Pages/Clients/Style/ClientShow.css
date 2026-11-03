@@ -1,0 +1,105 @@
+/* Cliente page (ClientShow.jsx). The card itself reuses the viatura card
+   styles (Cars/Style/CarCard.css). */
+
+.client-show-page .details-actions{
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--padding);
+
+	button, a{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+		padding: var(--padding) calc(2 * var(--big-padding));
+		border-radius: 5px;
+		font-weight: 700;
+	}
+}
+
+/* Page version of the card: bigger avatar and name. */
+.client-show-page .client-top .client-avatar{ width: 52px; height: 52px; font-size: 18px; }
+.client-show-page .client-card .car-make{ font-size: var(--font-size-big); }
+
+/* Cars as a grid of tiles: plate on top, make/model + chips, history
+   at the bottom (the list's row layout of CarCard, stacked). */
+.client-show-page .client-cars-list{
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: var(--big-padding);
+
+	.car-card{
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
+		min-height: 170px;
+		padding: var(--big-padding);
+	}
+
+	.car-plate{ align-self: flex-start; }
+
+	.car-main{ flex: 1; }
+
+	.car-title{
+		flex-direction: column;
+		gap: 0;
+		white-space: normal;
+	}
+
+	.car-history{
+		flex-direction: column;
+		gap: 2px;
+		padding-top: 10px;
+		border-top: 1px solid var(--border-light);
+	}
+}
+
+@media(max-width: 650px){
+	/* Two tiles per row when they fit (≥ 150px each), else one. */
+	.client-show-page .client-cars-list{
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: var(--padding);
+
+		.car-card{ min-height: 0; padding: 12px; }
+		.car-plate .car-plate-number{ font-size: 15px; padding: 0 8px; letter-spacing: .5px; }
+		.car-history .car-history-last{ white-space: normal; }
+	}
+}
+
+/* ---------- client | cars side by side ---------- */
+
+.client-show-page .client-top{
+	display: grid;
+	grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+	align-items: start;
+	gap: var(--big-padding);
+
+	/* The client card in a narrow column: avatar + name/contacts on top,
+	   counts under them, then the fields two per row. */
+	.client-card:not(.car-form){
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: var(--padding) var(--big-padding);
+
+		.client-avatar{ grid-column: 1; grid-row: 1; }
+		.car-main{ grid-column: 2; grid-row: 1; }
+		.car-history{
+			grid-column: 1 / -1;
+			grid-row: 2;
+			flex-direction: row;
+			flex-wrap: wrap;
+			gap: 4px 12px;
+		}
+		.car-details{ grid-column: 1 / -1; grid-row: 3; }
+	}
+
+	.client-card .car-form-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	/* Same pairing in the page's narrow left column. */
+	.client-card .car-form-grid .cf-wide{ grid-column: 1 / -1; }
+
+	.client-cars{ min-width: 0; }
+	.client-cars-list{ grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+
+@media(max-width: 1000px){
+	.client-show-page .client-top{ grid-template-columns: 1fr; }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import CarQuickSearch from "../../components/CarQuickSearch/CarQuickSearch";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -19,6 +20,11 @@ function formatDate(date) {
 }
 
 const DELIVERED_PER_PAGE = 5;
+
+// HIDDEN-HOME-DELIVERED: "Produtos Entregues" (counter tile + list card)
+// hidden from the landing page for now (user asked, 2026-11-03). Set to
+// true to bring both back.
+const SHOW_DELIVERED_PRODUCTS = false;
 
 export default function Home() {
 
@@ -102,7 +108,7 @@ export default function Home() {
 
 
 	useEffect(() => { loadDashboard(); }, []);
-	useEffect(() => { loadDelivered(); }, [deliveredPage]);
+	useEffect(() => { if (SHOW_DELIVERED_PRODUCTS) loadDelivered(); }, [deliveredPage]);
 
 
 	function getAppointmentStatusClass(schedule) {
@@ -199,19 +205,20 @@ export default function Home() {
 					<div className="header">
 						<i className="fa-solid fa-house" />
 						<h1>Início</h1>
+
+						<div className="home-header-actions">
+							<Link className="header-add" to="/schedules/new" title="Nova Marcação" aria-label="Nova Marcação">
+								<i className="fa-solid fa-calendar-plus" /> <span>Nova Marcação</span>
+							</Link>
+							<Link className="header-add" to="/services/new" title="Novo Serviço" aria-label="Novo Serviço">
+								<i className="fa-solid fa-clipboard-list" /> <span>Novo Serviço</span>
+							</Link>
+						</div>
 					</div>
 
 					<div className="body">
 
-						<div className="quick-actions">
-							<Link className="confirm" to="/schedules/new">
-								<i className="fa-solid fa-calendar-plus" /> Nova Marcação
-							</Link>
-
-							<Link className="confirm" to="/services/new">
-								<i className="fa-solid fa-clipboard-list" /> Novo Serviço
-							</Link>
-						</div>
+						<CarQuickSearch />
 
 						<div className="stat-grid">
 							<Link className="stat-card" to="/schedules_calendar">
@@ -238,11 +245,14 @@ export default function Home() {
 								<div className="stat-label">Produtos A Aguardar Entrega</div>
 							</div>
 
-							<div className="stat-card stat-card-static">
-								<i className="fa-solid fa-dolly" />
-								<div className="stat-value">{productsDeliveredTotal}</div>
-								<div className="stat-label">Produtos Entregues</div>
-							</div>
+							{/* HIDDEN-HOME-DELIVERED */}
+							{SHOW_DELIVERED_PRODUCTS && (
+								<div className="stat-card stat-card-static">
+									<i className="fa-solid fa-dolly" />
+									<div className="stat-value">{productsDeliveredTotal}</div>
+									<div className="stat-label">Produtos Entregues</div>
+								</div>
+							)}
 						</div>
 
 					</div>
@@ -363,42 +373,45 @@ export default function Home() {
 					</div>
 				</div>
 
-				<div className="card">
-					<div className="header">
-						<i className="fa-solid fa-dolly" />
-						<h1>Produtos Entregues</h1>
-					</div>
+				{/* HIDDEN-HOME-DELIVERED */}
+				{SHOW_DELIVERED_PRODUCTS && (
+					<div className="card">
+						<div className="header">
+							<i className="fa-solid fa-dolly" />
+							<h1>Produtos Entregues</h1>
+						</div>
 
-					<div className="body">
-						{loadingDelivered && productsDelivered.length === 0 ? (
-							<p className="home-empty">A carregar...</p>
-						) : productsDelivered.length === 0 ? (
-							<p className="home-empty">Sem produtos entregues.</p>
-						) : (
-							renderProductGroups(productsDelivered)
-						)}
+						<div className="body">
+							{loadingDelivered && productsDelivered.length === 0 ? (
+								<p className="home-empty">A carregar...</p>
+							) : productsDelivered.length === 0 ? (
+								<p className="home-empty">Sem produtos entregues.</p>
+							) : (
+								renderProductGroups(productsDelivered)
+							)}
 
-						<div className="pagination">
-							<button
-								className="options"
-								disabled={deliveredPage <= 1}
-								onClick={() => setDeliveredPage((p) => Math.max(1, p - 1))}
-							>
-								<i className="fa-solid fa-chevron-left" />
-							</button>
+							<div className="pagination">
+								<button
+									className="options"
+									disabled={deliveredPage <= 1}
+									onClick={() => setDeliveredPage((p) => Math.max(1, p - 1))}
+								>
+									<i className="fa-solid fa-chevron-left" />
+								</button>
 
-							<span>Página {deliveredPage} de {deliveredTotalPages} ({productsDeliveredTotal} produtos)</span>
+								<span>Página {deliveredPage} de {deliveredTotalPages} ({productsDeliveredTotal} produtos)</span>
 
-							<button
-								className="options"
-								disabled={deliveredPage >= deliveredTotalPages}
-								onClick={() => setDeliveredPage((p) => Math.min(deliveredTotalPages, p + 1))}
-							>
-								<i className="fa-solid fa-chevron-right" />
-							</button>
+								<button
+									className="options"
+									disabled={deliveredPage >= deliveredTotalPages}
+									onClick={() => setDeliveredPage((p) => Math.min(deliveredTotalPages, p + 1))}
+								>
+									<i className="fa-solid fa-chevron-right" />
+								</button>
+							</div>
 						</div>
 					</div>
-				</div>
+				)}
 
 			</div>
 		</div>

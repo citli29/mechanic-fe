@@ -1,0 +1,35 @@
+/* Bordered so it reads as a button. Same on every detail page. */
+a.back-button{
+	display: inline-flex;
+	align-items: center;
+	gap: var(--padding);
+	width: fit-content;
+	padding: var(--padding) calc(2 * var(--big-padding));
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	background: var(--bg-card);
+	font-weight: 700;
+	text-decoration: none;
+
+	&:hover{
+		border-color: var(--primary);
+		background: var(--primary-soft);
+	}
+}
+
+/* Apagar on a detail page: far right of Voltar's row. */
+.details-actions .detail-delete{
+	margin-left: auto;
+	border: 1px solid var(--danger);
+	background: var(--bg-card);
+	cursor: pointer;
+
+	&:hover:not(:disabled){
+		background: var(--danger);
+		color: #fff;
+	}
+	&:disabled{
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+}

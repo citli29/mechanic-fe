@@ -21,7 +21,7 @@ const RELATED_PRODUCT_COUNTS = {
 };
 
 // Orçamentos still waiting to be quoted (same as the Orçamentos page's
-// "Só por orçamentar"). Only the escritório quotes them, so only that view
+// "Por orçamentar"). Only the escritório quotes them, so only that view
 // gets the badge.
 const RELATED_BUDGET_COUNTS = {
 	"Escritório": { filters: { done: "false" } },
@@ -491,6 +491,29 @@ export default function Navbar() {
 
 						<div className="navbar-dropdown-menu">
 
+							{/* Used every day at reception: on top, bigger, with icons. */}
+							<div className="navbar-dropdown-featured">
+								<NavLink
+									to="/clients"
+									className={({ isActive }) => `navbar-featured-link ${isActive ? "active" : ""}`}
+									onClick={closeDropdown}
+								>
+									<i className="fa-solid fa-users" />
+									<span>Clientes</span>
+								</NavLink>
+
+								<NavLink
+									to="/cars"
+									className={({ isActive }) => `navbar-featured-link ${isActive ? "active" : ""}`}
+									onClick={closeDropdown}
+								>
+									<i className="fa-solid fa-car" />
+									<span>Viaturas</span>
+								</NavLink>
+							</div>
+
+							<div className="navbar-dropdown-divider" />
+
 							<NavLink
 								to="/services_manage"
 								className={linkClass}
@@ -515,23 +538,15 @@ export default function Navbar() {
 								Gestão de Orçamentos
 							</NavLink>
 
+							<NavLink
+								to="/service_types"
+								className={linkClass}
+								onClick={closeDropdown}
+							>
+								Tipos de Serviço
+							</NavLink>
+
 							<div className="navbar-dropdown-divider" />
-
-							<NavLink
-								to="/clients"
-								className={linkClass}
-								onClick={closeDropdown}
-							>
-								Clientes
-							</NavLink>
-
-							<NavLink
-								to="/cars"
-								className={linkClass}
-								onClick={closeDropdown}
-							>
-								Viaturas
-							</NavLink>
 
 							<NavLink
 								to="/makes"

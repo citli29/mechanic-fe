@@ -1,0 +1,364 @@
+/* ===================== Viatura card (CarCard.jsx) =====================
+   Shared by the Viaturas list and the viatura page. */
+
+.car-card{
+	position: relative;
+	display: grid;
+	grid-template-columns: 150px minmax(0, 1fr) minmax(160px, 0.45fr) auto;
+	align-items: center;
+	gap: var(--big-padding);
+	padding: 12px var(--big-padding);
+	border: 1px solid var(--border-light);
+	border-radius: 10px;
+	background: var(--bg-card);
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+	transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+
+	&:hover:not(.car-form){
+		border-color: var(--border);
+		box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+	}
+}
+
+/* Invisible link over the whole card (open in new tab still works). */
+.car-card-link{
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	border-radius: inherit;
+}
+
+/* European-style plate. */
+.car-plate{
+	display: flex;
+	align-items: stretch;
+	width: fit-content;
+	max-width: 100%;
+	height: 34px;
+	border: 2px solid #1e293b;
+	border-radius: 6px;
+	background: #fff;
+	overflow: hidden;
+
+	.car-plate-country{
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		width: 18px;
+		padding-bottom: 2px;
+		background: #1d4ed8;
+		color: #fff;
+		font-size: 10px;
+		font-weight: 700;
+	}
+
+	.car-plate-number{
+		display: flex;
+		align-items: center;
+		padding: 0 10px;
+		font-family: "DIN Alternate", "Roboto Mono", ui-monospace, monospace;
+		font-size: 17px;
+		font-weight: 800;
+		letter-spacing: 1px;
+		color: #0f172a;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
+.car-main{
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.car-title{
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	.car-make{
+		font-size: var(--font-size);
+		font-weight: 800;
+		color: var(--txt-dark);
+	}
+	.car-model{
+		font-size: var(--font-size);
+		color: var(--txt-light);
+	}
+}
+
+.car-specs{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.car-spec{
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	max-width: 100%;
+	padding: 2px 8px;
+	border-radius: 6px;
+	background: var(--bg-soft);
+	border: 1px solid var(--border-light);
+	color: var(--txt-light);
+	font-size: 13px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	i{ color: var(--txt-muted); font-size: 12px; }
+
+	&.is-empty{ color: var(--txt-muted); font-style: italic; }
+}
+
+.car-history{
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	font-size: var(--font-size-small);
+	color: var(--txt-light);
+
+	.car-history-count b{ color: var(--txt-dark); }
+
+	.car-history-last{
+		color: var(--txt-muted);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
+.car-actions{
+	position: relative;
+	z-index: 1; /* above .car-card-link */
+	display: flex;
+	gap: 4px;
+
+	button{
+		width: 36px;
+		height: 36px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid transparent;
+		border-radius: 8px;
+		background: transparent;
+		cursor: pointer;
+
+		&:hover{
+			background: var(--bg-page);
+			border-color: var(--border-light);
+		}
+	}
+}
+
+/* ---------- create / edit form ---------- */
+
+.car-card.car-form{
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--big-padding);
+	border-color: var(--primary);
+	box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.car-form-title{
+	font-weight: 800;
+	color: var(--txt-dark);
+
+	i{ color: var(--primary); margin-right: 4px; }
+}
+
+.car-form-grid{
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--padding) var(--big-padding);
+}
+
+.car-form-field{
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+
+	> span{
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--txt-light);
+	}
+
+	input, select{
+		width: 100%;
+		height: 40px;
+		padding: 0 var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: var(--bg-card);
+		font-size: var(--font-size);
+		color: var(--txt-dark);
+
+		&:focus{
+			outline: none;
+			border-color: var(--border-focus);
+		}
+	}
+
+	.car-form-plate{
+		font-weight: 700;
+		letter-spacing: 1px;
+		text-transform: uppercase;
+	}
+
+	/* "+ Adicionar Marca / Modelo" inline input + ✓ ✗. */
+	.inline-create{
+		flex-wrap: nowrap;
+
+		input{ min-width: 0; }
+		.create-buttons button{ height: 40px; width: 40px; }
+	}
+}
+
+.car-form-actions{
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		height: 40px;
+		padding: 0 var(--big-padding);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--bg-card);
+		font-weight: 600;
+		cursor: pointer;
+	}
+	button.confirm{
+		border-color: var(--success);
+		background: var(--success);
+		color: #fff;
+
+		&:hover{ background: var(--success-hover); }
+	}
+}
+
+/* ---------- read-only details (card expanded) ---------- */
+
+.car-card-link:focus-visible{
+	outline: 2px solid var(--border-focus);
+	outline-offset: -2px;
+}
+
+.car-actions .car-expand i{ transition: transform 0.2s; }
+.car-card.is-expanded{
+	border-color: var(--border);
+	box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+
+	.car-expand i{ transform: rotate(180deg); }
+}
+
+.car-details{
+	position: relative;
+	z-index: 1; /* above the overlay: text can be selected / copied */
+	grid-column: 1 / -1;
+	display: flex;
+	flex-direction: column;
+	gap: var(--big-padding);
+	padding-top: var(--big-padding);
+	border-top: 1px solid var(--border-light);
+	cursor: auto;
+}
+
+/* Same box as the Editar inputs, but plain text. */
+.car-details-value{
+	display: flex;
+	align-items: center;
+	min-height: 40px;
+	padding: 0 var(--padding);
+	border: 1px solid var(--border-light);
+	border-radius: 6px;
+	background: var(--bg-soft);
+	color: var(--txt-dark);
+	overflow-wrap: anywhere;
+	user-select: text;
+
+	&.is-empty{ color: var(--txt-muted); }
+}
+
+.car-details .car-form-actions a{
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	height: 40px;
+	padding: 0 var(--big-padding);
+	border: 1px solid var(--success);
+	border-radius: 8px;
+	background: var(--success);
+	color: #fff;
+	font-weight: 600;
+	text-decoration: none;
+
+	&:hover{ background: var(--success-hover); }
+}
+
+@media(max-width: 650px){
+	.car-details{ grid-row: 4; }
+	.car-details .car-form-actions a{ flex: 1; justify-content: center; }
+}
+
+/* ---------- tablet / phone ---------- */
+
+@media(max-width: 1000px){
+	.car-card{
+		grid-template-columns: 140px minmax(0, 1fr) auto;
+	}
+	.car-history{
+		grid-column: 2;
+		grid-row: 2;
+		flex-direction: row;
+		flex-wrap: wrap;
+		gap: 4px 10px;
+	}
+	.car-actions{ grid-row: 1; grid-column: 3; }
+	.car-form-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media(max-width: 650px){
+	.car-card{
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 10px;
+		padding: 12px;
+	}
+	.car-plate{ grid-column: 1; grid-row: 1; }
+	.car-actions{ grid-column: 2; grid-row: 1; }
+	.car-main{ grid-column: 1 / -1; grid-row: 2; }
+	.car-history{
+		grid-column: 1 / -1;
+		grid-row: 3;
+		padding-top: 8px;
+		border-top: 1px solid var(--border-light);
+	}
+
+	.car-form-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.car-form-field:first-child{ grid-column: 1 / -1; }
+	.car-form-actions button{ flex: 1; justify-content: center; }
+}
+
+/* On the viatura page the card isn't a link: no hover lift. */
+.car-card.is-page:hover{
+	border-color: var(--border);
+	box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}

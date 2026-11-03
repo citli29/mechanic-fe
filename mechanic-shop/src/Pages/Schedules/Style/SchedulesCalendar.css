@@ -326,3 +326,286 @@
 	}
 }
 
+
+/* ===================== phone: filters + week bar lined up =====================
+   + Adicionar Marcação                       (full row)
+   Tipo de Serviço       | Estado
+   Matrícula     | Cliente        | 🧹         (5/12, 5/12, 2/12: Limpar as an icon)
+   ‹            2 - 8 Nov             ›        (arrows on the edges, like the month bar)
+   Same edges and spacing as the services list on the phone. */
+@media(max-width: 650px){
+	.schedules-calendar-page .card .filters{
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		gap: var(--padding);
+
+		> *{
+			width: 100%;
+			min-width: 0;
+			margin: 0;
+			box-sizing: border-box;
+		}
+
+		select{ text-overflow: ellipsis; }
+
+		button, a{
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: var(--small-padding);
+			white-space: nowrap;
+		}
+
+		> a.confirm{ grid-column: 1 / span 10; order: 0; }
+		> .type-filter{ grid-column: span 6; order: 2; }
+		> .status-filter{ grid-column: span 6; order: 3; }
+		> .plate-filter{ grid-column: 1 / span 6; order: 4; }
+		> .client-filter{ grid-column: span 6; order: 5; }
+		> button.clear-filters{
+			grid-column: span 2;
+			order: 1;
+			padding: 0;
+
+			.clear-filters-label{ display: none; }
+		}
+	}
+
+	.schedules-calendar-page .week-navigation{
+		justify-content: space-between;
+		gap: var(--padding);
+
+		button{
+			flex: 0 0 auto;
+			height: calc(var(--line-height) + 2 * var(--padding) + 2px);
+		}
+
+		span{
+			flex: 1;
+			text-align: center;
+			font-size: var(--font-size);
+			font-weight: 700;
+			color: var(--txt-dark);
+		}
+	}
+}
+
+/* ===================== phone: day navigation =====================
+   Novembro 2026 ▾              ‹ ›  [Hoje]   (‹ › = a week back / forward)
+   SEG TER QUA QUI SEX SAB DOM                (overview; dots = marcações)
+   then the 7 day cards of the week (swipe ↔ = week back / forward). */
+.schedules-calendar-page .day-nav{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+}
+
+.schedules-calendar-page .day-nav-header{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--padding);
+
+	/* Label + caret; the transparent native month input covers it so a
+	   tap opens the phone's own month picker. */
+	.day-nav-month{
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: var(--small-padding);
+		min-width: 0;
+		/* Same 36px button look as the arrows / Hoje next to it. */
+		height: 36px;
+		padding: 0 10px 0 12px;
+		box-sizing: border-box;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		background: var(--bg-card);
+		font-size: var(--font-size);
+		font-weight: 800;
+		white-space: nowrap;
+		color: var(--txt-dark);
+		cursor: pointer;
+
+		&:active{ background: var(--bg-page-dark); }
+
+		span{
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		i{
+			font-size: 14px;
+			color: var(--accent);
+		}
+		input{
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			min-width: 0;
+			padding: 0;
+			border: none;
+			opacity: 0;
+			cursor: pointer;
+		}
+	}
+
+	.day-nav-actions{
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: 6px; /* = 2 x the arrows' 3px hit area, so they don't overlap */
+	}
+	.day-nav-arrow{
+		position: relative;
+		width: 36px;
+		height: 36px;
+		padding: 0;
+		font-size: var(--font-size-big);
+		border: 1px solid var(--border);
+		border-radius: 50%;
+		background: var(--bg-card);
+		color: var(--accent);
+		cursor: pointer;
+
+		&:active{ background: var(--bg-page-dark); }
+
+		/* Invisible padding around the circle so a slightly-off tap
+		   still counts, without taking more room in the row. */
+		&::after{
+			content: "";
+			position: absolute;
+			inset: -3px;
+		}
+	}
+
+	.day-nav-today{
+		flex: 0 0 auto;
+		margin-left: 4px;
+		height: 36px;
+		padding: 0 10px;
+		border: 1px solid var(--primary);
+		border-radius: 999px;
+		background: var(--bg-card);
+		color: var(--primary);
+		font-size: var(--font-size-small);
+		font-weight: 700;
+		cursor: pointer;
+
+		&:disabled{
+			border-color: var(--border);
+			color: var(--txt-muted);
+			cursor: default;
+		}
+	}
+}
+
+/* The 7 days across the full width, all the same size. */
+.schedules-calendar-page .week-strip{
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 3px;
+	align-items: stretch;
+
+	.week-strip-day{
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		min-width: 0;
+		padding: 6px 0 5px;
+		border: 1px solid transparent;
+		border-radius: 10px;
+		background: transparent;
+		color: var(--txt-dark);
+
+		.week-strip-weekday{
+			font-size: 10px;
+			font-weight: 800;
+			letter-spacing: 0.03em;
+			text-transform: uppercase;
+			color: var(--txt-muted);
+		}
+		.week-strip-number{
+			font-size: var(--font-size-big);
+			font-weight: 800;
+			line-height: 1.1;
+		}
+		/* Up to 3 dots for marcações, plus an orange one for events. */
+		.week-strip-dots{
+			display: flex;
+			gap: 3px;
+			height: 5px;
+
+			i{
+				width: 5px;
+				height: 5px;
+				border-radius: 50%;
+				background: var(--primary);
+			}
+			i.is-event{ background: var(--accent); }
+		}
+
+		/* Today: filled blue. */
+		&.is-today{
+			border-color: var(--primary);
+			background: var(--primary);
+			color: #fff;
+
+			.week-strip-weekday,
+			.week-strip-number{ color: #fff; }
+			.week-strip-dots i{ background: #fff; }
+			.week-strip-dots i.is-event{ background: var(--accent-soft); }
+		}
+	}
+}
+
+/* The week's day cards: today stands out. */
+.schedules-calendar-page .calendar-vertical.week-days{
+	touch-action: pan-y;
+
+	.calendar-day{
+		transition: border-color 0.2s, box-shadow 0.2s;
+	}
+	.calendar-day.is-today{
+		border-color: var(--primary);
+
+		.day-number{ color: var(--primary); }
+	}
+	.day-today-tag{
+		padding: 1px 8px;
+		border-radius: 999px;
+		background: var(--primary);
+		color: #fff;
+		font-size: 11px;
+		font-weight: 700;
+	}
+	.day-empty{
+		margin: 0;
+		color: var(--txt-muted);
+		font-size: var(--font-size-small);
+	}
+}
+
+/* Very narrow phones: "Nov 2026" instead of "Novembro 2026". */
+.schedules-calendar-page .day-nav-month .day-nav-month-short{ display: none; }
+
+@media(max-width: 400px){
+	.schedules-calendar-page .day-nav-month{
+		.day-nav-month-long{ display: none; }
+		.day-nav-month-short{ display: inline; }
+	}
+}
+
+/* Very narrow phones (320px): tighten the header spacing so the month
+   button keeps its full "Nov 2026". */
+@media(max-width: 340px){
+	.schedules-calendar-page .day-nav-header{
+		gap: 4px;
+
+		.day-nav-month{ padding: 0 8px 0 10px; }
+		.day-nav-actions{ gap: 4px; }
+		.day-nav-arrow::after{ inset: -2px; }
+		.day-nav-today{ padding: 0 8px; }
+	}
+}

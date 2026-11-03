@@ -1,26 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useFilterChange, useUrlParam, useUrlState } from "../../utils/useUrlState";
 import { applyIdSearch } from "../../utils/idSearch";
+import { CarCard, CarDetails, CarForm, digitsOnly } from "./CarCard";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/CarsList.css";
-import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 
 const PER_PAGE = 10;
 
-const emptyCar = {
-	plate: "",
-	make_id: "",
-	model_id: "",
-	month: "",
-	year: "",
-	cc: "",
-	engine_code: "",
-	color_code: "",
-	chassi_nr: "",
-};
+const emptyFilters = { plate: "", year: "", month: "", make_id: "", model_name: "" };
 
 export default function CarsList() {
 
@@ -28,51 +19,42 @@ export default function CarsList() {
 
 	const [cars, setCars] = useState([]);
 	const [makes, setMakes] = useState([]);
-	const [models, setModels] = useState([]);
 
-	const [filters, setFilters] = useState({
-		plate: "",
-		year: "",
-		month: "",
-		make_id: "",
-		model_name: "",
-	});
+	// Filters + page live in the URL (?plate=13&p=2): ← back restores
+	// them, and the Home search's "Ver todas" links straight to ?plate=.
+	const [filters, setFilters] = useUrlState(emptyFilters);
 
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
-	const [editing, setEditing] = useState(null);
+	// One form at a time: a new car, or the car being edited.
 	const [creatingCar, setCreatingCar] = useState(false);
+	const [editingId, setEditingId] = useState(null);
+	// Card opened read-only with ⌄ (same fields as Editar, no inputs).
+	const [expandedId, setExpandedId] = useState(null);
 
-	const [creatingMake, setCreatingMake] = useState(false);
-	const [creatingModel, setCreatingModel] = useState(false);
-	const [newMakeName, setNewMakeName] = useState("");
-	const [newModelName, setNewModelName] = useState("");
-
-	const [newCar, setNewCar] = useState(emptyCar);
-
-	function handleApiError(err) {
-		console.error(err);
-	}
-
+	// Phone: the search's placeholder is just "Matrícula" (fits the width).
+	const [isMobile, setIsMobile] = useState(
+		() => window.matchMedia("(max-width: 650px)").matches
+	);
 
 	useEffect(() => {
-		loadCars();
-		loadMakes();
-	}, [page]);
+		const media = window.matchMedia("(max-width: 650px)");
+		const onChange = (e) => setIsMobile(e.matches);
+		media.addEventListener("change", onChange);
+		return () => media.removeEventListener("change", onChange);
+	}, []);
 
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			if (page !== 1) {
-				setPage(1);
-			} else {
-				loadCars();
-			}
-		}, 400);
 
-		return () => clearTimeout(timer);
-	}, [filters]);
+	useEffect(() => { loadCars(); }, [page]);
+
+	useEffect(() => { loadMakes(); }, []);
+
+	useFilterChange(filters, () => {
+		if (page !== 1) setPage(1);
+		else loadCars();
+	});
 
 
 	async function loadCars() {
@@ -114,295 +96,73 @@ export default function CarsList() {
 	}
 
 
-	async function loadModels(make_id) {
-		if (!make_id) {
-			setModels([]);
-			return;
-		}
-
-		try {
-			const res = await api.get("/models", { params: { make_id } });
-			setModels(res.data.model_list || []);
-		} catch (err) {
-			console.error(err);
-			setModels([]);
-		}
-	}
-
-
-	async function createMake() {
-		if (!newMakeName.trim()) return;
-
-		try {
-			const res = await api.post("/makes", { name: newMakeName });
-			const newMake = res.data.make;
-
-			setMakes((prev) => [...prev, newMake]);
-
-			if (creatingCar) {
-				setNewCar((prev) => ({ ...prev, make_id: newMake.id, model_id: "" }));
-			}
-
-			if (editing) {
-				setEditing((prev) => ({ ...prev, make_id: newMake.id, model_id: "" }));
-			}
-
-			setModels([]);
-			setNewMakeName("");
-			setCreatingMake(false);
-
-			pushSuccessToast("Marca criada com sucesso.");
-		} catch (err) {
-			handleApiError(err);
-		}
-	}
-
-
-	async function createModel() {
-		const make_id = creatingCar ? newCar.make_id : editing?.make_id;
-
-		if (!newModelName.trim() || !make_id) return;
-
-		try {
-			const res = await api.post("/models", { name: newModelName, make_id });
-			const newModel = res.data.model;
-
-			setModels((prev) => [...prev, newModel]);
-
-			if (creatingCar) {
-				setNewCar((prev) => ({ ...prev, model_id: newModel.id }));
-			}
-
-			if (editing) {
-				setEditing((prev) => ({ ...prev, model_id: newModel.id }));
-			}
-
-			setNewModelName("");
-			setCreatingModel(false);
-
-			pushSuccessToast("Modelo criado com sucesso.");
-		} catch (err) {
-			handleApiError(err);
-		}
-	}
-
-
 	function updateFilter(e) {
-		setFilters({ ...filters, [e.target.name]: e.target.value });
-	}
-
-
-	function editCar(car) {
-		setEditing({ ...car });
-		loadModels(car.make_id);
-	}
-
-
-	function updateNewCar(e) {
-		const { name, value } = e.target;
-
-		setNewCar((prev) => ({
-			...prev,
-			[name]: value,
-			...(name === "make_id" ? { model_id: "" } : {}),
-		}));
-
-		if (name === "make_id") {
-			loadModels(value);
-		}
-	}
-
-
-	function updateEdit(e) {
-		const { name, value } = e.target;
-
-		setEditing((prev) => ({
-			...prev,
-			[name]: value,
-			...(name === "make_id" ? { model_id: "" } : {}),
-		}));
-
-		if (name === "make_id") {
-			loadModels(value);
-		}
-	}
-
-
-	async function saveCar() {
-		try {
-			const data = Object.fromEntries(
-				Object.entries(editing).filter(([_, value]) => value !== "")
-			);
-
-			await api.put(`/cars/${editing.id}`, data);
-
-			pushSuccessToast("Viatura atualizada com sucesso.");
-
-			setEditing(null);
-
-			loadCars();
-		} catch (err) {
-			handleApiError(err);
-		}
-	}
-
-
-	async function createCar() {
-		if (!newCar.plate.trim()) {
-			pushErrorToast("A matrícula é obrigatória.");
-			return;
-		}
-
-		if (!newCar.make_id) {
-			pushErrorToast("Selecione uma marca.");
-			return;
-		}
-
-		try {
-			const data = Object.fromEntries(
-				Object.entries(newCar).filter(([_, value]) => value !== "")
-			);
-
-			await api.post("/cars", data);
-
-			pushSuccessToast("Viatura criada com sucesso.");
-
-			setCreatingCar(false);
-			setNewCar(emptyCar);
-
-			loadCars();
-		} catch (err) {
-			handleApiError(err);
-		}
-	}
-
-
-	async function deleteCar(id, plate) {
-		const confirmed = window.confirm(`Apagar "${plate}"?`);
-		if (!confirmed) return;
-
-		try {
-			await api.delete(`/cars/${id}`);
-
-			pushSuccessToast("Viatura apagada com sucesso.");
-
-			loadCars();
-		} catch (err) {
-			handleApiError(err);
-		}
+		setFilters({ ...filters, [e.target.name]: digitsOnly(e.target.name, e.target.value) });
 	}
 
 
 	function clearFilters() {
-		setFilters({ plate: "", year: "", month: "", make_id: "", model_name: "" });
+		setFilters(emptyFilters);
 	}
 
-	function renderMakeField(value, onChange) {
-		if (creatingMake) {
-			return (
-				<div className="inline-create">
-					<input
-						placeholder="Nova Marca"
-						value={newMakeName}
-						onChange={(e) => setNewMakeName(e.target.value)}
-					/>
 
-					<div className="create-buttons">
-						<button className="confirm" onClick={createMake}>
-							<i className="fa-solid fa-check" />
-						</button>
-						<button
-							className="cancel"
-							onClick={() => {
-								setCreatingMake(false);
-								setNewMakeName("");
-							}}
-						>
-							<i className="fa-solid fa-x" />
-						</button>
-					</div>
-				</div>
-			);
-		}
+	function editCar(car) {
+		setCreatingCar(false);
+		setExpandedId(null);
+		setEditingId(car.id);
+	}
+
+
+	const activeFilterCount = Object.values(filters).filter((v) => v !== "").length;
+
+
+	// Card click opens the viatura page; ⌄ shows the details in place.
+	function renderCar(car) {
+		const isExpanded = expandedId === car.id;
+		const toggle = () => setExpandedId(isExpanded ? null : car.id);
 
 		return (
-			<select
-				name="make_id"
-				value={value || ""}
-				onChange={(e) => {
-					if (e.target.value === "new") {
-						setCreatingMake(true);
-						return;
-					}
-
-					onChange(e);
+			<CarCard
+				key={car.id}
+				car={car}
+				to={`/cars/${car.id}`}
+				className={isExpanded ? "is-expanded" : ""}
+				history={{
+					count: car.service_count,
+					lastDate: car.last_checkin_date,
+					lastClient: car.last_client_name,
 				}}
+				actions={
+					<button
+						className="options car-expand"
+						aria-expanded={isExpanded}
+						title={isExpanded ? "Esconder detalhes" : "Ver detalhes"}
+						aria-label={isExpanded ? "Esconder detalhes" : "Ver detalhes"}
+						onClick={toggle}
+					>
+						<i className="fa-solid fa-chevron-down" />
+					</button>
+				}
 			>
-				<option value="">Marca</option>
-				<option value="new">+ Adicionar Marca</option>
-
-				{makes.map((make) => (
-					<option key={make.id} value={make.id}>
-						{make.name}
-					</option>
-				))}
-			</select>
+				{isExpanded && (
+					<CarDetails
+						car={car}
+						actions={
+							<>
+								<button className="options" onClick={() => editCar(car)}>
+									<i className="fa-solid fa-pencil" /> Editar
+								</button>
+								<Link className="confirm" to={`/cars/${car.id}`}>
+									<i className="fa-solid fa-arrow-up-right-from-square" /> Abrir viatura
+								</Link>
+							</>
+						}
+					/>
+				)}
+			</CarCard>
 		);
 	}
 
-	function renderModelField(makeId, value, onChange) {
-		if (creatingModel) {
-			return (
-				<div className="inline-create">
-					<input
-						placeholder="Novo Modelo"
-						value={newModelName}
-						onChange={(e) => setNewModelName(e.target.value)}
-					/>
-
-					<div className="create-buttons">
-						<button className="confirm" onClick={createModel}>
-							<i className="fa-solid fa-check" />
-						</button>
-						<button
-							className="cancel"
-							onClick={() => {
-								setCreatingModel(false);
-								setNewModelName("");
-							}}
-						>
-							<i className="fa-solid fa-x" />
-						</button>
-					</div>
-				</div>
-			);
-		}
-
-		return (
-			<select
-				name="model_id"
-				value={value || ""}
-				onChange={(e) => {
-					if (e.target.value === "new") {
-						setCreatingModel(true);
-						return;
-					}
-
-					onChange(e);
-				}}
-			>
-				<option value="">Modelo</option>
-
-				{models.map((model) => (
-					<option key={model.id} value={model.id}>
-						{model.name}
-					</option>
-				))}
-
-				{makeId && <option value="new">+ Adicionar Modelo</option>}
-			</select>
-		);
-	}
 
 	return (
 		<div className="page cars-page">
@@ -412,38 +172,54 @@ export default function CarsList() {
 					<div className="header">
 						<i className="fa-solid fa-car" />
 						<h1>Viaturas</h1>
+						<span className="cars-total">{total} {total === 1 ? "viatura" : "viaturas"}</span>
 					</div>
 
 					<div className="body">
 
-						<div className="filters">
-							<input
-								name="plate"
-								placeholder="Matrícula"
-								value={filters.plate}
-								onChange={updateFilter}
-							/>
+						<div className="cars-toolbar">
+							<div className="cars-search">
+								<i className="fa-solid fa-magnifying-glass" />
+								<input
+									name="plate"
+									placeholder={isMobile ? "Matrícula" : "Pesquisar por matrícula..."}
+									value={filters.plate}
+									onChange={updateFilter}
+									autoComplete="off"
+								/>
+								{filters.plate && (
+									<button
+										className="cars-search-clear"
+										title="Limpar matrícula"
+										aria-label="Limpar matrícula"
+										onClick={() => setFilters({ ...filters, plate: "" })}
+									>
+										<i className="fa-solid fa-xmark" />
+									</button>
+								)}
+							</div>
 
-							<input
-								name="year"
-								placeholder="Ano"
-								value={filters.year}
-								onChange={updateFilter}
-							/>
+							{!creatingCar && (
+								<button
+									className="confirm cars-add"
+									onClick={() => {
+										setEditingId(null);
+										setExpandedId(null);
+										setCreatingCar(true);
+									}}
+								>
+									<i className="fa-solid fa-plus" /> <span>Adicionar Viatura</span>
+								</button>
+							)}
+						</div>
 
-							<input
-								name="month"
-								placeholder="Mês"
-								value={filters.month}
-								onChange={updateFilter}
-							/>
-
+						<div className="filters cars-filters">
 							<select
 								name="make_id"
 								value={filters.make_id}
 								onChange={updateFilter}
 							>
-								<option value="">Marca</option>
+								<option value="">Todas as marcas</option>
 								{makes.map((make) => (
 									<option key={make.id} value={make.id}>
 										{make.name}
@@ -458,240 +234,67 @@ export default function CarsList() {
 								onChange={updateFilter}
 							/>
 
-							<button className="options" onClick={clearFilters}>
-								<i className="fa-solid fa-broom" /> Limpar
-							</button>
+							<input
+								className="cars-filter-short"
+								name="month"
+								placeholder="Mês"
+								inputMode="numeric"
+								pattern="[0-9]*"
+								value={filters.month}
+								onChange={updateFilter}
+							/>
 
-							{!creatingCar && (
-								<button
-									className="confirm"
-									onClick={() => {
-										setCreatingCar(true);
-										setNewCar(emptyCar);
-										setModels([]);
-									}}
-								>
-									<i className="fa-solid fa-plus" /> Adicionar Viatura
-								</button>
-							)}
+							<input
+								className="cars-filter-short"
+								name="year"
+								placeholder="Ano"
+								inputMode="numeric"
+								pattern="[0-9]*"
+								value={filters.year}
+								onChange={updateFilter}
+							/>
+
+							<button className="options" onClick={clearFilters} disabled={activeFilterCount === 0}>
+								<i className="fa-solid fa-broom" /> <span>Limpar</span>
+							</button>
 						</div>
 
-						<table>
-							<thead>
-								<tr>
-									<th>Matrícula</th>
-									<th>Marca</th>
-									<th>Modelo</th>
-									<th>Mês</th>
-									<th>Ano</th>
-									<th>CC</th>
-									<th>Cod. Motor</th>
-									<th>Cod. Cor</th>
-									<th>Nr. Chassi</th>
-									<th></th>
-								</tr>
-							</thead>
+						<div className="cars-list">
+							{creatingCar && (
+								<CarForm
+									car={null}
+									title="Nova viatura"
+									onSaved={() => { setCreatingCar(false); loadCars(); }}
+									onCancel={() => setCreatingCar(false)}
+								/>
+							)}
 
-							<tbody>
-								{creatingCar && (
-									<tr className="editing">
-										<td data-label="Matrícula">
-											<input
-												name="plate"
-												value={newCar.plate}
-												onChange={updateNewCar}
-											/>
-										</td>
+							{cars.map((car) => (
+								editingId === car.id ? (
+									<CarForm
+										key={car.id}
+										car={car}
+										title={`Editar ${car.plate}`}
+										onSaved={() => { setEditingId(null); loadCars(); }}
+										onCancel={() => setEditingId(null)}
+									/>
+								) : (
+									renderCar(car)
+								)
+							))}
 
-										<td data-label="Marca">
-											{renderMakeField(newCar.make_id, updateNewCar)}
-										</td>
-
-										<td data-label="Modelo">
-											{renderModelField(newCar.make_id, newCar.model_id, updateNewCar)}
-										</td>
-
-										<td data-label="Mês">
-											<input
-												name="month"
-												value={newCar.month}
-												onChange={updateNewCar}
-											/>
-										</td>
-
-										<td data-label="Ano">
-											<input
-												name="year"
-												value={newCar.year}
-												onChange={updateNewCar}
-											/>
-										</td>
-
-										<td data-label="CC">
-											<input
-												name="cc"
-												value={newCar.cc}
-												onChange={updateNewCar}
-											/>
-										</td>
-
-										<td data-label="Cod. Motor">
-											<input
-												name="engine_code"
-												value={newCar.engine_code}
-												onChange={updateNewCar}
-											/>
-										</td>
-
-										<td data-label="Cod. Cor">
-											<input
-												name="color_code"
-												value={newCar.color_code}
-												onChange={updateNewCar}
-											/>
-										</td>
-
-										<td data-label="Nr. Chassi">
-											<input
-												name="chassi_nr"
-												value={newCar.chassi_nr}
-												onChange={updateNewCar}
-											/>
-										</td>
-
-										<td className="actions">
-											<button className="confirm" onClick={createCar}>
-												<i className="fa-solid fa-check" />
-											</button>
-											<button
-												className="cancel"
-												onClick={() => {
-													setCreatingCar(false);
-													setCreatingMake(false);
-													setCreatingModel(false);
-													setNewCar(emptyCar);
-												}}
-											>
-												<i className="fa-solid fa-x" />
-											</button>
-										</td>
-									</tr>
-								)}
-
-								{cars.map((car) => (
-									editing?.id === car.id ? (
-										<tr key={car.id} className="editing">
-											<td data-label="Matrícula">
-												<input
-													name="plate"
-													value={editing.plate || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="Marca">
-												{renderMakeField(editing.make_id, updateEdit)}
-											</td>
-
-											<td data-label="Modelo">
-												{renderModelField(editing.make_id, editing.model_id, updateEdit)}
-											</td>
-
-											<td data-label="Mês">
-												<input
-													name="month"
-													value={editing.month || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="Ano">
-												<input
-													name="year"
-													value={editing.year || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="CC">
-												<input
-													name="cc"
-													value={editing.cc || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="Cod. Motor">
-												<input
-													name="engine_code"
-													value={editing.engine_code || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="Cod. Cor">
-												<input
-													name="color_code"
-													value={editing.color_code || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="Nr. Chassi">
-												<input
-													name="chassi_nr"
-													value={editing.chassi_nr || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td className="actions">
-												<button className="confirm" onClick={saveCar}>
-													<i className="fa-solid fa-check" />
-												</button>
-												<button
-													className="cancel"
-													onClick={() => {
-														setEditing(null);
-														setCreatingMake(false);
-														setCreatingModel(false);
-													}}
-												>
-													<i className="fa-solid fa-x" />
-												</button>
-											</td>
-										</tr>
-									) : (
-										<tr key={car.id}>
-											<td data-label="Matrícula"><span className="cell-truncate" title={car.plate}>{car.plate}</span></td>
-											<td data-label="Marca"><span className="cell-truncate" title={car.make_name}>{car.make_name}</span></td>
-											<td data-label="Modelo"><span className="cell-truncate" title={car.model_name}>{car.model_name}</span></td>
-											<td data-label="Mês"><span className="cell-truncate" title={car.month}>{car.month}</span></td>
-											<td data-label="Ano"><span className="cell-truncate" title={car.year}>{car.year}</span></td>
-											<td data-label="CC"><span className="cell-truncate" title={car.cc}>{car.cc}</span></td>
-											<td data-label="Cod. Motor"><span className="cell-truncate" title={car.engine_code}>{car.engine_code}</span></td>
-											<td data-label="Cod. Cor"><span className="cell-truncate" title={car.color_code}>{car.color_code}</span></td>
-											<td data-label="Nr. Chassi"><span className="cell-truncate" title={car.chassi_nr}>{car.chassi_nr}</span></td>
-
-											<td className="actions">
-												<Link className="options" to={`/cars/${car.id}`}>
-													<i className="fa-solid fa-arrow-up-right-from-square" />
-												</Link>
-												<button className="options" onClick={() => editCar(car)}>
-													<i className="fa-solid fa-pencil" />
-												</button>
-												<button
-													className="cancel"
-													onClick={() => deleteCar(car.id, car.plate)}
-												>
-													<i className="fa-solid fa-trash" />
-												</button>
-											</td>
-										</tr>
-									)
-								))}
-							</tbody>
-						</table>
+							{cars.length === 0 && !creatingCar && (
+								<div className="cars-empty">
+									<i className="fa-solid fa-car-side" />
+									<p>{activeFilterCount > 0 ? "Nenhuma viatura encontrada com estes filtros." : "Ainda não há viaturas."}</p>
+									{activeFilterCount > 0 && (
+										<button className="options" onClick={clearFilters}>
+											<i className="fa-solid fa-broom" /> Limpar filtros
+										</button>
+									)}
+								</div>
+							)}
+						</div>
 
 						<div className="pagination">
 							<button

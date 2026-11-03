@@ -8,7 +8,7 @@ import "./Style/ServicesList.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
 import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
 import LabItemsLabel, { LabSummaryButton } from "../../components/LabSummary/LabItemsLabel";
-import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
+import { getServiceTypeAccent, getServiceTypeSelectStyle } from "../../utils/serviceTypeColor";
 
 const LAB_SERVICE_TYPE_NAME = "Laboratório";
 
@@ -113,6 +113,10 @@ export default function ServicesList() {
 	const [serviceTypes, setServiceTypes] = useState([]);
 
 	const [filters, setFilters] = useState(initialView.filters);
+	// Phone: date / client / make / model are folded behind "Filtros".
+	const [showMoreFilters, setShowMoreFilters] = useState(false);
+	const MORE_FILTER_KEYS = ["year", "month", "day", "client_name", "car_make", "car_model"];
+	const moreFiltersInUse = MORE_FILTER_KEYS.filter((key) => String(filters[key] ?? "").trim() !== "").length;
 	// What the list is actually loaded with — trails `filters` by a short
 	// pause so typing in a filter box doesn't fire a request per keystroke.
 	const [debouncedFilters, setDebouncedFilters] = useState(initialView.filters);
@@ -306,12 +310,19 @@ export default function ServicesList() {
 	}
 
 
+	// Same precedence as the service header: Entregue > Validado (office
+	// check) > Terminado > Por terminar.
 	function getStatusInfo(service) {
-		const isFinished = Boolean(service.is_finished);
+		const isFinished = Boolean(Number(service.is_finished));
+		const isValidated = Boolean(Number(service.office_check));
 		const isDelivered = Boolean(service.checkout);
 
 		if (isDelivered) {
 			return { rowClass: "service-delivered-row", badgeClass: "service-status-delivered", label: "Entregue" };
+		}
+
+		if (isValidated) {
+			return { rowClass: "service-validated-row", badgeClass: "service-status-validated", label: "Validado" };
 		}
 
 		if (isFinished) {
@@ -322,12 +333,13 @@ export default function ServicesList() {
 	}
 
 
-	// Delivered > finished > pending — a cluster shows as advanced as its
+	// Delivered > validated > finished > pending — a cluster shows as advanced as its
 	// least-progressed member, since from the shop's point of view the car
 	// isn't really done until every associated job on it is.
 	function statusRank(service) {
-		if (service.checkout) return 2;
-		if (service.is_finished) return 1;
+		if (service.checkout) return 3;
+		if (Number(service.office_check)) return 2;
+		if (Number(service.is_finished)) return 1;
 		return 0;
 	}
 
@@ -353,7 +365,8 @@ export default function ServicesList() {
 		const rank = group.representative.cluster_status_rank;
 		if (rank == null) return getGroupStatusInfo(group.pageMembers);
 
-		return getStatusInfo({ checkout: rank >= 2, is_finished: rank >= 1 });
+		// Backend rank: 0 por terminar, 1 terminado, 2 validado, 3 entregue.
+		return getStatusInfo({ checkout: rank >= 3, office_check: rank >= 2, is_finished: rank >= 1 });
 	}
 
 
@@ -801,14 +814,34 @@ export default function ServicesList() {
 						<i className="fa-solid fa-clipboard-list" />
 						<h1>Serviços</h1>
 
+						{/* Desktop only (CSS); phones have it on top of the filters. */}
+						<Link className="header-add" to="/services/new">
+							<i className="fa-solid fa-plus" /> <span>Adicionar Serviço</span>
+						</Link>
+
 						<ViewToggle listPath="/services" calendarPath="/services_calendar" />
 					</div>
 
 					<div className="body">
 
-						<div className="filters">
+						<div className={`filters ${isMobile && !showMoreFilters ? "more-collapsed" : ""}`}>
+							{/* Phone only: shows / hides the less used filters. */}
+							{isMobile && (
+								<button
+									type="button"
+									className={`more-filters-toggle ${showMoreFilters ? "is-open" : ""} ${moreFiltersInUse > 0 ? "in-use" : ""}`}
+									aria-expanded={showMoreFilters}
+									onClick={() => setShowMoreFilters((prev) => !prev)}
+								>
+									<i className="fa-solid fa-sliders" />
+									Filtros
+									{moreFiltersInUse > 0 && <span className="more-filters-count">{moreFiltersInUse}</span>}
+									<i className={`fa-solid fa-chevron-${showMoreFilters ? "up" : "down"} more-filters-chevron`} />
+								</button>
+							)}
+
 							<input
-								className="date-field"
+								className="date-field more-filter"
 								name="year"
 								placeholder="AAAA"
 								maxLength={4}
@@ -817,7 +850,7 @@ export default function ServicesList() {
 							/>
 
 							<input
-								className="date-field"
+								className="date-field more-filter"
 								name="month"
 								placeholder="MM"
 								maxLength={2}
@@ -828,7 +861,7 @@ export default function ServicesList() {
 							/>
 
 							<input
-								className="date-field"
+								className="date-field more-filter"
 								name="day"
 								placeholder="DD"
 								maxLength={2}
@@ -839,6 +872,7 @@ export default function ServicesList() {
 							/>
 
 							<input
+								className="more-filter"
 								name="client_name"
 								placeholder="Cliente"
 								value={filters.client_name}
@@ -846,6 +880,7 @@ export default function ServicesList() {
 							/>
 
 							<input
+								className="plate-filter"
 								name="car_plate"
 								placeholder="Matrícula"
 								value={filters.car_plate}
@@ -853,6 +888,7 @@ export default function ServicesList() {
 							/>
 
 							<input
+								className="more-filter"
 								name="car_make"
 								placeholder="Marca"
 								value={filters.car_make}
@@ -860,6 +896,7 @@ export default function ServicesList() {
 							/>
 
 							<input
+								className="more-filter"
 								name="car_model"
 								placeholder="Modelo"
 								value={filters.car_model}
@@ -867,9 +904,11 @@ export default function ServicesList() {
 							/>
 
 							<select
+								className="type-filter"
 								name="service_type_id"
 								value={filters.service_type_id}
 								onChange={updateFilter}
+								style={getServiceTypeSelectStyle(filters.service_type_id, serviceTypes)}
 							>
 								<option value="">Tipo de Serviço</option>
 								{serviceTypes.map((type) => (
@@ -880,6 +919,7 @@ export default function ServicesList() {
 							</select>
 
 							<select
+								className="status-filter"
 								name="status"
 								value={filters.status}
 								onChange={updateFilter}
@@ -887,14 +927,16 @@ export default function ServicesList() {
 								<option value="all">Todos</option>
 								<option value="unfinished">Por Terminar</option>
 								<option value="finished">Terminados</option>
+								<option value="validated">Validados</option>
 								<option value="delivered">Entregues</option>
 							</select>
 
-							<button className="options" onClick={clearFilters}>
-								<i className="fa-solid fa-broom" /> Limpar
+							<button className="options clear-filters" title="Limpar filtros" aria-label="Limpar filtros" onClick={clearFilters}>
+								<i className="fa-solid fa-broom" /> <span className="clear-filters-label">Limpar</span>
 							</button>
 
-							<Link className="confirm" to="/services/new">
+							{/* Phone only (CSS); desktop has it in the header. */}
+							<Link className="confirm filters-add" to="/services/new">
 								<i className="fa-solid fa-plus" /> Adicionar Serviço
 							</Link>
 						</div>

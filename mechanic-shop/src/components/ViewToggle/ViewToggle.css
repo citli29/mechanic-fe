@@ -10,7 +10,7 @@
 		display: flex;
 		align-items: center;
 		gap: var(--small-padding);
-		padding: var(--small-padding) var(--padding);
+		padding: calc(var(--small-padding) + 4px) var(--padding);
 		border: none;
 		border-radius: 6px;
 		background: transparent;

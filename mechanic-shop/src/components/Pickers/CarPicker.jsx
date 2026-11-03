@@ -38,19 +38,18 @@ export const CarPicker = ({
 	const [isInfoShowing, setIsInfoShowing] = useState(defaultInfoShowing);
 	const [presentingCar, setPresentingCar] = useState(emptyCar);
 
-	const isFirstCarEffect = useRef(true);
+	// The car last reported to the parent. Report only when `car` really
+	// changes (picked, cleared, created) — compared by value, not "first
+	// run", because React StrictMode (dev) runs this effect twice on mount:
+	// with a "skip the first run" flag, the 2nd run reported "no car" while
+	// the car_id prop's fetch was still going, and the service's autosave
+	// then cleared its car (seen 2026-11-03 on a remount of the service
+	// page). On mount `car` is null and so is this, so nothing is sent.
+	const lastReportedCarRef = useRef(null);
 
 	useEffect(() => {
-		if (isFirstCarEffect.current) {
-			isFirstCarEffect.current = false;
-
-			// On mount, `car` starts as null regardless of whether a
-			// car_id prop was passed in. If one was, the car_id effect
-			// below is already fetching it — don't report "no car" to
-			// the parent here, or it'll overwrite the real car_id before
-			// that fetch resolves and the fetch gets cancelled for nothing.
-			if (car_id) return;
-		}
+		if (car === lastReportedCarRef.current) return;
+		lastReportedCarRef.current = car;
 
 		onCarIdChange(car?.id ?? "");
 

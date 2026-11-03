@@ -1,0 +1,51 @@
+/* Cliente card (ClientCard.jsx): the viatura card (CarCard.css) with an
+   avatar where the plate goes. */
+
+.client-card{
+	grid-template-columns: 52px minmax(0, 1fr) minmax(180px, 0.45fr) auto;
+}
+
+.client-avatar{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 46px;
+	height: 46px;
+	border-radius: 50%;
+	background: var(--primary-soft);
+	border: 2px solid var(--primary);
+	color: var(--primary);
+	font-size: 16px;
+	font-weight: 800;
+	letter-spacing: 1px;
+}
+
+/* Tel / mail links work on their own even over the card's link. */
+a.client-contact{
+	position: relative;
+	z-index: 1;
+	color: var(--primary);
+	text-decoration: none;
+
+	i{ color: var(--primary); }
+	&:hover{ border-color: var(--primary); }
+}
+
+@media(max-width: 1000px){
+	.client-card{ grid-template-columns: 52px minmax(0, 1fr) auto; }
+}
+
+@media(max-width: 650px){
+	.client-card{ grid-template-columns: auto minmax(0, 1fr) auto; }
+	.client-card .client-avatar{ grid-column: 1; grid-row: 1; width: 40px; height: 40px; font-size: 14px; }
+	.client-card .car-main{ grid-column: 2; grid-row: 1; }
+	.client-card .car-actions{ grid-column: 3; grid-row: 1; }
+	.client-card .car-history,
+	.client-card .car-details{ grid-column: 1 / -1; }
+}
+
+/* Details / form fields: on phones (2 columns) the long ones get the
+   whole row, short ones pair up — rows keep a steady height. */
+@media(max-width: 650px){
+	.client-card .car-form-grid .cf-wide{ grid-column: 1 / -1; }
+}

@@ -1,0 +1,55 @@
+.service-types-page table tr{
+	grid-template-columns: minmax(0, 1fr) 110px 110px 110px;
+}
+
+.service-types-page .service-type-hint{
+	margin: 0;
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+
+	i{ margin-right: 4px; }
+}
+
+.service-types-page .service-type-name{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	min-width: 0;
+	max-width: 100%;
+}
+
+.service-types-page .service-type-dot{
+	flex: none;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--type-color);
+}
+
+.service-types-page .service-type-locked{
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--bg-page-dark);
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+	font-weight: 600;
+
+	i{ font-size: 0.85em; }
+}
+
+/* Locked row: the actions cell is just a muted lock, no buttons. */
+.service-types-page td.actions.is-locked{
+	color: var(--txt-muted);
+	cursor: help;
+}
+
+.service-types-page td.actions button:disabled{
+	opacity: 0.35;
+	cursor: not-allowed;
+
+	&:hover{ background: transparent; }
+}

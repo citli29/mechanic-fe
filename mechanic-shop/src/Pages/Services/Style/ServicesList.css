@@ -76,6 +76,14 @@
 	background: #bbf7d0;
 }
 
+.services-page table tr.service-validated-row td{
+	background: #fce7f9;
+}
+
+.services-page table tr.service-validated-row:hover td{
+	background: #f9d0f3;
+}
+
 .services-page table tr.service-delivered-row td{
 	background: #bfdbfe;
 }
@@ -104,6 +112,11 @@
 .services-page .service-status-pending{
 	background: #fef3c7;
 	color: #92400e;
+}
+
+.services-page .service-status-validated{
+	background: var(--state-validated);
+	color: #fff;
 }
 
 .services-page .service-status-delivered{
@@ -212,6 +225,10 @@
 
 .services-page .service-row.service-finished-row{
 	background: #f0fdf4;
+}
+
+.services-page .service-row.service-validated-row{
+	background: #fdf2fb;
 }
 
 .services-page .service-row.service-delivered-row{
@@ -377,5 +394,107 @@
 		min-width: 0;
 		padding: 2px var(--padding);
 		font-size: 11px;
+	}
+}
+
+/* ===================== phone: filters =====================
+   + Adicionar Serviço                     (full row)
+   Tipo de Serviço | Estado
+   Matrícula        | Filtros ▾    | 🧹   (5/12, 5/12, 2/12: Limpar as an icon)
+   ── folded behind "Filtros" (.more-filter) ──
+   AAAA | MM | DD                          (thirds)
+   Cliente                                 (full row)
+   Marca | Modelo
+   Every box the same height, every edge on the same lines. */
+@media(max-width: 650px){
+	.services-page .card .filters{
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		gap: var(--padding);
+
+		> *{
+			width: 100%;
+			min-width: 0;
+			margin: 0;
+			box-sizing: border-box;
+		}
+
+		select{ text-overflow: ellipsis; }
+
+		button, a{
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: var(--small-padding);
+			white-space: nowrap;
+		}
+
+		> a.confirm{ grid-column: 1 / span 10; order: 0; }
+		> .type-filter{ grid-column: span 6; order: 2; }
+		> .status-filter{ grid-column: span 6; order: 3; }
+		> .plate-filter{ grid-column: 1 / span 6; order: 4; }
+		> .more-filters-toggle{ grid-column: span 6; order: 5; }
+		> button.clear-filters{ grid-column: span 2; order: 1; }
+		> .date-field{ grid-column: span 4; order: 7; width: 100%; }
+		> input[name="client_name"]{ grid-column: 1 / -1; order: 8; }
+		> input[name="car_make"]{ grid-column: span 6; order: 9; }
+		> input[name="car_model"]{ grid-column: span 6; order: 10; }
+
+		/* Limpar: just the broom. */
+		> button.clear-filters{
+			padding: 0;
+
+			.clear-filters-label{ display: none; }
+		}
+
+		/* Folded: only Matrícula, Tipo, Estado (and the buttons) show. */
+		&.more-collapsed > .more-filter{ display: none; }
+	}
+
+	/* "Filtros ▾": same height as the inputs; orange when a folded filter
+	   is in use, with how many. */
+	.services-page .card .filters .more-filters-toggle{
+		height: calc(var(--line-height) + 2 * var(--padding) + 2px);
+		padding: 0 var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-card);
+		color: var(--txt-dark);
+		font-size: var(--font-size-small);
+		font-weight: 700;
+		cursor: pointer;
+
+		.more-filters-chevron{
+			font-size: 10px;
+			color: var(--txt-muted);
+		}
+		.more-filters-count{
+			min-width: 18px;
+			padding: 0 5px;
+			border-radius: 999px;
+			background: var(--accent);
+			color: #fff;
+			font-size: 11px;
+			line-height: 18px;
+			text-align: center;
+		}
+
+		&.is-open{
+			border-color: var(--primary);
+			color: var(--primary);
+
+			.more-filters-chevron{ color: var(--primary); }
+		}
+		&.in-use:not(.is-open){
+			border-color: var(--accent);
+			background: var(--accent-soft);
+		}
+	}
+
+	/* Sort row right under it, on the same edges and spacing. */
+	.services-page .mobile-sort-bar{
+		margin-top: calc(-1 * var(--padding));
+
+		select{ min-width: 0; }
 	}
 }

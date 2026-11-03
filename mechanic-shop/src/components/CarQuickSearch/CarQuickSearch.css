@@ -1,0 +1,135 @@
+.car-quick-search{
+	position: relative;
+	margin-bottom: var(--big-padding);
+}
+
+.car-quick-search-input{
+	position: relative;
+	display: flex;
+	align-items: center;
+
+	> i{
+		position: absolute;
+		left: 14px;
+		color: var(--txt-muted);
+		pointer-events: none;
+	}
+
+	input{
+		width: 100%;
+		height: 48px;
+		padding: 0 42px 0 44px;
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		background: var(--bg-card);
+		font-size: var(--font-size);
+		color: var(--txt-dark);
+		transition: border-color 0.15s, box-shadow 0.15s;
+
+		&:focus{
+			outline: none;
+			border-color: var(--border-focus);
+			box-shadow: 0 0 0 3px var(--primary-soft);
+		}
+	}
+
+	.car-quick-search-spinner{
+		left: auto;
+		right: 14px;
+	}
+}
+
+.car-quick-search-panel{
+	position: absolute;
+	top: calc(100% + 6px);
+	left: 0;
+	right: 0;
+	z-index: 20;
+	display: flex;
+	flex-direction: column;
+	padding: 6px;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: var(--bg-card);
+	box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+}
+
+.car-quick-search-item{
+	display: flex;
+	align-items: center;
+	gap: var(--big-padding);
+	padding: 8px 10px;
+	border-radius: 8px;
+	color: var(--txt-dark);
+	text-decoration: none;
+
+	&.is-active{ background: var(--primary-soft); }
+
+	.car-plate{
+		flex: none;
+		height: 30px;
+
+		.car-plate-number{ font-size: 15px; }
+	}
+}
+
+.car-quick-search-info{
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+
+	> span{
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
+.car-quick-search-name{ color: var(--txt-light); }
+.car-quick-search-name b{ color: var(--txt-dark); }
+
+.car-quick-search-meta{
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+}
+
+.car-quick-search-go{
+	color: var(--txt-muted);
+	font-size: 12px;
+}
+
+.car-quick-search-empty{
+	margin: 0;
+	padding: 12px;
+	color: var(--txt-muted);
+	text-align: center;
+}
+
+.car-quick-search-more{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	margin-top: 4px;
+	padding: 8px;
+	border-top: 1px solid var(--border-light);
+	color: var(--primary);
+	font-size: var(--font-size-small);
+	font-weight: 600;
+	text-decoration: none;
+
+	&:hover{ text-decoration: underline; }
+}
+
+@media(max-width: 650px){
+	.car-quick-search-item{ gap: 10px; padding: 8px 6px; }
+}
+
+/* .card clips its content (overflow: hidden); let the results panel
+   hang out of the card instead of being cut, and round the header itself. */
+.card:has(.car-quick-search){
+	overflow: visible;
+
+	> .header{ border-radius: 10px 10px 0 0; }
+}

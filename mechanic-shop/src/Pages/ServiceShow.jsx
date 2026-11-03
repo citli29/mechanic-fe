@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import api from "./../api/axios";
+import BackButton from "../components/BackButton/BackButton";
 import { notifyNotificationsUpdated } from "../utils/notificationView";
 import { useVisiblePoll } from "../utils/useVisiblePoll";
 import { pushErrorToast } from "../utils/errorToast";
@@ -964,6 +965,10 @@ export default function ServiceShow2() {
 	return(
 		<div className="service-page">
 			<div className="service-layout">
+				{/* Left column: Voltar on top of the section nav, sticky together. */}
+				<aside className="service-side">
+				{/* Same as the browser's ← (opened directly → Serviços). */}
+				<BackButton fallback="/services" />
 				<nav className="service-nav">
 					<button type="button" className="service-nav-print" onClick={() => handlePrint("agreement")}>
 						<i className="fa-solid fa-print" /> Imprimir
@@ -992,6 +997,7 @@ export default function ServiceShow2() {
 						</button>
 					))}
 				</nav>
+				</aside>
 				<div className="content">
 					<ServiceClusterTabs
 						currentId={id}

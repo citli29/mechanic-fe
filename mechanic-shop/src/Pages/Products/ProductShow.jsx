@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../../api/axios";
+import BackButton from "../../components/BackButton/BackButton";
 import { LabSummaryButton } from "../../components/LabSummary/LabItemsLabel";
 import { hasLabSummary } from "../../utils/labSummary";
 
@@ -150,9 +151,7 @@ export default function ProductShow() {
 			<div className="content">
 
 				<div className="details-actions">
-					<Link className="options" to="/products">
-						<i className="fa-solid fa-arrow-left" /> Voltar
-					</Link>
+					<BackButton fallback="/products" />
 				</div>
 
 				<div className="card">

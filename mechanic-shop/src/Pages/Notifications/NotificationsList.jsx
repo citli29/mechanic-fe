@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
+import { useUrlParam } from "../../utils/useUrlState";
 import { getDefaultViewTypeId, getStoredViewTypeId, notifyNotificationsUpdated, onNotificationsUpdated, setStoredViewTypeId } from "../../utils/notificationView";
 import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
 
@@ -151,7 +152,7 @@ export default function NotificationsList() {
 	const requestIdRef = useRef(0);
 
 	const [notifications, setNotifications] = useState([]);
-	const [onlyUnread, setOnlyUnread] = useState(true);
+	const [onlyUnread, setOnlyUnread] = useUrlParam("unread", true);
 	const [viewingNotification, setViewingNotification] = useState(null);
 	const [preview, setPreview] = useState(null);
 	const [previewLoading, setPreviewLoading] = useState(false);
@@ -159,7 +160,7 @@ export default function NotificationsList() {
 	const [notificationTypes, setNotificationTypes] = useState([]);
 	const [viewTypeId, setViewTypeId] = useState(getStoredViewTypeId());
 
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 

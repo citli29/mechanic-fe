@@ -315,3 +315,27 @@
 	border-left-color: var(--state-delivered-dark);
 	color: #fff;
 }
+
+/* Nova Marcação / Novo Serviço in the Início header (same look as the
+   Adicionar buttons next to Lista/Calendário). */
+.home-page .card .header .home-header-actions{
+	margin-left: auto;
+	display: flex;
+	gap: var(--padding);
+
+	.header-add{ margin-left: 0; }
+}
+
+/* Phone: Card.css hides .header-add (those pages repeat it in the
+   filters); here it's the only way in, so keep it, icon only. */
+@media(max-width: 650px){
+	.home-page .card .header .home-header-actions .header-add{
+		display: flex;
+		width: 42px;
+		justify-content: center;
+		padding-left: 0;
+		padding-right: 0;
+
+		span{ display: none; }
+	}
+}

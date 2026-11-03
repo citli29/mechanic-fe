@@ -250,3 +250,39 @@
 
 	.card table td.actions{ justify-content: flex-end; }
 }
+
+/* "Adicionar ..." beside the Lista/Calendário toggle (desktop). The same
+   link is also inside .filters for phones; CSS shows one or the other. */
+.card .header .header-add{
+	display: flex;
+	align-items: center;
+	gap: var(--small-padding);
+	margin-left: auto;
+	padding: calc(var(--small-padding) + 6px) var(--padding);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-card);
+	color: var(--success);
+	font-size: var(--font-size-small);
+	font-weight: 600;
+	white-space: nowrap;
+	text-decoration: none;
+
+	i{ font-size: var(--font-size-big) !important; }
+
+	&:hover{
+		color: var(--success-hover);
+		border-color: var(--success);
+	}
+}
+
+.card .header .header-add + .view-toggle{ margin-left: 0; }
+
+@media(min-width: 651px){
+	.card .filters > .filters-add{ display: none; }
+}
+
+@media(max-width: 650px){
+	.card .header .header-add{ display: none; }
+	.card .header .header-add + .view-toggle{ margin-left: auto; }
+}

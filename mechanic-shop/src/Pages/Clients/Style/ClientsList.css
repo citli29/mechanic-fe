@@ -1,3 +1,10 @@
-.clients-page table tr{
-	grid-template-columns: repeat(6, minmax(0, 1fr)) 110px;
+/* Clientes: uses the Viaturas list styles (page has .cars-page too, see
+   Cars/Style/CarsList.css); only the filters' phone grid differs. */
+
+@media(max-width: 650px){
+	.clients-page .card .clients-filters{
+		input[name="phone"],
+		input[name="email"]{ grid-column: span 2; }
+		button{ grid-column: 1 / -1; }
+	}
 }

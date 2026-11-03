@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios";
+import BackButton from "../../components/BackButton/BackButton";
 
 import { CarPicker } from "../../components/Pickers/CarPicker";
 import { ClientPicker } from "../../components/Pickers/ClientPicker";
@@ -279,9 +280,7 @@ export default function SchedulesShow() {
 			<div className="content">
 
 				<div className="details-actions">
-					<Link className="options" to="/schedules_calendar">
-						<i className="fa-solid fa-arrow-left" /> Voltar
-					</Link>
+					<BackButton fallback="/schedules_calendar" />
 				</div>
 
 				<div className="card">

@@ -5,6 +5,8 @@ import ServiceShow2 from "./Pages/ServiceShow";
 import Home from "./Pages/Home/Home";
 import MakesList from "./Pages/Makes/MakesList";
 import ProductTypesList from "./Pages/ProductTypes/ProductTypesList";
+import ServiceTypesList from "./Pages/ServiceTypes/ServiceTypesList";
+import ClientShow from "./Pages/Clients/ClientShow";
 import ModelsList from "./Pages/Models/ModelsList";
 import ClientsList from "./Pages/Clients/ClientsList";
 import ProductsList from "./Pages/Products/ProductsList";
@@ -58,8 +60,10 @@ function App() {
 					<Route path="/services/:id" element={<ServiceShow2/>} />
 					<Route path="/makes" element={<MakesList/>} />
 					<Route path="/product_types" element={<ProductTypesList/>} />
+					<Route path="/service_types" element={<ServiceTypesList/>} />
 					<Route path="/models" element={<ModelsList/>} />
 					<Route path="/clients" element={<ClientsList/>} />
+					<Route path="/clients/:id" element={<ClientShow/>} />
 					<Route path="/products" element={<ProductsList/>} />
 					<Route path="/events" element={<EventsList/>} />
 					<Route path="/products/:id" element={<ProductShow/>} />

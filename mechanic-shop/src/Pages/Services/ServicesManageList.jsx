@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useFilterChange, useUrlParam } from "../../utils/useUrlState";
 import { applyIdSearch } from "../../utils/idSearch";
 
 import "../Style/Page.css";
@@ -18,14 +19,14 @@ export default function ServicesManageList() {
 	const [services, setServices] = useState([]);
 	const [serviceTypes, setServiceTypes] = useState([]);
 
-	const [search, setSearch] = useState("");
+	const [search, setSearch] = useUrlParam("q", "");
 
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
-	const [sortColumn, setSortColumn] = useState(null);
-	const [sortDirection, setSortDirection] = useState("asc");
+	const [sortColumn, setSortColumn] = useUrlParam("sort", null);
+	const [sortDirection, setSortDirection] = useUrlParam("dir", "asc");
 
 	const [loading, setLoading] = useState(true);
 
@@ -89,25 +90,16 @@ export default function ServicesManageList() {
 
 	useEffect(() => { loadServices(); }, [page]);
 
-	useEffect(() => {
-		if (page !== 1) {
-			setPage(1);
-		} else {
-			loadServices();
-		}
-	}, [sortColumn, sortDirection]);
+	// Only on a real change (not on load): a page / sort / search restored
+	// from the URL stay as they were.
+	function reloadFromFirstPage() {
+		if (page !== 1) setPage(1);
+		else loadServices();
+	}
 
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			if (page !== 1) {
-				setPage(1);
-			} else {
-				loadServices();
-			}
-		}, 400);
+	useFilterChange({ sortColumn, sortDirection }, reloadFromFirstPage, 0);
 
-		return () => clearTimeout(timer);
-	}, [search]);
+	useFilterChange(search, reloadFromFirstPage);
 
 
 	function handleSort(column) {

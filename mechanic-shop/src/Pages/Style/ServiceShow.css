@@ -37,12 +37,26 @@
 	min-width: 0;
 }
 
-.service-nav{
+/* Left column: Voltar + the section nav, sticky together. */
+.service-side{
 	position: sticky;
 	top: calc(72px + var(--padding));
 
 	flex: 0 0 220px;
 	width: 220px;
+
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+
+	.back-button{
+		width: 100%;
+		justify-content: center;
+		box-sizing: border-box;
+	}
+}
+
+.service-nav{
 
 	display: flex;
 	flex-direction: column;
@@ -54,7 +68,8 @@
 	border: 1px solid var(--border);
 	border-radius: 10px;
 
-	max-height: calc(100vh - 72px - 2 * var(--padding));
+	/* minus Voltar (~40px) and the gap above the nav. */
+	max-height: calc(100vh - 72px - 4 * var(--padding) - 40px);
 	overflow-y: auto;
 
 	button{
@@ -162,11 +177,13 @@
 		   available width, overflowing the viewport. */
 		align-items: stretch;
 	}
-	.service-nav{
+	.service-side{
 		position: static;
 
 		width: 100%;
 		flex: none;
+	}
+	.service-nav{
 
 		/* Wrap instead of scrolling sideways — as a scroll strip, the
 		   buttons past the edge just looked cut off. */
@@ -1680,6 +1697,7 @@
 	}
 
 	.navbar,
+	.service-side,
 	.service-nav,
 	#state,
 	#schedule,

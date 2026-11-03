@@ -26,3 +26,15 @@ export function getServiceTypeAccent(serviceTypeId, serviceTypeName) {
 	if (ID_OVERRIDES[serviceTypeId]) return ID_OVERRIDES[serviceTypeId];
 	return SERVICE_TYPE_COLORS[serviceTypeId % SERVICE_TYPE_COLORS.length];
 }
+
+// Tint for a service-type <select> (same look as the Novo Serviço / Nova
+// Marcação forms): accent border + a light wash of it as background. No
+// type picked ("" / null) → no style, the select keeps its normal look.
+export function getServiceTypeSelectStyle(serviceTypeId, serviceTypes = []) {
+	if (!serviceTypeId) return undefined;
+
+	const name = serviceTypes.find((t) => String(t.id) === String(serviceTypeId))?.name;
+	const accent = getServiceTypeAccent(Number(serviceTypeId), name);
+
+	return { borderColor: accent, backgroundColor: `${accent}1a` }; // backgroundColor: keeps the ▾ arrow image
+}

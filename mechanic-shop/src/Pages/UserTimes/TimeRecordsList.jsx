@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useFilterChange, useUrlParam, useUrlState } from "../../utils/useUrlState";
 import { applyIdSearch } from "../../utils/idSearch";
 
 import "../Style/Page.css";
@@ -53,20 +54,20 @@ export default function TimeRecordsList() {
 
 	const requestIdRef = useRef(0);
 
-	const [tab, setTab] = useState("times");
+	const [tab, setTab] = useUrlParam("tab", "times");
 	const [rows, setRows] = useState([]);
 	const [counts, setCounts] = useState({});
 	const [users, setUsers] = useState([]);
 
-	const [filters, setFilters] = useState(EMPTY_FILTERS);
-	const [debouncedFilters, setDebouncedFilters] = useState(EMPTY_FILTERS);
+	const [filters, setFilters] = useUrlState(EMPTY_FILTERS);
+	const [debouncedFilters, setDebouncedFilters] = useState(filters);
 
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
-	const [sortColumn, setSortColumn] = useState(null);
-	const [sortDirection, setSortDirection] = useState("desc");
+	const [sortColumn, setSortColumn] = useUrlParam("sort", null);
+	const [sortDirection, setSortDirection] = useUrlParam("dir", "desc");
 
 	const [loading, setLoading] = useState(true);
 
@@ -149,13 +150,11 @@ export default function TimeRecordsList() {
 
 	// Anything that changes which rows match goes back to page 1 (here and
 	// in selectTab / handleSort).
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setDebouncedFilters(filters);
-			setPage(1);
-		}, 400);
-		return () => clearTimeout(timer);
-	}, [filters]);
+	// Only on a real change: filters / page restored from the URL stay.
+	useFilterChange(filters, () => {
+		setDebouncedFilters(filters);
+		setPage(1);
+	});
 
 	useEffect(() => { loadRows(); }, [page, tab, debouncedFilters, sortColumn, sortDirection]);
 

@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useUrlParam, useUrlState } from "../../utils/useUrlState";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/SchedulesCalendar.css";
 import ViewToggle from "../../components/ViewToggle/ViewToggle";
 import EventModal from "../../components/EventModal/EventModal";
-import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
+import { getServiceTypeAccent, getServiceTypeSelectStyle } from "../../utils/serviceTypeColor";
 import { layoutWeekEvents } from "../../utils/eventLanes";
 import { useCalendarEvents, DayEventLanes, DayEventStrip } from "../../components/CalendarEvents/CalendarEvents";
 
@@ -19,6 +20,33 @@ function formatDate(date) {
 }
 
 const WEEKDAY_NAMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
+
+// Phone day navigation helpers (dates at local midnight).
+function startOfDay(date) {
+	const d = new Date(date);
+	d.setHours(0, 0, 0, 0);
+	return d;
+}
+
+function addDays(date, days) {
+	const d = new Date(date);
+	d.setDate(d.getDate() + days);
+	return d;
+}
+
+// Monday of the week the date is in.
+function mondayOf(date) {
+	return addDays(startOfDay(date), -((date.getDay() + 6) % 7));
+}
+
+function capitalize(text) {
+	return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// How far a horizontal swipe must go (px) to change day, and how much
+// vertical movement still counts as a swipe rather than a scroll.
+const SWIPE_MIN_X = 60;
+const SWIPE_MAX_Y = 40;
 
 const LAB_ACCENT = getServiceTypeAccent(2);
 const MECHANIC_ACCENT = getServiceTypeAccent(1);
@@ -38,7 +66,9 @@ export default function SchedulesCalendar() {
 		[serviceTypes]
 	);
 
-	const [filters, setFilters] = useState({
+	// Filters, month and (phone) week live in the URL, so ← back from a
+	// marcação lands on the same view.
+	const [filters, setFilters] = useUrlState({
 		car_plate: "",
 		client_name: "",
 		service_type_id: "",
@@ -46,11 +76,29 @@ export default function SchedulesCalendar() {
 	});
 
 	const now = new Date();
-	const [year, setYear] = useState(now.getFullYear());
-	const [month, setMonth] = useState(now.getMonth());
+	const [year, setYear] = useUrlParam("y", now.getFullYear());
+	// month is 0-based in here, 1-based in the URL (?m=11 = Novembro).
+	const [monthNr, setMonthNr] = useUrlParam("m", now.getMonth() + 1);
+	const month = monthNr - 1;
+	const setMonth = (next) => setMonthNr((prevNr) =>
+		(typeof next === "function" ? next(prevNr - 1) : next) + 1
+	);
 
-	const [weekIndex, setWeekIndex] = useState(0);
-	const [weekIndexMonthKey, setWeekIndexMonthKey] = useState(`${now.getFullYear()}-${now.getMonth()}`);
+	// Phone: the shown week is the one around this date (opens on today;
+	// ‹ › / swipe move it 7 days, Hoje resets it). Its month drives which
+	// month is loaded (see the sync below).
+	const [dayKey, setDayKey] = useUrlParam("d", formatDate(startOfDay(now)));
+	const selectedDate = useMemo(() => {
+		const [y, m, d] = dayKey.split("-").map(Number);
+		const date = new Date(y, (m || 1) - 1, d || 1);
+		return Number.isNaN(date.getTime()) ? startOfDay(now) : date;
+	}, [dayKey]);
+	const setSelectedDate = (next) => setDayKey((prevKey) => {
+		const [y, m, d] = prevKey.split("-").map(Number);
+		const prev = new Date(y, m - 1, d);
+		return formatDate(typeof next === "function" ? next(prev) : next);
+	});
+	const swipeStartRef = useRef(null);
 
 	const [isMobile, setIsMobile] = useState(
 		window.matchMedia("(max-width: 650px)").matches
@@ -67,11 +115,11 @@ export default function SchedulesCalendar() {
 	}, []);
 
 
-	const currentMonthKey = `${year}-${month}`;
-
-	if (currentMonthKey !== weekIndexMonthKey) {
-		setWeekIndexMonthKey(currentMonthKey);
-		setWeekIndex(0);
+	// Phone: load the selected day's month. Its padded grid (below) always
+	// covers the whole week around any of its days, even across months.
+	if (isMobile && (selectedDate.getFullYear() !== year || selectedDate.getMonth() !== month)) {
+		setYear(selectedDate.getFullYear());
+		setMonth(selectedDate.getMonth());
 	}
 
 	// The calendar grid always shows whole weeks — the first/last row
@@ -356,23 +404,67 @@ export default function SchedulesCalendar() {
 	// index with calendarDays (the desktop grid renders calendarDays flat).
 	const dayEventLanes = weeksOfMonth.flatMap(layoutWeekEvents);
 
-	// Same real-week convention as the "Semanal" tab on Estatísticas de
-	// Utilizadores: label a week by its actual Monday-Sunday day range
-	// instead of an ordinal "Semana N" count — works out to the right
-	// dates even for the week straddling this month and the next/previous
-	// one (calendarDays now carries real adjacent-month days there, but
-	// the real Monday is still just 7 days per row from day 1's grid slot).
-	const weekMonday = new Date(year, month, 1 - startDay + weekIndex * 7);
-	const weekSunday = new Date(weekMonday);
-	weekSunday.setDate(weekMonday.getDate() + 6);
-	const weekLabel = `${weekMonday.getDate()}-${weekSunday.getDate()}`;
+	// ---------- phone: day navigation ----------
 
-	function previousWeek() {
-		setWeekIndex((prev) => Math.max(0, prev - 1));
+	const dayByKey = Object.fromEntries(calendarDays.map((day) => [day.key, day]));
+
+	const todayKey = formatDate(now);
+	const selectedMonday = mondayOf(selectedDate);
+	const stripDays = Array.from({ length: 7 }, (_, i) => {
+		const date = addDays(selectedMonday, i);
+		const key = formatDate(date);
+		// Days of the loaded grid have their data; the very first render
+		// after a month change may not yet, so fall back to an empty day.
+		return dayByKey[key] ?? { day: date.getDate(), key, schedules: [], events: [] };
+	});
+
+	const selectedMonthName = capitalize(
+		selectedDate.toLocaleString("pt-PT", { month: "long", year: "numeric" }).replace(" de ", " ")
+	);
+
+	// "Nov 2026" for very narrow phones (see the CSS).
+	const selectedMonthShort = `${capitalize(
+		selectedDate.toLocaleString("pt-PT", { month: "short" }).replace(".", "")
+	)} ${selectedDate.getFullYear()}`;
+
+	function moveSelectedDate(days) {
+		setSelectedDate((prev) => addDays(prev, days));
 	}
 
-	function nextWeek() {
-		setWeekIndex((prev) => Math.min(weeksOfMonth.length - 1, prev + 1));
+	function goToToday() {
+		setSelectedDate(startOfDay(new Date()));
+	}
+
+	// Native month picker (big jumps): today if it's the current month,
+	// otherwise the 1st of the picked month.
+	function handlePickMonth(e) {
+		const [y, m] = e.target.value.split("-").map(Number);
+		if (!y || !m) return;
+		const today = startOfDay(new Date());
+		setSelectedDate(
+			today.getFullYear() === y && today.getMonth() === m - 1 ? today : new Date(y, m - 1, 1)
+		);
+	}
+
+	// Swipe left / right on the week's cards: next / previous week.
+	// Passive: never blocks scrolling; only a clearly horizontal move counts.
+	function handleSwipeStart(e) {
+		const touch = e.touches[0];
+		swipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+	}
+
+	function handleSwipeEnd(e) {
+		const start = swipeStartRef.current;
+		swipeStartRef.current = null;
+		if (!start) return;
+
+		const touch = e.changedTouches[0];
+		const dx = touch.clientX - start.x;
+		const dy = touch.clientY - start.y;
+
+		if (Math.abs(dx) >= SWIPE_MIN_X && Math.abs(dy) <= SWIPE_MAX_Y) {
+			moveSelectedDate(dx < 0 ? 7 : -7);
+		}
 	}
 
 
@@ -411,42 +503,108 @@ export default function SchedulesCalendar() {
 	}
 
 
+	// Phone: month ▾, ‹ › (week) and Hoje, a strip summing up the week's
+	// 7 days (dots = marcações; not clickable), then the week's cards below.
 	function renderCalendarMobile() {
-		const week = weeksOfMonth[weekIndex] || [];
+		// Hoje is greyed out while today's week is the one shown.
+		const isOnToday = formatDate(selectedMonday) === formatDate(mondayOf(now));
 
 		return (
-			<>
-				<div className="week-navigation">
-					<button className="accent" disabled={weekIndex <= 0} onClick={previousWeek}>
-						<i className="fa-solid fa-chevron-left" />
-					</button>
+			<div className="day-nav">
+				<div className="day-nav-header">
+					{/* The month name opens the phone's own month picker. */}
+					<label className="day-nav-month" title="Escolher mês">
+						<span className="day-nav-month-long">{selectedMonthName}</span>
+						<span className="day-nav-month-short">{selectedMonthShort}</span>
+						<i className="fa-solid fa-caret-down" />
+						<input
+							type="month"
+							value={`${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}`}
+							onChange={handlePickMonth}
+							aria-label="Escolher mês"
+						/>
+					</label>
 
-					<span>{weekLabel}</span>
-
-					<button
-						className="accent"
-						disabled={weekIndex >= weeksOfMonth.length - 1}
-						onClick={nextWeek}
-					>
-						<i className="fa-solid fa-chevron-right" />
-					</button>
+					<div className="day-nav-actions">
+						<button type="button" className="day-nav-arrow" title="Semana anterior" aria-label="Semana anterior" onClick={() => moveSelectedDate(-7)}>
+							<i className="fa-solid fa-chevron-left" />
+						</button>
+						<button type="button" className="day-nav-arrow" title="Semana seguinte" aria-label="Semana seguinte" onClick={() => moveSelectedDate(7)}>
+							<i className="fa-solid fa-chevron-right" />
+						</button>
+						<button
+							type="button"
+							className="day-nav-today"
+							disabled={isOnToday}
+							onClick={goToToday}
+						>
+							Hoje
+						</button>
+					</div>
 				</div>
 
-				<div className="calendar calendar-vertical">
-					{week.map((day, index) => (
-						<div key={day.key} className={`calendar-day ${day.isOtherMonth ? "other-month" : ""}`}>
+				<div className="week-strip">
+
+					{stripDays.map((day, index) => {
+						const count = day.schedules.length;
+
+						return (
+							<div
+								key={day.key}
+								className={`week-strip-day ${day.key === todayKey ? "is-today" : ""}`}
+								aria-label={`${WEEKDAY_NAMES[index]} ${day.day}: ${count} ${count === 1 ? "marcação" : "marcações"}`}
+							>
+								<span className="week-strip-weekday">{WEEKDAY_NAMES[index]}</span>
+								<span className="week-strip-number">{day.day}</span>
+								<span className="week-strip-dots">
+									{Array.from({ length: Math.min(count, 3) }, (_, i) => <i key={i} />)}
+									{day.events.length > 0 && <i className="is-event" />}
+								</span>
+							</div>
+						);
+					})}
+				</div>
+
+				{/* The whole week, one card per day; swiping left / right
+				   changes week. */}
+				<div
+					className="calendar calendar-vertical week-days"
+					onTouchStart={handleSwipeStart}
+					onTouchEnd={handleSwipeEnd}
+				>
+					{stripDays.map((day, index) => (
+						<div key={day.key} className={`calendar-day ${day.key === todayKey ? "is-today" : ""}`}>
 							<DayEventStrip events={day.events} dayKey={day.key} onSelect={setSelectedEvent} />
 
 							<div className="day-label">
 								<span className="weekday-name">{WEEKDAY_NAMES[index]}</span>
 								<span className="day-number">{day.day}</span>
+								{day.key === todayKey && <span className="day-today-tag">Hoje</span>}
 							</div>
 
-							{renderDayHalves(day.schedules)}
+							{day.schedules.length > 0
+								? renderDayHalves(day.schedules)
+								: <p className="day-empty">Sem marcações.</p>}
 						</div>
 					))}
 				</div>
-			</>
+			</div>
+		);
+	}
+
+	function renderMonthNavigation() {
+		return (
+			<div className="month-navigation">
+				<button className="accent" onClick={previousMonth}>
+					<i className="fa-solid fa-chevron-left" />
+				</button>
+
+				<h2>{monthName}</h2>
+
+				<button className="accent" onClick={nextMonth}>
+					<i className="fa-solid fa-chevron-right" />
+				</button>
+			</div>
 		);
 	}
 
@@ -459,25 +617,19 @@ export default function SchedulesCalendar() {
 						<i className="fa-solid fa-calendar-days" />
 						<h1>Marcações</h1>
 
+						{/* Desktop only (CSS); phones have it on top of the filters. */}
+						<Link className="header-add" to="/schedules/new">
+							<i className="fa-solid fa-plus" /> <span>Adicionar Marcação</span>
+						</Link>
+
 						<ViewToggle listPath="/schedules" calendarPath="/schedules_calendar" />
 					</div>
 
 					<div className="body">
 
-						<div className="month-navigation">
-							<button className="accent" onClick={previousMonth}>
-								<i className="fa-solid fa-chevron-left" />
-							</button>
-
-							<h2>{monthName}</h2>
-
-							<button className="accent" onClick={nextMonth}>
-								<i className="fa-solid fa-chevron-right" />
-							</button>
-						</div>
-
 						<div className="filters">
 							<input
+								className="plate-filter"
 								name="car_plate"
 								placeholder="Matrícula"
 								value={filters.car_plate}
@@ -485,6 +637,7 @@ export default function SchedulesCalendar() {
 							/>
 
 							<input
+								className="client-filter"
 								name="client_name"
 								placeholder="Cliente"
 								value={filters.client_name}
@@ -492,9 +645,11 @@ export default function SchedulesCalendar() {
 							/>
 
 							<select
+								className="type-filter"
 								name="service_type_id"
 								value={filters.service_type_id}
 								onChange={updateFilter}
+								style={getServiceTypeSelectStyle(filters.service_type_id, serviceTypes)}
 							>
 								<option value="">Tipo de Serviço</option>
 								{serviceTypes.map((type) => (
@@ -505,6 +660,7 @@ export default function SchedulesCalendar() {
 							</select>
 
 							<select
+								className="status-filter"
 								name="status"
 								value={filters.status}
 								onChange={updateFilter}
@@ -516,14 +672,20 @@ export default function SchedulesCalendar() {
 								<option value="delivered">Entregue</option>
 							</select>
 
-							<button className="options" onClick={clearFilters}>
-								<i className="fa-solid fa-broom" /> Limpar
+							<button className="options clear-filters" title="Limpar filtros" aria-label="Limpar filtros" onClick={clearFilters}>
+								<i className="fa-solid fa-broom" /> <span className="clear-filters-label">Limpar</span>
 							</button>
 
-							<Link className="confirm" to="/schedules/new">
+							{/* Phone only (CSS); desktop has it in the header. */}
+							<Link className="confirm filters-add" to="/schedules/new">
 								<i className="fa-solid fa-plus" /> Adicionar Marcação
 							</Link>
 						</div>
+
+						{/* Desktop: month bar under the filters, right above the
+						   grid. Phone: its own month / week navigation inside
+						   renderCalendarMobile. */}
+						{!isMobile && renderMonthNavigation()}
 
 						<div className="calendar-wrapper">
 							{isMobile ? renderCalendarMobile() : renderCalendarDesktop()}

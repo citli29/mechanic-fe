@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useFilterChange, useUrlParam } from "../../utils/useUrlState";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
@@ -36,16 +37,16 @@ export default function BudgetsManageList() {
 	const requestIdRef = useRef(0);
 
 	const [budgets, setBudgets] = useState([]);
-	const [search, setSearch] = useState("");
-	const [statusFilter, setStatusFilter] = useState("");
-	const [serviceFilter, setServiceFilter] = useState("");
+	const [search, setSearch] = useUrlParam("q", "");
+	const [statusFilter, setStatusFilter] = useUrlParam("status", "");
+	const [serviceFilter, setServiceFilter] = useUrlParam("service", "");
 
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
-	const [sortColumn, setSortColumn] = useState(null);
-	const [sortDirection, setSortDirection] = useState("asc");
+	const [sortColumn, setSortColumn] = useUrlParam("sort", null);
+	const [sortDirection, setSortDirection] = useUrlParam("dir", "asc");
 
 	const [loading, setLoading] = useState(true);
 
@@ -101,18 +102,10 @@ export default function BudgetsManageList() {
 
 	useEffect(() => { loadBudgets(); }, [page]);
 
-	const isFirstFilterRun = useRef(true);
-	useEffect(() => {
-		if (isFirstFilterRun.current) { isFirstFilterRun.current = false; return; }
-		reloadFromFirstPage();
-	}, [sortColumn, sortDirection, statusFilter, serviceFilter]);
+	// Only on a real change (not on load): what came from the URL stays.
+	useFilterChange({ sortColumn, sortDirection, statusFilter, serviceFilter }, reloadFromFirstPage, 0);
 
-	const isFirstSearchRun = useRef(true);
-	useEffect(() => {
-		if (isFirstSearchRun.current) { isFirstSearchRun.current = false; return; }
-		const timer = setTimeout(reloadFromFirstPage, 400);
-		return () => clearTimeout(timer);
-	}, [search]);
+	useFilterChange(search, reloadFromFirstPage);
 
 
 	function handleSort(column) {

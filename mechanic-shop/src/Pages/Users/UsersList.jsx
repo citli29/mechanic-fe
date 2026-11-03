@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useFilterChange, useUrlParam, useUrlState } from "../../utils/useUrlState";
 import { applyIdSearch } from "../../utils/idSearch";
 
 import "../Style/Page.css";
@@ -15,30 +16,27 @@ export default function UsersList() {
 
 	const [users, setUsers] = useState([]);
 
-	const [filters, setFilters] = useState({
+	const [filters, setFilters] = useUrlState({
 		name: "",
 		email: "",
 		user_type: "",
 	});
 
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
 
 	useEffect(() => { loadUsers(); }, [page]);
 
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			if (page !== 1) {
-				setPage(1);
-			} else {
-				loadUsers();
-			}
-		}, 400);
-
-		return () => clearTimeout(timer);
-	}, [filters]);
+	// Only on a real change: filters restored from the URL keep their page.
+	useFilterChange(filters, () => {
+		if (page !== 1) {
+			setPage(1);
+		} else {
+			loadUsers();
+		}
+	});
 
 
 	async function loadUsers() {

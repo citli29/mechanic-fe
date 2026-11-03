@@ -1,22 +1,20 @@
+// Clientes: card list like Viaturas. Card click → cliente page; ⌄ shows
+// the details in place (Editar from there); Apagar is on the cliente page.
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useFilterChange, useUrlParam, useUrlState } from "../../utils/useUrlState";
 import { applyIdSearch } from "../../utils/idSearch";
+import { ClientCard, ClientDetails, ClientForm } from "./ClientCard";
 
 import "../Style/Page.css";
 import "../Style/Card.css";
+import "../Cars/Style/CarsList.css"; // search bar, filters, list, empty state
 import "./Style/ClientsList.css";
-import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 
 const PER_PAGE = 10;
 
-const emptyClient = {
-	name: "",
-	phone: "",
-	address: "",
-	email: "",
-	zip_code: "",
-	tax_nr: "",
-};
+const emptyFilters = { name: "", phone: "", email: "" };
 
 export default function ClientsList() {
 
@@ -24,39 +22,37 @@ export default function ClientsList() {
 
 	const [clients, setClients] = useState([]);
 
-	const [filters, setFilters] = useState({
-		name: "",
-		phone: "",
-		email: "",
-	});
-
-	const [page, setPage] = useState(1);
+	// Filters + page live in the URL: ← back restores them.
+	const [filters, setFilters] = useUrlState(emptyFilters);
+	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
-	const [editing, setEditing] = useState(null);
+	// One form at a time: a new client, or the one being edited.
 	const [creating, setCreating] = useState(false);
+	const [editingId, setEditingId] = useState(null);
+	// Card opened read-only with ⌄.
+	const [expandedId, setExpandedId] = useState(null);
 
-	const [newClient, setNewClient] = useState(emptyClient);
+	// Phone: the search's placeholder is just "Nome".
+	const [isMobile, setIsMobile] = useState(
+		() => window.matchMedia("(max-width: 650px)").matches
+	);
 
-	function handleApiError(err) {
-		console.error(err);
-	}
+	useEffect(() => {
+		const media = window.matchMedia("(max-width: 650px)");
+		const onChange = (e) => setIsMobile(e.matches);
+		media.addEventListener("change", onChange);
+		return () => media.removeEventListener("change", onChange);
+	}, []);
 
 
 	useEffect(() => { loadClients(); }, [page]);
 
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			if (page !== 1) {
-				setPage(1);
-			} else {
-				loadClients();
-			}
-		}, 400);
-
-		return () => clearTimeout(timer);
-	}, [filters]);
+	useFilterChange(filters, () => {
+		if (page !== 1) setPage(1);
+		else loadClients();
+	});
 
 
 	async function loadClients() {
@@ -87,130 +83,128 @@ export default function ClientsList() {
 	}
 
 
-	async function createClient() {
-		if (!newClient.name.trim()) {
-			pushErrorToast("O nome do cliente é obrigatório.");
-			return;
-		}
-
-		if (!newClient.phone.trim()) {
-			pushErrorToast("O telemóvel é obrigatório.");
-			return;
-		}
-
-		try {
-			const data = Object.fromEntries(
-				Object.entries(newClient).filter(([_, value]) => value !== "")
-			);
-
-			await api.post("/clients", data);
-
-			pushSuccessToast("Cliente criado com sucesso.");
-
-			setCreating(false);
-			setNewClient(emptyClient);
-
-			loadClients();
-		} catch (err) {
-			handleApiError(err);
-		}
-	}
-
-
-	function editClient(client) {
-		setEditing({ ...client });
-	}
-
-
-	function updateEdit(e) {
-		const { name, value } = e.target;
-		setEditing({ ...editing, [name]: value });
-	}
-
-
-	async function saveClient() {
-		if (!editing.name.trim()) {
-			pushErrorToast("O nome do cliente é obrigatório.");
-			return;
-		}
-
-		if (!editing.phone.trim()) {
-			pushErrorToast("O telemóvel é obrigatório.");
-			return;
-		}
-
-		try {
-			const data = Object.fromEntries(
-				Object.entries(editing).filter(([_, value]) => value !== "")
-			);
-
-			await api.put(`/clients/${editing.id}`, data);
-
-			pushSuccessToast("Cliente atualizado com sucesso.");
-
-			setEditing(null);
-
-			loadClients();
-		} catch (err) {
-			handleApiError(err);
-		}
-	}
-
-
-	async function deleteClient(id, name) {
-		const confirmed = window.confirm(`Apagar "${name}"?`);
-		if (!confirmed) return;
-
-		try {
-			await api.delete(`/clients/${id}`);
-
-			pushSuccessToast("Cliente apagado com sucesso.");
-
-			loadClients();
-		} catch (err) {
-			handleApiError(err);
-		}
-	}
-
-
 	function updateFilter(e) {
 		setFilters({ ...filters, [e.target.name]: e.target.value });
 	}
 
 
-	function updateNewClient(e) {
-		const { name, value } = e.target;
-		setNewClient({ ...newClient, [name]: value });
-	}
-
-
 	function clearFilters() {
-		setFilters({ name: "", phone: "", email: "" });
+		setFilters(emptyFilters);
 	}
+
+
+	function editClient(client) {
+		setCreating(false);
+		setExpandedId(null);
+		setEditingId(client.id);
+	}
+
+
+	const activeFilterCount = Object.values(filters).filter((v) => v !== "").length;
+
+
+	function renderClient(client) {
+		const isExpanded = expandedId === client.id;
+		const toggle = () => setExpandedId(isExpanded ? null : client.id);
+
+		return (
+			<ClientCard
+				key={client.id}
+				client={client}
+				to={`/clients/${client.id}`}
+				className={isExpanded ? "is-expanded" : ""}
+				history={{
+					count: client.service_count,
+					carCount: client.car_count,
+					lastDate: client.last_checkin_date,
+					lastCarPlate: client.last_car_plate,
+				}}
+				actions={
+					<button
+						className="options car-expand"
+						aria-expanded={isExpanded}
+						title={isExpanded ? "Esconder detalhes" : "Ver detalhes"}
+						aria-label={isExpanded ? "Esconder detalhes" : "Ver detalhes"}
+						onClick={toggle}
+					>
+						<i className="fa-solid fa-chevron-down" />
+					</button>
+				}
+			>
+				{isExpanded && (
+					<ClientDetails
+						client={client}
+						actions={
+							<>
+								<button className="options" onClick={() => editClient(client)}>
+									<i className="fa-solid fa-pencil" /> Editar
+								</button>
+								<Link className="confirm" to={`/clients/${client.id}`}>
+									<i className="fa-solid fa-arrow-up-right-from-square" /> Abrir cliente
+								</Link>
+							</>
+						}
+					/>
+				)}
+			</ClientCard>
+		);
+	}
+
 
 	return (
-		<div className="page clients-page">
+		<div className="page cars-page clients-page">
 			<div className="content">
 
 				<div className="card">
 					<div className="header">
-						<i className="fa-solid fa-address-book" />
+						<i className="fa-solid fa-users" />
 						<h1>Clientes</h1>
+						<span className="cars-total">{total} {total === 1 ? "cliente" : "clientes"}</span>
 					</div>
 
 					<div className="body">
 
-						<div className="filters">
-							<input
-								name="name"
-								placeholder="Nome"
-								value={filters.name}
-								onChange={updateFilter}
-							/>
+						<div className="cars-toolbar">
+							<div className="cars-search">
+								<i className="fa-solid fa-magnifying-glass" />
+								<input
+									name="name"
+									placeholder={isMobile ? "Nome" : "Pesquisar por nome..."}
+									value={filters.name}
+									onChange={updateFilter}
+									autoComplete="off"
+								/>
+								{filters.name && (
+									<button
+										className="cars-search-clear"
+										title="Limpar nome"
+										aria-label="Limpar nome"
+										onClick={() => setFilters({ ...filters, name: "" })}
+									>
+										<i className="fa-solid fa-xmark" />
+									</button>
+								)}
+							</div>
 
+							{!creating && (
+								<button
+									className="confirm cars-add"
+									onClick={() => {
+										setEditingId(null);
+										setExpandedId(null);
+										setCreating(true);
+									}}
+								>
+									<i className="fa-solid fa-plus" /> <span>Adicionar Cliente</span>
+								</button>
+							)}
+						</div>
+
+						<div className="filters cars-filters clients-filters">
 							<input
 								name="phone"
 								placeholder="Telemóvel"
+								inputMode="tel"
 								value={filters.phone}
 								onChange={updateFilter}
 							/>
@@ -218,193 +212,52 @@ export default function ClientsList() {
 							<input
 								name="email"
 								placeholder="Email"
+								inputMode="email"
 								value={filters.email}
 								onChange={updateFilter}
 							/>
 
-							<button className="options" onClick={clearFilters}>
-								<i className="fa-solid fa-broom" /> Limpar
+							<button className="options" onClick={clearFilters} disabled={activeFilterCount === 0}>
+								<i className="fa-solid fa-broom" /> <span>Limpar</span>
 							</button>
-
-							{!creating && (
-								<button className="confirm" onClick={() => setCreating(true)}>
-									<i className="fa-solid fa-plus" /> Adicionar Cliente
-								</button>
-							)}
 						</div>
 
-						<table>
-							<thead>
-								<tr>
-									<th>Nome</th>
-									<th>Telemóvel</th>
-									<th>Email</th>
-									<th>Morada</th>
-									<th>Cod. Postal</th>
-									<th>NIF</th>
-									<th></th>
-								</tr>
-							</thead>
+						<div className="cars-list">
+							{creating && (
+								<ClientForm
+									client={null}
+									title="Novo cliente"
+									onSaved={() => { setCreating(false); loadClients(); }}
+									onCancel={() => setCreating(false)}
+								/>
+							)}
 
-							<tbody>
-								{creating && (
-									<tr className="editing">
-										<td data-label="Nome">
-											<input
-												name="name"
-												placeholder="Nome"
-												value={newClient.name}
-												onChange={updateNewClient}
-											/>
-										</td>
+							{clients.map((client) => (
+								editingId === client.id ? (
+									<ClientForm
+										key={client.id}
+										client={client}
+										title={`Editar ${client.name}`}
+										onSaved={() => { setEditingId(null); loadClients(); }}
+										onCancel={() => setEditingId(null)}
+									/>
+								) : (
+									renderClient(client)
+								)
+							))}
 
-										<td data-label="Telemóvel">
-											<input
-												name="phone"
-												placeholder="Telemóvel"
-												value={newClient.phone}
-												onChange={updateNewClient}
-											/>
-										</td>
-
-										<td data-label="Email">
-											<input
-												name="email"
-												placeholder="Email"
-												value={newClient.email}
-												onChange={updateNewClient}
-											/>
-										</td>
-
-										<td data-label="Morada">
-											<input
-												name="address"
-												placeholder="Morada"
-												value={newClient.address}
-												onChange={updateNewClient}
-											/>
-										</td>
-
-										<td data-label="Cod. Postal">
-											<input
-												name="zip_code"
-												placeholder="Cod. Postal"
-												value={newClient.zip_code}
-												onChange={updateNewClient}
-											/>
-										</td>
-
-										<td data-label="NIF">
-											<input
-												name="tax_nr"
-												placeholder="NIF"
-												value={newClient.tax_nr}
-												onChange={updateNewClient}
-											/>
-										</td>
-
-										<td className="actions">
-											<button className="confirm" onClick={createClient}>
-												<i className="fa-solid fa-check" />
-											</button>
-											<button
-												className="cancel"
-												onClick={() => {
-													setCreating(false);
-													setNewClient(emptyClient);
-												}}
-											>
-												<i className="fa-solid fa-x" />
-											</button>
-										</td>
-									</tr>
-								)}
-
-								{clients.map((client) => (
-									editing?.id === client.id ? (
-										<tr key={client.id} className="editing">
-											<td data-label="Nome">
-												<input
-													name="name"
-													value={editing.name || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="Telemóvel">
-												<input
-													name="phone"
-													value={editing.phone || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="Email">
-												<input
-													name="email"
-													value={editing.email || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="Morada">
-												<input
-													name="address"
-													value={editing.address || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="Cod. Postal">
-												<input
-													name="zip_code"
-													value={editing.zip_code || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td data-label="NIF">
-												<input
-													name="tax_nr"
-													value={editing.tax_nr || ""}
-													onChange={updateEdit}
-												/>
-											</td>
-
-											<td className="actions">
-												<button className="confirm" onClick={saveClient}>
-													<i className="fa-solid fa-check" />
-												</button>
-												<button className="cancel" onClick={() => setEditing(null)}>
-													<i className="fa-solid fa-x" />
-												</button>
-											</td>
-										</tr>
-									) : (
-										<tr key={client.id}>
-											<td data-label="Nome"><span className="cell-truncate" title={client.name}>{client.name}</span></td>
-											<td data-label="Telemóvel"><span className="cell-truncate" title={client.phone}>{client.phone}</span></td>
-											<td data-label="Email"><span className="cell-truncate" title={client.email || "-"}>{client.email || "-"}</span></td>
-											<td data-label="Morada"><span className="cell-truncate" title={client.address || "-"}>{client.address || "-"}</span></td>
-											<td data-label="Cod. Postal"><span className="cell-truncate" title={client.zip_code || "-"}>{client.zip_code || "-"}</span></td>
-											<td data-label="NIF"><span className="cell-truncate" title={client.tax_nr || "-"}>{client.tax_nr || "-"}</span></td>
-
-											<td className="actions">
-												<button className="options" onClick={() => editClient(client)}>
-													<i className="fa-solid fa-pencil" />
-												</button>
-												<button
-													className="cancel"
-													onClick={() => deleteClient(client.id, client.name)}
-												>
-													<i className="fa-solid fa-trash" />
-												</button>
-											</td>
-										</tr>
-									)
-								))}
-							</tbody>
-						</table>
+							{clients.length === 0 && !creating && (
+								<div className="cars-empty">
+									<i className="fa-solid fa-user-slash" />
+									<p>{activeFilterCount > 0 ? "Nenhum cliente encontrado com estes filtros." : "Ainda não há clientes."}</p>
+									{activeFilterCount > 0 && (
+										<button className="options" onClick={clearFilters}>
+											<i className="fa-solid fa-broom" /> Limpar filtros
+										</button>
+									)}
+								</div>
+							)}
+						</div>
 
 						<div className="pagination">
 							<button

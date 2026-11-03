@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useFilterChange, useUrlParam, useUrlState } from "../../utils/useUrlState";
 import { applyIdSearch } from "../../utils/idSearch";
 
 import "../Style/Page.css";
@@ -28,13 +29,13 @@ export default function ProductsList() {
 	const [products, setProducts] = useState([]);
 	const [productTypes, setProductTypes] = useState([]);
 
-	const [filters, setFilters] = useState({
+	const [filters, setFilters] = useUrlState({
 		name: "",
 		reference: "",
 		p_t_id: "",
 	});
 
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [total, setTotal] = useState(0);
 
@@ -56,17 +57,14 @@ export default function ProductsList() {
 		loadProductTypes();
 	}, [page]);
 
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			if (page !== 1) {
-				setPage(1);
-			} else {
-				loadProducts();
-			}
-		}, 400);
-
-		return () => clearTimeout(timer);
-	}, [filters]);
+	// Only on a real change: filters restored from the URL keep their page.
+	useFilterChange(filters, () => {
+		if (page !== 1) {
+			setPage(1);
+		} else {
+			loadProducts();
+		}
+	});
 
 
 	async function loadProducts() {
