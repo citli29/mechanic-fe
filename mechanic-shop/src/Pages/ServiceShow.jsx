@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import api from "./../api/axios";
+import { notifyNotificationsUpdated } from "../utils/notificationView";
+import { useVisiblePoll } from "../utils/useVisiblePoll";
 import { pushErrorToast } from "../utils/errorToast";
 
 import { ServiceHeader } from "./Service/ServiceHeader";
@@ -13,9 +15,14 @@ import { MarkedTextarea } from "./MarkedTextarea";
 import { AppliedProducts } from "./AppliedProducts";
 import { UserTimes } from "./UserTimes";
 import { UserTimePunches } from "./UserTimePunches";
-import { ProductsRequested } from "./ProductsRequested";
+// HIDDEN-PRODUCTS-REQUESTED (testing without it; uncomment to restore)
+// import { ProductsRequested } from "./ProductsRequested";
 import { ServiceLab } from "./ServiceLab";
+import { QuoteProductPicker } from "./QuoteProductPicker";
 import LabSummaryList from "../components/LabSummary/LabSummaryList";
+
+// Id of an orçamento created on screen but not yet saved (Guardar).
+const NEW_QUOTE_ID = "new";
 
 const NAV_SECTIONS = [
 	{ id: "section-car", label: "Viatura", icon: "fa-car" },
@@ -23,7 +30,8 @@ const NAV_SECTIONS = [
 	{ id: "section-agreed", label: "Serviço Acordado", icon: "fa-pen-fancy" },
 	{ id: "section-done", label: "Serviço Realizado", icon: "fa-wrench" },
 	{ id: "section-lab", label: "Laboratório", icon: "fa-flask", labOnly: true },
-	{ id: "section-requested", label: "Pedido de Produtos", icon: "fa-cart-arrow-down" },
+	// HIDDEN-PRODUCTS-REQUESTED (testing without it; uncomment to restore)
+	// { id: "section-requested", label: "Pedido de Produtos", icon: "fa-cart-arrow-down" },
 	{ id: "section-applied", label: "Produtos Aplicados", icon: "fa-store" },
 	{ id: "section-times", label: "Tempos de Serviço", icon: "fa-hourglass-half" },
 	{ id: "section-finished", label: "Finalizado", icon: "fa-flag-checkered" },
@@ -602,6 +610,346 @@ export default function ServiceShow2() {
 	const handleOfficeCheckChange = (checked) => saveFieldNow("office_check", checked);
 
 	const [apReload, setApReload] = useState(false);
+	const [isQuoteOpen, setIsQuoteOpen] = useState(false);
+	// Orçamentos are saved in the backend (/services/{id}/budgets, each
+	// with its products). The page keeps its own shape for them: done →
+	// is_realized, product_name/reference/type_name → name/reference/type.
+	const [quotes, setQuotes] = useState([]);
+	const [activeQuoteId, setActiveQuoteId] = useState(null);
+	// Falls back to the last tab when the open one was deleted.
+	const activeQuote = quotes.find(q => q.id === activeQuoteId) ?? quotes[quotes.length - 1];
+	const realizedQuoteCount = quotes.filter(q => q.is_realized).length;
+	// Phone: the tabs collapse into a dropdown (the open orçamento + ▼).
+	const [isQuoteMenuOpen, setIsQuoteMenuOpen] = useState(false);
+	const quoteTabsRef = useRef(null);
+	useEffect(() => {
+		if (!isQuoteMenuOpen) return;
+		const onDown = (e) => {
+			if (quoteTabsRef.current && !quoteTabsRef.current.contains(e.target)) setIsQuoteMenuOpen(false);
+		};
+		document.addEventListener("mousedown", onDown);
+		return () => document.removeEventListener("mousedown", onDown);
+	}, [isQuoteMenuOpen]);
+	const quoteProductFromApi = (bp) => ({
+		id: bp.id,
+		product_id: bp.product_id,
+		name: bp.product_name ?? "",
+		reference: bp.product_reference ?? "",
+		type: bp.product_type_name ?? "",
+		quantity: bp.quantity,
+	});
+	const quoteFromApi = (b) => ({
+		id: b.id,
+		title: b.title ?? "",
+		note: b.note ?? "",
+		is_realized: !!Number(b.done),
+		products: (b.products ?? []).map(quoteProductFromApi),
+	});
+	// A new orçamento only exists on screen (id NEW_QUOTE_ID) until its
+	// first Guardar, so reloading keeps it.
+	// Which service the loaded quotes belong to (for ?orcamento= below).
+	const [quotesLoadedFor, setQuotesLoadedFor] = useState(null);
+	const loadQuotes = async () => {
+		try{
+			const response = await api.get(`services/${id}/budgets`);
+			const list = (response.data.budget_list ?? []).map(quoteFromApi);
+			setQuotes(prev => [...list, ...prev.filter(q => q.id === NEW_QUOTE_ID)]);
+		}catch(error){console.error(error, error?.response?.data?.error)}
+		finally{ setQuotesLoadedFor(id); }
+	};
+	useEffect(() => {
+		setQuotes([]);
+		setActiveQuoteId(null);
+		setQuoteDraft(null);
+		setQuotesLoadedFor(null);
+		loadQuotes();
+	}, [id]);
+	// Tells the escritório an orçamento was created / edited. The text and
+	// the link it opens are decided by the backend, in
+	// Oficina_Lima/api/app/Services/BudgetNotification.php. A failure here
+	// only logs; the orçamento itself is already saved.
+	const notifyQuote = async (quoteId, event) => {
+		try{
+			await api.post(`services/${id}/budgets/${quoteId}/notify`, { event });
+			notifyNotificationsUpdated();
+		}catch(error){console.error(error, error?.response?.data?.error)}
+	};
+	// services/{id}?orcamento={budget id} (the notification link) opens the
+	// card on that orçamento and scrolls to it, then drops the param.
+	const [searchParams, setSearchParams] = useSearchParams();
+	const wantedQuoteId = Number(searchParams.get("orcamento")) || null;
+	const quoteCardRef = useRef(null);
+	useEffect(() => {
+		if(wantedQuoteId == null || quotesLoadedFor !== id) return;
+		if(!quoteDraft && quotes.some(q => q.id === wantedQuoteId)){
+			setActiveQuoteId(wantedQuoteId);
+			setIsQuoteOpen(true);
+			setTimeout(() => quoteCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+		}
+		setSearchParams(prev => { const next = new URLSearchParams(prev); next.delete("orcamento"); return next; }, { replace: true });
+	}, [wantedQuoteId, quotesLoadedFor, id]);
+	// Editing an orçamento (title, products, quantities) works on a draft:
+	// nothing is sent until Guardar, and Cancelar throws it away. One at a
+	// time; while it's open the other tabs and + are locked so it can't be
+	// lost by switching. Products added in the draft get a temporary id.
+	// quoteDraft = { quoteId, isNew, title, products } or null.
+	const [quoteDraft, setQuoteDraft] = useState(null);
+	const [isSavingQuote, setIsSavingQuote] = useState(false);
+	const draftProductSeq = useRef(0);
+	const isEditingQuote = activeQuote != null && quoteDraft?.quoteId === activeQuote.id;
+	// What the open tab shows: the draft while editing, else the saved one.
+	const shownQuote = isEditingQuote
+		? { ...activeQuote, title: quoteDraft.title, products: quoteDraft.products }
+		: activeQuote;
+	const isQuoteDraftValid = isEditingQuote && quoteDraft.products.every(p => Number.isInteger(p.quantity) && p.quantity >= 1);
+	const handleClickEditQuote = () => {
+		if(!activeQuote || activeQuote.is_realized || quoteDraft) return;
+		setQuoteDraft({
+			quoteId: activeQuote.id,
+			isNew: false,
+			title: activeQuote.title,
+			products: activeQuote.products.map(p => ({ ...p })),
+		});
+	};
+	const handleCancelQuoteEdit = () => {
+		if(isSavingQuote) return;
+		if(quoteDraft?.isNew) setQuotes(prev => prev.filter(q => q.id !== NEW_QUOTE_ID));
+		setQuoteDraft(null);
+	};
+	// Guardar with no products asks first: save it empty, or discard
+	// (a new one is dropped, an existing one goes back to what was saved).
+	const [isConfirmEmptyQuoteOpen, setIsConfirmEmptyQuoteOpen] = useState(false);
+	const handleClickSaveQuote = () => {
+		if(isEditingQuote && quoteDraft.products.length === 0){
+			setIsConfirmEmptyQuoteOpen(true);
+			return;
+		}
+		handleSaveQuote();
+	};
+	useEffect(() => {
+		if(!isConfirmEmptyQuoteOpen) return;
+		const onKey = (e) => { if(e.key === "Escape") setIsConfirmEmptyQuoteOpen(false); };
+		document.addEventListener("keydown", onKey);
+		return () => document.removeEventListener("keydown", onKey);
+	}, [isConfirmEmptyQuoteOpen]);
+	const updateQuoteDraft = (changes) => setQuoteDraft(prev => prev && { ...prev, ...changes });
+	// Sends the draft as the changes against the saved orçamento: create it
+	// if new, then title, removed / changed / added products. If something
+	// fails half-way, the page shows what the server ended up with.
+	const handleSaveQuote = async () => {
+		if(!isEditingQuote || isSavingQuote || !isQuoteDraftValid) return;
+		const draft = quoteDraft;
+		const saved = quotes.find(q => q.id === draft.quoteId);
+		let quoteId = draft.isNew ? null : draft.quoteId;
+		let isChanged = draft.isNew;
+		setIsSavingQuote(true);
+		try{
+			if(draft.isNew){
+				const response = await api.post(`services/${id}/budgets`, { title: draft.title });
+				quoteId = quoteFromApi(response.data.budget).id;
+			}else if(draft.title !== saved.title){
+				await api.patch(`services/${id}/budgets/${quoteId}`, { title: draft.title });
+				isChanged = true;
+			}
+			const savedProducts = draft.isNew ? [] : saved.products;
+			const base = `services/${id}/budgets/${quoteId}/products`;
+			for(const p of savedProducts){
+				if(!draft.products.some(d => d.id === p.id)){ await api.delete(`${base}/${p.id}`); isChanged = true; }
+			}
+			for(const d of draft.products){
+				const before = savedProducts.find(p => p.id === d.id);
+				if(!before){ await api.post(base, { product_id: d.product_id, quantity: d.quantity }); isChanged = true; }
+				else if(before.quantity !== d.quantity){ await api.patch(`${base}/${d.id}`, { quantity: d.quantity }); isChanged = true; }
+			}
+			setQuoteDraft(null);
+			// Only when everything went through, and something actually changed.
+			if(isChanged) notifyQuote(quoteId, draft.isNew ? "created" : "edited");
+		}catch(error){
+			console.error(error, error?.response?.data?.error);
+			// Nothing saved yet: keep the draft so Guardar can be tried again.
+			if(quoteId == null) return;
+			setQuoteDraft(null);
+		}finally{
+			setIsSavingQuote(false);
+		}
+		setQuotes(prev => prev.filter(q => q.id !== NEW_QUOTE_ID));
+		setActiveQuoteId(quoteId);
+		await loadQuotes();
+	};
+	// Confirmation shown when "Adicionar Orçamento" is clicked while
+	// orçamentos already exist.
+	const [isConfirmNewQuoteOpen, setIsConfirmNewQuoteOpen] = useState(false);
+	const handleClickAddQuote = () => {
+		if(quotes.length > 0){
+			setIsConfirmNewQuoteOpen(true);
+			return;
+		}
+		addQuote();
+	};
+	const handleConfirmNewQuote = () => {
+		setIsConfirmNewQuoteOpen(false);
+		addQuote();
+	};
+	useEffect(() => {
+		if(!isConfirmNewQuoteOpen) return;
+		const onKey = (e) => { if(e.key === "Escape") setIsConfirmNewQuoteOpen(false); };
+		document.addEventListener("keydown", onKey);
+		return () => document.removeEventListener("keydown", onKey);
+	}, [isConfirmNewQuoteOpen]);
+	// Un-marking an orçamentado orçamento asks first, so it isn't undone
+	// by a stray click; marking it goes straight through.
+	const [quoteToUnmark, setQuoteToUnmark] = useState(null);
+	const handleClickToggleQuoteStatus = (quote) => {
+		if(quote.is_realized){
+			setQuoteToUnmark(quote);
+			return;
+		}
+		saveQuoteStatus(quote.id, true);
+	};
+	const handleConfirmUnmarkQuote = () => {
+		saveQuoteStatus(quoteToUnmark.id, false);
+		setQuoteToUnmark(null);
+	};
+	// Orçamentado locks everything but the note (DB triggers); the button
+	// is disabled while the orçamento is being edited, so no draft is lost.
+	const saveQuoteStatus = async (quoteId, isRealized) => {
+		try{
+			const response = await api.patch(`services/${id}/budgets/${quoteId}`, { done: isRealized });
+			const saved = quoteFromApi(response.data.budget);
+			setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, is_realized: saved.is_realized } : q));
+		}catch(error){console.error(error, error?.response?.data?.error)}
+	};
+	useEffect(() => {
+		if(!quoteToUnmark) return;
+		const onKey = (e) => { if(e.key === "Escape") setQuoteToUnmark(null); };
+		document.addEventListener("keydown", onKey);
+		return () => document.removeEventListener("keydown", onKey);
+	}, [quoteToUnmark]);
+	// Opens straight in edit mode, on screen only until Guardar.
+	const addQuote = () => {
+		if(quoteDraft) return;
+		const title = `Orçamento #${quotes.length + 1}`;
+		setQuotes(prev => [...prev, { id: NEW_QUOTE_ID, title, note: "", is_realized: false, products: [] }]);
+		setQuoteDraft({ quoteId: NEW_QUOTE_ID, isNew: true, title, products: [] });
+		setActiveQuoteId(NEW_QUOTE_ID);
+		setIsQuoteOpen(true);
+	};
+	// Orçamento waiting on the delete confirmation modal (null = closed).
+	const [quoteToDelete, setQuoteToDelete] = useState(null);
+	const deleteQuote = async (quoteId) => {
+		try{
+			// notify=1: the backend also tells the escritório ("Orçamento apagado").
+			await api.delete(`services/${id}/budgets/${quoteId}`, { params: { notify: 1 } });
+			notifyNotificationsUpdated();
+			setQuotes(prev => prev.filter(q => q.id !== quoteId));
+			setQuoteDraft(prev => prev?.quoteId === quoteId ? null : prev);
+		}catch(error){console.error(error, error?.response?.data?.error)}
+	};
+	const handleClickDeleteQuote = (quoteId) => {
+		// Never saved: just drop it.
+		if(quoteId === NEW_QUOTE_ID){
+			handleCancelQuoteEdit();
+			return;
+		}
+		// An empty orçamento goes straight away; one with products asks first.
+		const quote = quotes.find(q => q.id === quoteId);
+		if(quote?.products.length > 0){
+			setQuoteToDelete(quote);
+			return;
+		}
+		deleteQuote(quoteId);
+	};
+	const handleConfirmDeleteQuote = () => {
+		deleteQuote(quoteToDelete.id);
+		setQuoteToDelete(null);
+	};
+	useEffect(() => {
+		if(!quoteToDelete) return;
+		const onKey = (e) => { if(e.key === "Escape") setQuoteToDelete(null); };
+		document.addEventListener("keydown", onKey);
+		return () => document.removeEventListener("keydown", onKey);
+	}, [quoteToDelete]);
+	// Product rows only change the draft; Guardar sends them.
+	const handleSelectQuoteProduct = (product) => {
+		draftProductSeq.current += 1;
+		setQuoteDraft(prev => prev && {
+			...prev,
+			products: [...prev.products, {
+				id: `draft-${draftProductSeq.current}`,
+				product_id: product.product_id,
+				name: product.name,
+				reference: product.reference,
+				type: product.type,
+				quantity: product.quantity ?? 1,
+			}],
+		});
+	};
+	// An empty / invalid quantity just keeps Guardar disabled.
+	const updateQuoteProduct = (productId, field, value) => {
+		setQuoteDraft(prev => prev && {
+			...prev,
+			products: prev.products.map(p => p.id === productId ? { ...p, [field]: value } : p),
+		});
+	};
+	const handleClickDeleteQuoteProduct = (productId) => {
+		setQuoteDraft(prev => prev && { ...prev, products: prev.products.filter(p => p.id !== productId) });
+	};
+	// The note is locked until "Editar"; ✓ saves it, ✗ / Esc drops the
+	// changes. Like the lab action notes. quoteNoteDraft is the text being
+	// edited, for the orçamento editingNoteQuoteId (null = not editing).
+	const [editingNoteQuoteId, setEditingNoteQuoteId] = useState(null);
+	const [quoteNoteDraft, setQuoteNoteDraft] = useState("");
+	const [isSavingQuoteNote, setIsSavingQuoteNote] = useState(false);
+	const isEditingQuoteNote = activeQuote != null && editingNoteQuoteId === activeQuote.id;
+	// Picks up orçamentos changed elsewhere (e.g. the escritório marking one
+	// Orçamentado), but never while one or its note is being edited or saved,
+	// so nothing being typed is replaced.
+	useVisiblePoll(() => {
+		if(quoteDraft || editingNoteQuoteId != null || isSavingQuote || isSavingQuoteNote) return;
+		loadQuotes();
+	}, 30000);
+	const quoteNoteRef = useRef(null);
+	// Cursor at the end of the text when editing starts.
+	useEffect(() => {
+		const el = quoteNoteRef.current;
+		if(!isEditingQuoteNote || !el) return;
+		el.focus();
+		el.setSelectionRange(el.value.length, el.value.length);
+	}, [isEditingQuoteNote]);
+	const handleClickEditQuoteNote = () => {
+		setQuoteNoteDraft(activeQuote.note);
+		setEditingNoteQuoteId(activeQuote.id);
+	};
+	const handleCancelQuoteNote = () => {
+		setEditingNoteQuoteId(null);
+		setQuoteNoteDraft("");
+	};
+	const handleSaveQuoteNote = async () => {
+		if(isSavingQuoteNote) return;
+		const quoteId = editingNoteQuoteId;
+		setIsSavingQuoteNote(true);
+		try{
+			const previousNote = quotes.find(q => q.id === quoteId)?.note;
+			const response = await api.patch(`services/${id}/budgets/${quoteId}`, { note: quoteNoteDraft });
+			const saved = quoteFromApi(response.data.budget);
+			if(saved.note !== previousNote) notifyQuote(quoteId, "edited");
+			setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, note: saved.note } : q));
+			handleCancelQuoteNote();
+		}catch(error){console.error(error, error?.response?.data?.error)}
+		finally{ setIsSavingQuoteNote(false); }
+	};
+	// Leaving the tab (or the service) drops an unsaved edit.
+	useEffect(() => {
+		if(editingNoteQuoteId != null && editingNoteQuoteId !== activeQuote?.id) handleCancelQuoteNote();
+	}, [activeQuote?.id]);
+	useEffect(() => { handleCancelQuoteNote(); }, [id]);
+	// The note grows with its text from 1 line up to the CSS max-height (3
+	// lines), then scrolls.
+	const autoGrowQuoteNote = (el) => {
+		if(!el) return;
+		el.style.height = "auto";
+		el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
+	};
 	const [aps, setAps] = useState([]);
 
 	const isFinished = !!service.is_finished;
@@ -803,6 +1151,7 @@ export default function ServiceShow2() {
 						</div>
 					</div>
 				)}
+				{/* HIDDEN-PRODUCTS-REQUESTED (testing without it; uncomment to restore)
 				<div className="service-products-requested-card" id="section-requested">
 					<div className="header">
 						<i className="fa-solid fa-cart-arrow-down"/>
@@ -812,6 +1161,328 @@ export default function ServiceShow2() {
 						<ProductsRequested key={id} id={id} onProductForwarded={()=>setApReload(true)} disabled={isFinished}/>
 					</div>
 				</div>
+				*/}
+				{/* Reuses the Applied Products card/table styling. Shown and
+				   editable on finished services too (user's call, for now). */}
+				<div ref={quoteCardRef} className={`service-applied-products-card service-quote-card ${quotes.length > 0 && !isQuoteOpen ? "collapsed" : ""}`}>
+					{/* The whole header shows / hides the orçamentos (once there are any). */}
+					<div
+						className={`header ${quotes.length > 0 ? "is-toggle" : ""}`}
+						{...(quotes.length > 0 ? {
+							role: "button",
+							tabIndex: 0,
+							"aria-expanded": isQuoteOpen,
+							title: isQuoteOpen ? "Ocultar Orçamentos" : "Mostrar Orçamentos",
+							onClick: () => setIsQuoteOpen(prev => !prev),
+							onKeyDown: (e) => {
+								if(e.key === "Enter" || e.key === " "){ e.preventDefault(); setIsQuoteOpen(prev => !prev); }
+							},
+						} : {})}
+					>
+						<i className="fa-solid fa-file-invoice"/>
+						<h1>Orçamento</h1>
+						{/* orçamentados/total badge: gray with none, red while some are
+						   missing, green when all are done. */}
+						<span
+							className={`service-quote-badge ${
+								quotes.length === 0 ? "" : realizedQuoteCount === quotes.length ? "all-done" : "missing"
+							}`}
+							title="Orçamentados / Total"
+						>
+							{realizedQuoteCount}/{quotes.length}
+						</span>
+						{quotes.length > 0 && (
+							<span className="service-quote-toggle" aria-hidden="true">
+								<i className={`fa-solid ${isQuoteOpen ? "fa-chevron-up" : "fa-chevron-down"}`}/>
+							</span>
+						)}
+					</div>
+					<div className="body">
+						{/* Only before the first orçamento; after that the + beside
+						   the tabs adds new ones. */}
+						{quotes.length === 0 && (
+							<div className="service-quote-buttons">
+								<button type="button" className="service-request-quote service-add-quote" onClick={handleClickAddQuote}>
+									<i className="fa-solid fa-plus"/>
+									Adicionar Orçamento
+								</button>
+							</div>
+						)}
+						{isQuoteOpen && activeQuote && (
+							<div className="service-quote">
+								{/* One tab per orçamento; the open one's title is editable in place. */}
+								<div ref={quoteTabsRef} className={`service-quote-tabs ${isQuoteMenuOpen ? "menu-open" : ""}`}>
+									{quotes.map((quote) => quote.id === activeQuote.id ? (
+										<div key={quote.id} className={`service-quote-tab active ${quote.is_realized ? "realized" : ""}`}>
+											<i className={`service-quote-tab-status ${quote.is_realized ? "fa-solid fa-circle-check" : "fa-regular fa-circle"}`} title={quote.is_realized ? "Orçamentado" : "Não orçamentado"}/>
+											<input
+												type="text"
+												size={Math.max(shownQuote.title.length, 10)}
+												maxLength={96}
+												value={shownQuote.title}
+												placeholder="Título do orçamento"
+												readOnly={!isEditingQuote}
+												onChange={(e)=>updateQuoteDraft({ title: e.target.value })}
+											/>
+											{isEditingQuote && (
+												<button type="button" className="cancel" title="Apagar orçamento" onClick={()=>handleClickDeleteQuote(quote.id)}><i className="fa-solid fa-trash"/></button>
+											)}
+											{/* Phone only (CSS): opens the orçamentos dropdown. */}
+											{quotes.length > 1 && (
+												<button type="button" className="service-quote-menu-toggle" title="Escolher orçamento" onClick={()=>setIsQuoteMenuOpen(prev=>!prev)}>
+													<i className={`fa-solid ${isQuoteMenuOpen ? "fa-chevron-up" : "fa-chevron-down"}`}/>
+												</button>
+											)}
+										</div>
+									) : (
+										<button key={quote.id} type="button" className={`service-quote-tab ${quote.is_realized ? "realized" : ""}`} disabled={!!quoteDraft} title={quoteDraft ? "Guarde ou cancele a edição primeiro" : undefined} onClick={()=>setActiveQuoteId(quote.id)}>
+											<i className={`service-quote-tab-status ${quote.is_realized ? "fa-solid fa-circle-check" : "fa-regular fa-circle"}`} title={quote.is_realized ? "Orçamentado" : "Não orçamentado"}/>
+											{quote.title || "Sem título"}
+										</button>
+									))}
+									<button type="button" className="service-quote-tab-add" title={quoteDraft ? "Guarde ou cancele a edição primeiro" : "Adicionar Orçamento"} disabled={!!quoteDraft} onClick={handleClickAddQuote}>
+										<i className="fa-solid fa-plus"/>
+									</button>
+									{/* Phone only (CSS): every orçamento, the open one marked. */}
+									{isQuoteMenuOpen && quotes.length > 1 && (
+										<ul className="service-quote-menu">
+											{quotes.map((quote) => (
+												<li key={quote.id}>
+													<button
+														type="button"
+														className={`${quote.id === activeQuote.id ? "active" : ""} ${quote.is_realized ? "realized" : ""}`}
+														disabled={!!quoteDraft && quote.id !== activeQuote.id}
+														onClick={()=>{ setActiveQuoteId(quote.id); setIsQuoteMenuOpen(false); }}
+													>
+														<i className={`service-quote-tab-status fa-fw ${quote.is_realized ? "fa-solid fa-circle-check" : "fa-regular fa-circle"}`}/>
+														<span>{quote.title || "Sem título"}</span>
+													</button>
+												</li>
+											))}
+										</ul>
+									)}
+								</div>
+								<div className="service-quote-panel">
+									{/* has-edit-btn: only Editar is showing (phone turns it into a
+									   circle beside Orçamentado). */}
+									<div className={`service-quote-toolbar ${!isEditingQuote && !activeQuote.is_realized ? "has-edit-btn" : ""}`}>
+										{/* Products can only be added while editing. */}
+										{isEditingQuote && (
+											<QuoteProductPicker
+												placeholder="Pesquisar produto..."
+												onSelect={handleSelectQuoteProduct}
+											/>
+										)}
+										{/* Editar unlocks the orçamento into a draft; Guardar sends it,
+										   Cancelar drops it. No Editar while Orçamentado. */}
+										<span className="service-quote-edit-btns">
+											{isEditingQuote ? (
+												<>
+													<button type="button" className="is-cancel" disabled={isSavingQuote} onClick={handleCancelQuoteEdit}>
+														<i className="fa-solid fa-xmark"/> Cancelar
+													</button>
+													<button
+														type="button"
+														className="is-confirm"
+														disabled={isSavingQuote || !isQuoteDraftValid}
+														title={isQuoteDraftValid ? "Guardar orçamento" : "Há quantidades inválidas"}
+														onClick={handleClickSaveQuote}
+													>
+														<i className={`fa-solid ${isSavingQuote ? "fa-spinner fa-spin" : "fa-check"}`}/> Guardar
+													</button>
+												</>
+											) : !activeQuote.is_realized && (
+												<button type="button" className="is-edit" title="Editar orçamento" disabled={!!quoteDraft} onClick={handleClickEditQuote}>
+													<i className="fa-solid fa-pen"/> <span className="service-quote-edit-label">Editar</span>
+												</button>
+											)}
+										</span>
+										<button
+											type="button"
+											className={`service-quote-status ${activeQuote.is_realized ? "realized" : ""}`}
+											disabled={isEditingQuote}
+											title={isEditingQuote ? "Guarde ou cancele a edição primeiro" : undefined}
+											onClick={()=>handleClickToggleQuoteStatus(activeQuote)}
+										>
+											<i className={`fa-fw ${activeQuote.is_realized ? "fa-solid fa-circle-check" : "fa-regular fa-circle"}`}/>
+											{/* Both labels share one grid cell so the button keeps the
+											   longer one's width in either state. */}
+											<span className="service-quote-status-labels">
+												<span className={activeQuote.is_realized ? "hidden" : ""}>Não orçamentado</span>
+												<span className={activeQuote.is_realized ? "" : "hidden"}>Orçamentado</span>
+											</span>
+										</button>
+									</div>
+									<table className={isEditingQuote ? "" : "is-locked"}>
+										<thead>
+											<tr>
+												<th>Nome</th>
+												<th>Referencia</th>
+												<th>Tipo de Produto</th>
+												<th>Quantidade</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody>
+											{shownQuote.products.map((p) => (
+												<tr key={p.id}>
+													<td className="p-name">
+														<label className="magic-label">Nome:</label>
+														<input disabled type="text" placeholder="-" value={p.name}/>
+													</td>
+													<td className="p-reference">
+														<label className="magic-label">Referencia:</label>
+														<input disabled type="text" placeholder="-" value={p.reference}/>
+													</td>
+													<td className="p-p-type">
+														<label className="magic-label">T. Produto:</label>
+														<input disabled type="text" placeholder="-" value={p.type}/>
+													</td>
+													<td className="p-quantity">
+														<label className="magic-label">Qt:</label>
+														<input type="number" min="1" step="1" disabled={!isEditingQuote} value={p.quantity} onChange={(e)=>updateQuoteProduct(p.id, "quantity", e.target.value.trim()!=="" ? Number(e.target.value) : "")}/>
+													</td>
+													<td className="p-cancel">
+														{isEditingQuote && (
+															<button type="button" className="cancel" onClick={()=>handleClickDeleteQuoteProduct(p.id)}><i className="fa-solid fa-trash"/></button>
+														)}
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+									<div className={`service-quote-note-field ${isEditingQuoteNote ? "is-editing" : ""}`}>
+										<i className="fa-solid fa-note-sticky service-quote-note-icon"/>
+										<textarea
+											className={`service-quote-note ${isEditingQuoteNote ? "" : "is-locked"}`}
+											rows={1}
+											ref={(el)=>{ quoteNoteRef.current = el; autoGrowQuoteNote(el); }}
+											value={isEditingQuoteNote ? quoteNoteDraft : activeQuote.note}
+											placeholder="Nota"
+											readOnly={!isEditingQuoteNote}
+											onChange={(e)=>setQuoteNoteDraft(e.target.value)}
+											onKeyDown={(e)=>{ if(isEditingQuoteNote && e.key === "Escape") handleCancelQuoteNote(); }}
+										/>
+										<span className="service-quote-note-btns">
+											{isEditingQuoteNote ? (
+												<>
+													<button type="button" className="is-confirm" title="Guardar nota" disabled={isSavingQuoteNote} onClick={handleSaveQuoteNote}>
+														<i className={`fa-solid ${isSavingQuoteNote ? "fa-spinner fa-spin" : "fa-check"}`}/>
+													</button>
+													<button type="button" className="is-cancel" title="Cancelar edição" disabled={isSavingQuoteNote} onClick={handleCancelQuoteNote}>
+														<i className="fa-solid fa-xmark"/>
+													</button>
+												</>
+											) : activeQuote.id !== NEW_QUOTE_ID && (
+												<button type="button" title="Editar nota" onClick={handleClickEditQuoteNote}>
+													<i className="fa-solid fa-pen"/>
+												</button>
+											)}
+										</span>
+									</div>
+								</div>
+							</div>
+						)}
+					</div>
+				</div>
+				{isConfirmNewQuoteOpen && (
+					<div className="quote-modal-backdrop" onClick={()=>setIsConfirmNewQuoteOpen(false)}>
+						<div className="quote-modal" role="dialog" aria-modal="true" onClick={(e)=>e.stopPropagation()}>
+							<div className="quote-modal-header">
+								<i className="fa-solid fa-file-invoice"/>
+								<div>
+									<h2>Criar novo orçamento?</h2>
+									<p>
+										Já {quotes.length === 1 ? "existe 1 orçamento" : `existem ${quotes.length} orçamentos`} neste serviço.
+									</p>
+								</div>
+							</div>
+							<div className="quote-modal-buttons">
+								<button type="button" onClick={()=>setIsConfirmNewQuoteOpen(false)}>Cancelar</button>
+								<button type="button" className="primary" autoFocus onClick={handleConfirmNewQuote}>
+									<i className="fa-solid fa-plus"/> Criar orçamento
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
+				{isConfirmEmptyQuoteOpen && isEditingQuote && (
+					<div className="quote-modal-backdrop" onClick={()=>setIsConfirmEmptyQuoteOpen(false)}>
+						<div className="quote-modal quote-modal-wide" role="dialog" aria-modal="true" onClick={(e)=>e.stopPropagation()}>
+							<div className="quote-modal-header">
+								<i className="fa-solid fa-circle-question"/>
+								<div>
+									<h2>Orçamento sem produtos</h2>
+									<p>
+										{quoteDraft.isNew
+											? <>"{quoteDraft.title || "Sem título"}" não tem produtos. Guardar mesmo assim, ou descartar?</>
+											: <>"{quoteDraft.title || "Sem título"}" vai ficar sem produtos. Guardar assim, ou descartar as alterações?</>}
+									</p>
+								</div>
+							</div>
+							<div className="quote-modal-buttons quote-modal-buttons-three">
+								<button type="button" autoFocus onClick={()=>setIsConfirmEmptyQuoteOpen(false)}>Continuar a editar</button>
+								<button type="button" className="danger" onClick={()=>{ setIsConfirmEmptyQuoteOpen(false); handleCancelQuoteEdit(); }}>
+									<i className="fa-solid fa-xmark"/> {quoteDraft.isNew ? "Descartar" : "Descartar alterações"}
+								</button>
+								<button type="button" className="primary" onClick={()=>{ setIsConfirmEmptyQuoteOpen(false); handleSaveQuote(); }}>
+									<i className="fa-solid fa-check"/> Guardar vazio
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
+				{quoteToUnmark && (
+					<div className="quote-modal-backdrop" onClick={()=>setQuoteToUnmark(null)}>
+						<div className="quote-modal" role="dialog" aria-modal="true" onClick={(e)=>e.stopPropagation()}>
+							<div className="quote-modal-header">
+								<i className="fa-solid fa-circle-question"/>
+								<div>
+									<h2>Tem a certeza?</h2>
+									<p>
+										"{quoteToUnmark.title || "Sem título"}" vai passar de Orçamentado para Não orçamentado.
+									</p>
+								</div>
+							</div>
+							<div className="quote-modal-buttons">
+								<button type="button" autoFocus onClick={()=>setQuoteToUnmark(null)}>Cancelar</button>
+								<button type="button" className="primary" onClick={handleConfirmUnmarkQuote}>
+									Marcar como Não orçamentado
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
+				{quoteToDelete && (
+					<div className="quote-delete-backdrop" onClick={()=>setQuoteToDelete(null)}>
+						<div className="quote-delete-modal" role="dialog" aria-modal="true" onClick={(e)=>e.stopPropagation()}>
+							<div className="quote-delete-header">
+								<i className="fa-solid fa-trash"/>
+								<div>
+									<h2>Apagar orçamento?</h2>
+									<p>
+										"{quoteToDelete.title || "Sem título"}" tem {quoteToDelete.products.length} {quoteToDelete.products.length === 1 ? "produto" : "produtos"} que serão removidos.
+									</p>
+								</div>
+							</div>
+							<ul className="quote-delete-products">
+								{quoteToDelete.products.map(p => (
+									<li key={p.id}>
+										<span className="name">{p.name || "-"}</span>
+										<span className="ref">{p.reference || "-"}</span>
+										<span className="qty">x{p.quantity}</span>
+									</li>
+								))}
+							</ul>
+							<div className="quote-delete-buttons">
+								<button type="button" onClick={()=>setQuoteToDelete(null)}>Cancelar</button>
+								<button type="button" className="danger" autoFocus onClick={handleConfirmDeleteQuote}>
+									<i className="fa-solid fa-trash"/> Apagar
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
 				<div className="service-applied-products-card" id="section-applied">
 					<div className="header">
 						<i className="fa-solid fa-store"></i>

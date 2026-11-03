@@ -466,3 +466,117 @@
 	}
 
 }
+
+/* ===================== Orçamento preview ===================== */
+
+.notif-budget-service{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	font-weight: 700;
+	color: var(--txt-dark);
+}
+
+.notif-budget{
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-card);
+	overflow: hidden;
+}
+
+.notif-budget-header{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--padding);
+	padding: var(--padding);
+	border-bottom: 1px solid var(--border);
+	background: var(--bg-page);
+}
+
+.notif-budget-title{
+	min-width: 0;
+	font-weight: 800;
+	color: var(--txt-dark);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.notif-budget-status{
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	gap: var(--small-padding);
+	padding: 2px var(--padding);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--bg-card);
+	color: var(--txt-light);
+	font-size: var(--font-size-small);
+	font-weight: 700;
+
+	&.is-done{
+		border-color: var(--success);
+		background: var(--success-soft);
+		color: var(--success);
+	}
+}
+
+/* Name · reference · quantity per product; scrolls past ~5. */
+.notif-budget-products{
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	max-height: 170px;
+	overflow-y: auto;
+
+	li{
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto auto;
+		gap: var(--big-padding);
+		align-items: center;
+		padding: var(--small-padding) var(--padding);
+		border-bottom: 1px solid var(--border-light, var(--border));
+		font-size: var(--font-size-small);
+
+		&:last-child{ border-bottom: none; }
+	}
+}
+.notif-budget-product-name{
+	color: var(--txt-dark);
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.notif-budget-product-ref{ color: var(--txt-muted); }
+.notif-budget-product-qty{
+	min-width: 2.5em;
+	text-align: right;
+	font-weight: 700;
+	color: var(--txt-dark);
+}
+
+.notif-budget-empty{
+	margin: 0;
+	padding: var(--padding);
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+	font-style: italic;
+}
+
+.notif-budget-note{
+	margin: 0;
+	padding: var(--padding);
+	border-top: 1px solid var(--border);
+	background: var(--bg-page);
+	color: var(--txt-dark);
+	font-size: var(--font-size-small);
+	white-space: pre-wrap;
+	word-break: break-word;
+
+	i{ color: var(--txt-muted); }
+}

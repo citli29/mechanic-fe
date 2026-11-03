@@ -45,6 +45,18 @@ function extractServiceIdFromUrl(url) {
 	return match ? match[1] : null;
 }
 
+// Orçamento notifications (BudgetNotification.php) carry service_id /
+// budget_id in data; the first ones only had "services/29?orcamento=2".
+// Found by that, not by title, so the titles can change freely.
+function getBudgetRef(notification) {
+	const data = notification?.data;
+	if (data?.budget_id != null && data?.service_id != null) {
+		return { serviceId: String(data.service_id), budgetId: String(data.budget_id), event: data.event ?? null };
+	}
+	const match = data?.url?.match(/^services\/(\d+)\?orcamento=(\d+)$/);
+	return match ? { serviceId: match[1], budgetId: match[2], event: null } : null;
+}
+
 function normalizeUrl(url) {
 	return url.startsWith("/") ? url : `/${url}`;
 }
@@ -270,8 +282,27 @@ export default function NotificationsList() {
 		setPreview(null);
 		setPreviewLoading(false);
 
+		const budgetRef = getBudgetRef(viewingNotification);
+
 		async function run() {
-			if ((title === SERVICE_FINISHED_TITLE || title === SERVICE_STARTED_TITLE) && serviceId) {
+			if (budgetRef) {
+				setPreviewLoading(true);
+				try {
+					// The orçamento may have been deleted since (404): still show
+					// its service, and say so.
+					const [serviceRes, budget] = await Promise.all([
+						api.get(`/services/${budgetRef.serviceId}`),
+						api.get(`/services/${budgetRef.serviceId}/budgets/${budgetRef.budgetId}`)
+							.then((r) => r.data.budget)
+							.catch(() => null),
+					]);
+					if (isCurrent) setPreview({ type: "budget", service: serviceRes.data.service, budget, event: budgetRef.event });
+				} catch {
+					// leave preview empty — popup still shows the plain message
+				} finally {
+					if (isCurrent) setPreviewLoading(false);
+				}
+			} else if ((title === SERVICE_FINISHED_TITLE || title === SERVICE_STARTED_TITLE) && serviceId) {
 				setPreviewLoading(true);
 				try {
 					const res = await api.get(`/services/${serviceId}`);
@@ -648,6 +679,68 @@ export default function NotificationsList() {
 												{preview.appliedProduct
 													? "Este produto já foi aplicado ao serviço — já não consta em Produtos Pedidos."
 													: "Este produto já não consta em Produtos Pedidos — pode ter sido removido."}
+											</p>
+										)}
+									</>
+								) : preview.type === "budget" ? (
+									<>
+										<div className="notif-service-preview-row">
+											<span className="notif-service-preview-label">Serviço</span>
+											<span className="notif-budget-service">
+												#{preview.service?.id}
+												<span className={`notif-service-preview-state ${getServiceStatus(preview.service).stateClass}`}>
+													{getServiceStatus(preview.service).desc}
+												</span>
+											</span>
+										</div>
+
+										<div className="notif-service-preview-row">
+											<span className="notif-service-preview-label">Tipo de Serviço</span>
+											<ServiceTypeBadge serviceTypeId={preview.service?.service_type_id} label={preview.service?.service_type_name} />
+										</div>
+
+										{formatCarLabel(preview.service) && (
+											<div className="notif-service-preview-row">
+												<span className="notif-service-preview-label">Viatura</span>
+												<span>{formatCarLabel(preview.service)}</span>
+											</div>
+										)}
+
+										{preview.budget ? (
+											<div className="notif-budget">
+												<div className="notif-budget-header">
+													<span className="notif-budget-title">{preview.budget.title || "Sem título"}</span>
+													<span className={`notif-budget-status ${Number(preview.budget.done) === 1 ? "is-done" : ""}`}>
+														<i className={`fa-fw ${Number(preview.budget.done) === 1 ? "fa-solid fa-circle-check" : "fa-regular fa-circle"}`} />
+														{Number(preview.budget.done) === 1 ? "Orçamentado" : "Por orçamentar"}
+													</span>
+												</div>
+
+												{preview.budget.products?.length > 0 ? (
+													<ul className="notif-budget-products">
+														{preview.budget.products.map((p) => (
+															<li key={p.id}>
+																<span className="notif-budget-product-name">{p.product_name || "-"}</span>
+																<span className="notif-budget-product-ref">{p.product_reference || "-"}</span>
+																<span className="notif-budget-product-qty">x{p.quantity}</span>
+															</li>
+														))}
+													</ul>
+												) : (
+													<p className="notif-budget-empty">Sem produtos.</p>
+												)}
+
+												{preview.budget.note && (
+													<p className="notif-budget-note">
+														<i className="fa-regular fa-note-sticky" /> {preview.budget.note}
+													</p>
+												)}
+											</div>
+										) : (
+											<p className="notif-product-missing">
+												{preview.event === "deleted"
+													? "Este orçamento foi apagado da folha de serviço."
+													: "Este orçamento já não existe — pode ter sido apagado."}
 											</p>
 										)}
 									</>

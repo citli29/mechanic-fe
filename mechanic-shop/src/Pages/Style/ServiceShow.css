@@ -2,6 +2,20 @@
 	padding: 0 var(--big-padding);
 	color:var(--txt-dark);
 	filter: staturate(0.5);
+
+	/* Locked actions (edit/delete/forward on a finished service) go gray so
+	   they read as unavailable. !important beats the per-card rules that
+	   recolor disabled children and the td-hover background swap. */
+	button:disabled,
+	button:disabled:hover{
+		color: var(--disabled-text) !important;
+		background: var(--bg-disabled) !important;
+
+		*{
+			color: inherit !important;
+			background: transparent !important;
+		}
+	}
 }
 
 .print-summary-block{
@@ -292,6 +306,538 @@
 
 }
 
+/* Show/hide toggle inside the Orçamento card body, full width above
+   its table. */
+.service-request-quote{
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--padding);
+	padding: var(--padding) var(--big-padding);
+	background: var(--bg-page);
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	color: var(--txt-dark);
+	font-size: var(--font-size);
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.service-quote-buttons{
+	display: flex;
+	gap: var(--padding);
+
+	/* Toggle takes the room; "Adicionar" only as wide as its text. */
+	.service-request-quote{ flex: 1 1 auto; }
+	.service-add-quote{
+		flex: 0 0 auto;
+		width: auto;
+		white-space: nowrap;
+	}
+	/* No orçamentos yet → no Mostrar/Ocultar, so it takes the whole row. */
+	.service-add-quote:only-child{
+		flex: 1 1 auto;
+	}
+}
+/* Orçamentos as tabs: a row of tabs (the open one joins the panel
+   below and holds the editable title), then the panel with the product
+   search + delete, the product table and the notes. */
+.service-quote-card .body .service-quote{
+	display: flex;
+	flex-direction: column;
+
+	/* Tabs styled like the associated-services tabs
+	   (Service/Style/ServiceClusterTabs.css): tinted with a colored left
+	   stripe, the open one filled and taller, + flush after the last.
+	   Colour is the card's indigo, green once Orçamentado. */
+	.service-quote-tabs{
+		display: flex;
+		align-items: flex-end;
+		gap: 3px;
+		padding: 0 var(--padding);
+		overflow-x: auto;
+		/* Sits on the panel's top border. */
+		margin-bottom: -1px;
+		position: relative;
+		z-index: 1;
+	}
+	.service-quote-tab{
+		--tab-type-color: #6366f1;
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--small-padding);
+		padding: var(--padding) var(--big-padding);
+		border: 1px solid var(--border);
+		border-left: 4px solid var(--tab-type-color);
+		border-radius: 8px 8px 0 0;
+		background: color-mix(in srgb, var(--tab-type-color) 15%, white);
+		color: var(--txt-dark);
+		font-size: var(--font-size);
+		white-space: nowrap;
+		cursor: pointer;
+
+		&:hover{ filter: brightness(0.94); }
+		/* Locked while another orçamento is being edited. */
+		&:disabled{ opacity: 0.5; cursor: not-allowed; filter: none; }
+
+		&.realized{ --tab-type-color: var(--success); }
+
+		.service-quote-tab-status{ color: var(--tab-type-color); }
+
+		&.active{
+			padding-top: calc(var(--padding) + 6px);
+			border-bottom: none;
+			border-color: color-mix(in srgb, var(--tab-type-color) 65%, black);
+			background: var(--tab-type-color);
+			color: #fff;
+			font-weight: 700;
+			cursor: default;
+
+			&:hover{ filter: none; }
+			.service-quote-tab-status{ color: #fff; }
+		}
+
+		/* Sized to its text (size attr); looks like the tab label until
+		   hovered/focused. */
+		input{
+			width: auto;
+			min-width: 0;
+			padding: 0 var(--small-padding);
+			border: 1px solid transparent;
+			border-radius: 5px;
+			background: transparent;
+			font-size: var(--font-size);
+			font-weight: 700;
+			line-height: var(--line-height);
+			color: inherit;
+
+			&::placeholder{ color: rgba(255, 255, 255, 0.7); }
+			&:hover, &:focus{
+				border-color: rgba(255, 255, 255, 0.6);
+				outline: none;
+			}
+			/* Orçamentado: read-only, no edit hint. */
+			&[readonly]:hover, &[readonly]:focus{ border-color: transparent; }
+		}
+
+		/* Delete-orçamento, beside the open tab's title. */
+		button{
+			height: var(--line-height);
+			aspect-ratio: 1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border: none;
+			border-radius: 5px;
+			background: transparent;
+			color: #fff;
+			font-size: var(--font-size-small);
+
+			&:hover{ background: rgba(255, 255, 255, 0.2); }
+		}
+	}
+	/* Phone-only orçamento dropdown (see the 750px block). */
+	.service-quote-tab .service-quote-menu-toggle,
+	.service-quote-menu{ display: none; }
+
+	/* + after the last tab, like .service-cluster-tab-add. */
+	.service-quote-tab-add{
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-left: -3px;
+		padding: var(--padding) var(--big-padding);
+		border: 1px solid var(--border);
+		border-radius: 0 8px 0 0;
+		background: transparent;
+		color: var(--txt-muted);
+		font-size: var(--font-size-small);
+		line-height: var(--line-height);
+		cursor: pointer;
+
+		&:hover{ background: var(--bg-page); color: var(--txt-dark); }
+		&:disabled{ opacity: 0.4; cursor: not-allowed; background: transparent; }
+	}
+
+	.service-quote-panel{
+		display: flex;
+		flex-direction: column;
+		gap: var(--padding);
+		padding: var(--padding);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+	}
+
+	/* Product search with the Orçamentado toggle beside it, at the
+	   search bar's height. */
+	.service-quote-toolbar{
+		display: flex;
+		gap: var(--padding);
+		align-items: flex-start;
+
+		.service-quote-status{
+			flex: 0 0 auto;
+			display: flex;
+			align-items: center;
+			gap: var(--padding);
+			height: calc(var(--line-height) + 2 * var(--padding) + 2px);
+			padding: 0 var(--big-padding);
+			border: 1px solid var(--border);
+			border-radius: 999px;
+			background: var(--bg-page);
+			color: var(--txt-light);
+			font-weight: 600;
+			white-space: nowrap;
+			cursor: pointer;
+
+			&.realized{
+				border-color: var(--success);
+				background: var(--success-soft);
+				color: var(--success);
+			}
+			/* Locked while the orçamento is being edited. */
+			&:disabled{ opacity: 0.5; cursor: not-allowed; }
+
+			.service-quote-status-labels{
+				display: grid;
+
+				span{
+					grid-area: 1 / 1;
+					text-align: center;
+				}
+				.hidden{ visibility: hidden; }
+			}
+		}
+
+		flex-wrap: wrap;
+
+		/* No Editar (Orçamentado): keep the toggle on the right, where it
+		   sits beside Editar, instead of jumping to the left. */
+		.service-quote-edit-btns:empty + .service-quote-status{
+			margin-left: auto;
+		}
+
+		/* Editar, or Cancelar + Guardar while editing; pushed right of
+		   the search (or alone when there's no search, in view mode). */
+		.service-quote-edit-btns{
+			flex: 0 0 auto;
+			display: flex;
+			gap: var(--padding);
+			margin-left: auto;
+
+			&:empty{ display: none; }
+
+			button{
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: var(--small-padding);
+				height: calc(var(--line-height) + 2 * var(--padding) + 2px);
+				padding: 0 var(--big-padding);
+				border: 1px solid var(--border);
+				border-radius: 999px;
+				background: var(--bg-page);
+				color: var(--txt-dark);
+				font-weight: 600;
+				white-space: nowrap;
+				cursor: pointer;
+
+				&:hover:not(:disabled){ filter: brightness(0.95); }
+				&:disabled{ opacity: 0.5; cursor: not-allowed; }
+
+				&.is-edit{
+					border-color: #6366f1;
+					color: #6366f1;
+				}
+				&.is-confirm{
+					border-color: var(--success);
+					background: var(--success);
+					color: #fff;
+				}
+			}
+		}
+
+		/* The picker's search bar joins the toolbar row directly, sharing
+		   it with the Orçamentado toggle. */
+		.quote-product-picker{
+			display: contents;
+
+			.search-bar{
+				flex: 1;
+				min-width: 0;
+
+				/* Orçamentado: locked, greyed out. */
+				&.is-disabled{
+					opacity: 0.6;
+
+					input{ background: var(--bg-page); }
+				}
+			}
+		}
+	}
+
+	table{
+		border-radius: 5px;
+
+		/* 5 columns (no Aplicado): Quantidade is the second-to-last cell,
+		   which the shared table rules style like the button column. */
+		tr{
+			grid-template-columns: minmax(0, 2.5fr) repeat(2, minmax(0, 1fr)) minmax(0px,100px) minmax(0px,42.59px);
+		}
+		tr td.p-quantity:nth-last-child(2){
+			padding: 0;
+
+			input{
+				border: none;
+				text-align: center;
+			}
+		}
+	}
+
+	/* Note with edit / save / cancel pinned to its first line's right end
+	   (like the lab action notes). */
+	/* Neutral grey: stripe on the left, light tint and a note icon; white
+	   with a grey border while editing. */
+	.service-quote-note-field{
+		--note-color: #6b7280;
+		position: relative;
+
+		.service-quote-note-icon{
+			position: absolute;
+			top: calc(var(--padding) + 1px);
+			left: calc(4px + var(--padding));
+			line-height: var(--line-height);
+			color: var(--note-color);
+			pointer-events: none;
+		}
+		.service-quote-note{
+			padding-left: calc(4px + 2 * var(--padding) + 1em);
+			padding-right: calc(4rem + 2 * var(--padding));
+			border-color: color-mix(in srgb, var(--note-color) 35%, white);
+			border-left: 4px solid var(--note-color);
+			background: color-mix(in srgb, var(--note-color) 7%, white);
+			color: var(--txt-dark);
+			font-weight: 500;
+			border-top-left-radius: 0;
+			border-top-right-radius: 0;
+
+			&::placeholder{ color: var(--txt-muted); }
+		}
+		.service-quote-note.is-locked{
+			cursor: default;
+			&:focus{ outline: none; }
+		}
+		&.is-editing .service-quote-note{
+			background: var(--bg-card);
+			border-color: var(--note-color);
+			outline: 2px solid color-mix(in srgb, var(--note-color) 25%, transparent);
+		}
+	}
+	.service-quote-note-btns{
+		position: absolute;
+		top: 1px;
+		right: var(--small-padding);
+		display: inline-flex;
+		gap: var(--small-padding);
+
+		button{
+			width: 2rem;
+			padding: var(--padding) 0;
+			border: none;
+			background: none;
+			color: var(--txt-muted);
+			text-align: center;
+			cursor: pointer;
+
+			&:hover{ color: var(--txt-dark); }
+			&:disabled{ cursor: default; opacity: 0.6; }
+			&.is-confirm{ color: #16a34a; }
+			&.is-cancel:hover{ color: var(--danger); }
+		}
+	}
+	.service-quote-note{
+		width: 100%;
+		/* Height is set from JS (autoGrowQuoteNote): 1 line when empty,
+		   growing to 3 lines, then it scrolls. */
+		box-sizing: border-box;
+		line-height: var(--line-height);
+		max-height: calc(3 * var(--line-height) + 2 * var(--padding) + 2px);
+		padding: var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		resize: none;
+		overflow-y: auto;
+		font-size: var(--font-size);
+	}
+}
+
+/* Delete-orçamento confirmation — same backdrop/panel look as the
+   other modals (EventModal, product picker modal). */
+.quote-delete-backdrop,
+.quote-modal-backdrop{
+	position: fixed;
+	inset: 0;
+	z-index: 2000;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 15vh var(--big-padding) var(--big-padding);
+	background: rgba(15, 23, 42, 0.45);
+}
+.quote-delete-modal,
+.quote-modal{
+	display: flex;
+	flex-direction: column;
+	gap: var(--big-padding);
+	width: 100%;
+	max-width: 460px;
+	max-height: 70vh;
+	padding: var(--big-padding);
+	border-radius: 10px;
+	background: var(--bg-card);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+.quote-delete-header,
+.quote-modal-header{
+	display: flex;
+	gap: var(--big-padding);
+	align-items: flex-start;
+
+	>i{
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.5rem;
+		aspect-ratio: 1;
+		border-radius: 50%;
+		background: var(--danger-soft);
+		color: var(--danger);
+	}
+	h2{
+		font-size: var(--font-size-big);
+		color: var(--txt-dark);
+	}
+	p{
+		margin-top: var(--small-padding);
+		font-size: var(--font-size-small);
+		color: var(--txt-light);
+	}
+}
+.quote-delete-products{
+	list-style: none;
+	overflow-y: auto;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-page);
+
+	li{
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto auto;
+		gap: var(--big-padding);
+		align-items: center;
+		padding: var(--padding) var(--big-padding);
+		border-bottom: 1px solid var(--border-light);
+
+		&:last-child{ border-bottom: none; }
+	}
+	.name{
+		font-weight: 600;
+		color: var(--txt-dark);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.ref{
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+	}
+	.qty{
+		font-weight: 600;
+		color: var(--txt-light);
+	}
+}
+.quote-delete-buttons,
+.quote-modal-buttons{
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+		padding: var(--padding) var(--big-padding);
+		border-radius: 5px;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.danger{
+		background: var(--danger);
+		border-color: var(--danger);
+		color: white;
+
+		&:hover{ background: var(--danger-hover); }
+	}
+	.primary{
+		background: var(--primary);
+		border-color: var(--primary);
+		color: white;
+
+		&:hover{ background: var(--primary-hover); }
+	}
+}
+/* Empty-orçamento pop-up: wider so its three buttons fit side by side;
+   on a phone they stack, full width. */
+.quote-modal.quote-modal-wide{ max-width: 600px; }
+.quote-modal-buttons.quote-modal-buttons-three{
+	flex-wrap: nowrap;
+
+	button{
+		justify-content: center;
+		white-space: nowrap;
+	}
+}
+@media(max-width: 600px){
+	.quote-modal-buttons.quote-modal-buttons-three{
+		flex-direction: column;
+		align-items: stretch;
+	}
+}
+/* Layout D: the "Novo produto" pop-up's form. */
+.quote-modal-header{
+	align-items: center;
+
+	>i{
+		background: var(--primary-soft);
+		color: var(--primary);
+	}
+}
+.quote-add-modal-fields{
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: var(--padding) var(--big-padding);
+	align-items: center;
+
+	label{
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		color: var(--txt-light);
+	}
+	input, select{
+		height: calc(var(--line-height) + 2 * var(--padding));
+		padding: 0 var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-card);
+		font-size: var(--font-size);
+	}
+}
+
 .service-done-info-card{
 	.header{
 		border-bottom: 4px solid #e8aa2e;
@@ -300,6 +846,59 @@
 .service-applied-products-card{
 	.header{
 		border-bottom: 4px solid #ff8fff;
+	}
+}
+.service-quote-card{
+	.header .service-quote-badge{
+		margin-left: auto;
+		min-width: 2.5rem;
+		padding: 0 var(--padding);
+		border-radius: 999px;
+		background: var(--txt-muted);
+		color: white;
+		font-size: var(--font-size-small);
+		font-weight: 700;
+		line-height: var(--line-height);
+		text-align: center;
+
+		&.missing{ background: var(--danger); }
+		&.all-done{ background: var(--success); }
+	}
+	/* Hidden with the arrow: only the header shows, no empty body. */
+	&.collapsed > .body{ display: none; }
+	/* Mostrar/Ocultar orçamentos, as a small arrow beside the badge. */
+	.header .service-quote-toggle{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: var(--line-height);
+		aspect-ratio: 1;
+		padding: 0;
+		border: none;
+		border-radius: 5px;
+		background: transparent;
+		color: var(--txt-light);
+		cursor: pointer;
+
+	}
+	.header{
+		border-bottom: 4px solid #6366f1;
+	}
+	/* Clickable header (show / hide), with the arrow lighting up on hover. */
+	.header.is-toggle{
+		cursor: pointer;
+		user-select: none;
+		transition: background 0.15s;
+
+		&:hover{
+			background: var(--bg-page);
+
+			.service-quote-toggle{ background: var(--bg-page-dark); color: var(--txt-dark); }
+		}
+		&:focus-visible{
+			outline: 2px solid #6366f1;
+			outline-offset: -2px;
+		}
 	}
 }
 .service-user-times-card{
@@ -429,8 +1028,11 @@
 							height: 100%;
 							padding: var(--padding); 
 							cursor: pointer;
-							box-sizing: border-box; 
+							box-sizing: border-box;
 							justify-content: center;
+							&:has(input:disabled){
+								cursor: default;
+							}
 							input{
 								width:unset;
 								text-align: right;
@@ -633,6 +1235,129 @@
 		.p-cancel{
 			border-left: 1px dashed var(--border);
 		}
+	}
+	/* Phone: the tabs become a dropdown. Only the open orçamento's tab
+	   shows (full width, title still editable) with a ▼ that lists them all. */
+	.service-quote-card .body .service-quote{
+		.service-quote-tabs{
+			overflow: visible;
+		}
+		.service-quote-tab:not(.active){ display: none; }
+		.service-quote-tab.active{
+			flex: 1 1 auto;
+			min-width: 0;
+
+			input{ flex: 1 1 auto; width: 0; }
+			.service-quote-menu-toggle{ display: flex; }
+		}
+		.service-quote-menu{
+			display: flex;
+			flex-direction: column;
+			position: absolute;
+			top: 100%;
+			left: var(--padding);
+			right: var(--padding);
+			margin: 2px 0 0;
+			padding: var(--small-padding);
+			list-style: none;
+			background: var(--bg-card, #fff);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+			max-height: 50vh;
+			overflow-y: auto;
+
+			button{
+				--tab-type-color: #6366f1;
+				width: 100%;
+				display: flex;
+				align-items: center;
+				gap: var(--padding);
+				padding: var(--padding) var(--big-padding);
+				border: none;
+				border-left: 4px solid transparent;
+				border-radius: 5px;
+				background: transparent;
+				color: var(--txt-dark);
+				font-size: var(--font-size);
+				text-align: left;
+				cursor: pointer;
+
+				span{
+					min-width: 0;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+				}
+				&.realized{ --tab-type-color: var(--success); }
+				.service-quote-tab-status{ color: var(--tab-type-color); }
+				&:hover{ background: var(--bg-page); }
+				&:disabled{ opacity: 0.4; cursor: not-allowed; background: transparent; }
+				&.active{
+					border-left-color: var(--tab-type-color);
+					background: color-mix(in srgb, var(--tab-type-color) 15%, white);
+					font-weight: 700;
+				}
+			}
+		}
+	}
+	/* Phone: Orçamentado / Não orçamentado toggle on top, product search
+	   below it at full width. */
+	.service-quote-card .body .service-quote .service-quote-panel .service-quote-toolbar{
+		.service-quote-status{
+			order: -1;
+			flex: 1 1 100%;
+			justify-content: center;
+			border-radius: 5px;
+		}
+		.quote-product-picker .search-bar{ flex: 1 1 100%; }
+		.service-quote-edit-btns{
+			flex: 1 1 100%;
+			button{ flex: 1 1 0; }
+		}
+
+		/* Phone, not editing: Editar is a square icon-only button on the
+		   same row as the Orçamentado toggle, to its right. */
+		&.has-edit-btn{
+			.service-quote-status{
+				order: -2;
+				flex: 1 1 0;
+				min-width: 0;
+			}
+			.service-quote-edit-btns{
+				order: -1;
+				flex: 0 0 auto;
+				margin-left: 0;
+
+				button.is-edit{
+					flex: 0 0 auto;
+					width: calc(var(--line-height) + 2 * var(--padding) + 2px);
+					padding: 0;
+					border-radius: 8px;
+				}
+				.service-quote-edit-label{ display: none; }
+			}
+		}
+	}
+	/* Phone: the orçamento table has no Aplicado column. */
+	.service-quote-card .body .service-quote table tbody tr{
+		grid-template-columns: minmax(0, 1fr) 56px 44px;
+		grid-template-areas:
+			"name qty cancel"
+			"ref  qty cancel"
+			"type qty cancel";
+	}
+	/* Phone, not editing: no trash buttons, so no delete column. */
+	.service-quote-card .body .service-quote table.is-locked tbody tr{
+		grid-template-columns: minmax(0, 1fr) 56px;
+		grid-template-areas:
+			"name qty"
+			"ref  qty"
+			"type qty";
+
+		td.p-cancel{ display: none; }
+	}
+	.service-applied-products-card .body table tbody tr{
 
 		/* :not(:last-child) only to out-rank the desktop
 		   "td:not(:nth-last-child(2)):not(:last-child) *" centering rule. */

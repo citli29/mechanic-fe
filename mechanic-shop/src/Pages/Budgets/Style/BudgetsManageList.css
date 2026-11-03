@@ -1,0 +1,87 @@
+/* Gestão de Orçamentos. Sortable headers, action buttons and disabled
+   selects come from ServicesManageList.css (.services-manage-page). */
+
+/* Nº, Título, Serviço, Matrícula, Cliente, Produtos, Nota, Estado, actions */
+.budgets-manage-page table tr{
+	grid-template-columns:
+		56px minmax(0, 1.5fr) 80px minmax(0, 1fr) minmax(0, 1.1fr)
+		90px minmax(0, 1.4fr) 150px calc(3 * 42.59px);
+}
+
+/* Search takes the row, the two filters sit beside it (or wrap below). */
+.budgets-manage-page .budgets-manage-filters{
+	input{ flex: 3 1 260px; }
+	select{ flex: 1 1 170px; }
+}
+
+/* Read-only cells look like text until the row is edited. */
+.budgets-manage-page table td input:disabled{
+	opacity: 1;
+	color: var(--txt-dark);
+	-webkit-text-fill-color: var(--txt-dark);
+	text-overflow: ellipsis;
+}
+
+/* Disabled actions (delete while Orçamentado, others while a row is
+   being edited) look disabled. */
+.budgets-manage-page table td.actions button:disabled{
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
+@media(min-width: 651px){
+	.budgets-manage-page table td input{
+		text-align: center;
+	}
+}
+
+.budgets-manage-page .budgets-manage-finished{
+	margin-left: var(--small-padding);
+	color: var(--state-finished-dark);
+	font-size: var(--font-size-small);
+}
+
+.budgets-manage-page .budgets-manage-status{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--small-padding);
+	width: 100%;
+	padding: var(--small-padding) var(--padding);
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	background: var(--bg-page);
+	color: var(--txt-light);
+	font-weight: 600;
+	white-space: nowrap;
+	cursor: pointer;
+
+	&.is-done{
+		border-color: var(--success);
+		background: var(--success-soft);
+		color: var(--success);
+	}
+
+	/* Not editing: a plain status label, not a dimmed button. */
+	&:disabled{
+		opacity: 1;
+		cursor: default;
+	}
+}
+
+@media(min-width: 651px) and (max-width: 1100px){
+	.budgets-manage-page table tr{
+		grid-template-columns:
+			44px minmax(0, 1.4fr) 64px minmax(0, 1fr) minmax(0, 1fr)
+			64px minmax(0, 1.2fr) 130px calc(3 * 42.59px);
+	}
+}
+
+@media(max-width: 650px){
+	.budgets-manage-page table td input{
+		text-align: right;
+	}
+	.budgets-manage-page .budgets-manage-status{
+		width: auto;
+	}
+}

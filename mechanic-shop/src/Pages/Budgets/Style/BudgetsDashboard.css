@@ -1,0 +1,547 @@
+/* Orçamentos page. Tabs, groups and tables come from
+   ProductRequestsDashboard.css (.product-requests-page); only what's
+   different for orçamentos is here. */
+
+/* Nome, Referência, Tipo, Qt. */
+.budgets-page table tr{
+	grid-template-columns: repeat(3, 3fr) 1fr;
+}
+.budgets-page td.budget-qty{
+	justify-content: center;
+	text-align: center;
+}
+
+/* ===================== header ===================== */
+
+/* Every row of a block (header, note) uses the same left inset and the
+   same icon column, so icons line up under each other and so do texts. */
+.budgets-page .budget-group{
+	--budget-inset: var(--big-padding);
+	--budget-icon-col: 18px;
+	--budget-col-gap: var(--padding);
+}
+
+.budgets-page .budget-header{
+	padding: var(--padding) var(--padding) var(--padding) var(--budget-inset);
+	align-items: center;
+
+	.budget-header-text{
+		display: grid;
+		grid-template-columns: var(--budget-icon-col) minmax(0, 1fr);
+		column-gap: var(--budget-col-gap);
+		row-gap: 2px;
+		align-items: center;
+		min-width: 0;
+	}
+	.budget-status-icon{
+		grid-column: 1;
+		grid-row: 1;
+		justify-self: center;
+		color: var(--txt-muted);
+	}
+	.budget-title{
+		grid-column: 2;
+		display: flex;
+		align-items: center;
+		gap: var(--small-padding);
+		min-height: 28px;
+		font-size: var(--font-size);
+		color: var(--txt-dark);
+	}
+	.budget-context{
+		grid-column: 2;
+		font-weight: 600;
+		color: var(--txt-light);
+	}
+
+	.budget-header-actions{
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--padding);
+	}
+
+	/* The header's generic "button, a" rule makes square icon buttons;
+	   the status button is a normal one. */
+	.budget-status{
+		aspect-ratio: auto;
+		height: 32px;
+		gap: var(--small-padding);
+		padding: var(--small-padding) var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-card);
+		color: var(--txt-light);
+		font-weight: 600;
+		white-space: nowrap;
+		cursor: pointer;
+
+		&:hover:not(:disabled){ filter: brightness(0.95); }
+		&:disabled{ opacity: 0.6; cursor: wait; }
+
+		&.is-done{
+			border-color: var(--success);
+			background: var(--success-soft);
+			color: var(--success);
+		}
+
+		.budget-status-labels{
+			display: grid;
+
+			span{ grid-area: 1 / 1; text-align: center; }
+			.hidden{ visibility: hidden; }
+		}
+	}
+	/* Same height as the Orçamentado button beside it. */
+	.budget-open{
+		height: 32px;
+		width: 32px;
+	}
+}
+
+/* Orçamentado: green edge and icon. */
+.budgets-page .budget-group.is-done{
+	border-color: var(--success);
+
+	.budget-status-icon{ color: var(--success); }
+}
+
+/* Arrived from a notification (?highlight=). */
+.budgets-page .budget-group.is-highlighted{
+	outline: 2px solid var(--accent);
+	outline-offset: -1px;
+
+	.budget-header{ background: var(--accent-soft); }
+}
+
+/* ===================== body ===================== */
+
+.budgets-page .budget-no-products{
+	padding: var(--padding) var(--padding) var(--padding) calc(var(--budget-inset) + var(--budget-icon-col) + var(--budget-col-gap));
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+	font-style: italic;
+}
+
+
+/* ===================== un-mark confirmation ===================== */
+
+.budget-modal-backdrop{
+	position: fixed;
+	inset: 0;
+	z-index: 2000;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 15vh var(--big-padding) var(--big-padding);
+	background: rgba(15, 23, 42, 0.45);
+}
+.budget-modal{
+	display: flex;
+	flex-direction: column;
+	gap: var(--big-padding);
+	width: 100%;
+	max-width: 440px;
+	padding: var(--big-padding);
+	border-radius: 10px;
+	background: var(--bg-card);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+
+	h2{
+		font-size: var(--font-size-big);
+		color: var(--txt-dark);
+	}
+	p{
+		font-size: var(--font-size-small);
+		color: var(--txt-light);
+	}
+}
+.budget-modal-buttons{
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--padding);
+
+	button{
+		padding: var(--padding) var(--big-padding);
+		border-radius: 5px;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.primary{
+		background: var(--primary);
+		border-color: var(--primary);
+		color: #fff;
+	}
+}
+
+/* ===================== phone ===================== */
+
+@media(max-width: 650px){
+	/* Title + car on top, Orçamentado + open link below at full width. */
+	.budgets-page .budget-header{
+		flex-direction: column;
+		align-items: stretch;
+
+		.budget-header-actions{
+			.budget-status{ flex: 1 1 auto; justify-content: center; }
+		}
+	}
+	.budgets-page td.budget-qty{
+		justify-content: space-between;
+	}
+}
+
+/* ===================== filters + day groups ===================== */
+
+.budgets-page .budget-filters{
+	input{ flex: 3 1 260px; }
+	select{ flex: 1 1 160px; }
+}
+
+/* "Só por orçamentar" switch, in the filters row at the inputs' height. */
+.budgets-page .filters .budget-waiting{
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	height: calc(var(--line-height) + 2 * var(--padding) + 2px);
+	padding: 0 var(--padding) 0 var(--big-padding);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--bg-card);
+	color: var(--txt-light);
+	font-size: var(--font-size-small);
+	font-weight: 700;
+	white-space: nowrap;
+	cursor: pointer;
+	user-select: none;
+	transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+	&:hover{ background: var(--bg-page); }
+
+	/* The real checkbox stays for keyboard / screen readers, unseen. */
+	input{
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		min-width: 0;
+		flex: none;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.budget-switch{
+		position: relative;
+		flex: 0 0 auto;
+		width: 34px;
+		height: 20px;
+		border-radius: 999px;
+		background: var(--border);
+		transition: background 0.15s;
+
+		&::after{
+			content: "";
+			position: absolute;
+			top: 2px;
+			left: 2px;
+			width: 16px;
+			height: 16px;
+			border-radius: 50%;
+			background: #fff;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+			transition: transform 0.15s;
+		}
+	}
+	input:focus-visible + .budget-switch{
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	.budget-waiting-count{
+		min-width: 22px;
+		padding: 1px 7px;
+		border-radius: 999px;
+		background: var(--bg-page-dark);
+		color: var(--txt-light);
+		font-size: 11px;
+		text-align: center;
+
+		&.has-waiting{
+			background: var(--accent);
+			color: #fff;
+		}
+	}
+
+	&.is-checked{
+		border-color: var(--accent);
+		background: var(--accent-soft);
+		color: var(--txt-dark);
+
+		.budget-switch{ background: var(--accent); }
+		.budget-switch::after{ transform: translateX(14px); }
+	}
+}
+
+@media(max-width: 650px){
+	.budgets-page .filters .budget-waiting{
+		flex: 1 1 100%;
+		justify-content: flex-start;
+
+		.budget-waiting-count{ margin-left: auto; }
+	}
+}
+
+.budgets-page .budget-days{
+	display: flex;
+	flex-direction: column;
+	gap: calc(2 * var(--big-padding));
+}
+.budgets-page .budget-day{
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+}
+.budgets-page .budget-day-title{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	padding-bottom: var(--small-padding);
+	border-bottom: 1px solid var(--border);
+	font-size: var(--font-size);
+	font-weight: 800;
+	color: var(--txt-dark);
+}
+
+/* ===================== title / note editing ===================== */
+
+.budgets-page .budget-header .budget-title{
+	min-width: 0;
+
+	.budget-title-text{
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.budget-title-input{
+		flex: 1 1 auto;
+		min-width: 0;
+		max-width: 420px;
+		height: auto;
+		padding: 2px var(--padding);
+		border: 1px solid var(--primary);
+		border-radius: 5px;
+		background: var(--bg-card);
+		font: inherit;
+		font-weight: 700;
+		color: var(--txt-dark);
+	}
+}
+
+/* Small pen beside the title / note. The header's generic "button, a"
+   square rule is undone here. */
+.budgets-page .budget-pen{
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px !important;
+	aspect-ratio: auto !important;
+	padding: 0;
+	border: none;
+	border-radius: 5px;
+	background: transparent;
+	color: var(--txt-muted);
+	font-size: 12px;
+	cursor: pointer;
+
+	&:hover:not(:disabled){ background: var(--bg-page-dark); color: var(--primary); }
+	&:disabled{ opacity: 0.35; cursor: not-allowed; }
+}
+
+.budgets-page .budget-edit-btns{
+	flex: 0 0 auto;
+	display: flex;
+	gap: var(--small-padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px !important;
+		aspect-ratio: auto !important;
+		padding: 0;
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-card);
+		color: var(--txt-light);
+		cursor: pointer;
+
+		&:disabled{ opacity: 0.6; cursor: wait; }
+		&.is-confirm{
+			border-color: var(--success);
+			background: var(--success);
+			color: #fff;
+		}
+		&.is-cancel:hover:not(:disabled){ color: var(--danger); border-color: var(--danger); }
+	}
+}
+
+/* ===================== note ===================== */
+
+/* Note section under the products: icon | "NOTA" + text | Editar.
+   Same inset / icon column as the header above it. */
+.budgets-page .budget-note{
+	display: grid;
+	grid-template-columns: var(--budget-icon-col) minmax(0, 1fr) auto;
+	column-gap: var(--budget-col-gap);
+	align-items: start;
+	padding: var(--padding) var(--padding) var(--padding) var(--budget-inset);
+	border-top: 1px solid var(--border);
+	background: #fffdf3;
+
+	.budget-note-icon{
+		justify-self: center;
+		margin-top: 3px;
+		color: var(--accent-dark);
+	}
+	.budget-note-body{
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+	.budget-note-label{
+		font-size: 11px;
+		font-weight: 800;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--txt-muted);
+	}
+	.budget-note-text{
+		margin: 0;
+		font-size: var(--font-size-small);
+		line-height: 1.45;
+		color: var(--txt-dark);
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	/* "✎ Editar": quiet until hovered. */
+	.budget-note-edit{
+		display: flex;
+		align-items: center;
+		gap: var(--small-padding);
+		height: 28px;
+		padding: 0 var(--padding);
+		border: 1px solid transparent;
+		border-radius: 5px;
+		background: transparent;
+		color: var(--txt-light);
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		cursor: pointer;
+
+		i{ font-size: 11px; }
+		&:hover:not(:disabled){ border-color: var(--border); background: var(--bg-card); color: var(--primary); }
+		&:disabled{ opacity: 0.35; cursor: not-allowed; }
+	}
+
+	/* Editing: textarea under the label, Cancelar / Guardar under it. */
+	&.is-editing{
+		grid-template-columns: var(--budget-icon-col) minmax(0, 1fr);
+		background: var(--bg-card);
+
+		.budget-note-body{ gap: var(--small-padding); }
+
+		textarea{
+			width: 100%;
+			max-width: none;
+			min-height: 4.8em;
+			padding: var(--padding);
+			border: 1px solid var(--primary);
+			border-radius: 6px;
+			box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+			font: inherit;
+			font-size: var(--font-size-small);
+			line-height: 1.45;
+			color: var(--txt-dark);
+			resize: vertical;
+
+			&:focus{ outline: none; }
+		}
+	}
+	.budget-note-actions{
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: var(--padding);
+
+		.budget-note-hint{
+			margin-right: auto;
+			font-size: 12px;
+			color: var(--txt-muted);
+		}
+		button{
+			display: flex;
+			align-items: center;
+			gap: var(--small-padding);
+			height: 30px;
+			padding: 0 var(--big-padding);
+			border: 1px solid var(--border);
+			border-radius: 5px;
+			background: var(--bg-card);
+			color: var(--txt-dark);
+			font-size: var(--font-size-small);
+			font-weight: 600;
+			cursor: pointer;
+
+			&:disabled{ opacity: 0.6; cursor: wait; }
+			&.is-cancel:hover:not(:disabled){ background: var(--bg-page); }
+			&.is-confirm{
+				border-color: var(--success);
+				background: var(--success);
+				color: #fff;
+
+				&:hover:not(:disabled){ filter: brightness(0.95); }
+			}
+		}
+	}
+
+	/* No note yet: one quiet clickable row, "+" in the icon column. */
+	&.is-empty{
+		grid-template-columns: var(--budget-icon-col) minmax(0, 1fr);
+		align-items: center;
+		width: 100%;
+		height: auto;
+		min-height: 38px;
+		border-left: none;
+		border-right: none;
+		border-bottom: none;
+		border-radius: 0;
+		background: transparent;
+		color: var(--txt-light);
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		text-align: left;
+		cursor: pointer;
+
+		.budget-note-icon{
+			margin-top: 0;
+			font-size: 12px;
+			color: var(--txt-muted);
+		}
+		&:hover:not(:disabled){
+			background: var(--bg-page);
+			color: var(--primary);
+
+			.budget-note-icon{ color: var(--primary); }
+		}
+		&:disabled{ opacity: 0.5; cursor: not-allowed; }
+	}
+}
+
+@media(max-width: 650px){
+	.budgets-page .budget-note .budget-note-hint{ display: none; }
+}

@@ -6,6 +6,11 @@ import { claimNotificationDing, isNotificationSoundMuted, playNotificationSound,
 import { onPollResult, publishPollResult, usePollLeader } from "../../utils/pollLeader";
 import "./Navbar.css";
 
+// HIDDEN-ENCOMENDAS-NAV: the Encomendas link is hidden from the navbar for
+// now (user asked, 2026-11-03). Set to true to bring it back (link + badge);
+// the /products_requested page itself still works.
+const SHOW_ENCOMENDAS_NAV = false;
+
 // Each view cares about a different stage of the same Encomendas pipeline:
 // Oficina wants to know what's ready to use (delivered), Escritório wants to
 // know what still needs to be ordered. Filters match ProductRequestsDashboard's
@@ -13,6 +18,13 @@ import "./Navbar.css";
 const RELATED_PRODUCT_COUNTS = {
 	"Oficina": { filters: { is_delivered: "true" } },
 	"Escritório": { filters: { is_ordered: "false" } },
+};
+
+// Orçamentos still waiting to be quoted (same as the Orçamentos page's
+// "Só por orçamentar"). Only the escritório quotes them, so only that view
+// gets the badge.
+const RELATED_BUDGET_COUNTS = {
+	"Escritório": { filters: { done: "false" } },
 };
 
 export default function Navbar() {
@@ -25,6 +37,7 @@ export default function Navbar() {
 	const [soundMuted, setSoundMuted] = useState(() => isNotificationSoundMuted());
 	const [viewTypeName, setViewTypeName] = useState(null);
 	const [productCount, setProductCount] = useState(null);
+	const [budgetCount, setBudgetCount] = useState(null);
 
 	// Highest notification id already dinged for, per view-type scope (e.g.
 	// "3,5" for Geral+Oficina) — null until that scope's first real fetch, so
@@ -102,7 +115,8 @@ export default function Navbar() {
 	}, [notificationTypes]);
 
 	useEffect(() => {
-		const relatedProductInfo = viewTypeName ? RELATED_PRODUCT_COUNTS[viewTypeName] : null;
+		// No badge to show while the link is hidden (HIDDEN-ENCOMENDAS-NAV).
+		const relatedProductInfo = SHOW_ENCOMENDAS_NAV && viewTypeName ? RELATED_PRODUCT_COUNTS[viewTypeName] : null;
 
 		if (!relatedProductInfo) {
 			setProductCount(null);
@@ -127,6 +141,42 @@ export default function Navbar() {
 
 		const unsubscribe = onPollResult("product-count", (data) => {
 			if (isCurrent && data.viewTypeName === viewTypeName) setProductCount(data.count);
+		});
+
+		return () => {
+			isCurrent = false;
+			clearInterval(pollId);
+			unsubscribe();
+		};
+	}, [viewTypeName, isPollLeader]);
+
+	// Same polling as the Encomendas count above, for the Orçamentos badge.
+	useEffect(() => {
+		const relatedBudgetInfo = viewTypeName ? RELATED_BUDGET_COUNTS[viewTypeName] : null;
+
+		if (!relatedBudgetInfo) {
+			setBudgetCount(null);
+			return;
+		}
+
+		let isCurrent = true;
+
+		function loadBudgetCount() {
+			api.get("/budgets", { params: { ...relatedBudgetInfo.filters, p: 1, u: 1 } })
+				.then((res) => {
+					if (!isCurrent) return;
+					const count = res.data.pagination?.total ?? 0;
+					setBudgetCount(count);
+					publishPollResult("budget-count", { viewTypeName, count });
+				})
+				.catch(() => {});
+		}
+
+		loadBudgetCount();
+		const pollId = isPollLeader ? setInterval(loadBudgetCount, 5000) : null;
+
+		const unsubscribe = onPollResult("budget-count", (data) => {
+			if (isCurrent && data.viewTypeName === viewTypeName) setBudgetCount(data.count);
 		});
 
 		return () => {
@@ -388,14 +438,28 @@ export default function Navbar() {
 							Serviços
 						</NavLink>
 
+						{/* HIDDEN-ENCOMENDAS-NAV: see SHOW_ENCOMENDAS_NAV at the top. */}
+						{SHOW_ENCOMENDAS_NAV && (
+							<NavLink
+								to="/products_requested"
+								className={linkClass}
+								onClick={closeDropdown}
+							>
+								Encomendas
+								{productCount > 0 && (
+									<span className="navbar-badge">{productCount > 99 ? "99+" : productCount}</span>
+								)}
+							</NavLink>
+						)}
+
 						<NavLink
-							to="/products_requested"
+							to="/budgets"
 							className={linkClass}
 							onClick={closeDropdown}
 						>
-							Encomendas
-							{productCount > 0 && (
-								<span className="navbar-badge">{productCount > 99 ? "99+" : productCount}</span>
+							Orçamentos
+							{budgetCount > 0 && (
+								<span className="navbar-badge">{budgetCount > 99 ? "99+" : budgetCount}</span>
 							)}
 						</NavLink>
 
@@ -441,6 +505,14 @@ export default function Navbar() {
 								onClick={closeDropdown}
 							>
 								Gestão de Laboratório
+							</NavLink>
+
+							<NavLink
+								to="/budgets_manage"
+								className={linkClass}
+								onClick={closeDropdown}
+							>
+								Gestão de Orçamentos
 							</NavLink>
 
 							<div className="navbar-dropdown-divider" />

@@ -23,6 +23,8 @@ import ServicesManageList from "./Pages/Services/ServicesManageList";
 import ServicesCalendar from "./Pages/Services/ServicesCalendar";
 import ServicesNew from "./Pages/Services/ServicesNew";
 import ProductRequestsDashboard from "./Pages/ProductRequests/ProductRequestsDashboard";
+import BudgetsDashboard from "./Pages/Budgets/BudgetsDashboard";
+import BudgetsManageList from "./Pages/Budgets/BudgetsManageList";
 import NotificationsList from "./Pages/Notifications/NotificationsList";
 import UserTimeStats from "./Pages/UserTimes/UserTimeStats";
 import TimeRecordsList from "./Pages/UserTimes/TimeRecordsList";
@@ -77,6 +79,8 @@ function App() {
 					<Route path="/services_calendar" element={<ServicesCalendar/>} />
 					<Route path="/services/new" element={<ServicesNew/>} />
 					<Route path="/products_requested" element={<ProductRequestsDashboard/>} />
+					<Route path="/budgets" element={<BudgetsDashboard/>} />
+					<Route path="/budgets_manage" element={<BudgetsManageList/>} />
 					<Route path="/notifications" element={<NotificationsList/>} />
 					<Route path="/test" element={<TestPage/>} />
 
