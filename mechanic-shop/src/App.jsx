@@ -31,10 +31,13 @@ import NotificationsList from "./Pages/Notifications/NotificationsList";
 import UserTimeStats from "./Pages/UserTimes/UserTimeStats";
 import TimeRecordsList from "./Pages/UserTimes/TimeRecordsList";
 import LabManagement from "./Pages/Lab/LabManagement";
+import DevicesList from "./Pages/Devices/DevicesList";
 
 import "./style/variables.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ErrorToasts from "./components/ErrorToasts/ErrorToasts";
+import Login from "./Pages/Login/Login";
+import { getAuthToken, onAuthChange } from "./api/auth";
 
 function App() {
 
@@ -45,6 +48,21 @@ function App() {
 			}
 		});
 	},[]);
+
+	// Shop login: without a stored token only the login screen is shown.
+	// The token stays in localStorage, so this is a one-time step per device.
+	const [token, setToken] = useState(getAuthToken);
+	useEffect(() => onAuthChange(setToken), []);
+
+	if (!token) {
+		return (
+			<>
+			<ErrorToasts/>
+			<Login/>
+			</>
+		);
+	}
+
 	//<Route path="/services/:id" element={<ServicesShow />} />
 	return (
 
@@ -86,6 +104,7 @@ function App() {
 					<Route path="/budgets" element={<BudgetsDashboard/>} />
 					<Route path="/budgets_manage" element={<BudgetsManageList/>} />
 					<Route path="/notifications" element={<NotificationsList/>} />
+					<Route path="/devices" element={<DevicesList/>} />
 					<Route path="/test" element={<TestPage/>} />
 
 				</Route>

@@ -1,0 +1,47 @@
+.devices-page table tr{
+	grid-template-columns: minmax(0, 1fr) 120px 150px 110px 110px;
+}
+
+.devices-page .devices-hint{
+	margin: 0;
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+
+	i{ margin-right: 4px; }
+}
+
+.devices-page .device-name{
+	display: flex;
+	align-items: center;
+	gap: var(--padding);
+	min-width: 0;
+	max-width: 100%;
+}
+
+.devices-page .device-icon{
+	flex: none;
+	width: 18px;
+	text-align: center;
+	color: var(--txt-muted);
+}
+
+.devices-page .device-text{
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.devices-page .device-ua{
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+}
+
+.devices-page .device-current{
+	flex: none;
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--bg-page-dark);
+	color: var(--txt-muted);
+	font-size: var(--font-size-small);
+	font-weight: 600;
+}

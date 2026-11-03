@@ -26,6 +26,11 @@ const DELIVERED_PER_PAGE = 5;
 // true to bring both back.
 const SHOW_DELIVERED_PRODUCTS = false;
 
+// HIDDEN-HOME-PRODUCT-TILES: "Produtos Por Encomendar" + "Produtos A Aguardar
+// Entrega" counter tiles hidden from the landing page (user asked,
+// 2026-11-03). Set to true to bring them back.
+const SHOW_PRODUCT_REQUEST_TILES = false;
+
 export default function Home() {
 
 	const requestIdRef = useRef(0);
@@ -233,17 +238,22 @@ export default function Home() {
 								<div className="stat-label">Serviços Por Terminar</div>
 							</Link>
 
-							<div className="stat-card stat-card-static">
-								<i className="fa-solid fa-cart-shopping" />
-								<div className="stat-value">{productsToOrderTotal}</div>
-								<div className="stat-label">Produtos Por Encomendar</div>
-							</div>
+							{/* HIDDEN-HOME-PRODUCT-TILES */}
+							{SHOW_PRODUCT_REQUEST_TILES && (
+								<>
+									<div className="stat-card stat-card-static">
+										<i className="fa-solid fa-cart-shopping" />
+										<div className="stat-value">{productsToOrderTotal}</div>
+										<div className="stat-label">Produtos Por Encomendar</div>
+									</div>
 
-							<div className="stat-card stat-card-static">
-								<i className="fa-solid fa-truck" />
-								<div className="stat-value">{productsAwaitingDeliveryTotal}</div>
-								<div className="stat-label">Produtos A Aguardar Entrega</div>
-							</div>
+									<div className="stat-card stat-card-static">
+										<i className="fa-solid fa-truck" />
+										<div className="stat-value">{productsAwaitingDeliveryTotal}</div>
+										<div className="stat-label">Produtos A Aguardar Entrega</div>
+									</div>
+								</>
+							)}
 
 							{/* HIDDEN-HOME-DELIVERED */}
 							{SHOW_DELIVERED_PRODUCTS && (

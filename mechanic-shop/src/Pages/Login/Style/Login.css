@@ -1,0 +1,143 @@
+.login-page {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--big-padding);
+	background: var(--bg-page);
+	box-sizing: border-box;
+}
+
+.login-card {
+	width: 100%;
+	max-width: 380px;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 2rem 1.75rem;
+	background: var(--bg-card);
+	border: 1px solid var(--border-light);
+	border-radius: 14px;
+	box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+	box-sizing: border-box;
+}
+
+.login-brand {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+}
+
+.login-brand-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 10px;
+	background: var(--accent);
+	color: #fff;
+	font-weight: 700;
+}
+
+.login-brand-text {
+	font-size: var(--font-size-big);
+	font-weight: 600;
+	color: var(--txt-dark);
+}
+
+.login-title {
+	margin: 0.25rem 0 0;
+	font-size: 1.15rem;
+	font-weight: 500;
+	color: var(--txt-light);
+}
+
+.login-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	font-size: var(--font-size-small);
+	color: var(--txt-light);
+}
+
+.login-field input {
+	width: 100%;
+	padding: 0.65rem 0.75rem;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	font: inherit;
+	font-size: var(--font-size);
+	color: var(--txt-dark);
+	background: var(--bg-card);
+	box-sizing: border-box;
+}
+
+.login-field input:focus {
+	outline: none;
+	border-color: var(--border-focus);
+	box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.login-password {
+	position: relative;
+}
+
+.login-password input {
+	padding-right: 2.75rem;
+}
+
+.login-password-toggle {
+	position: absolute;
+	top: 50%;
+	right: 0.35rem;
+	transform: translateY(-50%);
+	width: 34px;
+	height: 34px;
+	border: none;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--txt-muted);
+	cursor: pointer;
+}
+
+.login-password-toggle:hover {
+	color: var(--txt-dark);
+	background: var(--bg-soft);
+}
+
+.login-error {
+	padding: 0.6rem 0.75rem;
+	border-radius: 8px;
+	background: var(--danger-soft);
+	color: var(--danger);
+	font-size: var(--font-size-small);
+}
+
+.login-submit {
+	padding: 0.75rem;
+	border: none;
+	border-radius: 8px;
+	background: var(--primary);
+	color: #fff;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.login-submit:hover:not(:disabled) {
+	background: var(--primary-hover);
+}
+
+.login-submit:disabled {
+	opacity: 0.7;
+	cursor: default;
+}
+
+.login-hint {
+	margin: 0;
+	text-align: center;
+	font-size: 0.8rem;
+	color: var(--txt-muted);
+}

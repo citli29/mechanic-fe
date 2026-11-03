@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import api from "../../api/axios";
+import { clearAuthToken } from "../../api/auth";
 import { getDefaultViewTypeId, getStoredViewTypeId, onNotificationsUpdated, onViewTypeChanged } from "../../utils/notificationView";
 import { claimNotificationDing, isNotificationSoundMuted, playNotificationSound, setNotificationSoundMuted, unlockNotificationSound } from "../../utils/notificationSound";
 import { onPollResult, publishPollResult, usePollLeader } from "../../utils/pollLeader";
@@ -358,6 +359,16 @@ export default function Navbar() {
 
 	}, []);
 
+	async function handleLogout() {
+		if (!window.confirm("Terminar sessão neste dispositivo?")) return;
+		try {
+			await api.post("/auth/logout");
+		} catch {
+			// logged out locally either way
+		}
+		clearAuthToken();
+	}
+
 	function closeDropdown() {
 
 		dropdownRef.current?.removeAttribute("open");
@@ -400,6 +411,16 @@ export default function Navbar() {
 							title={soundMuted ? "Ativar som de notificações" : "Silenciar som de notificações"}
 						>
 							<i className={`fa-solid ${soundMuted ? "fa-volume-xmark" : "fa-volume-high"}`} />
+						</button>
+
+						<button
+							type="button"
+							className="navbar-sound-toggle"
+							onClick={handleLogout}
+							aria-label="Terminar sessão"
+							title="Terminar sessão"
+						>
+							<i className="fa-solid fa-right-from-bracket" />
 						</button>
 
 						<NavLink
@@ -616,6 +637,16 @@ export default function Navbar() {
 								onClick={closeDropdown}
 							>
 								Eventos
+							</NavLink>
+
+							<div className="navbar-dropdown-divider" />
+
+							<NavLink
+								to="/devices"
+								className={linkClass}
+								onClick={closeDropdown}
+							>
+								Dispositivos
 							</NavLink>
 
 						</div>
