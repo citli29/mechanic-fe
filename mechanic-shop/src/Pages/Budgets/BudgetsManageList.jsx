@@ -185,7 +185,7 @@ export default function BudgetsManageList() {
 		const confirmed = await confirmDialog(
 			`Apagar o orçamento nº ${budget.id} "${budget.title || "Sem título"}" (serviço #${budget.service_id})` +
 			(products > 0 ? ` e os seus ${products} produto(s)` : "") +
-			"? Esta ação não pode ser desfeita."
+			"? Fica no Lixo durante 90 dias."
 		);
 
 		if (!confirmed) return;

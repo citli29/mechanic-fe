@@ -217,7 +217,7 @@ export default function ServicesManageList() {
 
 	async function deleteService(service) {
 		const confirmed = await confirmDialog(
-			`Apagar o serviço #${service.id} (${service.client_name || "s/cliente"})? Esta ação não pode ser desfeita.`
+			`Apagar o serviço #${service.id} (${service.client_name || "s/cliente"})? Fica no Lixo durante 90 dias.`
 		);
 
 		if (!confirmed) return;
