@@ -7,6 +7,7 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ModelsList.css";
 import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 const PER_PAGE = 10;
 
@@ -153,7 +154,7 @@ export default function ModelsList() {
 
 
 	async function deleteModel(id, name) {
-		const confirmed = window.confirm(`Apagar "${name}"?`);
+		const confirmed = await confirmDialog(`Apagar "${name}"?`);
 		if (!confirmed) return;
 
 		try {

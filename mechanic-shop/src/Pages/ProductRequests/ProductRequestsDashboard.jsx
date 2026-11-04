@@ -212,7 +212,7 @@ export default function ProductRequestsDashboard() {
 	async function updateItem(spr) {
 		try {
 			const response = await api.put(
-				`services/${spr.service_id}/products_requested/${spr.spr_id}`,
+				`services/${spr.service_id}/products_requested/${spr.id}`,
 				{
 					product_id: spr.product_id,
 					quantity: spr.quantity,

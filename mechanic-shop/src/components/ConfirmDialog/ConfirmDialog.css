@@ -1,0 +1,45 @@
+.confirm-dialog-backdrop{
+	position: fixed;
+	inset: 0;
+	z-index: 3000; /* above EventModal (2000) */
+
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+
+	padding: 20vh var(--big-padding) var(--big-padding);
+
+	background: rgba(15, 23, 42, 0.45);
+}
+
+.confirm-dialog{
+	display: flex;
+	flex-direction: column;
+	gap: var(--big-padding);
+
+	width: 100%;
+	max-width: 400px;
+
+	padding: var(--big-padding);
+	border-radius: 10px;
+	background: var(--bg-card);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+
+	p{
+		margin: 0;
+		color: var(--txt-dark);
+		white-space: pre-line;
+		overflow-wrap: anywhere;
+	}
+}
+
+.confirm-dialog-actions{
+	display: flex;
+	gap: var(--padding);
+
+	button{
+		flex: 1;
+		height: calc(var(--line-height) + 2 * var(--padding));
+		border-radius: 5px;
+	}
+}

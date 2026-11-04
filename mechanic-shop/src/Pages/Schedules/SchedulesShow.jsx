@@ -16,6 +16,8 @@ import "./Style/ScheduleForm.css";
 import "./Style/SchedulesShow.css";
 import "../Services/Style/ServicesNewLab.css";
 import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
+import { confirmDialog } from "../../utils/confirmDialog";
+import DateInput from "../../components/DateInput/DateInput";
 
 const emptyServiceForm = {
 	kms: "",
@@ -177,7 +179,7 @@ export default function SchedulesShow() {
 
 
 	async function deleteSchedule() {
-		if (!window.confirm("Apagar esta marcação?")) return;
+		if (!await confirmDialog("Apagar esta marcação?")) return;
 
 		try {
 			await api.delete(`/schedules/${id}`);
@@ -296,8 +298,7 @@ export default function SchedulesShow() {
 							<div className="field">
 								<label>Data</label>
 
-								<input
-									type="date"
+								<DateInput
 									value={editing.date || ""}
 									onChange={updateDate}
 									disabled={!isEditing}
@@ -440,8 +441,7 @@ export default function SchedulesShow() {
 								<div className="field">
 									<label>Entrada</label>
 
-									<input
-										type="date"
+									<DateInput
 										value={serviceForm.checkin}
 										onChange={(e) =>
 											setServiceForm((prev) => ({ ...prev, checkin: e.target.value }))

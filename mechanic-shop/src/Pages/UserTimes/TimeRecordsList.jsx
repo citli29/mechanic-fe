@@ -9,13 +9,14 @@ import "../Style/Card.css";
 import "./TimeRecordsList.css";
 import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
 import { pushSuccessToast } from "../../utils/errorToast";
+import { confirmDialog } from "../../utils/confirmDialog";
+import DateInput from "../../components/DateInput/DateInput";
 
 const PER_PAGE = 20;
 
 // Time entries (minutes on a day) and punches (start/end clock) of every
 // service, with filters, sorting and inline editing. Rows are edited and
-// deleted by their real id (/user_times/:id, /user_time_punches/:id) — not
-// by their position inside a service like the service page does.
+// deleted by their real id (/user_times/:id, /user_time_punches/:id).
 const TABS = [
 	{ key: "times", label: "Tempos", icon: "fa-hourglass-half", endpoint: "/user_times", listKey: "time_list" },
 	{ key: "punches", label: "Pontos", icon: "fa-stopwatch", endpoint: "/user_time_punches", listKey: "punch_list" },
@@ -251,7 +252,7 @@ export default function TimeRecordsList() {
 			? `o tempo de ${row.user_name} (${formatMinutes(row.minutes)}) de ${formatDate(row.date)}`
 			: `o ponto de ${row.user_name} de ${formatDate(row.date)}`;
 
-		if (!window.confirm(`Apagar ${what} do serviço #${row.service_id}?`)) return;
+		if (!await confirmDialog(`Apagar ${what} do serviço #${row.service_id}?`)) return;
 
 		try {
 			await api.delete(`${activeTab.endpoint}/${row.id}`);
@@ -271,7 +272,7 @@ export default function TimeRecordsList() {
 
 		return (
 			<>
-				<td data-label="Data"><input type="date" value={editing.date || ""} onChange={set("date")} /></td>
+				<td data-label="Data"><DateInput value={editing.date || ""} onChange={set("date")} /></td>
 				<td data-label="Serviço">
 					<input type="number" min="1" placeholder="Nº serviço" value={editing.service_id || ""} onChange={set("service_id")} />
 				</td>
@@ -390,11 +391,11 @@ export default function TimeRecordsList() {
 							<input placeholder="Cliente" value={filters.client_name} onChange={(e) => setFilter("client_name", e.target.value)} />
 							<label className="tr-date-filter">
 								De
-								<input type="date" value={filters.date_from} onChange={(e) => setFilter("date_from", e.target.value)} />
+								<DateInput value={filters.date_from} onChange={(e) => setFilter("date_from", e.target.value)} />
 							</label>
 							<label className="tr-date-filter">
 								Até
-								<input type="date" value={filters.date_to} onChange={(e) => setFilter("date_to", e.target.value)} />
+								<DateInput value={filters.date_to} onChange={(e) => setFilter("date_to", e.target.value)} />
 							</label>
 							<button className="options" onClick={() => setFilters(EMPTY_FILTERS)}>
 								<i className="fa-solid fa-broom" /> Limpar

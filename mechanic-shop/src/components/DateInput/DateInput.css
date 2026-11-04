@@ -1,0 +1,16 @@
+/* The real date input behind DateInput: invisible and out of the layout,
+   only there so showPicker() can open the browser's calendar. It sits where
+   it would have been in the flow, so the calendar opens next to the field.
+   !important because page styles like `.item-field input { width: 100% }`
+   also match it. */
+input.date-input-native{
+	position: absolute !important;
+	width: 1px !important;
+	min-width: 0 !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: 0 !important;
+	opacity: 0 !important;
+	pointer-events: none !important;
+}

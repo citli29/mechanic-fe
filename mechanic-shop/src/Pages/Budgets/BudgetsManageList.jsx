@@ -8,6 +8,7 @@ import "../Style/Card.css";
 import "../Services/Style/ServicesManageList.css";
 import "./Style/BudgetsManageList.css";
 import { pushSuccessToast } from "../../utils/errorToast";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 // Gestão de Orçamentos: every orçamento of every service in one table, like
 // Gestão de Serviços. Edit a row's title / note / Orçamentado in place, or
@@ -181,7 +182,7 @@ export default function BudgetsManageList() {
 		if (isDone(budget)) return;
 
 		const products = Number(budget.product_count) || 0;
-		const confirmed = window.confirm(
+		const confirmed = await confirmDialog(
 			`Apagar o orçamento nº ${budget.id} "${budget.title || "Sem título"}" (serviço #${budget.service_id})` +
 			(products > 0 ? ` e os seus ${products} produto(s)` : "") +
 			"? Esta ação não pode ser desfeita."

@@ -14,6 +14,7 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "../Cars/Style/CarCard.css";
 import "./Style/ClientShow.css";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 export default function ClientShow() {
 
@@ -119,7 +120,7 @@ export default function ClientShow() {
 
 	// The DB refuses a client with services, so the button is off then.
 	async function deleteClient() {
-		if (!window.confirm("Apagar este cliente?")) return;
+		if (!await confirmDialog("Apagar este cliente?")) return;
 
 		try {
 			await api.delete(`/clients/${id}`);

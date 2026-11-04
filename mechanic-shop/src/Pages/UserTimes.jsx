@@ -1,5 +1,7 @@
 import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
+import { confirmDialog } from "../utils/confirmDialog";
+import DateInput from "../components/DateInput/DateInput";
 
 export const UserTimes = ({
 	id,
@@ -135,6 +137,7 @@ export const UserTimes = ({
 	}
 	const handleActionDeleteUT = async (id) => {
 		if(disabled) return;
+		if(!await confirmDialog("Apagar este registo de tempo?")) return;
 		const ut = await deleteUserTimes(id);
 		if(ut)
 			loadUserTimes();
@@ -152,7 +155,7 @@ export const UserTimes = ({
 	}
 
 	const handleActionEditUT = async (ut) =>{
-		const u = await putUserTimes(ut.sut_id, ut.user_id, ut.minutes, ut.date);
+		const u = await putUserTimes(ut.id, ut.user_id, ut.minutes, ut.date);
 		if(u){
 			setIsEditing(null);
 			await loadUserTimes();
@@ -173,17 +176,17 @@ export const UserTimes = ({
 				</thead>
 				<tbody>
 					{userTimes.map((ut) =>(
-						<tr key={ut.sut_id}>
+						<tr key={ut.id}>
 							<td className="ut-name">
 								<select 
 									name="ut-user" 
 									id="ut-user" 
-									disabled={isEditing!==ut.sut_id}
+									disabled={isEditing!==ut.id}
 									value={ut.user_id}
 									onChange={
 										(e) => {
 											const u = e.target.value;
-											setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id ? 
+											setUserTimes(prev => prev.map((_ut) => ut.id === _ut.id ? 
 												{ ..._ut, user_id:u}
 												: _ut
 											));
@@ -201,40 +204,39 @@ export const UserTimes = ({
 									<input 
 										type="number" min="1" max="1440" 
 										value={ut?.minutes??""} 
-										disabled={isEditing!==ut.sut_id}
+										disabled={isEditing!==ut.id}
 										onChange={(e) => {
 											const mins = e.target.value.trim()!==""?Number(e.target.value):"";
-											setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id ? 
+											setUserTimes(prev => prev.map((_ut) => ut.id === _ut.id ? 
 												{ ..._ut, minutes:mins }
 												: _ut
 											));
 										}}
 									/>
 							</td>
-							<td className={`ut-date ${isEditing===ut.sut_id?"is-editing":""}`}> 
-								<input 
-									type="date"
+							<td className={`ut-date ${isEditing===ut.id?"is-editing":""}`}> 
+								<DateInput
 									value={ut?.date??""} 
-									disabled={isEditing!==ut.sut_id}
+									disabled={isEditing!==ut.id}
 									onChange={(e) => {
 										const date = formatDate(e.target.value);
-										setUserTimes(prev => prev.map((_ut) => ut.sut_id === _ut.sut_id? 
+										setUserTimes(prev => prev.map((_ut) => ut.id === _ut.id? 
 											{ ..._ut, date:date }
 											: _ut
 										));
 									}}/>
 							</td>
-							{isEditing!==ut.sut_id &&(
+							{isEditing!==ut.id &&(
 								<>
 									<td className="p-edit">
-										<button className="options" disabled={disabled} onClick={()=>handleClickStartEditing(ut.sut_id)}><i className="fa-solid fa-pencil"/></button>
+										<button className="options" disabled={disabled} onClick={()=>handleClickStartEditing(ut.id)}><i className="fa-solid fa-pencil"/></button>
 									</td>
 									<td className="p-cancel">
-										<button className="cancel" disabled={disabled} onClick={()=>handleActionDeleteUT(ut.sut_id)}><i className="fa-solid fa-trash"/></button>
+										<button className="cancel" disabled={disabled} onClick={()=>handleActionDeleteUT(ut.id)}><i className="fa-solid fa-trash"/></button>
 									</td>
 								</>
 							)}
-							{isEditing===ut.sut_id &&(
+							{isEditing===ut.id &&(
 								<>
 									<td className="p-edit-confirm">
 										<button className="confirm" onClick={()=>handleActionEditUT(ut)}><i className="fa-solid fa-check"/></button>
@@ -286,8 +288,7 @@ export const UserTimes = ({
 								/>
 							</td>
 							<td className="ut-date is-editing"> 
-								<input 
-									type="date"
+								<DateInput
 									value={newUserTime?.date??""} 
 									onChange={(e) => {
 										const date = formatDate(e.target.value);

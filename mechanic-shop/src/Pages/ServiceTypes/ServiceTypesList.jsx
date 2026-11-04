@@ -7,6 +7,7 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ServiceTypesList.css";
 import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 const PER_PAGE = 10;
 
@@ -111,7 +112,7 @@ export default function ServiceTypesList() {
 
 
 	async function deleteServiceType(id) {
-		const confirmed = window.confirm("Apagar este tipo de serviço?");
+		const confirmed = await confirmDialog("Apagar este tipo de serviço?");
 		if (!confirmed) return;
 
 		try {

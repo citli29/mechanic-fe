@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout/Layout";
-import TestPage from "./components/TestPage";
 import ServiceShow2 from "./Pages/ServiceShow";
 import Home from "./Pages/Home/Home";
 import MakesList from "./Pages/Makes/MakesList";
@@ -32,10 +31,13 @@ import UserTimeStats from "./Pages/UserTimes/UserTimeStats";
 import TimeRecordsList from "./Pages/UserTimes/TimeRecordsList";
 import LabManagement from "./Pages/Lab/LabManagement";
 import DevicesList from "./Pages/Devices/DevicesList";
+import BackupsList from "./Pages/Backups/BackupsList";
+import TrashList from "./Pages/Trash/TrashList";
 
 import "./style/variables.css";
 import { useEffect, useState } from "react";
 import ErrorToasts from "./components/ErrorToasts/ErrorToasts";
+import ConfirmDialog from "./components/ConfirmDialog/ConfirmDialog";
 import Login from "./Pages/Login/Login";
 import { getAuthToken, onAuthChange } from "./api/auth";
 
@@ -58,6 +60,7 @@ function App() {
 		return (
 			<>
 			<ErrorToasts/>
+		<ConfirmDialog/>
 			<Login/>
 			</>
 		);
@@ -68,6 +71,7 @@ function App() {
 
 		<>
 		<ErrorToasts/>
+		<ConfirmDialog/>
 		<BrowserRouter>
 
 			<Routes>
@@ -105,7 +109,8 @@ function App() {
 					<Route path="/budgets_manage" element={<BudgetsManageList/>} />
 					<Route path="/notifications" element={<NotificationsList/>} />
 					<Route path="/devices" element={<DevicesList/>} />
-					<Route path="/test" element={<TestPage/>} />
+					<Route path="/backups" element={<BackupsList/>} />
+					<Route path="/trash" element={<TrashList/>} />
 
 				</Route>
 

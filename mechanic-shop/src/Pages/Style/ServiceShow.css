@@ -2068,3 +2068,111 @@
 .service-signed-info-card .text-entry.no-label textarea{
 	padding-top: var(--padding);
 }
+
+/* Orçamento products as cards on phones (see .quote-items in ServiceShow.jsx).
+   On wider screens the table is used and this list stays hidden. */
+.service-quote-panel .quote-items{ display: none; }
+
+@media(max-width: 750px){
+	.service-quote-panel > table{ display: none; }
+
+	.service-quote-panel .quote-items{
+		display: flex;
+		flex-direction: column;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		overflow: hidden;
+		background: var(--bg-page);
+
+		&:empty{ display: none; }
+	}
+
+	.service-quote-panel .quote-item{
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--small-padding) var(--padding);
+		padding: var(--padding) calc(var(--padding) * 1.5);
+		border-bottom: 1px solid var(--border);
+
+		&:last-child{ border-bottom: none; }
+	}
+
+	.service-quote-panel .quote-item-text{
+		flex: 1 1 0;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.service-quote-panel .quote-item-name{
+		font-weight: 600;
+		color: var(--txt-dark);
+		overflow-wrap: anywhere;
+	}
+
+	.service-quote-panel .quote-item-meta{
+		font-size: var(--font-size-small);
+		color: var(--txt-muted);
+		overflow-wrap: anywhere;
+	}
+
+	.service-quote-panel .quote-item-qty{
+		flex: none;
+		padding: 2px 10px;
+		border-radius: 999px;
+		background: var(--bg-page-dark);
+		color: var(--txt-dark);
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
+	/* Editing: the stepper gets its own line, on the right. */
+	.service-quote-panel .quote-items.is-editing .quote-item-text{ flex-basis: 100%; }
+
+	.service-quote-panel .quote-item-stepper{
+		flex: none;
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: var(--small-padding);
+
+		button{
+			width: 40px;
+			height: 40px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			background: var(--bg-card);
+			color: var(--txt-dark);
+		}
+
+		button.is-delete{
+			color: var(--danger);
+			border-color: var(--danger-soft);
+			background: var(--danger-soft);
+		}
+
+		input{
+			width: 52px;
+			height: 40px;
+			text-align: center;
+			font-weight: 600;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			background: var(--bg-card);
+			-moz-appearance: textfield;
+			appearance: textfield;
+
+			&::-webkit-outer-spin-button,
+			&::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+
+			&.is-invalid{ border-color: var(--danger); }
+		}
+	}
+}

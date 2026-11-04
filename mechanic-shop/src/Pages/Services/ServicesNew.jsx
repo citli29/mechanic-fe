@@ -12,6 +12,7 @@ import "../Style/Card.css";
 import "../Schedules/Style/ScheduleForm.css";
 import "./Style/ServicesNewLab.css";
 import { pushErrorToast } from "../../utils/errorToast";
+import DateInput from "../../components/DateInput/DateInput";
 
 function oneLine(text) {
 	return (text || "").replace(/\s+/g, " ").trim();
@@ -292,9 +293,8 @@ export default function ServicesNew() {
 
 							<div className="field">
 								<label htmlFor="checkin">Entrada</label>
-								<input
+								<DateInput
 									id="checkin"
-									type="date"
 									name="checkin"
 									value={editing.checkin}
 									onChange={updateField}
@@ -304,9 +304,8 @@ export default function ServicesNew() {
 
 							<div className="field">
 								<label htmlFor="checkout-predict">Prev. Saída</label>
-								<input
+								<DateInput
 									id="checkout-predict"
-									type="date"
 									name="checkout_predict"
 									value={editing.checkout_predict}
 									onChange={updateField}

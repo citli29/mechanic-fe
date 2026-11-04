@@ -3,6 +3,7 @@ import api from "./../api/axios";
 import "./Style/Page.css";
 import "./Style/ProductsRequested.css";
 import { pushSuccessToast } from "../utils/errorToast";
+import { confirmDialog } from "../utils/confirmDialog";
 
 export const ProductsRequested = ({
 	id,
@@ -129,7 +130,7 @@ export const ProductsRequested = ({
 	const updatePR = async (pr) => {
 		try {
 			const response = await api.put(
-				`services/${id}/products_requested/${pr.spr_id}`,
+				`services/${id}/products_requested/${pr.id}`,
 				{
 					product_id: pr.product_id,
 					quantity: pr.quantity,
@@ -230,7 +231,7 @@ export const ProductsRequested = ({
 	const handleInputChange = (pr) => {
 		setProductsRequested(prev =>
 			prev.map(item =>
-				item.spr_id === pr.spr_id
+				item.id === pr.id
 					? pr
 					: item
 			)
@@ -239,6 +240,7 @@ export const ProductsRequested = ({
 
 	const handleActionDeletePR = async (id) => {
 		if(disabled) return;
+		if(!await confirmDialog("Apagar este pedido de produto?")) return;
 		const pr = await deletePR(id);
 		loadPRs();
 	}
@@ -269,7 +271,7 @@ export const ProductsRequested = ({
 		const ap = await postAP(newAp);
 		if(ap) {
 			onProductForwarded();
-			await deletePR(pr.spr_id);
+			await deletePR(pr.id);
 		}
 
 		loadPRs();
@@ -359,7 +361,7 @@ export const ProductsRequested = ({
 				</thead>
 				<tbody>
 					{productsRequested.map((pr) =>(
-						<tr key={pr.spr_id}>
+						<tr key={pr.id}>
 							<td id="pr-p-name">{pr.product_name}</td>
 							<td id="pr-p-ref">{pr.product_reference}</td>
 							<td id="pr-p-p-t">{pr.product_type_name}</td>
@@ -381,7 +383,7 @@ export const ProductsRequested = ({
 								</span>
 							</td>
 							<td id="pr-for"><button className="confirm" disabled={disabled}><i className="fa-solid fa-forward" onClick={(e)=>handleActionForwardPR(pr)}/></button></td>
-							<td id="pr-delete"><button className="cancel" disabled={disabled}><i className="fa-solid fa-trash" onClick={(e)=>handleActionDeletePR(pr.spr_id)}/></button></td>
+							<td id="pr-delete"><button className="cancel" disabled={disabled}><i className="fa-solid fa-trash" onClick={(e)=>handleActionDeletePR(pr.id)}/></button></td>
 						</tr>
 					))}
 				</tbody>

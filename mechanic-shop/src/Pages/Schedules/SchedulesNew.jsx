@@ -15,6 +15,7 @@ import "./Style/ScheduleForm.css";
 import "./Style/SchedulesNew.css";
 import "../Services/Style/ServicesNewLab.css";
 import { pushSuccessToast } from "../../utils/errorToast";
+import DateInput from "../../components/DateInput/DateInput";
 
 export default function SchedulesNew() {
 
@@ -293,8 +294,7 @@ export default function SchedulesNew() {
 									<div className="field">
 										<label>Data</label>
 
-										<input
-											type="date"
+										<DateInput
 											name="date"
 											value={editing.date || ""}
 											onChange={updateDate}

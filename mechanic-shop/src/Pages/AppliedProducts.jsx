@@ -2,6 +2,7 @@ import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
 import "./Style/Page.css";
 import { pushSuccessToast } from "../utils/errorToast";
+import { confirmDialog } from "../utils/confirmDialog";
 
 export const AppliedProducts = ({
 	id,
@@ -136,7 +137,7 @@ export const AppliedProducts = ({
 	const updateAP = async (ap) => {
 		try {
 			const response = await api.put(
-				`services/${id}/applied_products/${ap.sap_id}`,
+				`services/${id}/applied_products/${ap.id}`,
 				{
 					product_id: ap.product_id,
 					quantity: ap.quantity,
@@ -230,6 +231,7 @@ export const AppliedProducts = ({
 
 	const handleActionDeleteAP = async (id) => {
 		if(disabled) return;
+		if(!await confirmDialog("Apagar este produto aplicado?")) return;
 		const ap = await deleteAP(id);
 		loadAPs();
 	}
@@ -316,7 +318,7 @@ export const AppliedProducts = ({
 				</thead>
 				<tbody>
 					{appliedProducts.map((ap) =>(
-						<tr key={ap.sap_id}>
+						<tr key={ap.id}>
 							<td className="p-name">
 								<label htmlFor="product-name" className="magic-label">Nome:</label>
 								<input disabled type="text" value={ap?.product_name??""}/>
@@ -334,7 +336,7 @@ export const AppliedProducts = ({
 								<input type="number" value={ap?.quantity??""} disabled={disabled} onChange={async (e) => {
 									if(disabled) return;
 									const quantity = e.target.value.trim()!==""?Number(e.target.value):"";
-									setAppliedProducts(prev => prev.map((_ap) => ap.sap_id === _ap.sap_id ?
+									setAppliedProducts(prev => prev.map((_ap) => ap.id === _ap.id ?
 										{ ..._ap, quantity }:
 										_ap
 									));
@@ -353,7 +355,7 @@ export const AppliedProducts = ({
 										onChange={async (e) => {
 											if(disabled) return;
 											const is_applied = e.target.checked ? "1" : "0";
-											setAppliedProducts(prev => prev.map((_ap) => ap.sap_id === _ap.sap_id ? 
+											setAppliedProducts(prev => prev.map((_ap) => ap.id === _ap.id ? 
 												{ ..._ap, is_applied }: 
 												_ap
 											));
@@ -363,7 +365,7 @@ export const AppliedProducts = ({
 								</label>
 							</td>
 							<td className="p-cancel">
-								<button className="cancel" disabled={disabled} onClick={()=>handleActionDeleteAP(ap.sap_id)}><i className="fa-solid fa-trash"/></button>
+								<button className="cancel" disabled={disabled} onClick={()=>handleActionDeleteAP(ap.id)}><i className="fa-solid fa-trash"/></button>
 							</td>
 						</tr>
 					))}

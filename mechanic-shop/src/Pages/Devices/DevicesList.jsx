@@ -6,6 +6,7 @@ import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/DevicesList.css";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 const NAME_MAX = 60;
 
@@ -111,7 +112,7 @@ export default function DevicesList() {
 		const message = device.is_current
 			? "Este é o dispositivo que está a usar. Terminar sessão aqui?"
 			: "Terminar a sessão deste dispositivo? Vai ter de iniciar sessão outra vez nele.";
-		if (!window.confirm(message)) return;
+		if (!await confirmDialog(message, { confirmLabel: "Terminar sessão" })) return;
 
 		try {
 			const res = await api.delete(`/auth/devices/${device.id}`);

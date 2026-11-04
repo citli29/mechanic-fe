@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import { useUrlParam } from "../../utils/useUrlState";
-import { getDefaultViewTypeId, getStoredViewTypeId, notifyNotificationsUpdated, onNotificationsUpdated, setStoredViewTypeId } from "../../utils/notificationView";
+import { getDefaultViewTypeId, getStoredViewTypeId, getViewLock, notifyNotificationsUpdated, onNotificationsUpdated, onViewTypeChanged, setStoredViewTypeId } from "../../utils/notificationView";
 import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
 
 import "../Style/Page.css";
@@ -159,6 +159,13 @@ export default function NotificationsList() {
 
 	const [notificationTypes, setNotificationTypes] = useState([]);
 	const [viewTypeId, setViewTypeId] = useState(getStoredViewTypeId());
+	// Locked accounts (oficina / escritorio logins) can't switch view.
+	const [viewLocked, setViewLocked] = useState(Boolean(getViewLock()));
+
+	useEffect(() => onViewTypeChanged(() => {
+		setViewTypeId(getStoredViewTypeId());
+		setViewLocked(Boolean(getViewLock()));
+	}), []);
 
 	const [page, setPage] = useUrlParam("p", 1);
 	const [totalPages, setTotalPages] = useState(1);
@@ -461,6 +468,8 @@ export default function NotificationsList() {
 								id="notif-view-type"
 								value={effectiveViewTypeId}
 								onChange={(e) => selectViewType(e.target.value)}
+								disabled={viewLocked}
+								title={viewLocked ? "Esta sessão está fixa nesta vista." : undefined}
 							>
 								{selectableTypes.map((type) => (
 									<option key={type.id} value={type.id}>

@@ -9,6 +9,7 @@ import "../Style/Card.css";
 import "./Style/ServicesManageList.css";
 import { getServiceTypeAccent } from "../../utils/serviceTypeColor";
 import { pushSuccessToast } from "../../utils/errorToast";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 const PER_PAGE = 10;
 
@@ -215,7 +216,7 @@ export default function ServicesManageList() {
 
 
 	async function deleteService(service) {
-		const confirmed = window.confirm(
+		const confirmed = await confirmDialog(
 			`Apagar o serviço #${service.id} (${service.client_name || "s/cliente"})? Esta ação não pode ser desfeita.`
 		);
 

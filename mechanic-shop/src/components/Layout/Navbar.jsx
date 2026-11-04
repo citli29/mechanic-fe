@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import api from "../../api/axios";
 import { clearAuthToken } from "../../api/auth";
-import { getDefaultViewTypeId, getStoredViewTypeId, onNotificationsUpdated, onViewTypeChanged } from "../../utils/notificationView";
+import { getIsAdmin, onAccountChanged, setIsAdmin } from "../../api/account";
+import { getDefaultViewTypeId, getStoredViewTypeId, onNotificationsUpdated, onViewTypeChanged, setViewLock } from "../../utils/notificationView";
 import { claimNotificationDing, isNotificationSoundMuted, playNotificationSound, setNotificationSoundMuted, unlockNotificationSound } from "../../utils/notificationSound";
 import { onPollResult, publishPollResult, usePollLeader } from "../../utils/pollLeader";
 import "./Navbar.css";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 // HIDDEN-ENCOMENDAS-NAV: the Encomendas link is hidden from the navbar for
 // now (user asked, 2026-11-03). Set to true to bring it back (link + badge);
@@ -37,6 +39,7 @@ export default function Navbar() {
 	const [notificationTypes, setNotificationTypes] = useState([]);
 	const [soundMuted, setSoundMuted] = useState(() => isNotificationSoundMuted());
 	const [viewTypeName, setViewTypeName] = useState(null);
+	const [isAdmin, setIsAdminState] = useState(getIsAdmin);
 	const [productCount, setProductCount] = useState(null);
 	const [budgetCount, setBudgetCount] = useState(null);
 
@@ -81,6 +84,19 @@ export default function Navbar() {
 			document.removeEventListener("touchstart", unlock);
 		};
 	}, []);
+
+	// Refresh the account's notification-view lock, so devices that were
+	// already logged in (or an account whose lock changed) pick it up.
+	useEffect(() => {
+		api.get("/auth/me")
+			.then((res) => {
+				setViewLock(res.data.notification_type_id);
+				setIsAdmin(res.data.is_admin);
+			})
+			.catch(() => {});
+	}, []);
+
+	useEffect(() => onAccountChanged(() => setIsAdminState(getIsAdmin())), []);
 
 	useEffect(() => {
 		api.get("/notification_types")
@@ -360,7 +376,7 @@ export default function Navbar() {
 	}, []);
 
 	async function handleLogout() {
-		if (!window.confirm("Terminar sessão neste dispositivo?")) return;
+		if (!await confirmDialog("Terminar sessão neste dispositivo?", { confirmLabel: "Terminar sessão" })) return;
 		try {
 			await api.post("/auth/logout");
 		} catch {
@@ -648,6 +664,27 @@ export default function Navbar() {
 							>
 								Dispositivos
 							</NavLink>
+
+							{/* Admin login only (the API checks it too). */}
+							{isAdmin && (
+								<NavLink
+									to="/backups"
+									className={linkClass}
+									onClick={closeDropdown}
+								>
+									Cópias de Segurança
+								</NavLink>
+							)}
+
+							{isAdmin && (
+								<NavLink
+									to="/trash"
+									className={linkClass}
+									onClick={closeDropdown}
+								>
+									Lixo
+								</NavLink>
+							)}
 
 						</div>
 

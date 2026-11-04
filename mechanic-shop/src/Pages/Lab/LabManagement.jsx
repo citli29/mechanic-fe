@@ -6,6 +6,7 @@ import "../Style/Card.css";
 import "./Style/LabManagement.css";
 import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 import LabInstanceSearch from "./LabInstanceSearch";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 const PER_PAGE = 10;
 const ICON_CLASS_PLACEHOLDER = "fa-solid fa-flask";
@@ -183,7 +184,7 @@ export default function LabManagement() {
 
 
 	async function deleteItem(id) {
-		const confirmed = window.confirm("Apagar este item?");
+		const confirmed = await confirmDialog("Apagar este item?");
 		if (!confirmed) return;
 
 		try {
@@ -293,7 +294,7 @@ export default function LabManagement() {
 
 
 	async function deleteProperty(id) {
-		const confirmed = window.confirm("Apagar esta propriedade?");
+		const confirmed = await confirmDialog("Apagar esta propriedade?");
 		if (!confirmed) return;
 
 		try {
@@ -386,7 +387,7 @@ export default function LabManagement() {
 
 
 	async function deleteAction(id) {
-		const confirmed = window.confirm("Apagar esta ação?");
+		const confirmed = await confirmDialog("Apagar esta ação?");
 		if (!confirmed) return;
 
 		try {
@@ -486,7 +487,7 @@ export default function LabManagement() {
 
 
 	async function deleteValue(id) {
-		const confirmed = window.confirm("Apagar este valor?");
+		const confirmed = await confirmDialog("Apagar este valor?");
 		if (!confirmed) return;
 
 		try {

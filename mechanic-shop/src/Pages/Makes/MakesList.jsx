@@ -7,6 +7,7 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/MakesList.css";
 import { pushSuccessToast } from "../../utils/errorToast";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 const PER_PAGE = 10;
 
@@ -123,7 +124,7 @@ export default function MakesList() {
 
 
 	async function deleteMake(id, name) {
-		const confirmed = window.confirm(`Apagar "${name}"?`);
+		const confirmed = await confirmDialog(`Apagar "${name}"?`);
 		if (!confirmed) return;
 
 		try {

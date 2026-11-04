@@ -8,6 +8,7 @@ import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge
 import "../../components/Pickers/style/Picker.css";
 import "./Style/ServiceHeader.css";
 import "./Style/ServiceClusterTabs.css";
+import DateInput from "../../components/DateInput/DateInput";
 
 // Fields the service_associations INSERT trigger syncs across every member
 // of a cluster — associating an existing service that already has its own
@@ -676,9 +677,8 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 
 							<div className="service-cluster-add-textfield">
 								<label htmlFor="service-cluster-add-checkin">Entrada</label>
-								<input
+								<DateInput
 									id="service-cluster-add-checkin"
-									type="date"
 									value={newCheckin}
 									disabled={creating}
 									onChange={(e) => setNewCheckin(e.target.value)}
@@ -687,9 +687,8 @@ function AddToClusterModal({ currentId, clusterTabs, excludedIds, onClose, onLin
 
 							<div className="service-cluster-add-textfield">
 								<label htmlFor="service-cluster-add-checkout-predict">Prev. Saída</label>
-								<input
+								<DateInput
 									id="service-cluster-add-checkout-predict"
-									type="date"
 									value={newCheckoutPredict}
 									disabled={creating}
 									onChange={(e) => setNewCheckoutPredict(e.target.value)}

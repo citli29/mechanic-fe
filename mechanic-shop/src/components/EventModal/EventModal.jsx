@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 import "./EventModal.css";
+import { confirmDialog } from "../../utils/confirmDialog";
+import DateInput from "../DateInput/DateInput";
 
 function validate(data) {
 	if (!data.title.trim()) {
@@ -78,7 +80,7 @@ export default function EventModal({ event, onClose, onSaved }) {
 	}
 
 	async function handleDelete() {
-		const confirmed = window.confirm("Apagar este evento?");
+		const confirmed = await confirmDialog("Apagar este evento?");
 		if (!confirmed) return;
 
 		setDeleting(true);
@@ -131,9 +133,8 @@ export default function EventModal({ event, onClose, onSaved }) {
 				<div className="event-modal-row">
 					<div className="event-modal-field">
 						<label htmlFor="event-modal-start-date">Data de Início</label>
-						<input
+						<DateInput
 							id="event-modal-start-date"
-							type="date"
 							name="start_date"
 							value={editing.start_date || ""}
 							disabled={busy}
@@ -157,9 +158,8 @@ export default function EventModal({ event, onClose, onSaved }) {
 				<div className="event-modal-row">
 					<div className="event-modal-field">
 						<label htmlFor="event-modal-end-date">Data de Fim</label>
-						<input
+						<DateInput
 							id="event-modal-end-date"
-							type="date"
 							name="end_date"
 							value={editing.end_date || ""}
 							disabled={busy}

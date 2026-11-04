@@ -1,0 +1,283 @@
+.trash-page table tr{
+	grid-template-columns: 44px 210px minmax(0, 1fr) 150px 96px;
+}
+
+.trash-page .trash-hint{
+	margin: 0;
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+
+	i{ margin-right: 4px; }
+}
+
+.trash-page .trash-filters{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--padding);
+
+	select, input[type="search"]{
+		padding: var(--padding);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-page);
+		color: var(--txt-dark);
+	}
+
+	input[type="search"]{
+		flex: 1;
+		min-width: 160px;
+	}
+}
+
+.trash-page .trash-restore-selected{
+	display: flex;
+	align-items: center;
+	gap: var(--small-padding);
+	margin-left: auto;
+	padding: var(--padding) var(--big-padding);
+	border-radius: 5px;
+	font-weight: 600;
+
+	&:disabled{
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+}
+
+.trash-page .trash-type{
+	display: inline-block;
+	max-width: 100%;
+	padding: 2px 10px;
+	border-radius: 999px;
+	background: var(--primary-soft);
+	color: var(--primary);
+	font-size: var(--font-size-small);
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.trash-page tr.is-restored{
+	opacity: 0.6;
+}
+
+.trash-page .trash-when{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+}
+
+.trash-page .trash-restored,
+.trash-modal .trash-restored{
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--success-soft);
+	color: var(--success);
+	font-size: var(--font-size-small);
+	font-weight: 600;
+}
+
+/* Empty / nothing found */
+.trash-page .trash-empty-state{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--small-padding);
+	padding: calc(3 * var(--big-padding)) var(--big-padding);
+	border: 1px dashed var(--border);
+	border-radius: 8px;
+	text-align: center;
+	color: var(--txt-muted);
+
+	i{
+		font-size: 2.2rem;
+		margin-bottom: var(--small-padding);
+		opacity: 0.7;
+	}
+
+	h2{
+		margin: 0;
+		font-size: var(--font-size-big);
+		color: var(--txt-dark);
+	}
+
+	p{
+		margin: 0;
+		font-size: var(--font-size-small);
+	}
+}
+
+/* Details window */
+.trash-modal-backdrop{
+	position: fixed;
+	inset: 0;
+	z-index: 2000;
+
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+
+	padding: 10vh var(--big-padding) var(--big-padding);
+	overflow-y: auto;
+
+	background: rgba(15, 23, 42, 0.45);
+}
+
+.trash-modal{
+	display: flex;
+	flex-direction: column;
+	gap: var(--big-padding);
+
+	width: 100%;
+	max-width: 560px;
+
+	padding: var(--big-padding);
+	border-radius: 10px;
+	background: var(--bg-card);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+
+.trash-modal-header{
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--big-padding);
+
+	> div{
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--small-padding);
+		min-width: 0;
+	}
+
+	h2{
+		margin: 0;
+		font-size: var(--font-size-big);
+		color: var(--txt-dark);
+		overflow-wrap: anywhere;
+	}
+
+	button{
+		flex: none;
+		aspect-ratio: 1;
+		width: 32px;
+		border-radius: 5px;
+	}
+}
+
+.trash-modal .trash-type{
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 999px;
+	background: var(--primary-soft);
+	color: var(--primary);
+	font-size: var(--font-size-small);
+	font-weight: 600;
+}
+
+.trash-modal-meta{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--padding);
+	margin: 0;
+	font-size: var(--font-size-small);
+	color: var(--txt-muted);
+
+	> i{ margin-right: -4px; }
+}
+
+.trash-fields{
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--padding) var(--big-padding);
+	margin: 0;
+	padding: var(--big-padding);
+	border-radius: 8px;
+	background: var(--bg-page);
+}
+
+.trash-field{
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+
+	&.is-wide{ grid-column: 1 / -1; }
+
+	dt{
+		font-size: var(--font-size-small);
+		font-weight: 600;
+		color: var(--txt-muted);
+	}
+
+	dd{
+		margin: 0;
+		color: var(--txt-dark);
+		overflow-wrap: anywhere;
+		white-space: pre-wrap;
+
+		&.is-empty{ color: var(--txt-muted); }
+	}
+}
+
+.trash-modal-actions{
+	display: flex;
+	gap: var(--padding);
+
+	button{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--small-padding);
+		flex: 1;
+		height: calc(var(--line-height) + 2 * var(--padding));
+		border-radius: 5px;
+		font-weight: 600;
+
+		&:disabled{
+			cursor: not-allowed;
+			opacity: 0.6;
+		}
+	}
+}
+
+@media (max-width: 650px){
+	.trash-fields{ grid-template-columns: minmax(0, 1fr); }
+}
+
+.trash-page .trash-pages{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--big-padding);
+	color: var(--txt-muted);
+
+	button{
+		width: 36px;
+		height: 32px;
+		border-radius: 5px;
+	}
+}
+
+/* Card.css styles every `td input` as a text field; keep these real checkboxes. */
+.trash-page table input[type="checkbox"]{
+	appearance: auto;
+	width: 16px;
+	height: 16px;
+	min-width: 0;
+	padding: 0;
+	margin: 0;
+	border: none;
+	cursor: pointer;
+	accent-color: var(--primary);
+
+	&:disabled{ cursor: not-allowed; }
+}

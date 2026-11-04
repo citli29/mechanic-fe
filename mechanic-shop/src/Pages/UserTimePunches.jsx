@@ -1,5 +1,6 @@
 import { useEffect, useState , useRef} from "react";
 import api from "./../api/axios";
+import { confirmDialog } from "../utils/confirmDialog";
 
 export const UserTimePunches = ({
 	id,
@@ -127,13 +128,14 @@ export const UserTimePunches = ({
 		const utp = await postUserTimePunches(newUserTimePunch.user_id, newUserTimePunch.date);
 		if(utp){
 			setIsAddingUTP(false);
-			await handleActionStartTime(utp.sutp_id);
+			await handleActionStartTime(utp.id);
 			loadUserTimePunches();
 		}
 	}
 
 	const handleActionDeleteUTP = async (id) => {
 		if(disabled) return;
+		if(!await confirmDialog("Apagar este ponto?")) return;
 		const utp = await deleteUserTimePunches(id);
 		if(utp)
 			loadUserTimePunches();
@@ -153,7 +155,7 @@ export const UserTimePunches = ({
 
 	const handleActionEditUTP = async (ut) =>{
 		if(disabled) return;
-		const u = await putUserTimePunches(ut.sutp_id, ut.user_id, ut.date);
+		const u = await putUserTimePunches(ut.id, ut.user_id, ut.date);
 		if(u){
 			setIsEditing(null);
 			await loadUserTimePunches();
@@ -204,17 +206,17 @@ export const UserTimePunches = ({
 				</thead>
 				<tbody>
 					{userTimePunches.map((utp) =>(
-						<tr key={utp.sutp_id}>
+						<tr key={utp.id}>
 							<td className="utp-name">
 								<select 
 									name="ut-user" 
 									id="ut-user" 
-									disabled={isEditing!==utp.sutp_id}
+									disabled={isEditing!==utp.id}
 									value={utp.user_id}
 									onChange={
 										async (e) => {
 											const u = e.target.value;
-											setUserTimePunches(prev => prev.map((_utp) => utp.sut_id === _utp.sut_id ? 
+											setUserTimePunches(prev => prev.map((_utp) => utp.id === _utp.id ? 
 												{ ..._utp, user_id:u}
 												: _utp
 											));
@@ -236,7 +238,7 @@ export const UserTimePunches = ({
 								<td className="utp-time-start">
 										<button
 											disabled={disabled}
-											onClick={(e)=>handleActionStartTime(utp.sutp_id)}
+											onClick={(e)=>handleActionStartTime(utp.id)}
 										><i className="fa-solid fa-hourglass-start"/></button></td>
 							)}
 							{(utp.hours_f!==null && utp.minutes_f!==null)?(
@@ -245,21 +247,21 @@ export const UserTimePunches = ({
 								<td className="utp-time-end">
 										<button
 											disabled={disabled || (utp.hours_s===null && utp.minutes_s===null)}
-											onClick={(e)=>handleActionStopTime(utp.sutp_id)}
+											onClick={(e)=>handleActionStopTime(utp.id)}
 									><i className="fa-solid fa-hourglass-end"/></button></td>
 							)}
 							<td className="utp-minutes just-text"><span>{utp?.minutes!==null ?utp?.minutes + "m" :"-"}</span></td>
-							{isEditing!==utp.sutp_id &&(
+							{isEditing!==utp.id &&(
 								<>
 									<td className="utp-edit">
-										<button className="options" disabled={disabled} onClick={()=>handleClickStartEditing(utp.sutp_id)}><i className="fa-solid fa-pencil"/></button>
+										<button className="options" disabled={disabled} onClick={()=>handleClickStartEditing(utp.id)}><i className="fa-solid fa-pencil"/></button>
 									</td>
 									<td className="utp-cancel">
-										<button className="cancel" disabled={disabled} onClick={(e)=>handleActionDeleteUTP(utp.sutp_id)}><i className="fa-solid fa-trash"/></button>
+										<button className="cancel" disabled={disabled} onClick={(e)=>handleActionDeleteUTP(utp.id)}><i className="fa-solid fa-trash"/></button>
 									</td>
 								</>
 							)}
-							{isEditing===utp.sutp_id &&(
+							{isEditing===utp.id &&(
 								<>
 									<td className="utp-edit-confirm">
 										<button className="confirm" onClick={()=>handleActionEditUTP(utp)}><i className="fa-solid fa-check"/></button>

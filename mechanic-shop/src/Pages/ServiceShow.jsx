@@ -1323,7 +1323,7 @@ export default function ServiceShow2() {
 										<thead>
 											<tr>
 												<th>Nome</th>
-												<th>Referencia</th>
+												<th>Referência</th>
 												<th>Tipo de Produto</th>
 												<th>Quantidade</th>
 												<th></th>
@@ -1337,7 +1337,7 @@ export default function ServiceShow2() {
 														<input disabled type="text" placeholder="-" value={p.name}/>
 													</td>
 													<td className="p-reference">
-														<label className="magic-label">Referencia:</label>
+														<label className="magic-label">Referência:</label>
 														<input disabled type="text" placeholder="-" value={p.reference}/>
 													</td>
 													<td className="p-p-type">
@@ -1357,6 +1357,54 @@ export default function ServiceShow2() {
 											))}
 										</tbody>
 									</table>
+									{/* Phone (≤750px): the table above is hidden and the products
+									   show as simple cards instead. Editing uses a −/+ stepper; at
+									   quantity 1 the − turns into the trash. */}
+									<ul className={`quote-items ${isEditingQuote ? "is-editing" : ""}`}>
+										{shownQuote.products.map((p) => {
+											const meta = [p.reference, p.type]
+												.filter(v => v != null && String(v).trim() !== "" && String(v).trim() !== "-")
+												.join(" · ");
+											const qty = p.quantity;
+											const hasQty = Number.isInteger(qty) && qty >= 1;
+											return (
+												<li key={p.id} className="quote-item">
+													<div className="quote-item-text">
+														<span className="quote-item-name">{p.name || "-"}</span>
+														{meta && <span className="quote-item-meta">{meta}</span>}
+													</div>
+													{isEditingQuote ? (
+														<div className="quote-item-stepper">
+															{hasQty && qty > 1 ? (
+																<button type="button" aria-label="Menos um" title="Menos um" onClick={()=>updateQuoteProduct(p.id, "quantity", qty - 1)}>
+																	<i className="fa-solid fa-minus"/>
+																</button>
+															) : (
+																<button type="button" className="is-delete" aria-label="Remover produto" title="Remover produto" onClick={()=>handleClickDeleteQuoteProduct(p.id)}>
+																	<i className="fa-solid fa-trash"/>
+																</button>
+															)}
+															<input
+																type="number"
+																inputMode="numeric"
+																min="1"
+																step="1"
+																aria-label="Quantidade"
+																className={hasQty ? "" : "is-invalid"}
+																value={qty}
+																onChange={(e)=>updateQuoteProduct(p.id, "quantity", e.target.value.trim()!=="" ? Number(e.target.value) : "")}
+															/>
+															<button type="button" aria-label="Mais um" title="Mais um" onClick={()=>updateQuoteProduct(p.id, "quantity", hasQty ? qty + 1 : 1)}>
+																<i className="fa-solid fa-plus"/>
+															</button>
+														</div>
+													) : (
+														<span className="quote-item-qty" title="Quantidade">× {qty}</span>
+													)}
+												</li>
+											);
+										})}
+									</ul>
 									<div className={`service-quote-note-field ${isEditingQuoteNote ? "is-editing" : ""}`}>
 										<i className="fa-solid fa-note-sticky service-quote-note-icon"/>
 										<textarea
@@ -1577,7 +1625,7 @@ export default function ServiceShow2() {
 							</thead>
 							<tbody>
 								{aps.map((ap) => (
-									<tr key={ap.sap_id}>
+									<tr key={ap.id}>
 										<td>{ap.product_name || "-"}</td>
 										<td>{ap.product_reference || "-"}</td>
 										<td>{ap.product_type_name || "-"}</td>

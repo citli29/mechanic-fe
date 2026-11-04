@@ -3,6 +3,7 @@ import "./Style/ServiceHeader.css";
 import api from "./../../api/axios";
 import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
 import { pushErrorToast } from "../../utils/errorToast";
+import DateInput from "../../components/DateInput/DateInput";
 
 function oneLine(text) {
 	return (text || "").replace(/\s+/g, " ").trim();
@@ -175,8 +176,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 
 				<div className="item-field" id="checkin">
 					<label htmlFor="service-checkin">Entrada</label>
-					<input
-						type="date"
+					<DateInput
 						id="service-checkin"
 						value={service.checkin??""}
 						onChange={(e) => onServiceChange("checkin", e.target.value) }
@@ -186,8 +186,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 
 				<div className="item-field" id="checkout-predict">
 					<label htmlFor="service-checkout-predict"> Prev. Saída </label>
-					<input
-						type="date"
+					<DateInput
 						id="service-checkout-predict"
 						value={service.checkout_predict??""}
 						onChange={(e) => onServiceChange( "checkout_predict", e.target.value) }
@@ -252,8 +251,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 
 				<div className="item-field" id="checkout">
 					<label htmlFor="service-checkout"> Saída</label>
-					<input
-						type="date"
+					<DateInput
 						id="service-checkout"
 						value={service.checkout??""}
 						onChange={(e) => handleCheckoutChange(e.target.value) }
@@ -341,8 +339,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 
 					<div className="item-field" id="checkin">
 						<label htmlFor="service-checkin">Entrada</label>
-						<input
-							type="date"
+						<DateInput
 							id="service-checkin"
 							value={service.checkin??""}
 							onChange={(e) => onServiceChange("checkin", e.target.value) }
@@ -352,8 +349,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 
 					<div className="item-field" id="checkout-predict">
 						<label htmlFor="service-checkout-predict"> Prev. Saída </label>
-						<input
-							type="date"
+						<DateInput
 							id="service-checkout-predict"
 							value={service.checkout_predict??""}
 							onChange={(e) => onServiceChange( "checkout_predict", e.target.value) }
@@ -400,8 +396,7 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 
 					<div className="item-field" id="checkout">
 						<label htmlFor="service-checkout"> Saída</label>
-						<input
-							type="date"
+						<DateInput
 							id="service-checkout"
 							value={service.checkout??""}
 							onChange={(e) => handleCheckoutChange(e.target.value) }

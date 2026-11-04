@@ -10,6 +10,7 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/CarShow.css";
 import { pushSuccessToast } from "../../utils/errorToast";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 export default function CarShow() {
 
@@ -71,7 +72,7 @@ export default function CarShow() {
 	// Moved here from the Viaturas list. The DB also refuses a car with
 	// services, so the button is off while the history isn't empty.
 	async function deleteCar() {
-		if (!window.confirm("Apagar esta viatura?")) return;
+		if (!await confirmDialog("Apagar esta viatura?")) return;
 
 		try {
 			await api.delete(`/cars/${id}`);

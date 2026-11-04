@@ -7,6 +7,8 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/EventsList.css";
 import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
+import { confirmDialog } from "../../utils/confirmDialog";
+import DateInput from "../../components/DateInput/DateInput";
 
 const PER_PAGE = 15;
 
@@ -198,7 +200,7 @@ export default function EventsList() {
 
 
 	async function deleteEvent(id) {
-		const confirmed = window.confirm("Apagar este evento?");
+		const confirmed = await confirmDialog("Apagar este evento?");
 		if (!confirmed) return;
 
 		try {
@@ -311,8 +313,7 @@ export default function EventsList() {
 										</td>
 
 										<td data-label="Início">
-											<input
-												type="date"
+											<DateInput
 												name="start_date"
 												value={newEvent.start_date}
 												onChange={updateNewEvent}
@@ -326,8 +327,7 @@ export default function EventsList() {
 										</td>
 
 										<td data-label="Fim">
-											<input
-												type="date"
+											<DateInput
 												name="end_date"
 												value={newEvent.end_date}
 												onChange={updateNewEvent}
@@ -393,8 +393,7 @@ export default function EventsList() {
 												</td>
 
 												<td data-label="Início">
-													<input
-														type="date"
+													<DateInput
 														name="start_date"
 														value={editing.start_date || ""}
 														onChange={updateEdit}
@@ -408,8 +407,7 @@ export default function EventsList() {
 												</td>
 
 												<td data-label="Fim">
-													<input
-														type="date"
+													<DateInput
 														name="end_date"
 														value={editing.end_date || ""}
 														onChange={updateEdit}

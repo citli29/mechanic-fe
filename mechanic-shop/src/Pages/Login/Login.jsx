@@ -1,6 +1,8 @@
 import { useState } from "react";
 import api from "../../api/axios";
 import { setAuthToken } from "../../api/auth";
+import { setViewLock } from "../../utils/notificationView";
+import { setIsAdmin } from "../../api/account";
 import "./Style/Login.css";
 
 export default function Login() {
@@ -20,6 +22,8 @@ export default function Login() {
 
 		try {
 			const res = await api.post("/auth/login", { username, password });
+			setViewLock(res.data.notification_type_id);
+			setIsAdmin(res.data.is_admin);
 			setAuthToken(res.data.token);
 		} catch (err) {
 			setError(

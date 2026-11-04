@@ -8,6 +8,7 @@ import { hasLabSummary } from "../../utils/labSummary";
 import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/UserShow.css";
+import DateInput from "../../components/DateInput/DateInput";
 
 function formatDate(date) {
 	const y = date.getFullYear();
@@ -172,8 +173,7 @@ export default function UserShow() {
 								<i className="fa-solid fa-chevron-left" />
 							</button>
 
-							<input
-								type="date"
+							<DateInput
 								value={selectedDate}
 								onChange={(e) => setSelectedDate(e.target.value)}
 							/>

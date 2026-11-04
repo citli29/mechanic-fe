@@ -8,6 +8,7 @@ import "../Style/Page.css";
 import "../Style/Card.css";
 import "./Style/ProductsList.css";
 import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 const PER_PAGE = 10;
 
@@ -220,7 +221,7 @@ export default function ProductsList() {
 
 
 	async function deleteProduct(id) {
-		const confirmed = window.confirm("Apagar este produto?");
+		const confirmed = await confirmDialog("Apagar este produto?");
 		if (!confirmed) return;
 
 		try {
