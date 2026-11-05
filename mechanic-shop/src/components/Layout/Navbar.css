@@ -406,6 +406,16 @@
 	border: 1px solid #e5e7eb;
 	border-radius: 12px;
 	box-shadow: 0 16px 35px rgba(0, 0, 0, 0.2);
+
+	/* Long menu: scroll inside it instead of running off the screen. */
+	max-height: calc(100dvh - 90px);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+/* Don't let the items squash when the menu scrolls. */
+.navbar-dropdown-menu > * {
+	flex-shrink: 0;
 }
 
 .navbar-dropdown-menu .navbar-link {

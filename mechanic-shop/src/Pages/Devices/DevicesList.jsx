@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { clearAuthToken } from "../../api/auth";
+import { getIsAdmin, onAccountChanged } from "../../api/account";
 import { pushErrorToast, pushSuccessToast } from "../../utils/errorToast";
 
 import "../Style/Page.css";
@@ -10,7 +11,8 @@ import { confirmDialog } from "../../utils/confirmDialog";
 
 const NAME_MAX = 60;
 
-// Every PC/tablet/phone logged in with the shop login. Removing one logs it
+// Admin only (the API refuses everyone else): every PC/tablet/phone logged
+// in with any shop account, with the account it uses. Removing one logs it
 // out at its next request; removing this one is the same as "Terminar sessão".
 // A lost or stolen device can be cut off here without changing the password.
 
@@ -77,8 +79,14 @@ export default function DevicesList() {
 	const [devices, setDevices] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [editing, setEditing] = useState(null); // { id, name }
+	const [isAdmin, setIsAdminState] = useState(getIsAdmin);
 
-	useEffect(() => { loadDevices(); }, []);
+	useEffect(() => onAccountChanged(() => setIsAdminState(getIsAdmin())), []);
+
+	useEffect(() => {
+		if (isAdmin) loadDevices();
+		else setLoading(false);
+	}, [isAdmin]);
 
 	async function loadDevices() {
 		try {
@@ -144,6 +152,24 @@ export default function DevicesList() {
 		);
 	}
 
+	if (!isAdmin) {
+		return (
+			<div className="page devices-page">
+				<div className="content">
+					<div className="card">
+						<div className="header">
+							<i className="fa-solid fa-lock" />
+							<h1>Dispositivos</h1>
+						</div>
+						<div className="body">
+							<p className="devices-hint">Só a conta de administrador tem acesso a esta página.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="page devices-page">
 			<div className="content">
@@ -166,6 +192,7 @@ export default function DevicesList() {
 							<thead>
 								<tr>
 									<th>Dispositivo</th>
+									<th>Conta</th>
 									<th>IP</th>
 									<th>Sessão iniciada</th>
 									<th>Último uso</th>
@@ -194,6 +221,7 @@ export default function DevicesList() {
 													}}
 												/>
 											</td>
+											<td data-label="Conta">{device.username}</td>
 											<td data-label="IP">{device.ip || "-"}</td>
 											<td data-label="Sessão iniciada">{formatDateTime(device.created_at)}</td>
 											<td data-label="Último uso">{lastUsedLabel(device.last_used_at)}</td>
@@ -209,6 +237,7 @@ export default function DevicesList() {
 									) : (
 										<tr key={device.id} className={device.is_current ? "is-current" : ""}>
 											<td data-label="Dispositivo">{renderDevice(device)}</td>
+											<td data-label="Conta">{device.username}</td>
 											<td data-label="IP">{device.ip || "-"}</td>
 											<td data-label="Sessão iniciada">{formatDateTime(device.created_at)}</td>
 											<td data-label="Último uso">{lastUsedLabel(device.last_used_at)}</td>

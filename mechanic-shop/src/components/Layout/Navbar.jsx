@@ -43,6 +43,11 @@ export default function Navbar() {
 	const [productCount, setProductCount] = useState(null);
 	const [budgetCount, setBudgetCount] = useState(null);
 
+	// The oficina login (locked to the Oficina view, not admin) gets a shorter
+	// Gestão menu: no Gestão de Serviços / Laboratório / Orçamentos, no Eventos.
+	// Admin keeps everything even while viewing as Oficina.
+	const isOficinaAccount = !isAdmin && viewTypeName === "Oficina";
+
 	// Highest notification id already dinged for, per view-type scope (e.g.
 	// "3,5" for Geral+Oficina) — null until that scope's first real fetch, so
 	// we never "ding" just for loading the page with pre-existing unread
@@ -549,39 +554,49 @@ export default function Navbar() {
 								</NavLink>
 							</div>
 
-							<div className="navbar-dropdown-divider" />
+							{/* That whole section is hidden for the oficina login. */}
+							{!isOficinaAccount && <div className="navbar-dropdown-divider" />}
 
-							<NavLink
-								to="/services_manage"
-								className={linkClass}
-								onClick={closeDropdown}
-							>
-								Gestão de Serviços
-							</NavLink>
+							{!isOficinaAccount && (
+								<NavLink
+									to="/services_manage"
+									className={linkClass}
+									onClick={closeDropdown}
+								>
+									Gestão de Serviços
+								</NavLink>
+							)}
 
-							<NavLink
-								to="/lab_management"
-								className={linkClass}
-								onClick={closeDropdown}
-							>
-								Gestão de Laboratório
-							</NavLink>
+							{!isOficinaAccount && (
+								<NavLink
+									to="/lab_management"
+									className={linkClass}
+									onClick={closeDropdown}
+								>
+									Gestão de Laboratório
+								</NavLink>
+							)}
 
-							<NavLink
-								to="/budgets_manage"
-								className={linkClass}
-								onClick={closeDropdown}
-							>
-								Gestão de Orçamentos
-							</NavLink>
+							{!isOficinaAccount && (
+								<NavLink
+									to="/budgets_manage"
+									className={linkClass}
+									onClick={closeDropdown}
+								>
+									Gestão de Orçamentos
+								</NavLink>
+							)}
 
-							<NavLink
-								to="/service_types"
-								className={linkClass}
-								onClick={closeDropdown}
-							>
-								Tipos de Serviço
-							</NavLink>
+							{/* Admin only. */}
+							{isAdmin && (
+								<NavLink
+									to="/service_types"
+									className={linkClass}
+									onClick={closeDropdown}
+								>
+									Tipos de Serviço
+								</NavLink>
+							)}
 
 							<div className="navbar-dropdown-divider" />
 
@@ -621,13 +636,16 @@ export default function Navbar() {
 
 							<div className="navbar-dropdown-divider" />
 
-							<NavLink
-								to="/users"
-								className={linkClass}
-								onClick={closeDropdown}
-							>
-								Utilizadores
-							</NavLink>
+							{/* Admin only. */}
+							{isAdmin && (
+								<NavLink
+									to="/users"
+									className={linkClass}
+									onClick={closeDropdown}
+								>
+									Utilizadores
+								</NavLink>
+							)}
 
 							<NavLink
 								to="/user_times_stats"
@@ -645,27 +663,31 @@ export default function Navbar() {
 								Registos de Tempo
 							</NavLink>
 
-							<div className="navbar-dropdown-divider" />
+							{!isOficinaAccount && <div className="navbar-dropdown-divider" />}
 
-							<NavLink
-								to="/events"
-								className={linkClass}
-								onClick={closeDropdown}
-							>
-								Eventos
-							</NavLink>
-
-							<div className="navbar-dropdown-divider" />
-
-							<NavLink
-								to="/devices"
-								className={linkClass}
-								onClick={closeDropdown}
-							>
-								Dispositivos
-							</NavLink>
+							{!isOficinaAccount && (
+								<NavLink
+									to="/events"
+									className={linkClass}
+									onClick={closeDropdown}
+								>
+									Eventos
+								</NavLink>
+							)}
 
 							{/* Admin login only (the API checks it too). */}
+							{isAdmin && <div className="navbar-dropdown-divider" />}
+
+							{isAdmin && (
+								<NavLink
+									to="/devices"
+									className={linkClass}
+									onClick={closeDropdown}
+								>
+									Dispositivos
+								</NavLink>
+							)}
+
 							{isAdmin && (
 								<NavLink
 									to="/backups"
