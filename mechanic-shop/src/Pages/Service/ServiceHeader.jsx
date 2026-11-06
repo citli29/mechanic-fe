@@ -4,6 +4,7 @@ import api from "./../../api/axios";
 import ServiceTypeBadge from "../../components/ServiceTypeBadge/ServiceTypeBadge";
 import { pushErrorToast } from "../../utils/errorToast";
 import DateInput from "../../components/DateInput/DateInput";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 function oneLine(text) {
 	return (text || "").replace(/\s+/g, " ").trim();
@@ -118,8 +119,18 @@ export const ServiceHeader = ({ service, onServiceChange, onOfficeCheckChange ,l
 		}
 		
 	}
-	function handleScheduleSelect(e) {
+	// Removing or swapping the service's marcação asks first (the select is
+	// controlled, so Cancelar just leaves the old one showing).
+	async function handleScheduleSelect(e) {
 		const value = e.target.value;
+		const current = service.schedule_id;
+
+		if (current && String(current) !== String(value)) {
+			const question = value
+				? `Trocar a marcação #${current} deste serviço pela marcação #${value}?`
+				: `Tem a certeza que quer desassociar a marcação #${current} deste serviço?`;
+			if (!await confirmDialog(question, { confirmLabel: value ? "Trocar" : "Desassociar" })) return;
+		}
 
 		onServiceChange("schedule_id", value);
 

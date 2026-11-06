@@ -1065,6 +1065,7 @@ export default function ServiceShow2() {
 									{...prev, car_id: value,}
 							))}
 							isAllowedEditing={canEditCarClient}
+							confirmRemove
 						/>
 					</div>
 					<div className="service-section" id="section-client">
@@ -1076,6 +1077,7 @@ export default function ServiceShow2() {
 									{...prev, client_id: value,}
 							))}
 							isAllowedEditing={canEditCarClient}
+							confirmRemove
 						/>
 					</div>
 					<div className="service-signed-info-card" id="section-agreed">

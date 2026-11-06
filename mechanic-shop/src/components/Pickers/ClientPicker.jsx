@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState } from "react";
 import api from "./../../api/axios";
 import "./style/Picker.css";
+import { confirmDialog } from "../../utils/confirmDialog";
 
 const SEARCHING = 1;
 const SELECTED = 2;
@@ -21,6 +22,9 @@ export const ClientPicker = ({
 	client_id ="",
 	onClientIdChange,
 	isAllowedEditing,
+	// Ask before removing the selected client (the ✕). The service page turns
+	// it on; elsewhere the ✕ just clears.
+	confirmRemove = false,
 }) =>{
 	const [clients, setClients] = useState([]);
 	const [searchClient, setSearchClient] = useState("");
@@ -218,6 +222,15 @@ export const ClientPicker = ({
 
 	const handleClickStartAddCancel = (e) => {handleClickSelectCancel(e);}
 
+	const handleClickRemove = async (e) => {
+		e.preventDefault();
+		if (confirmRemove) {
+			const name = client?.name ? ` "${client.name}"` : "";
+			if (!await confirmDialog(`Tem a certeza que quer desassociar o cliente${name} deste serviço?`, { confirmLabel: "Desassociar" })) return;
+		}
+		handleClickSelectCancel(e);
+	}
+
 	const handleClickActionAdd = async (e) =>{
 		e.preventDefault();
 		const c = await postClient(presentingClient);
@@ -242,7 +255,7 @@ export const ClientPicker = ({
 						<button className="client" onClick={(e)=>{setIsInfoShowing(!isInfoShowing)}}><i className={`fa-solid fa-chevron-${isInfoShowing?"up":"down"}`}/></button>
 						{isAllowedEditing && (<>
 							<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
-							<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
+							<button className="cancel" title="Desassociar cliente" onClick={handleClickRemove}><i className="fa-solid fa-x"/></button>
 						</>
 						)}
 					</div>

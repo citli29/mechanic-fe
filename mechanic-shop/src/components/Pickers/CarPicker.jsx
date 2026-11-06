@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import api from "./../../api/axios";
 import "./style/Picker.css";
+import { confirmDialog } from "../../utils/confirmDialog";
 import { MakePicker } from "./MakePicker";
 import { ModelPicker } from "./ModelPicker";
 
@@ -28,6 +29,9 @@ export const CarPicker = ({
 	isAllowedEditing,
 	allowDeselect=true,
 	defaultInfoShowing=false,
+	// Ask before removing the selected car (the ✕). The service page turns
+	// it on; elsewhere the ✕ just clears.
+	confirmRemove=false,
 }) => {
 	const [cars, setCars] = useState([]);
 	const [searchCar, setSearchCar] = useState("");
@@ -250,6 +254,15 @@ export const CarPicker = ({
 
 	const handleClickStartAddCancel = (e) =>{ handleClickSelectCancel(e); }
 
+	const handleClickRemove = async (e) => {
+		e.preventDefault();
+		if (confirmRemove) {
+			const plate = car?.plate ? ` ${car.plate}` : "";
+			if (!await confirmDialog(`Tem a certeza que quer desassociar a viatura${plate} deste serviço?`, { confirmLabel: "Desassociar" })) return;
+		}
+		handleClickSelectCancel(e);
+	}
+
 	const handleClickActionAdd = async (e) =>{
 		e.preventDefault();
 		const c = await postCar(presentingCar);
@@ -276,7 +289,7 @@ export const CarPicker = ({
 							<>
 								<button className="options" onClick={(e)=>handleClickStartEdit(e)}><i className="fa-solid fa-pencil"/></button>
 								{allowDeselect && (
-									<button className="cancel" onClick={(e)=>{handleClickSelectCancel(e)}}><i className="fa-solid fa-x"/></button>
+									<button className="cancel" title="Desassociar viatura" onClick={handleClickRemove}><i className="fa-solid fa-x"/></button>
 								)}
 							</>
 						)}
