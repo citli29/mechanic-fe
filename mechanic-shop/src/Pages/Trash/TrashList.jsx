@@ -10,7 +10,7 @@ import "./Style/TrashList.css";
 
 // Lixo (admin only — the API refuses everyone else).
 // Every delete on the main tables is saved for 90 days by the database
-// (deleted_rows, see utils/trash_triggers.php). From here a row can be put
+// (deleted_rows, see utils/admin_scripts/trash_triggers.php). From here a row can be put
 // back with its original id. Several can be restored together (e.g. an
 // orçamento and its products); the server puts parents back first, and a
 // row whose parent is still deleted is refused with nothing changed.

@@ -42,6 +42,9 @@ export default function Navbar() {
 	const [isAdmin, setIsAdminState] = useState(getIsAdmin);
 	const [productCount, setProductCount] = useState(null);
 	const [budgetCount, setBudgetCount] = useState(null);
+	// Text of the problem with the newest backup (too old or broken), or null
+	// when it's fine. Shown to every account as a red "!" in the top row.
+	const [backupProblem, setBackupProblem] = useState(null);
 
 	// The oficina login (locked to the Oficina view, not admin) gets a shorter
 	// Gestão menu: no Gestão de Serviços / Laboratório / Orçamentos, no Eventos.
@@ -390,11 +393,51 @@ export default function Navbar() {
 		clearAuthToken();
 	}
 
+	// Checked when the page opens, every 10 min, and on every navigation (so
+	// it clears right after making a copy on the Cópias de Segurança page).
+	// The backend caches the integrity check, so repeated calls are cheap.
+	useEffect(() => {
+		let cancelled = false;
+		function check() {
+			api.get("/backups/status")
+				.then((res) => { if (!cancelled) setBackupProblem(res.data.ok ? null : res.data.problem); })
+				.catch((err) => {
+					if (cancelled) return;
+					// 401 = logged out (the app handles that); anything else = the check itself failed.
+					setBackupProblem(err?.response?.status === 401 ? null : "Não foi possível verificar as cópias de segurança.");
+				});
+		}
+		check();
+		const timer = setInterval(check, 10 * 60 * 1000);
+		return () => { cancelled = true; clearInterval(timer); };
+	}, [location.pathname]);
+
 	function closeDropdown() {
 
 		dropdownRef.current?.removeAttribute("open");
 
 	}
+
+	// The menu's max-height has to end at the bottom of the screen. On phones
+	// the navbar is tall (links grid above Gestão), so a fixed offset left the
+	// last options below the screen, unreachable even by scrolling the menu.
+	function fitDropdownMenu() {
+		const dropdown = dropdownRef.current;
+		if (!dropdown?.open) return;
+		const summary = dropdown.querySelector("summary");
+		const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+		const menuTop = summary.getBoundingClientRect().bottom + 10;
+		dropdown.style.setProperty("--navbar-dropdown-max-height", `${Math.max(160, viewportHeight - menuTop - 12)}px`);
+	}
+
+	useEffect(() => {
+		window.addEventListener("resize", fitDropdownMenu);
+		window.visualViewport?.addEventListener("resize", fitDropdownMenu);
+		return () => {
+			window.removeEventListener("resize", fitDropdownMenu);
+			window.visualViewport?.removeEventListener("resize", fitDropdownMenu);
+		};
+	}, []);
 
 	return (
 
@@ -420,6 +463,30 @@ export default function Navbar() {
 
 					<div className="navbar-top-row-icons">
 
+						{/* Everyone sees the warning; only admin can open the backups page.
+						    Tooltip is CSS (data-tip), so tapping it on a phone shows it too. */}
+						{backupProblem && (isAdmin ? (
+							<NavLink
+								to="/backups"
+								className="navbar-backup-warning"
+								onClick={closeDropdown}
+								aria-label={backupProblem}
+								data-tip={backupProblem}
+							>
+								<i className="fa-solid fa-exclamation" />
+							</NavLink>
+						) : (
+							<span
+								className="navbar-backup-warning"
+								tabIndex={0}
+								role="img"
+								aria-label={backupProblem}
+								data-tip={backupProblem}
+							>
+								<i className="fa-solid fa-exclamation" />
+							</span>
+						))}
+
 						<button
 							type="button"
 							className="navbar-sound-toggle"
@@ -432,16 +499,6 @@ export default function Navbar() {
 							title={soundMuted ? "Ativar som de notificações" : "Silenciar som de notificações"}
 						>
 							<i className={`fa-solid ${soundMuted ? "fa-volume-xmark" : "fa-volume-high"}`} />
-						</button>
-
-						<button
-							type="button"
-							className="navbar-sound-toggle"
-							onClick={handleLogout}
-							aria-label="Terminar sessão"
-							title="Terminar sessão"
-						>
-							<i className="fa-solid fa-right-from-bracket" />
 						</button>
 
 						<NavLink
@@ -521,6 +578,7 @@ export default function Navbar() {
 					<details
 						ref={dropdownRef}
 						className="navbar-dropdown"
+						onToggle={fitDropdownMenu}
 					>
 
 						<summary>
@@ -707,6 +765,18 @@ export default function Navbar() {
 									Lixo
 								</NavLink>
 							)}
+
+							{/* Every account, always the last option. */}
+							<div className="navbar-dropdown-divider" />
+
+							<button
+								type="button"
+								className="navbar-link navbar-logout-link"
+								onClick={() => { closeDropdown(); handleLogout(); }}
+							>
+								<i className="fa-solid fa-right-from-bracket" />
+								Terminar sessão
+							</button>
 
 						</div>
 

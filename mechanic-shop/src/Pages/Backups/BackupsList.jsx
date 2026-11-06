@@ -10,7 +10,7 @@ import "./Style/BackupsList.css";
 // Cópias de Segurança (admin only — the API refuses everyone else).
 // Shows the copies in BACKUP_PATH, makes one on demand and downloads one to
 // this computer. There's deliberately no restore button: restoring
-// overwrites everyone's data, so it's done on the server (utils/restore.php).
+// overwrites everyone's data, so it's done on the server (utils/admin_scripts/restore.php).
 
 // The daily cron copy should never be older than this.
 const STALE_HOURS = 26;

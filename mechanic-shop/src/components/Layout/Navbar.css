@@ -408,7 +408,8 @@
 	box-shadow: 0 16px 35px rgba(0, 0, 0, 0.2);
 
 	/* Long menu: scroll inside it instead of running off the screen. */
-	max-height: calc(100dvh - 90px);
+	/* Set from Navbar.jsx when the menu opens; the calc is the fallback. */
+	max-height: var(--navbar-dropdown-max-height, calc(100dvh - 90px));
 	overflow-y: auto;
 	overscroll-behavior: contain;
 }
@@ -440,6 +441,23 @@
 	background: #fef3c7;
 	color: #92400e;
 	box-shadow: none;
+}
+
+/* Terminar sessão: a button styled like the other menu links. */
+.navbar-dropdown-menu .navbar-logout-link {
+	gap: 10px;
+
+	border: none;
+	background: transparent;
+
+	color: #b91c1c;
+	text-align: left;
+	cursor: pointer;
+}
+
+.navbar-dropdown-menu .navbar-logout-link:hover {
+	background: #fef2f2;
+	color: #991b1b;
 }
 
 /* Clientes / Viaturas: two highlighted tiles at the top of Gestão. */
@@ -614,3 +632,77 @@
 
 }
 
+
+
+/* =====================
+   Backup warning (admin)
+===================== */
+
+.navbar-backup-warning {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+
+	width: 40px;
+	height: 40px;
+
+	border-radius: 10px;
+	background: rgba(239, 68, 68, 0.16);
+
+	color: #f87171;
+	font-size: 1.15rem;
+	text-decoration: none;
+	cursor: default;
+
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease;
+}
+
+a.navbar-backup-warning {
+	cursor: pointer;
+}
+
+.navbar-backup-warning:hover,
+.navbar-backup-warning:focus-visible {
+	background: #ef4444;
+	color: #ffffff;
+}
+
+/* Tooltip: on hover, and on tap/focus (phones have no hover). */
+.navbar-backup-warning::after {
+	content: attr(data-tip);
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 1200;
+
+	width: max-content;
+	max-width: min(280px, calc(100vw - 24px));
+	padding: 8px 10px;
+
+	background: #ffffff;
+	border: 1px solid #fecaca;
+	border-radius: 8px;
+	box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+	color: #991b1b;
+	font-size: 0.85rem;
+	font-weight: 500;
+	line-height: 1.35;
+	white-space: normal;
+	text-align: left;
+
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: opacity 0.15s ease;
+}
+
+.navbar-backup-warning:hover::after,
+.navbar-backup-warning:focus::after {
+	opacity: 1;
+	visibility: visible;
+}
