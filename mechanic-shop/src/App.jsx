@@ -33,6 +33,7 @@ import LabManagement from "./Pages/Lab/LabManagement";
 import DevicesList from "./Pages/Devices/DevicesList";
 import BackupsList from "./Pages/Backups/BackupsList";
 import TrashList from "./Pages/Trash/TrashList";
+import ServicePrint from "./Pages/ServicePrint/ServicePrint";
 
 import "./style/variables.css";
 import { useEffect, useState } from "react";
@@ -75,6 +76,9 @@ function App() {
 		<BrowserRouter>
 
 			<Routes>
+
+				{/* Print page: outside the Layout (no navbar / footer), made for paper. */}
+				<Route path="/services/:id/imprimir" element={<ServicePrint/>} />
 
 				<Route element={<Layout />}>
 

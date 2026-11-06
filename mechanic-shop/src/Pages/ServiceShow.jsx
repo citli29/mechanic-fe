@@ -271,19 +271,23 @@ export default function ServiceShow2() {
 		}
 	}, [service]);
 
-	function handlePrint(mode) {
-		document.body.classList.toggle("print-summary", mode === "summary");
-		window.print();
-	}
-
-	useEffect(() => {
-		function resetPrintMode() {
-			document.body.classList.remove("print-summary");
+	// "Imprimir" / "Imprimir Resumo" open the print page (Pages/ServicePrint)
+	// in a new tab; it prints when its own Imprimir is clicked (the signing
+	// text can be edited there first). It reads the service from the API, so an edit still in
+	// the autosave window is saved first (waits up to ~5 s). The tab is
+	// opened right away (inside the click, so it isn't blocked as a popup)
+	// and pointed at the page once the save is done.
+	const saveStatusRef = useRef(saveStatus);
+	saveStatusRef.current = saveStatus;
+	async function handlePrint(doc) {
+		const url = `/services/${id}/imprimir?doc=${doc}`;
+		const printTab = window.open("", "_blank");
+		for(let waited = 0; waited < 5000 && ["pending", "saving"].includes(saveStatusRef.current); waited += 100){
+			await new Promise((resolve) => setTimeout(resolve, 100));
 		}
-
-		window.addEventListener("afterprint", resetPrintMode);
-		return () => window.removeEventListener("afterprint", resetPrintMode);
-	}, []);
+		if(printTab) printTab.location.href = url;
+		else window.open(url, "_blank");
+	}
 
 	const NOTE_SEPARATOR = "\u001E";
 	function extractPlainNote(raw) {
@@ -1003,11 +1007,11 @@ export default function ServiceShow2() {
 				{/* Same as the browser's ← (opened directly → Serviços). */}
 				<BackButton fallback="/services" />
 				<nav className="service-nav">
-					<button type="button" className="service-nav-print" onClick={() => handlePrint("agreement")}>
-						<i className="fa-solid fa-print" /> Imprimir
+					<button type="button" className="service-nav-print" onClick={() => handlePrint("folha")}>
+						<i className="fa-solid fa-print" /> Termo de Responsabilidade
 					</button>
-					<button type="button" className="service-nav-print" onClick={() => handlePrint("summary")}>
-						<i className="fa-solid fa-file-lines" /> Imprimir Resumo
+					<button type="button" className="service-nav-print" onClick={() => handlePrint("resumo")}>
+						<i className="fa-solid fa-print" /> Resumo de Serviço
 					</button>
 					{saveStatus !== "idle" && (
 						<div className={`service-save-status service-save-status-${saveStatus}`}>
@@ -1053,9 +1057,6 @@ export default function ServiceShow2() {
 						clusterMates={clusterMates}
 					/>
 					<div className="service-section" id="section-car">
-						<h1 className="print-title">
-							Informação da viatura
-						</h1>
 						<CarPicker
 							car_id={service.car_id}
 							onCarIdChange={(value)=>setService(prev => (
@@ -1067,9 +1068,6 @@ export default function ServiceShow2() {
 						/>
 					</div>
 					<div className="service-section" id="section-client">
-						<h1 className="print-title">
-							Informação do cliente
-						</h1>
 						<ClientPicker
 							client_id={service.client_id}
 							onClientIdChange={(value)=>setService(prev => (
@@ -1659,83 +1657,6 @@ export default function ServiceShow2() {
 							/>
 						</div>
 					</label>
-				</div>
-				<div className="print-summary-block">
-					<h1>Resumo do Serviço #{service.id}</h1>
-
-					<div className="print-summary-grid">
-						<div><strong>Viatura:</strong> {[service.car_plate, service.car_make_name, service.car_model_name].filter(Boolean).join(" - ") || "-"}</div>
-						<div><strong>Cliente:</strong> {service.client_name || "-"}</div>
-						<div><strong>Telemóvel:</strong> {service.client_phone || "-"}</div>
-						<div><strong>Tipo de Serviço:</strong> {service.service_type_name || "-"}</div>
-						<div><strong>Entrada:</strong> {service.checkin || "-"}</div>
-						<div><strong>Saída:</strong> {service.checkout || "-"}</div>
-						<div><strong>Kms:</strong> {service.kms || "-"}</div>
-					</div>
-
-					<h2>Descrição de Avaria</h2>
-					{showLabSummary && <LabSummaryList items={labSummary} />}
-					<p>{service.malfunction || "-"}</p>
-
-					<h2>Serviço Realizado</h2>
-					<p>{service.service || "-"}</p>
-
-					<h2>Notas/Observações</h2>
-					<p>{extractPlainNote(service.note) || "-"}</p>
-
-					<h2>Produtos Aplicados</h2>
-					{aps.length === 0 ? (
-						<p>Sem produtos aplicados.</p>
-					) : (
-						<table>
-							<thead>
-								<tr>
-									<th>Nome</th>
-									<th>Referência</th>
-									<th>Tipo</th>
-									<th>Qt.</th>
-									<th>Aplicado</th>
-								</tr>
-							</thead>
-							<tbody>
-								{aps.map((ap) => (
-									<tr key={ap.id}>
-										<td>{ap.product_name || "-"}</td>
-										<td>{ap.product_reference || "-"}</td>
-										<td>{ap.product_type_name || "-"}</td>
-										<td>{ap.quantity}</td>
-										<td>{ap.is_applied == "1" ? "Sim" : "Não"}</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					)}
-
-					<h2>Tempo dos Funcionários</h2>
-					{timeSummary.length === 0 ? (
-						<p>Sem tempos registados.</p>
-					) : (
-						<table>
-							<thead>
-								<tr>
-									<th>Funcionário</th>
-									<th>Tempo</th>
-								</tr>
-							</thead>
-							<tbody>
-								{timeSummary.map(ts => (
-									<tr key={ts.user_id}>
-										<td>{ts.user_name}</td>
-										<td>{formatMinutes(ts.minutes)}</td>
-									</tr>
-								))}
-								<tr>
-									<td><strong>Total</strong></td>
-									<td><strong>{formatMinutes(timeSummary.reduce((sum, ts) => sum + (ts.minutes ?? 0), 0))}</strong></td>
-								</tr>
-							</tbody>
-						</table>
-					)}
 				</div>
 				</div>
 			</div>

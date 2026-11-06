@@ -67,26 +67,18 @@
 }
 
 .navbar-logo-icon {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
+	display: block;
+	flex-shrink: 0;
 
-	width: 40px;
-	height: 40px;
-
-	border-radius: 11px;
-
-	background: #f59e0b;
-	color: #111827;
-
-	font-size: 0.9rem;
-	font-weight: 800;
-
-	box-shadow: 0 4px 12px rgba(245, 158, 11, 0.28);
+	/* The logo is wider than tall: keep its shape. Phones: 36px (below). */
+	width: auto;
+	height: 52px;
 }
 
 .navbar-logo-text {
 	white-space: nowrap;
+	/* Same orange as the logo (public/brand/oficina_logo_icon2.svg). */
+	color: #f59e0b;
 }
 
 
@@ -570,7 +562,6 @@
 	}
 
 	.navbar-logo-icon {
-		width: 36px;
 		height: 36px;
 	}
 

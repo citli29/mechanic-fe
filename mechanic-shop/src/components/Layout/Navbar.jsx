@@ -8,6 +8,7 @@ import { claimNotificationDing, isNotificationSoundMuted, playNotificationSound,
 import { onPollResult, publishPollResult, usePollLeader } from "../../utils/pollLeader";
 import "./Navbar.css";
 import { confirmDialog } from "../../utils/confirmDialog";
+import { APP_NAME, fullTitle, pageTitleFor } from "../../utils/pageTitle";
 
 // HIDDEN-ENCOMENDAS-NAV: the Encomendas link is hidden from the navbar for
 // now (user asked, 2026-11-03). Set to true to bring it back (link + badge);
@@ -324,13 +325,15 @@ export default function Navbar() {
 		};
 	}, [location.pathname, notificationTypes, isPollLeader]);
 
+	// Tab title: "(3) Oficina Lima - Serviço #116" (names in utils/pageTitle.js).
 	useEffect(() => {
-		document.title = unreadCount > 0 ? `(${unreadCount}) Oficina Lima` : "Oficina Lima";
+		const title = fullTitle(pageTitleFor(location.pathname));
+		document.title = unreadCount > 0 ? `(${unreadCount}) ${title}` : title;
 
 		return () => {
-			document.title = "Oficina Lima";
+			document.title = APP_NAME;
 		};
-	}, [unreadCount]);
+	}, [unreadCount, location.pathname]);
 
 	const linkClass = ({ isActive }) =>
 		isActive
@@ -452,9 +455,13 @@ export default function Navbar() {
 						className="navbar-logo"
 						onClick={closeDropdown}
 					>
-						<span className="navbar-logo-icon">
-							OL
-						</span>
+						{/* public/brand/oficina_logo_icon2.svg: the shop's logo, orange outlines. */}
+						<img
+							className="navbar-logo-icon"
+							src="/brand/oficina_logo_icon2.svg"
+							alt=""
+							aria-hidden="true"
+						/>
 
 						<span className="navbar-logo-text">
 							Oficina Lima

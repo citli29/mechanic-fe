@@ -1,0 +1,622 @@
+/* Printed service documents (/services/:id/imprimir). Everything is under
+   .sp-screen so nothing here leaks into the rest of the app. On screen the
+   page shows as an A4 sheet on grey; printed, only the sheet. */
+
+.sp-screen {
+	--sp-ink: #111827;
+	--sp-text: #1f2937;
+	--sp-muted: #6b7280;
+	--sp-line: #d1d5db;
+	--sp-soft: #f3f4f6;
+	--sp-accent: #1e3a5f;
+	--sp-rule: #c4c8cf;         /* writing lines in the ruled boxes */
+	--sp-blank: #9ca3af;        /* dotted fill-in lines */
+	--sp-row-line: #e5e7eb;     /* table rows */
+	--sp-zebra: #fafafa;        /* every other table row */
+
+	min-height: 100vh;
+	padding: 72px 16px 32px;
+	background: #e5e7eb;
+	color: var(--sp-text);
+	font-family: "Roboto", "Segoe UI", Helvetica, Arial, sans-serif;
+	font-size: 10pt;
+	line-height: 1.4;
+	-webkit-print-color-adjust: exact;
+	print-color-adjust: exact;
+}
+
+.sp-screen *,
+.sp-screen *::before,
+.sp-screen *::after {
+	box-sizing: border-box;
+}
+
+/* The app's global `*` rule (style/variables.css) gives every element its
+   own font size, which breaks inheritance; here sizes follow .sp-screen and
+   the classes below. (Its font, Roboto, is kept; not resetting font-family
+   also keeps the Font Awesome icons working.) */
+.sp-screen * {
+	font-size: inherit;
+}
+
+/* ---------- high contrast (P&B) ----------
+   For weak black & white printers: no greys, every line dark, header bars
+   white with a black rule. Toggled in the toolbar (remembered per browser). */
+.sp-screen.is-contrast {
+	--sp-ink: #000000;
+	--sp-text: #000000;
+	--sp-muted: #000000;
+	--sp-line: #000000;
+	--sp-soft: #ffffff;
+	--sp-accent: #000000;
+	--sp-rule: #000000;
+	--sp-blank: #000000;
+	--sp-row-line: #000000;
+	--sp-zebra: #ffffff;
+}
+.sp-screen.is-contrast .sp-section h2 { border-bottom-width: 1.5px; }
+.sp-screen.is-contrast .sp-label { font-weight: 700; }
+.sp-screen.is-contrast .sp-ruled-line { border-top-width: 1.2px; }
+.sp-screen.is-contrast .sp-value.is-blank { border-bottom-style: solid; }
+
+/* ---------- toolbar (screen only) ---------- */
+
+.sp-toolbar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 16px;
+	background: #111827;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.sp-toolbar button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 36px;
+	padding: 0 14px;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	border-radius: 8px;
+	background: transparent;
+	color: #e5e7eb;
+	font: inherit;
+	font-size: 0.95rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.sp-toolbar button:hover { background: rgba(255, 255, 255, 0.08); }
+.sp-toolbar button:disabled { opacity: 0.5; cursor: default; }
+.sp-toolbar button.active { background: #ffffff; color: #111827; border-color: #ffffff; }
+.sp-toolbar button.is-primary { background: #f59e0b; border-color: #f59e0b; color: #111827; }
+
+.sp-toolbar-tabs,
+.sp-toolbar-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+/* ---------- the sheet ---------- */
+
+.sp-page {
+	display: flex;
+	flex-direction: column;
+	width: 210mm;
+	max-width: 100%;
+	min-height: 297mm;
+	margin: 0 auto;
+	padding: 14mm 14mm 10mm;
+	background: #ffffff;
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+
+.sp-message {
+	margin: auto;
+	color: var(--sp-muted);
+	font-size: 1.1rem;
+}
+.sp-message.is-error { color: #b91c1c; }
+
+/* Header: shop on the left, document on the right, accent rule under. */
+.sp-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 16px;
+	padding-bottom: 10px;
+	border-bottom: 2.5px solid var(--sp-accent);
+}
+
+.sp-shop {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+.sp-logo {
+	flex: 0 0 auto;
+	display: block;
+	height: 24mm;
+	width: auto;
+}
+/* P&B: the blue logo in dark grey / black, so a weak printer doesn't fade it. */
+.sp-screen.is-contrast .sp-logo {
+	filter: grayscale(1) contrast(2.2);
+}
+.sp-shop-info {
+	min-width: 0;
+}
+
+.sp-shop-name {
+	color: var(--sp-accent);
+	font-size: 20pt;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+	line-height: 1.1;
+}
+.sp-shop-sub {
+	margin-top: 2px;
+	color: var(--sp-muted);
+	font-size: 9.5pt;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+.sp-shop-line {
+	color: var(--sp-muted);
+	font-size: 8.5pt;
+}
+
+.sp-doc {
+	text-align: right;
+	white-space: nowrap;
+}
+.sp-doc-title {
+	color: var(--sp-ink);
+	font-size: 14pt;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.sp-doc-number {
+	display: inline-block;
+	margin: 4px 0 2px;
+	padding: 2px 10px;
+	border-radius: 4px;
+	background: var(--sp-accent);
+	color: #ffffff;
+	font-size: 12pt;
+	font-weight: 700;
+}
+.sp-doc-line {
+	color: var(--sp-muted);
+	font-size: 9pt;
+}
+
+.sp-body {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 9px;
+	padding-top: 12px;
+}
+
+/* ---------- sections and fields ---------- */
+
+.sp-section {
+	break-inside: avoid;
+	border: 1px solid var(--sp-line);
+	border-radius: 6px;
+	padding: 6px 10px 8px;
+}
+
+.sp-section h2 {
+	margin: -6px -10px 6px;
+	padding: 4px 10px;
+	border-bottom: 1px solid var(--sp-line);
+	border-radius: 6px 6px 0 0;
+	background: var(--sp-soft);
+	color: var(--sp-accent);
+	font-size: 8.5pt;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+}
+
+.sp-two {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 9px;
+}
+.sp-two .sp-section {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	align-content: start;
+	column-gap: 10px;
+}
+.sp-two .sp-section h2,
+.sp-two .sp-plate {
+	grid-column: 1 / -1;
+}
+
+.sp-grid-4 {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	column-gap: 10px;
+}
+.sp-grid-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	column-gap: 10px;
+}
+
+.sp-field {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding: 2px 0;
+}
+.sp-field.is-wide { grid-column: 1 / -1; }
+
+.sp-label {
+	color: var(--sp-muted);
+	font-size: 7pt;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.sp-value {
+	min-height: 1.4em;
+	color: var(--sp-ink);
+	font-weight: 500;
+	overflow-wrap: anywhere;
+}
+/* Empty: a line to write on. */
+.sp-value.is-blank { border-bottom: 1px dotted var(--sp-blank); }
+
+.sp-no-car {
+	grid-column: 1 / -1;
+	padding: 6px 0;
+	color: var(--sp-muted);
+	font-style: italic;
+}
+
+.sp-plate {
+	justify-self: start;
+	margin: 1px 0 4px;
+	padding: 1px 10px;
+	border: 1.5px solid var(--sp-ink);
+	border-radius: 4px;
+	color: var(--sp-ink);
+	font-family: "Roboto Mono", "Consolas", monospace;
+	font-size: 13pt;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+}
+
+.sp-text {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	color: var(--sp-ink);
+}
+/* Ruled box (Folha): one line every 7 mm, drawn as real elements (borders
+   print; background images often don't). Height and line count come from
+   TextBox in ServicePrint.jsx. */
+.sp-ruled {
+	position: relative;
+}
+.sp-ruled-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 0;
+	border-top: 1px solid var(--sp-rule);
+	transform: translateY(-1px);
+}
+.sp-ruled-text {
+	position: relative;
+	line-height: 7mm;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	color: var(--sp-ink);
+}
+
+.sp-muted { color: var(--sp-muted); }
+
+/* ---------- laboratório ---------- */
+
+.sp-lab,
+.sp-lab ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.sp-lab > li { padding: 3px 0; }
+.sp-lab > li + li { border-top: 1px dashed var(--sp-line); }
+.sp-lab-item {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2px 10px;
+	align-items: baseline;
+}
+.sp-lab-props { color: var(--sp-muted); font-size: 9pt; }
+/* Actions as dots, drawn with ::before (the app's global CSS removes list
+   bullets, so list-style can't be relied on). */
+.sp-lab ul { padding-left: 4px; }
+.sp-lab ul li {
+	position: relative;
+	padding: 1px 0 1px 14px;
+	font-size: 9.5pt;
+}
+/* Resumo: a checkbox in front instead of the dot. */
+.sp-lab ul.has-checks li {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	padding-left: 2px;
+}
+.sp-check {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	align-self: center;
+	width: 11px;
+	height: 11px;
+	border: 1px solid var(--sp-ink);
+	border-radius: 2px;
+	font-size: 8pt;
+	font-weight: 700;
+	line-height: 1;
+}
+.sp-lab ul.has-dots li::before {
+	content: "";
+	position: absolute;
+	left: 3px;
+	top: 0.62em;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: var(--sp-ink);
+}
+.sp-lab-note { color: var(--sp-muted); }
+.sp-lab + .sp-text { margin-top: 6px; }
+
+
+/* ---------- tables ---------- */
+
+.sp-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 9.5pt;
+}
+.sp-table th {
+	padding: 4px 6px;
+	border-bottom: 1.5px solid var(--sp-ink);
+	color: var(--sp-muted);
+	font-size: 7.5pt;
+	font-weight: 700;
+	text-align: left;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.sp-table td {
+	padding: 4px 6px;
+	border-bottom: 1px solid var(--sp-row-line);
+	color: var(--sp-ink);
+}
+.sp-table tbody tr:nth-child(even) td { background: var(--sp-zebra); }
+.sp-table tr { break-inside: avoid; }
+.sp-table .is-num { text-align: right; white-space: nowrap; }
+.sp-table .is-center { text-align: center; }
+.sp-table tfoot td {
+	border-top: 1.5px solid var(--sp-ink);
+	border-bottom: none;
+	font-weight: 700;
+}
+.sp-table-times { max-width: 60%; }
+
+/* ---------- terms and signatures ---------- */
+
+.sp-terms p {
+	margin: 0 0 3px;
+	color: var(--sp-text);
+	font-size: 8pt;
+	text-align: justify;
+}
+
+.sp-sign {
+	break-inside: avoid;
+	margin-top: auto;
+	padding-top: 10px;
+}
+.sp-authorization-wrap { margin: 0 0 26px; }
+
+.sp-authorization {
+	margin: 0;
+	font-size: 9.5pt;
+	text-align: justify;
+	white-space: pre-wrap;
+}
+.sp-authorization + .sp-authorization { margin-top: 4px; }
+.sp-authorization strong { color: var(--sp-ink); font-weight: 700; }
+
+.sp-authorization-title {
+	margin: 0 0 6px;
+	color: var(--sp-accent);
+	font-size: 10.5pt;
+	font-weight: 700;
+	text-align: center;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+/* Screen-only controls above the sentence (hidden on paper). */
+.sp-authorization-tools {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 6px;
+	padding: 6px 8px;
+	border: 1px dashed #f59e0b;
+	border-radius: 6px;
+	background: #fffbeb;
+	font-size: 8.5pt;
+}
+.sp-authorization-tools button {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	height: 26px;
+	padding: 0 10px;
+	border: 1px solid #f59e0b;
+	border-radius: 999px;
+	background: #ffffff;
+	color: #b45309;
+	font-weight: 600;
+	cursor: pointer;
+}
+.sp-authorization-tools button.is-on {
+	background: #f59e0b;
+	color: #111827;
+}
+.sp-authorization-toggle {
+	display: inline-flex;
+	border: 1px solid #f59e0b;
+	border-radius: 999px;
+	overflow: hidden;
+}
+.sp-authorization-tools .sp-authorization-toggle button {
+	border: none;
+	border-radius: 0;
+}
+.sp-authorization-tools .sp-authorization-toggle button + button {
+	border-left: 1px solid #f59e0b;
+}
+.sp-authorization-tools .sp-authorization-toggle button.active {
+	background: #f59e0b;
+	color: #111827;
+}
+.sp-edited-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #b91c1c;
+}
+.sp-authorization-note {
+	margin-left: auto;
+	color: #b45309;
+	font-size: 8pt;
+}
+
+.sp-authorization-edit {
+	display: block;
+	width: 100%;
+	margin: 0;
+	padding: 4px 6px;
+	border: 1.5px solid #f59e0b;
+	border-radius: 4px;
+	background: #ffffff;
+	color: var(--sp-ink);
+	font: inherit;
+	font-size: 9.5pt;
+	line-height: 1.4;
+	resize: none;
+	overflow: hidden;
+}
+.sp-authorization-edit:focus { outline: none; }
+
+.sp-sign-row {
+	display: grid;
+	grid-template-columns: 2fr 2fr 1fr;
+	gap: 18px;
+}
+.sp-sign-box span {
+	display: block;
+	margin-top: 4px;
+	color: var(--sp-muted);
+	font-size: 8pt;
+	text-align: center;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.sp-sign-line { border-bottom: 1px solid var(--sp-ink); height: 28px; }
+
+/* ---------- footer ---------- */
+
+.sp-footer {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 12px;
+	padding-top: 6px;
+	border-top: 1px solid var(--sp-line);
+	color: var(--sp-muted);
+	font-size: 7.5pt;
+}
+
+/* ---------- phones (screen only) ---------- */
+
+@media screen and (max-width: 820px) {
+	.sp-screen { padding: 112px 8px 16px; }
+	.sp-toolbar { flex-direction: column; align-items: stretch; }
+	.sp-page { width: 100%; min-height: 0; padding: 18px 14px; }
+	.sp-two, .sp-grid-4 { grid-template-columns: 1fr 1fr; }
+	.sp-header { flex-direction: column; }
+	.sp-doc { text-align: left; }
+}
+
+/* ---------- paper ---------- */
+
+/* A named page, so these margins don't change other prints in the app. */
+@page service-print {
+	size: A4;
+	margin: 11mm 13mm 9mm;
+}
+
+@media print {
+	/* Keep the section headers, the Nº badge etc. even when the browser's
+	   "background graphics" option is off. */
+	.sp-page,
+	.sp-page * {
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	html, body {
+		margin: 0 !important;
+		padding: 0 !important;
+		background: #ffffff !important;
+	}
+	.sp-screen {
+		min-height: 0;
+		padding: 0;
+		background: #ffffff;
+	}
+	.sp-toolbar,
+	.sp-authorization-tools { display: none; }
+	/* Printed while still in Editar: the box prints as plain text. */
+	.sp-authorization-edit {
+		padding: 0;
+		border: none;
+		background: transparent;
+	}
+	.sp-page {
+		page: service-print;
+		width: auto;
+		/* One sheet minus the @page margins, so the signatures sit at the
+		   bottom of the first page; longer content just flows on. */
+		min-height: 276mm;
+		margin: 0;
+		padding: 0;
+		box-shadow: none;
+	}
+}

@@ -450,10 +450,15 @@
 		display: none !important;
 	}
 
-	/* ServiceShow.css runs `* { all: revert !important; }` on every print job
-	   app-wide, which wipes out the plain (non-media) display:none above —
-	   so both reports would show regardless of body class unless this hide
-	   is re-asserted here, inside @media print, with matching !important. */
+	/* The reports were built on top of a reset of every app style (it used
+	   to live in ServiceShow.css and hit every print app-wide). It now only
+	   runs while one of these reports is printing; the !important rules
+	   below re-apply the report's own look on top of it. */
+	/* :where() keeps it at zero specificity, like the old bare `*`, so the
+	   report's own !important rules still win. */
+	:where(body.print-report-anual, body.print-report-semanal) *{
+		all: revert !important;
+	}
 	.user-time-stats-print-anual,
 	.user-time-stats-print-semanal{
 		display: none !important;
