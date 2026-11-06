@@ -530,6 +530,31 @@
 			}
 		}
 
+		/* "Pedir": products of this orçamento are to be ordered. Same pill
+		   as Orçamentado; saves on click (a new one: with Guardar). */
+		.service-quote-order{
+			flex: 0 0 auto;
+			display: flex;
+			align-items: center;
+			gap: var(--padding);
+			height: calc(var(--line-height) + 2 * var(--padding) + 2px);
+			padding: 0 var(--big-padding);
+			border: 1px solid var(--border);
+			border-radius: 999px;
+			background: var(--bg-page);
+			color: var(--txt-light);
+			font-weight: 600;
+			white-space: nowrap;
+			cursor: pointer;
+
+			&.checked{
+				border-color: #d97706;
+				background: #fef3c7;
+				color: #b45309;
+			}
+			&:disabled{ opacity: 0.5; cursor: wait; }
+		}
+
 		flex-wrap: wrap;
 
 		/* No Editar (Orçamentado): keep the toggle on the right, where it
@@ -600,12 +625,38 @@
 	table{
 		border-radius: 5px;
 
-		/* 5 columns (no Aplicado): Quantidade is the second-to-last cell,
-		   which the shared table rules style like the button column. */
+		/* 6 columns: Nome, Referência, Tipo, Quantidade, Pedir, button. */
 		tr{
-			grid-template-columns: minmax(0, 2.5fr) repeat(2, minmax(0, 1fr)) minmax(0px,100px) minmax(0px,42.59px);
+			grid-template-columns: minmax(0, 2.5fr) repeat(2, minmax(0, 1fr)) minmax(0px,100px) minmax(0px,64px) minmax(0px,42.59px);
 		}
-		tr td.p-quantity:nth-last-child(2){
+		tr th.p-to-order-head{ text-align: center; }
+		/* "Pedir": the label fills the cell, so a click anywhere in it
+		   toggles the checkbox. Only while editing (Editar). */
+		tr td.p-to-order{
+			padding: 0;
+
+			label{
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 100%;
+				height: 100%;
+				min-height: calc(var(--line-height) + 2 * var(--padding));
+				margin: 0;
+				cursor: default;
+			}
+			.magic-label{ display: none; }
+			input{
+				width: 18px;
+				height: 18px;
+				margin: 0;
+				accent-color: #d97706;
+				pointer-events: none;   /* the label handles the click */
+			}
+			&.is-editable label{ cursor: pointer; }
+			&.is-editable:hover{ background: #fef3c7; }
+		}
+		tr td.p-quantity{
 			padding: 0;
 
 			input{
@@ -2101,6 +2152,32 @@
 		&:last-child{ border-bottom: none; }
 	}
 
+	/* "Pedir" checkbox on the phone cards. */
+	.service-quote-panel .quote-item-order{
+		flex: 0 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		color: var(--txt-light);
+		font-size: 0.7rem;
+		font-weight: 600;
+
+		padding: 4px 6px;
+		border-radius: 6px;
+
+		input{
+			width: 20px;
+			height: 20px;
+			margin: 0;
+			accent-color: #d97706;
+			pointer-events: none;   /* the label handles the click */
+		}
+		&.checked{ color: #b45309; }
+		&.is-editable{ cursor: pointer; }
+		&.is-editable:active{ background: #fef3c7; }
+	}
+
 	.service-quote-panel .quote-item-text{
 		flex: 1 1 0;
 		min-width: 0;
@@ -2176,3 +2253,11 @@
 		}
 	}
 }
+
+/* Pedir marker on the other orçamento tabs. */
+.service-quote-tab-order{
+	margin-left: 6px;
+	color: #d97706;
+	font-size: 0.85em;
+}
+

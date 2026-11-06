@@ -638,6 +638,8 @@ export default function ServiceShow2() {
 		reference: bp.product_reference ?? "",
 		type: bp.product_type_name ?? "",
 		quantity: bp.quantity,
+		// "Pedir": this product is to be ordered.
+		to_order: !!Number(bp.to_order),
 	});
 	const quoteFromApi = (b) => ({
 		id: b.id,
@@ -693,7 +695,8 @@ export default function ServiceShow2() {
 	// nothing is sent until Guardar, and Cancelar throws it away. One at a
 	// time; while it's open the other tabs and + are locked so it can't be
 	// lost by switching. Products added in the draft get a temporary id.
-	// quoteDraft = { quoteId, isNew, title, products } or null.
+	// quoteDraft = { quoteId, isNew, title, products } or null. Each product
+	// carries its own to_order ("Pedir"), sent with Guardar while editing.
 	const [quoteDraft, setQuoteDraft] = useState(null);
 	const [isSavingQuote, setIsSavingQuote] = useState(false);
 	const draftProductSeq = useRef(0);
@@ -743,6 +746,9 @@ export default function ServiceShow2() {
 		const saved = quotes.find(q => q.id === draft.quoteId);
 		let quoteId = draft.isNew ? null : draft.quoteId;
 		let isChanged = draft.isNew;
+		// Only Pedir ticks changed → "Orçamento para pedir" instead of "editado".
+		let isOtherChange = draft.isNew;
+		let hasNewToOrder = false;
 		setIsSavingQuote(true);
 		try{
 			if(draft.isNew){
@@ -751,20 +757,33 @@ export default function ServiceShow2() {
 			}else if(draft.title !== saved.title){
 				await api.patch(`services/${id}/budgets/${quoteId}`, { title: draft.title });
 				isChanged = true;
+				isOtherChange = true;
 			}
 			const savedProducts = draft.isNew ? [] : saved.products;
 			const base = `services/${id}/budgets/${quoteId}/products`;
 			for(const p of savedProducts){
-				if(!draft.products.some(d => d.id === p.id)){ await api.delete(`${base}/${p.id}`); isChanged = true; }
+				if(!draft.products.some(d => d.id === p.id)){ await api.delete(`${base}/${p.id}`); isChanged = true; isOtherChange = true; }
 			}
 			for(const d of draft.products){
 				const before = savedProducts.find(p => p.id === d.id);
-				if(!before){ await api.post(base, { product_id: d.product_id, quantity: d.quantity }); isChanged = true; }
-				else if(before.quantity !== d.quantity){ await api.patch(`${base}/${d.id}`, { quantity: d.quantity }); isChanged = true; }
+				if(!before){
+					await api.post(base, { product_id: d.product_id, quantity: d.quantity, to_order: !!d.to_order });
+					isChanged = true;
+					isOtherChange = true;
+				}else{
+					const changes = {};
+					if(before.quantity !== d.quantity){ changes.quantity = d.quantity; isOtherChange = true; }
+					if(!!before.to_order !== !!d.to_order){
+						changes.to_order = !!d.to_order;
+						if(d.to_order) hasNewToOrder = true;
+						else isOtherChange = true;
+					}
+					if(Object.keys(changes).length){ await api.patch(`${base}/${d.id}`, changes); isChanged = true; }
+				}
 			}
 			setQuoteDraft(null);
 			// Only when everything went through, and something actually changed.
-			if(isChanged) notifyQuote(quoteId, draft.isNew ? "created" : "edited");
+			if(isChanged) notifyQuote(quoteId, draft.isNew ? "created" : (!isOtherChange && hasNewToOrder) ? "to_order" : "edited");
 		}catch(error){
 			console.error(error, error?.response?.data?.error);
 			// Nothing saved yet: keep the draft so Guardar can be tried again.
@@ -819,6 +838,19 @@ export default function ServiceShow2() {
 			const saved = quoteFromApi(response.data.budget);
 			setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, is_realized: saved.is_realized } : q));
 		}catch(error){console.error(error, error?.response?.data?.error)}
+	};
+	// "Pedir" per product, and "Pedir todo" = a shortcut that's ticked when
+	// every product is (unticking one product unticks it). Like the rest of
+	// the orçamento they only change while editing (Editar) and are saved
+	// with Guardar; Orçamentado locks them (no Editar then).
+	const handleToggleProductToOrder = (product) => {
+		if(!isEditingQuote) return;
+		updateQuoteProduct(product.id, "to_order", !product.to_order);
+	};
+	const handleToggleAllToOrder = (products) => {
+		if(!isEditingQuote || products.length === 0) return;
+		const next = !products.every(p => p.to_order);
+		setQuoteDraft(prev => prev && { ...prev, products: prev.products.map(p => ({ ...p, to_order: next })) });
 	};
 	useEffect(() => {
 		if(!quoteToUnmark) return;
@@ -882,6 +914,7 @@ export default function ServiceShow2() {
 				reference: product.reference,
 				type: product.type,
 				quantity: product.quantity ?? 1,
+				to_order: false,
 			}],
 		});
 	};
@@ -1244,6 +1277,7 @@ export default function ServiceShow2() {
 										<button key={quote.id} type="button" className={`service-quote-tab ${quote.is_realized ? "realized" : ""}`} disabled={!!quoteDraft} title={quoteDraft ? "Guarde ou cancele a edição primeiro" : undefined} onClick={()=>setActiveQuoteId(quote.id)}>
 											<i className={`service-quote-tab-status ${quote.is_realized ? "fa-solid fa-circle-check" : "fa-regular fa-circle"}`} title={quote.is_realized ? "Orçamentado" : "Não orçamentado"}/>
 											{quote.title || "Sem título"}
+											{quote.products.some(p => p.to_order) && <i className="fa-solid fa-cart-shopping service-quote-tab-order" title="Tem produtos para pedir"/>}
 										</button>
 									))}
 									<button type="button" className="service-quote-tab-add" title={quoteDraft ? "Guarde ou cancele a edição primeiro" : "Adicionar Orçamento"} disabled={!!quoteDraft} onClick={handleClickAddQuote}>
@@ -1318,6 +1352,24 @@ export default function ServiceShow2() {
 												<span className={activeQuote.is_realized ? "" : "hidden"}>Orçamentado</span>
 											</span>
 										</button>
+										{(() => {
+											const products = shownQuote.products;
+											const isAll = products.length > 0 && products.every(p => p.to_order);
+											return (
+												<button
+													type="button"
+													role="checkbox"
+													aria-checked={isAll}
+													className={`service-quote-order ${isAll ? "checked" : ""}`}
+													disabled={!isEditingQuote || products.length === 0 || isSavingQuote}
+													title={!isEditingQuote ? (activeQuote.is_realized ? "Orçamentado: não é possível alterar" : "Carregue em Editar para alterar") : products.length === 0 ? "Sem produtos" : isAll ? "Desmarcar Pedir em todos os produtos" : "Marcar Pedir em todos os produtos"}
+													onClick={()=>handleToggleAllToOrder(products)}
+												>
+													<i className={`fa-fw ${isAll ? "fa-solid fa-square-check" : "fa-regular fa-square"}`}/>
+													Pedir todo
+												</button>
+											);
+										})()}
 									</div>
 									<table className={isEditingQuote ? "" : "is-locked"}>
 										<thead>
@@ -1326,6 +1378,7 @@ export default function ServiceShow2() {
 												<th>Referência</th>
 												<th>Tipo de Produto</th>
 												<th>Quantidade</th>
+												<th className="p-to-order-head">Pedir</th>
 												<th></th>
 											</tr>
 										</thead>
@@ -1348,6 +1401,18 @@ export default function ServiceShow2() {
 														<label className="magic-label">Qt:</label>
 														<input type="number" min="1" step="1" disabled={!isEditingQuote} value={p.quantity} onChange={(e)=>updateQuoteProduct(p.id, "quantity", e.target.value.trim()!=="" ? Number(e.target.value) : "")}/>
 													</td>
+													{/* The whole cell is the click target (a label around the checkbox). */}
+													<td className={`p-to-order ${isEditingQuote ? "is-editable" : ""}`}>
+														<label title={isEditingQuote ? (p.to_order ? "Desmarcar Pedir" : "Marcar Pedir") : (p.to_order ? "Marcado para pedir" : "Não marcado para pedir")}>
+															<span className="magic-label">Pedir:</span>
+															<input
+																type="checkbox"
+																checked={!!p.to_order}
+																disabled={!isEditingQuote || isSavingQuote}
+																onChange={()=>handleToggleProductToOrder(p)}
+															/>
+														</label>
+													</td>
 													<td className="p-cancel">
 														{isEditingQuote && (
 															<button type="button" className="cancel" onClick={()=>handleClickDeleteQuoteProduct(p.id)}><i className="fa-solid fa-trash"/></button>
@@ -1369,6 +1434,15 @@ export default function ServiceShow2() {
 											const hasQty = Number.isInteger(qty) && qty >= 1;
 											return (
 												<li key={p.id} className="quote-item">
+													<label className={`quote-item-order ${p.to_order ? "checked" : ""} ${isEditingQuote ? "is-editable" : ""}`} title={p.to_order ? "Marcado para pedir" : "Não marcado para pedir"}>
+														<input
+															type="checkbox"
+															checked={!!p.to_order}
+															disabled={!isEditingQuote || isSavingQuote}
+															onChange={()=>handleToggleProductToOrder(p)}
+														/>
+														<span>Pedir</span>
+													</label>
 													<div className="quote-item-text">
 														<span className="quote-item-name">{p.name || "-"}</span>
 														{meta && <span className="quote-item-meta">{meta}</span>}

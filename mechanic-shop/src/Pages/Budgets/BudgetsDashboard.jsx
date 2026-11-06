@@ -32,6 +32,14 @@ const PERIOD_FILTERS = [
 	{ value: "29", label: "Últimos 30 dias" },
 ];
 
+// "Pedir" (to_order): ticked per product on the service page when it's to be ordered.
+// The filter: orçamentos with at least one product to order, or none.
+const ORDER_FILTERS = [
+	{ value: "", label: "Pedir: todos" },
+	{ value: "true", label: "A pedir" },
+	{ value: "false", label: "Sem pedido" },
+];
+
 const SERVICE_FILTERS = [
 	{ value: "", label: "Todos os serviços" },
 	{ value: "false", label: "Serviço por terminar" },
@@ -111,6 +119,7 @@ export default function BudgetsDashboard() {
 	const [statusFilter, setStatusFilter] = useUrlParam("status", "");
 	const [periodFilter, setPeriodFilter] = useUrlParam("period", "");
 	const [serviceFilter, setServiceFilter] = useUrlParam("service", "");
+	const [orderFilter, setOrderFilter] = useUrlParam("pedir", "");
 	const [toQuoteCount, setToQuoteCount] = useState(null);
 
 	// ?highlight={budget id} (the orçamento notification's link): briefly
@@ -170,6 +179,7 @@ export default function BudgetsDashboard() {
 			if (statusFilter) params.done = statusFilter;
 			if (periodFilter) params.from = periodStart(periodFilter);
 			if (serviceFilter) params.service_finished = serviceFilter;
+			if (orderFilter) params.to_order = orderFilter;
 
 			const res = await api.get("/budgets", { params });
 			if (requestId !== requestIdRef.current) return;
@@ -202,7 +212,7 @@ export default function BudgetsDashboard() {
 	}
 
 	// Only on a real change (not on load): what came from the URL stays.
-	useFilterChange({ statusFilter, periodFilter, serviceFilter }, reloadFromFirstPage, 0);
+	useFilterChange({ statusFilter, periodFilter, serviceFilter, orderFilter }, reloadFromFirstPage, 0);
 
 	useFilterChange(search, reloadFromFirstPage);
 
@@ -376,6 +386,12 @@ export default function BudgetsDashboard() {
 					</div>
 
 					<div className="budget-header-actions">
+						{/* Read-only here: set on the service page. */}
+						{Number(budget.to_order_count) > 0 && (
+							<span className="budget-to-order" title="Produtos marcados para pedir">
+								<i className="fa-solid fa-cart-shopping" /> Pedir {budget.to_order_count}/{budget.product_count}
+							</span>
+						)}
 						<button
 							type="button"
 							className={`budget-status ${isDone ? "is-done" : ""}`}
@@ -409,6 +425,7 @@ export default function BudgetsDashboard() {
 								<th>Referência</th>
 								<th>Tipo</th>
 								<th>Qt.</th>
+								<th>Pedir</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -418,6 +435,9 @@ export default function BudgetsDashboard() {
 									<td data-label="Referência">{p.product_reference || "-"}</td>
 									<td data-label="Tipo">{p.product_type_name || "-"}</td>
 									<td data-label="Qt." className="budget-qty">{p.quantity}</td>
+									<td data-label="Pedir" className={`budget-product-order ${Number(p.to_order) === 1 ? "is-on" : ""}`}>
+										{Number(p.to_order) === 1 ? <><i className="fa-solid fa-cart-shopping" /> Pedir</> : "-"}
+									</td>
 								</tr>
 							))}
 						</tbody>
@@ -513,6 +533,9 @@ export default function BudgetsDashboard() {
 							</select>
 							<select value={serviceFilter} onChange={(e) => setServiceFilter(e.target.value)}>
 								{SERVICE_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+							</select>
+							<select value={orderFilter} onChange={(e) => setOrderFilter(e.target.value)}>
+								{ORDER_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
 							</select>
 
 							{/* Switch: same filter as Estado → "Por orçamentar"; the count

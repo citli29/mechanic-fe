@@ -733,6 +733,10 @@ export default function NotificationsList() {
 																<span className="notif-budget-product-name">{p.product_name || "-"}</span>
 																<span className="notif-budget-product-ref">{p.product_reference || "-"}</span>
 																<span className="notif-budget-product-qty">x{p.quantity}</span>
+																{/* "Pedir" per product (set on the service page). */}
+																<span className={`notif-budget-product-order ${Number(p.to_order) === 1 ? "is-on" : ""}`}>
+																	{Number(p.to_order) === 1 && <><i className="fa-solid fa-cart-shopping" /> Pedir</>}
+																</span>
 															</li>
 														))}
 													</ul>
